@@ -47,7 +47,6 @@ internal class VersioningUserAgentMiddleware(customHeaders: Map<String, String> 
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
     }
 
-    // See: https://community.cloudflare.com/t/cannot-seem-to-send-multipart-form-data/163491
     if (request.url.encodedPath.contains(ApiPaths.User.PROFILE_IMAGE)) {
       newRequestBuilder.removeHeader("Content-Type")
     }

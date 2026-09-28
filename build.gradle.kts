@@ -75,7 +75,6 @@ allprojects {
     }
 }
 
-// Root multi-module Dokka output
 dokka { dokkaPublications.html { outputDirectory.set(rootDir.resolve("docs/")) } }
 
 dependencies {
@@ -195,7 +194,6 @@ subprojects {
     }
   }
 
-  // Kotlin configuration
   tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions { jvmTarget.set(libs.versions.jvmTarget.map(JvmTarget::fromTarget)) }
   }

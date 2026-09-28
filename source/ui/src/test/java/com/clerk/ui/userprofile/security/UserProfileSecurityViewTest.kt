@@ -66,7 +66,6 @@ class UserProfileSecurityViewTest {
         ClerkResult.success(Unit)
       }
     composeTestRule.runOnIdle {
-      // Keep mocked availability work on the main thread so Compose can wait for it to finish.
       val factory = viewModelFactory {
         initializer {
           UserProfileBiometricCredentialViewModel(workDispatcher = Dispatchers.Main.immediate)
@@ -79,7 +78,6 @@ class UserProfileSecurityViewTest {
 
   @After
   fun tearDown() {
-    // Dispose the composition and cancel ViewModel work before removing the singleton mocks.
     composeTestRule.activityRule.scenario.close()
     unmockkAll()
   }

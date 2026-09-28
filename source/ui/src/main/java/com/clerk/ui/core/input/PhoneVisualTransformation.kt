@@ -13,13 +13,11 @@ private val phoneUtil: PhoneNumberUtil by lazy { PhoneNumberUtil.getInstance() }
 
 internal fun phoneVisualTransformation(regionIso: String): VisualTransformation =
   VisualTransformation { text ->
-    // RAW: must already be filtered/capped (only '+' and digits)
     val raw = text.text
 
     val fmt: AsYouTypeFormatter = phoneUtil.getAsYouTypeFormatter(regionIso)
     fmt.clear()
 
-    // rawToFmt[pos] = formatted length AFTER processing first `pos` raw chars (boundary map)
     val rawToFmt = IntArray(raw.length + 1)
     var formatted = ""
     rawToFmt[0] = 0
@@ -32,12 +30,10 @@ internal fun phoneVisualTransformation(regionIso: String): VisualTransformation 
 
     val fLen = formatted.length
 
-    // Clamp any accidental overshoot (extra safety)
     for (i in 0..raw.length) {
       rawToFmt[i] = min(rawToFmt[i], fLen)
     }
 
-    // Build reverse mapping for every formatted boundary f ∈ [0, fLen]
     val fmtToRaw = IntArray(fLen + 1)
     var r = 0
     for (f in 0..fLen) {
@@ -49,7 +45,6 @@ internal fun phoneVisualTransformation(regionIso: String): VisualTransformation 
       object : OffsetMapping {
         override fun originalToTransformed(offset: Int): Int {
           val o = offset.coerceIn(0, raw.length)
-          // Always in [0, fLen]
           return rawToFmt[o]
         }
 

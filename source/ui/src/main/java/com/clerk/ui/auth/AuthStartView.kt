@@ -124,8 +124,10 @@ internal fun AuthStartViewImpl(
       biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
   }
 
-  val lastAuthenticationStrategy =
-    runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
+  val lastAuthenticationStrategy = runCatching {
+    Clerk.client.lastAuthenticationStrategy
+  }
+    .getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,
@@ -491,7 +493,6 @@ private val String.isEmailAddress: Boolean
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val authViewHelper = AuthStartViewHelper()
 
   authViewHelper.setTestValues(

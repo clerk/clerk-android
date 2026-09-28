@@ -120,7 +120,6 @@ class UpdateProfileViewModelTest {
     viewModel.state.test {
       assertEquals(UpdateProfileViewModel.State.Idle, awaitItem())
       viewModel.removeProfileImage()
-      // When user is null, guard emits Error without going through Loading
       assertEquals(UpdateProfileViewModel.State.Error("User not authenticated"), awaitItem())
     }
   }

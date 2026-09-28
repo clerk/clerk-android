@@ -60,21 +60,20 @@ internal fun HostedAuthResource.authenticationUri(): Uri? {
     }
 }
 
-internal fun Uri.matchesHostedAuthRedirectUrl(redirectUrl: String): Boolean =
-  runCatching {
-      // Comparing the encoded authority and path subsumes their decoded counterparts
-      // (authority, host, port, and path), so only the encoded forms are compared.
-      val expected = redirectUrl.toUri()
-      !scheme.isNullOrBlank() &&
-        !expected.scheme.isNullOrBlank() &&
-        scheme.equals(expected.scheme, ignoreCase = true) &&
-        encodedAuthority.equals(expected.encodedAuthority, ignoreCase = true) &&
-        encodedPath == expected.encodedPath
-    }
-    .getOrDefault(false)
+internal fun Uri.matchesHostedAuthRedirectUrl(redirectUrl: String): Boolean = runCatching {
+  val expected = redirectUrl.toUri()
+  !scheme.isNullOrBlank() &&
+    !expected.scheme.isNullOrBlank() &&
+    scheme.equals(expected.scheme, ignoreCase = true) &&
+    encodedAuthority.equals(expected.encodedAuthority, ignoreCase = true) &&
+    encodedPath == expected.encodedPath
+}
+  .getOrDefault(false)
 
-private fun Uri.singleQueryParameter(name: String): String? =
-  runCatching { getQueryParameters(name).singleOrNull() }.getOrNull()
+private fun Uri.singleQueryParameter(name: String): String? = runCatching {
+  getQueryParameters(name).singleOrNull()
+}
+  .getOrNull()
 
 private fun Uri.nonEmptySingleQueryParameter(name: String): String? =
   singleQueryParameter(name)?.takeIf { it.isNotBlank() }

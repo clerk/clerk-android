@@ -65,9 +65,7 @@ class TelemetryCollector(
     val prepared = preparePayload(raw.event, raw.payload)
     val recordResult = shouldRecord(prepared, raw.eventSamplingRate)
 
-    // TODO hook into your logger if you want parity with ClerkLogger.debug
     if (!recordResult.shouldRecord) {
-      // e.g. log "[telemetry][skipped - ${recordResult.reason}] ${prepared.event}"
       return
     }
 
@@ -149,19 +147,17 @@ class TelemetryCollector(
   private suspend fun scheduleFlushIfNeeded() {
     val shouldFlush = mutex.withLock { buffer.size >= config.maxBufferSize }
     if (shouldFlush) {
-      // fire-and-forget
       scope.launch { flush() }
     }
   }
 
   suspend fun flush() {
-    val events =
-      mutex.withLock {
-        if (buffer.isEmpty()) return
-        val copy = buffer.toList()
-        buffer.clear()
-        copy
-      }
+    val events = mutex.withLock {
+      if (buffer.isEmpty()) return
+      val copy = buffer.toList()
+      buffer.clear()
+      copy
+    }
 
     val envelope = TelemetryEnvelope(events)
     try {

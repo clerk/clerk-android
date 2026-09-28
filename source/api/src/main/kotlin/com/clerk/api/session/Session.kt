@@ -44,19 +44,13 @@ data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
-
-  // Can be null if session wasn’t abandoned
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
   @SerialName("last_active_organization_id") val lastActiveOrganizationId: String? = null,
-
-  // More future-proof than String?
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
-
-  // New: factor_verification_age
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,

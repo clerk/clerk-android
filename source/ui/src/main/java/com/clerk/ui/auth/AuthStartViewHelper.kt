@@ -19,8 +19,6 @@ private const val PHONE_NUMBER = "phone_number"
 
 @Stable
 internal class AuthStartViewHelper {
-
-  // Test backdoor properties - set these for testing
   internal var testEnabledFirstFactorAttributes: List<String>? = null
   internal var testSocialProviders: List<OAuthProvider>? = null
   internal var testApplicationName: String? = null
@@ -65,7 +63,6 @@ internal class AuthStartViewHelper {
     get() {
       val socialProviders = testSocialProviders ?: Clerk.socialProviders.values
       return socialProviders.any {
-        // For testing, assume all test social providers are authenticatable
         if (testSocialProviders != null) true
         else
           (it as? UserSettings.SocialConfig)?.let { config ->

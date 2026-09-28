@@ -343,8 +343,6 @@ private fun OtpBoxRow(
     horizontalArrangement = Arrangement.spacedBy(dp8, alignment = Alignment.CenterHorizontally),
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    // Place the hidden inner text field at the start so the system paste/selection toolbar
-    // anchors near the first box instead of at the end.
     Box(modifier = Modifier.size(dp1).alpha(0f).background(Color.Transparent)) { innerTextField() }
 
     val showCaret = isFocused && otpText.length < DEFAULT_OTP_LENGTH

@@ -430,8 +430,6 @@ class AuthTest {
       every { ClerkApi.client } returns clientApi
       coEvery { clientApi.setActive(secondSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
         ClerkResult.success(secondSession)
-      // Read replica returns a fully-hydrated client but with the previous
-      // lastActiveSessionId — read-after-write lag.
       coEvery { clientApi.get() } returns
         ClerkResult.success(
           Client(

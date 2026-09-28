@@ -87,11 +87,6 @@ internal object HostedAuthService {
       SSOManagerActivity.createAuthorizationIntent(context, hostedAuthUri).apply {
         addFlags(FLAG_ACTIVITY_NEW_TASK)
       }
-    // The launch holds the pending-store lock so a concurrent cancellation cannot slip in
-    // between the ownership check and the activity start; when the attempt is no longer
-    // current, nothing launches and the deferred already carries the cancellation result.
-    // await() stays outside the catch so its CancellationException propagates instead of being
-    // swallowed as a launch failure.
     val launchFailure =
       try {
         pendingAuthStore.runIfCurrent(pendingAuth) { context.startActivity(intent) }
@@ -118,9 +113,6 @@ internal object HostedAuthService {
         expectedState = pendingAuth.state,
       )
     return when (callbackResult) {
-      // An invalid callback (e.g. a forged state fired by another app) must not consume the
-      // single completion slot or fail the pending flow. Report the failure to this caller and
-      // keep waiting so the legitimate callback can still complete the authentication.
       is ClerkResult.Failure -> callbackResult
       is ClerkResult.Success ->
         if (pendingAuth.completionStarted.compareAndSet(false, true)) {
@@ -209,7 +201,6 @@ internal object HostedAuthService {
     callback: HostedAuthCallback,
     client: Client,
   ): ClerkResult<Session, ClerkErrorResponse> {
-    // The redeemed client has already been applied locally; this only resolves the flow result.
     val createdSession = client.sessions.firstOrNull { it.id == callback.createdSessionId }
     return if (createdSession == null) {
       finishPendingAuth(
@@ -355,7 +346,6 @@ private suspend fun createHostedAuth(
 ): ClerkResult<Uri, ClerkErrorResponse> {
   var result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = false)
   if (result is ClerkResult.Failure && result.isSignedOutFailure()) {
-    // DeviceTokenSavingMiddleware has already persisted any replacement token from the 401.
     result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = true)
   }
   return when (result) {

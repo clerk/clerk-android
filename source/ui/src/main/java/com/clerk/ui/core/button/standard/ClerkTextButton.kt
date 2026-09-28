@@ -40,7 +40,7 @@ fun ClerkTextButton(
   textColor: Color? = null,
   textStyle: TextStyle? = null,
   boundedRipple: Boolean = true,
-  rippleColor: Color = Color.Unspecified, // Unspecified -> uses LocalContentColor
+  rippleColor: Color = Color.Unspecified,
   clerkTheme: ClerkTheme? = null,
   onClick: () -> Unit,
 ) {
@@ -53,7 +53,7 @@ fun ClerkTextButton(
       modifier =
         modifier
           .padding(horizontal = dp8)
-          .clip(ClerkMaterialTheme.shape) // masks ripple to this shape
+          .clip(ClerkMaterialTheme.shape)
           .clickable(
             interactionSource = interaction,
             indication = ripple(bounded = boundedRipple, color = rippleColor),

@@ -75,7 +75,6 @@ internal object BiometricSessionVerificationService {
     session: Session,
     level: SessionVerification.Level,
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> {
-    // Reverification responses omit the user from their embedded session.
     val userId =
       session.user?.id
         ?: Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id }?.user?.id

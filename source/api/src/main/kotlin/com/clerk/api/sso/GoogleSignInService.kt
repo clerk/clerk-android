@@ -61,11 +61,9 @@ internal class GoogleSignInService(
     ) {
       val idToken = googleCredentialManager.getIdTokenFromCredential(credential.data)
 
-      // First try to authenticate (sign in)
       val authResult: ClerkResult<SignIn, ClerkErrorResponse> =
         ClerkApi.signIn.authenticateWithGoogle(token = idToken)
 
-      // Handle the result
       when (authResult) {
         is ClerkResult.Success -> authResult.signInToOAuthResult()
         is ClerkResult.Failure -> {

@@ -112,7 +112,6 @@ class SessionReverificationTokenTest {
     fetcher.invalidateSession(session.id)
     assertEquals(verifiedToken, fetcher.getToken(session))
 
-    // Edge renewal can advance iat without refreshing the underlying origin claims.
     for (snapshot in listOf(token(400, originIssuedAt = 100), token(400, originIssuedAt = 200))) {
       updateSnapshot(snapshot)
       assertEquals(verifiedToken, fetcher.getToken(session))
@@ -311,7 +310,6 @@ class SessionReverificationTokenTest {
     val waiter = async { fetcher.getToken(session) }
     testScheduler.runCurrent()
 
-    // Complete the owner immediately, leaving the waiter's continuation queued.
     response.complete(oldToken)
     assertTrue(owner.isCompleted)
     assertEquals(oldToken, owner.await())

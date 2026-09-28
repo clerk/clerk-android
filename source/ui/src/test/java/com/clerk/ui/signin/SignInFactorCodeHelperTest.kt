@@ -12,7 +12,6 @@ class SignInFactorCodeHelperTest {
 
   private val helper = SignInFactorCodeUiHelper
 
-  // Tests for getShowResendValue
   @Test
   fun `getShowResendValue with Default state returns true`() {
     assertTrue(helper.getShowResendValue(VerificationState.Default))
@@ -33,7 +32,6 @@ class SignInFactorCodeHelperTest {
     assertFalse(helper.getShowResendValue(VerificationState.Success))
   }
 
-  // Tests for showResend
   @Test
   fun `showResend with totp strategy returns false for Default state`() {
     val factor = Factor(strategy = "totp")
@@ -58,7 +56,6 @@ class SignInFactorCodeHelperTest {
     assertFalse(helper.showResend(factor, VerificationState.Verifying))
   }
 
-  // Tests for showUseAnotherMethod
   @Test
   fun `showUseAnotherMethod with reset_password_email_code strategy returns false`() {
     val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
@@ -88,8 +85,4 @@ class SignInFactorCodeHelperTest {
     val factor = Factor(strategy = "totp")
     assertTrue(helper.showUseAnotherMethod(factor))
   }
-
-  // Note: Testing Composable functions like titleForStrategy() and resendString()
-  // requires a Compose test environment (e.g., using ComposeTestRule) and
-  // is not covered in this standard JUnit test class.
 }

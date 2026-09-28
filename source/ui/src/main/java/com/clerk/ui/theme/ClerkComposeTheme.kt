@@ -25,7 +25,6 @@ import com.clerk.ui.theme.colors.isDark
 import com.materialkolor.ktx.darken
 import com.materialkolor.ktx.lighten
 
-// Theme constants
 private const val PRIMARY_PRESSED_FACTOR = 0.06F
 private const val BORDER_ALPHA_SUBTLE = 0.06F
 private const val BUTTON_BORDER_ALPHA = 0.08F
@@ -383,8 +382,6 @@ private fun computeColorScheme(colors: ClerkColors, isDarkMode: Boolean): ColorS
   level = DeprecationLevel.WARNING,
 )
 internal object ClerkThemeAccess {
-
-  // Direct Clerk theme object access
   internal val colors: ClerkThemeColors
     @Composable get() = ClerkMaterialTheme.colors
 
@@ -394,7 +391,6 @@ internal object ClerkThemeAccess {
   internal val design: ClerkDesign
     @Composable get() = ClerkMaterialTheme.design
 
-  // Computed color variants
   internal val computed: ComputedColors
     @Composable get() = ClerkMaterialTheme.computedColors
 }

@@ -528,9 +528,7 @@ internal object GoogleCredentialAuthenticationService {
         SignIn.CredentialType.PASSWORD -> requestOptions.add(GetPasswordOption())
         SignIn.CredentialType.GOOGLE ->
           requestOptions.add(googleCredentialManager.getGoogleIdOption())
-        SignIn.CredentialType.UNKNOWN -> {
-          // Skip unknown credential types
-        }
+        SignIn.CredentialType.UNKNOWN -> {}
       }
     }
 
@@ -745,25 +743,25 @@ private fun JsonObject.passkeyRpId(): String? {
 
   return topLevelRpId
     ?: runCatching {
-        this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-      }
+      this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+    }
       .getOrNull()
 }
 
 private fun JsonObject.passkeyAllowCredentials(): List<Map<String, String>> {
   return runCatching {
-      this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
-        val credentialJson = credential.jsonObject
-        val credentialId =
-          credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: return@mapNotNull null
-        val credentialType =
-          credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: "public-key"
+    this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
+      val credentialJson = credential.jsonObject
+      val credentialId =
+        credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: return@mapNotNull null
+      val credentialType =
+        credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: "public-key"
 
-        mapOf("type" to credentialType, "id" to credentialId)
-      }
+      mapOf("type" to credentialType, "id" to credentialId)
     }
+  }
     .getOrNull()
     .orEmpty()
 }

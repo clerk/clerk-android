@@ -83,7 +83,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 response: Response<ClerkResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
-                  // Repackage the initial result with new tags with this call's request + response
                   val tags = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {
@@ -106,8 +105,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 } else {
                   var errorBody: Any? = null
                   response.errorBody()?.let { responseBody ->
-                    // Don't try to decode empty bodies
-                    // Unknown length bodies (i.e. -1L) are fine
                     if (responseBody.contentLength() == 0L) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
                     val statusCode = createStatusCode(response.code())

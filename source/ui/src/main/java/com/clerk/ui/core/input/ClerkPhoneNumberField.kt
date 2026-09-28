@@ -146,7 +146,6 @@ private fun findMatchingCountry(value: String, defaultCountry: CountryInfo): Cou
     matchingCountries.isEmpty() -> defaultCountry
     matchingCountries.size == 1 -> matchingCountries.first()
     else -> {
-      // Multiple matches - prioritize US for +1, otherwise take first
       matchingCountries.find { it.countryShortName == "US" } ?: matchingCountries.first()
     }
   }
@@ -162,7 +161,6 @@ private fun CountryAutoDetectionEffect(
   val context = LocalContext.current
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
 
-  // Update selected country when value changes externally
   LaunchedEffect(value) {
     if (value.isNotEmpty()) {
       val matchingCountry = findMatchingCountry(value, defaultCountry)
@@ -172,7 +170,6 @@ private fun CountryAutoDetectionEffect(
     }
   }
 
-  // Auto-detect country on first load
   LaunchedEffect(Unit) {
     val detectedCountry = PhoneInputUtils.detectCountry(context)
     if (detectedCountry != null && value.isEmpty()) {
@@ -322,7 +319,6 @@ private fun PhoneNumberInput(
       interactionSource = interactionSource,
       value = value,
       onValueChange = { newValue ->
-        // Filter and cap the input, ensuring it maintains proper format
         val filtered = PhoneInputUtils().keepDialableCapped(newValue)
         onValueChange(filtered)
       },
@@ -463,7 +459,6 @@ private fun CountryDropdownContent(
     val allCountries = PhoneInputUtils.getAllCountries()
     val detectedCountry = PhoneInputUtils.detectCountry(context)
 
-    // Show detected country first if it exists
     if (detectedCountry != null) {
       Text(
         modifier = Modifier.padding(start = dp12),
@@ -486,7 +481,6 @@ private fun CountryDropdownContent(
       )
     }
 
-    // Show all countries
     allCountries.forEach { country ->
       DropdownMenuItem(
         text = { Text(text = country.getSelectorText) },
@@ -561,16 +555,12 @@ private fun PreviewPhoneInput() {
           .padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12),
     ) {
-      // Empty phone number - should show country picker with default country
       ClerkPhoneNumberField(value = "", onValueChange = {})
 
-      // Phone number with US country code
       ClerkPhoneNumberField(value = "+1 5551234567", onValueChange = {})
 
-      // Phone number with UK country code
       ClerkPhoneNumberField(value = "+44 20 1234 5678", onValueChange = {})
 
-      // Error state
       ClerkPhoneNumberField(
         value = "+1 555",
         onValueChange = {},

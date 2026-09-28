@@ -235,8 +235,6 @@ class LastUsedAuthTest {
 
   @Test
   fun biometricCredentialCountsTowardVisibleMethodCount() {
-    // Only one identifier attribute is enabled, so the badge is normally hidden; the visible
-    // biometric-credential button makes it two methods.
     val result =
       LastUsedAuth.from(
         lastAuthenticationStrategy = "trusted_device",

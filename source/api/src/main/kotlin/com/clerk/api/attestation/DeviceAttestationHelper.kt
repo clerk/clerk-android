@@ -74,14 +74,12 @@ internal object DeviceAttestationHelper {
   suspend fun prepareIntegrityTokenProvider(context: Context, cloudProjectNumber: Long?) {
     requireNotNull(cloudProjectNumber) { "Cloud project number is required" }
 
-    // Check cache first - if we have a prepared provider, use it
     preparedProviders[cloudProjectNumber]?.let { cachedProvider ->
       integrityTokenProvider = cachedProvider
       ClerkLog.d("Using cached integrity token provider for project $cloudProjectNumber")
       return
     }
 
-    // Initialize integrity manager if needed
     initializeIntegrityManagerIfNeeded(context)
 
     val manager = requireNotNull(integrityManager) { "IntegrityManager is not initialized" }
@@ -102,7 +100,6 @@ internal object DeviceAttestationHelper {
                 "Integrity token provider prepared successfully for project $cloudProjectNumber"
               )
               integrityTokenProvider = tokenProvider
-              // Cache the provider for future use
               preparedProviders[cloudProjectNumber] = tokenProvider
               continuation.resume(Unit)
             }
@@ -115,7 +112,6 @@ internal object DeviceAttestationHelper {
               )
             }
 
-          // Handle cancellation
           continuation.invokeOnCancellation {
             ClerkLog.d("Integrity token preparation was cancelled for project $cloudProjectNumber")
           }
@@ -189,7 +185,6 @@ internal object DeviceAttestationHelper {
               )
             }
 
-          // Handle cancellation
           continuation.invokeOnCancellation { ClerkLog.d("Integrity token request was cancelled") }
         }
       }

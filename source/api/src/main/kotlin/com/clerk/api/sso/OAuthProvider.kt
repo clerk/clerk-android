@@ -374,7 +374,6 @@ data class OAuthProviderData(val provider: String, val strategy: String, val nam
 val OAuthProvider.providerName: String
   get() = this.providerData.name
 
-// In-memory override store used for tests to inject logo URLs
 private val logoUrlOverrides: MutableMap<OAuthProvider, String?> = mutableMapOf()
 
 /**
@@ -400,7 +399,6 @@ private val logoUrlOverrides: MutableMap<OAuthProvider, String?> = mutableMapOf(
  */
 val OAuthProvider.logoUrl: String?
   get() =
-    // Test override takes precedence when present
     logoUrlOverrides[this]?.let { it.trim().takeIf { trimmed -> trimmed.isNotEmpty() } }
       ?: Clerk.socialProviders.values
         .find { it.strategy == strategy }

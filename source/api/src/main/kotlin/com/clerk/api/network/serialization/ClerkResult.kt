@@ -70,9 +70,9 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     }
 
     public enum class ErrorType {
-      API, // For ClerkAPI failures
-      HTTP, // For HTTP failures
-      UNKNOWN, // For unknown/network failures
+      API,
+      HTTP,
+      UNKNOWN,
     }
   }
 

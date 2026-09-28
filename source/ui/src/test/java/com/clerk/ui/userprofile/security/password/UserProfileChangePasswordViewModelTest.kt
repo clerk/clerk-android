@@ -87,7 +87,6 @@ class UserProfileChangePasswordViewModelTest {
   @Test
   fun resetState_setsIdle() {
     val viewModel = UserProfileChangePasswordViewModel()
-    // Already Idle; ensure it's Idle
     assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
     viewModel.resetState()
     assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)

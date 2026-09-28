@@ -333,25 +333,20 @@ private fun SocialButtonIcon(
 @Composable
 private fun PreviewSocialButton() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
+  provider.setLogoUrl(null)
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      // Full width with text (>180dp)
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(min = 200.dp))
-      // Icon only - constrained width but will be at least 120dp
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(max = 150.dp))
-      // Icon only - very narrow constraint, button will still be 120dp minimum
       ClerkSocialButton(provider = provider)
-      // Pressed state
       ClerkSocialButton(
         provider = provider,
         isPressed = true,
         modifier = Modifier.widthIn(min = 200.dp),
       )
-      // Disabled state
       ClerkSocialButton(
         provider = provider,
         isEnabled = false,
@@ -371,7 +366,7 @@ private fun PreviewSocialButton() {
 @Composable
 private fun PreviewSocialRow() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
+  provider.setLogoUrl(null)
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),

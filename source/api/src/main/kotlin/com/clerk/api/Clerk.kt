@@ -838,14 +838,6 @@ object Clerk {
       application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
       trackedApplication = application
     }
-    // Seed currentActivity from the passed context if it (or a wrapper around
-    // it) is an Activity. Without this, callers that initialize() after the
-    // host Activity has already passed onResume — e.g. React Native bridges,
-    // late-init flows behind a permission gate, or any framework that boots
-    // Clerk after activity creation — would see currentActivity stay null
-    // until the next OS-driven resume cycle, breaking the first Credential
-    // Manager call (Google sign-in, passkeys). Callers without an Activity
-    // context can use [attachActivity] instead.
     context.findActivityOrNull()?.let { currentActivity = WeakReference(it) }
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
@@ -1129,7 +1121,6 @@ object Clerk {
     this.client = updatedClient
     lastClientServerFetchAtMillis = serverFetchAtMillis
     _clientFlow.value = updatedClient
-    // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()
     } catch (e: Exception) {
@@ -1201,7 +1192,6 @@ object Clerk {
   internal fun updateSessionAndUserState() {
     val previousSession = _session.value
 
-    // Find session by ID from all sessions (not just active sessions)
     val currentSessions = if (::client.isInitialized) client.sessions else emptyList()
     val currentSession = currentSessions.firstOrNull { it.id == client.lastActiveSessionId }
 

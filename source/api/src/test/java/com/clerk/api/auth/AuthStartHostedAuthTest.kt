@@ -63,8 +63,6 @@ class AuthStartHostedAuthTest {
   @Test
   fun `startHostedAuth succeeds under forced organization selection using the applied session`() =
     runTest {
-      // With the redeemed client applied locally, the forced-organization-selection early return
-      // in setActive resolves against the fresh Clerk.session instead of stale pre-auth state.
       val session = session()
       coEvery { HostedAuthService.start(any(), any()) } returns ClerkResult.success(session)
       every { Clerk.organizationSelectionIsForced } returns true

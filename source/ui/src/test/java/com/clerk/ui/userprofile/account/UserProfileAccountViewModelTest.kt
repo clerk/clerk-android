@@ -24,7 +24,6 @@ class UserProfileAccountViewModelTest {
   @BeforeTest
   fun setUp() {
     mockkObject(Clerk)
-    // Ensure launched coroutines run immediately for this simple verification
     kotlinx.coroutines.Dispatchers.setMain(UnconfinedTestDispatcher())
   }
 
@@ -59,7 +58,6 @@ class UserProfileAccountViewModelTest {
     viewModel.signOut()
     advanceUntilIdle()
 
-    // Must not collapse to signOut(null) / signOut() — that would sign out every account.
     coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = any()) }
     coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = null) }
   }

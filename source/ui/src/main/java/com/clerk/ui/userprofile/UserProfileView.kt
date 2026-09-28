@@ -135,9 +135,6 @@ fun UserProfileView(
       }
 
       if (showAuth) {
-        // The add-account flow replaces the profile entirely, so it dismisses itself rather
-        // than showing the host's back button, which would pop the host's own navigation.
-        // Hosts that want to own this flow can pass onAddAccount instead.
         CompositionLocalProvider(LocalClerkHostBackAction provides null) {
           AuthView(
             modifier = Modifier.fillMaxSize(),
@@ -292,8 +289,6 @@ internal fun EntryProviderScope<NavKey>.userProfileEntries(
 
   entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
 
-  // Always register the entry so that a restored CustomRouteNavKey does not crash the graph.
-  // If no destination is provided, pop back to the profile root.
   entry<CustomRouteNavKey> { key ->
     if (customDestination != null) {
       val navigator =

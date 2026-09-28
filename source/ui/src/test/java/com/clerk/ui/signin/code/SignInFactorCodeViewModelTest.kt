@@ -306,7 +306,6 @@ class SignInFactorCodeViewModelTest {
 
       viewModel.attempt(factor, isSecondFactor = false, code)
 
-      // First, the view model emits Loading; then, error from the handler
       assertEquals(AuthenticationViewState.Loading, awaitItem())
       assertEquals(AuthenticationViewState.Error("error"), awaitItem())
     }

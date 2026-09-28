@@ -142,10 +142,8 @@ internal object StorageHelper {
     }
     storageCipher = null
     if (context != null) {
-      // Reinitialize to ensure clean state
       initialize(context)
     } else {
-      // Allow tests to simulate uninitialized state.
       secureStorage = null
     }
   }

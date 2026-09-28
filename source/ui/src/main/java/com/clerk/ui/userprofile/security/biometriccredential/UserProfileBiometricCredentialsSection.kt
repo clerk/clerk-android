@@ -48,7 +48,6 @@ internal fun UserProfileBiometricCredentialsSection(
     }
   }
 
-  // Existing PIN-capable credentials can still be disabled when strict enrollment is unavailable.
   if (!state.isEnabled && !state.canEnroll && !state.isLoading) return
 
   val promptTitle = stringResource(R.string.sign_in_with_biometrics)

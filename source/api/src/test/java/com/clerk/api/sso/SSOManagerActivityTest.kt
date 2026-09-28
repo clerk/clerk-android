@@ -37,7 +37,6 @@ class SSOManagerActivityTest {
 
   @Before
   fun setup() {
-    // Ensure AppCompat theme for AppCompatActivity
     ApplicationProvider.getApplicationContext<Application>()
       .setTheme(androidx.appcompat.R.style.Theme_AppCompat)
   }
@@ -251,7 +250,6 @@ class SSOManagerActivityTest {
 
     val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
     controller.create().resume()
-    // Simulate another onResume before finish()
     controller.pause().resume()
 
     coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(any()) }
@@ -264,7 +262,7 @@ class SSOManagerActivityTest {
     coEvery { SSOService.completeAuthenticateWithRedirect(any()) } throws RuntimeException("boom")
 
     val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
-    Thread.setDefaultUncaughtExceptionHandler { _, _ -> /* swallow coroutine exception */ }
+    Thread.setDefaultUncaughtExceptionHandler { _, _ -> }
     try {
       val app = ApplicationProvider.getApplicationContext<Application>()
       val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
@@ -314,7 +312,7 @@ class SSOManagerActivityTest {
     val gate = CompletableDeferred<Unit>()
     coEvery { SSOService.completeAuthenticateWithRedirect(any()) } coAnswers
       {
-        gate.await() // suspend until we release to simulate long-running work
+        gate.await()
       }
 
     val app = ApplicationProvider.getApplicationContext<Application>()
@@ -325,16 +323,12 @@ class SSOManagerActivityTest {
       }
 
     val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
-    // First resume: only launches CustomTabs and sets authorizationStarted=true
     controller.create().resume()
-    // Simulate configuration change before completion begins
     controller.configurationChange()
-    // Next resume: should start completion exactly once
     controller.resume()
 
     coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(any()) }
 
-    // Release the gate so activity can finish
     gate.complete(Unit)
   }
 

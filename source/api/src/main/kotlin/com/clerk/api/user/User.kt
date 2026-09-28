@@ -422,27 +422,20 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
     is ClerkResult.Success -> {
       val client = clientResult.value
 
-      // Prefer the same "active session" selection strategy used by Clerk itself, but never
-      // accept a user whose id doesn't match the receiver (important for multi-session apps).
       val userFromActiveSession =
         client
           .activeSessions()
           .firstOrNull { it.id == client.lastActiveSessionId && it.user?.id == this.id }
           ?.user ?: client.activeSessions().firstOrNull { it.user?.id == this.id }?.user
 
-      // If the active session user doesn't match this receiver (or is absent), fall back to any
-      // session carrying this user's id (multi-session apps).
       val userFromAnySession = client.sessions.firstOrNull { it.user?.id == this.id }?.user
 
-      // If the middleware already synced Clerk.client, prefer the freshly-derived Clerk.user.
       val userFromClerk = Clerk.user?.takeIf { it.id == this.id }
 
       val updated = userFromClerk ?: userFromAnySession ?: userFromActiveSession
       if (updated != null) {
         ClerkResult.success(updated)
       } else {
-        // Extremely defensive: if the backend doesn't include `session.user` in the client payload.
-        // In that case, fall back to the dedicated "me" endpoint.
         when (val meResult = ClerkApi.user.getUser()) {
           is ClerkResult.Success -> meResult
           is ClerkResult.Failure ->
@@ -487,7 +480,7 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+@Suppress("DEPRECATION")
 suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> =
   params.unsafeMetadata?.let { rawMetadata ->
     updateWithDeprecatedUnsafeMetadata(params, rawMetadata)
@@ -497,7 +490,6 @@ private suspend fun updateWithDeprecatedUnsafeMetadata(
   params: UpdateParams,
   rawMetadata: String,
 ): ClerkResult<User, ClerkErrorResponse> =
-  // Parse before any mutation so a malformed payload fails atomically (no network call).
   when (val metadataResult = parseUnsafeMetadata(rawMetadata)) {
     is ClerkResult.Failure -> metadataResult
     is ClerkResult.Success ->
@@ -524,7 +516,7 @@ private fun parseUnsafeMetadata(rawMetadata: String): ClerkResult<JsonObject, Cl
  * Note: [UpdateParams.publicMetadata] and [UpdateParams.privateMetadata] are deprecated. They are
  * only settable from the Backend API; on the Frontend API they are no-ops
  */
-@Suppress("DEPRECATION") // params.{public,private,unsafe}Metadata are themselves deprecated.
+@Suppress("DEPRECATION")
 private fun UpdateParams.hasNonMetadataFields(): Boolean =
   firstName != null ||
     lastName != null ||
@@ -535,17 +527,13 @@ private fun UpdateParams.hasNonMetadataFields(): Boolean =
     publicMetadata != null ||
     privateMetadata != null
 
-@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+@Suppress("DEPRECATION")
 private suspend fun updateProfileFieldsBeforeMetadata(
   params: UpdateParams
 ): ClerkResult<User, ClerkErrorResponse> =
   if (params.hasNonMetadataFields()) {
     ClerkApi.user.updateUser(fields = params.copy(unsafeMetadata = null).toMap())
   } else {
-    // No rest fields to send. Fetch the current user explicitly so the merge-patch diff
-    // baseline below is fresh — the receiver's `unsafeMetadata`. A stale baseline
-    // silently under-null-deletes those server-only keys and leaks partial-replace
-    // semantics out of an API the caller expects to behave like full replace.
     ClerkApi.user.getUser()
   }
 
@@ -553,10 +541,6 @@ private suspend fun updateMetadataAfterProfileUpdate(
   desired: JsonObject,
   profileResult: ClerkResult.Success<User>,
 ): ClerkResult<User, ClerkErrorResponse> {
-  // Diff against the *fresh* user returned by the PATCH /me or GET /me call above — never
-  // against stale `this`. The response reflects the current server state, so the merge
-  // patch (with RFC 7396 null-deletes for removed keys) correctly captures replace
-  // semantics even when other actors have mutated metadata since this client's last sync.
   val current = profileResult.value.unsafeMetadata ?: JsonObject(emptyMap())
   val patch = computeMergePatch(current, desired) as? JsonObject ?: desired
 
@@ -932,18 +916,17 @@ suspend fun User.getPaymentMethods(
 }
 
 internal fun currentSessionId(): String? {
-  val clientSessionId =
-    runCatching {
-        val client = Clerk.client
-        val pendingChooseOrganizationSession =
-          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-        val lastActiveSession =
-          client.lastActiveSessionId?.let { lastActiveSessionId ->
-            client.sessions.firstOrNull { it.id == lastActiveSessionId }
-          }
-        pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  val clientSessionId = runCatching {
+    val client = Clerk.client
+    val pendingChooseOrganizationSession =
+      client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+    val lastActiveSession =
+      client.lastActiveSessionId?.let { lastActiveSessionId ->
+        client.sessions.firstOrNull { it.id == lastActiveSessionId }
       }
-      .getOrNull()
+    pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  }
+    .getOrNull()
 
   return clientSessionId ?: Clerk.session?.id
 }

@@ -97,13 +97,10 @@ internal object AppLifecycleListener {
       return
     }
 
-    // Ensure observer is added on the main thread
     if (Looper.myLooper() == Looper.getMainLooper()) {
-      // Already on main thread
       ProcessLifecycleOwner.get().lifecycle.addObserver(listener)
       isListening = true
     } else {
-      // Post to main thread
       Handler(Looper.getMainLooper()).post {
         if (listenerGeneration == generation) {
           ProcessLifecycleOwner.get().lifecycle.addObserver(listener)

@@ -70,13 +70,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   @Suppress("NestedBlockDepth")
   private fun syncResponse(request: Request, response: Response): Response {
-    // Only process JSON responses
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
       responseBody.let {
         try {
-          // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
           val authEvents =
             if (jsonElement is JsonObject) {
@@ -96,7 +94,6 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
           authEvents.forEach(Clerk.auth::send)
 
-          // Return the original response with its body
           val newBody = it.toResponseBody(body.contentType())
           return response.newBuilder().body(newBody).build()
         } catch (e: SerializationException) {
@@ -258,10 +255,10 @@ private fun syncClerkClient(
 private fun Response.serverFetchAtMillis(): Long {
   val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
   return runCatching {
-      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-        .apply { timeZone = TimeZone.getTimeZone("GMT") }
-        .parse(serverDate)
-        ?.time
-    }
+    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+      .apply { timeZone = TimeZone.getTimeZone("GMT") }
+      .parse(serverDate)
+      ?.time
+  }
     .getOrNull() ?: System.currentTimeMillis()
 }

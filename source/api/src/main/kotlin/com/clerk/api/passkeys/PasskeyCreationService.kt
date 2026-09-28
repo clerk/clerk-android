@@ -116,7 +116,6 @@ internal object PasskeyCreationService {
    * @throws IllegalArgumentException if the registration response JSON is not found in the bundle
    */
   private fun parsePasskeyDataDirectFromBundle(result: Bundle): PublicKeyCredentialData {
-    // Extract JSON string from the Bundle
     val jsonString =
       result.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
         ?: throw IllegalArgumentException("No registration response JSON found in bundle")
@@ -124,7 +123,6 @@ internal object PasskeyCreationService {
     val json = Json { ignoreUnknownKeys = true }
     val fullResponse = json.decodeFromString<FullPasskeyResponse>(jsonString)
 
-    // Convert response JsonObject to Map<String, String> with only the required fields
     val responseMap =
       mapOf(
         "attestationObject" to

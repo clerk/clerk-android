@@ -33,15 +33,12 @@ class DeviceAttestationHelperTest {
 
   @Before
   fun setup() {
-    // Mock static dependencies
     mockkStatic(IntegrityManagerFactory::class)
     mockkObject(ClerkApi)
 
-    // Set up default behavior
     every { IntegrityManagerFactory.createStandard(any()) } returns mockIntegrityManager
     every { ClerkApi.deviceAttestation } returns mockDeviceAttestationApi
 
-    // Reset the helper state
     DeviceAttestationHelper.integrityManager = null
     DeviceAttestationHelper.integrityTokenProvider = null
     DeviceAttestationHelper.clearCache()
@@ -54,7 +51,6 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `prepareIntegrityTokenProvider throws exception when cloudProjectNumber is null`() = runTest {
-    // When & Then
     try {
       DeviceAttestationHelper.prepareIntegrityTokenProvider(mockContext, null)
       throw AssertionError("Expected IllegalArgumentException to be thrown")
@@ -65,13 +61,10 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `attestDevice throws exception when token provider is null`() = runTest {
-    // Given
     DeviceAttestationHelper.integrityTokenProvider = null
 
-    // When
     val result = DeviceAttestationHelper.attestDevice("client-id")
 
-    // Then
     assertTrue("Result should be failure", result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertNotNull("Throwable should not be null", failure.throwable)
@@ -86,7 +79,6 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `performAssertion calls device attestation API`() = runTest {
-    // Given
     val token = "test-token"
     val applicationId = "com.example.app"
     val mockClient = mockk<Client>()
@@ -94,20 +86,16 @@ class DeviceAttestationHelperTest {
     coEvery { mockDeviceAttestationApi.verify(any(), any()) } returns
       ClerkResult.success(mockClient)
 
-    // When
     val result = DeviceAttestationHelper.performAssertion(token, applicationId)
 
-    // Then
     assertTrue("Result should be success", result is ClerkResult.Success)
     assertEquals(mockClient, (result as ClerkResult.Success).value)
   }
 
   @Test
   fun `performAssertion throws exception when applicationId is null`() = runTest {
-    // Given
     val token = "test-token"
 
-    // When & Then
     try {
       DeviceAttestationHelper.performAssertion(token, null)
       throw AssertionError("Expected IllegalArgumentException to be thrown")
@@ -118,21 +106,17 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `getHashedClientId generates correct SHA-256 hash`() {
-    // Given
     val clientId = "test-client-id"
 
-    // When
     val result = DeviceAttestationHelper.getHashedClientId(clientId)
 
-    // Then
     assertNotNull(result)
-    assertEquals(SHA256_HEX_LENGTH, result.length) // SHA-256 produces 64 character hex string
-    assertTrue(result.matches(Regex("[0-9a-f]{$SHA256_HEX_LENGTH}"))) // Should be valid hex string
+    assertEquals(SHA256_HEX_LENGTH, result.length)
+    assertTrue(result.matches(Regex("[0-9a-f]{$SHA256_HEX_LENGTH}")))
   }
 
   @Test
   fun `getHashedClientId handles different input values consistently`() {
-    // Test different inputs
     val inputs =
       listOf("", "a", "test-client-id", "another-longer-client-id-with-special-chars!@#$%")
 
@@ -140,7 +124,6 @@ class DeviceAttestationHelperTest {
       val result1 = DeviceAttestationHelper.getHashedClientId(input)
       val result2 = DeviceAttestationHelper.getHashedClientId(input)
 
-      // Same input should always produce same hash
       assertEquals("Hash should be consistent for input: $input", result1, result2)
       assertEquals(
         "Hash should be $SHA256_HEX_LENGTH characters for input: $input",
@@ -156,42 +139,33 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `getHashedClientId produces different hashes for different inputs`() {
-    // Given different inputs
     val input1 = "client-id-1"
     val input2 = "client-id-2"
 
-    // When
     val hash1 = DeviceAttestationHelper.getHashedClientId(input1)
     val hash2 = DeviceAttestationHelper.getHashedClientId(input2)
 
-    // Then
     assertTrue("Different inputs should produce different hashes", hash1 != hash2)
   }
 
   @Test
   fun `getHashedClientId uses cache for performance`() {
-    // Given
     val clientId = "test-client-id"
 
-    // When - call multiple times
     val result1 = DeviceAttestationHelper.getHashedClientId(clientId)
     val result2 = DeviceAttestationHelper.getHashedClientId(clientId)
     val result3 = DeviceAttestationHelper.getHashedClientId(clientId)
 
-    // Then - all results should be identical (from cache)
     assertEquals("Results should be identical from cache", result1, result2)
     assertEquals("Results should be identical from cache", result2, result3)
   }
 
   @Test
   fun `clearCache resets helper state`() {
-    // Given - generate some cached data
     DeviceAttestationHelper.getHashedClientId("test")
 
-    // When
     DeviceAttestationHelper.clearCache()
 
-    // Then
     val statsAfter = DeviceAttestationHelper.getCacheStats()
     assertEquals("Hash cache should be empty", 0, statsAfter.hashCacheSize)
     assertEquals("Prepared providers should be empty", 0, statsAfter.preparedProvidersCount)
@@ -204,7 +178,6 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `scope is properly configured`() {
-    // Then
     assertNotNull(DeviceAttestationHelper.scope)
   }
 }

@@ -119,7 +119,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         }
       AuthorizationTokenSelection(
         token = token,
-        // After invalidation, only an eligible token can supply verification ages.
         fallbackFactorVerificationAge =
           session.factorVerificationAge.takeUnless { requiresNewerOrigin },
       )
@@ -186,7 +185,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           tokenTasks.putIfAbsent(context.cacheKey, deferred)
         }
       if (existingTask != null) {
-        // Invalidation can happen after completion but before this waiter resumes.
         existingTask.await()?.takeIf { isCurrentRuntime(context) }
       } else {
         try {
@@ -225,7 +223,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return if (!isCurrentRuntime(context)) {
       null
     } else {
-      // After reverification, snapshots must be newer than a token fetched in this generation.
       if (options.template == null) {
         synchronized(runtimeLock) {
           if (isCurrentRuntime(context)) {
@@ -309,8 +306,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       when (tokensRequest) {
         is ClerkResult.Success -> {
           SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
-          // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
-          // monotonic when responses complete out of order.
           tokensRequest.value
         }
         is ClerkResult.Failure -> {
@@ -375,7 +370,7 @@ data class GetTokenOptions(
   val skipCache: Boolean = false,
 
   /** Buffer time in seconds before token expiration to consider it invalid */
-  val expirationBuffer: Long = 10, // seconds
+  val expirationBuffer: Long = 10,
 )
 
 /**

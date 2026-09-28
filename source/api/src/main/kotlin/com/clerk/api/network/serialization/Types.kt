@@ -81,13 +81,9 @@ internal object Types {
   internal fun getRawType(type: Type?): Class<*> {
     return when (type) {
       is Class<*> -> {
-        // type is a normal class.
         type
       }
       is ParameterizedType -> {
-        // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either
-        // but
-        // suspects some pathological case related to nested classes exists.
         val rawType = type.rawType
         rawType as Class<*>
       }
@@ -96,9 +92,6 @@ internal object Types {
         Array.newInstance(getRawType(componentType), 0).javaClass
       }
       is TypeVariable<*> -> {
-        // We could use the variable's bounds, but that won't work if there are multiple. having a
-        // raw
-        // type that's more general than necessary is okay.
         Any::class.java
       }
       is WildcardType -> getRawType(type.upperBounds[0])
@@ -116,22 +109,19 @@ internal object Types {
   @JvmStatic
   internal fun equals(a: Type?, b: Type?): Boolean {
     if (a === b) {
-      return true // Also handles (a == null && b == null).
+      return true
     }
-    // This isn't a supported type.
     when (a) {
       is Class<*> -> {
         return if (b is GenericArrayType) {
           equals(a.componentType, b.genericComponentType)
         } else if (b is ParameterizedType && a.rawType == b.rawType) {
-          // Class instance with generic info, from method return types
           return a.typeParameters.flatMap { it.bounds.toList() } == b.actualTypeArguments.toList()
         } else {
-          a == b // Class already specifies equals().
+          a == b
         }
       }
       is ParameterizedType -> {
-        // Class instance with generic info, from method return types
         if (b is Class<*> && a.rawType == b.rawType) {
           return b.typeParameters.map { it.bounds }.toTypedArray().flatten() ==
             a.actualTypeArguments.toList()
@@ -161,7 +151,7 @@ internal object Types {
         if (b !is TypeVariable<*>) return false
         return (a.genericDeclaration === b.genericDeclaration && (a.name == b.name))
       }
-      else -> return false // This isn't a supported type.
+      else -> return false
     }
   }
 }

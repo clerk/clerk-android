@@ -106,7 +106,6 @@ class SessionTokenRegistrationTest {
           assertTrue(callerStarted.await(5, TimeUnit.SECONDS))
           awaitBlockedOn(callerThread.get(), runtimeLock)
 
-          // Reset while context creation is blocked, replacing the session's organization.
           client.value = Client(sessions = listOf(currentSession))
           fetcher.reset()
           request
@@ -184,7 +183,6 @@ class SessionTokenRegistrationTest {
     }
   }
 
-  // Hold a stale registration long enough for the new caller to join it on the broken path.
   private class RegistrationBarrierMap :
     ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>() {
     val oldCaller = AtomicReference<Thread>()

@@ -222,12 +222,11 @@ private fun UserProfileMfaAddSmsContent(
 private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, String> {
   val phoneUtil = PhoneNumberUtil.getInstance()
   val raw = phoneNumber.phoneNumber
-  val proto =
-    runCatching {
-        val formatted = if (raw.startsWith("+")) raw else "+$raw"
-        phoneUtil.parse(formatted, null)
-      }
-      .getOrNull()
+  val proto = runCatching {
+    val formatted = if (raw.startsWith("+")) raw else "+$raw"
+    phoneUtil.parse(formatted, null)
+  }
+    .getOrNull()
 
   val resolvedRegion: String =
     when {
@@ -240,10 +239,8 @@ private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, S
       else -> "UN"
     }
 
-  // Safely build the flag emoji
   val flag = runCatching { CountryCodeUtils.regionToFlagEmoji(resolvedRegion) }.getOrElse { "🏳️" }
 
-  // Format nicely for display if valid
   val displayNumber: String =
     when {
       proto != null && phoneUtil.isValidNumber(proto) ->

@@ -73,7 +73,6 @@ internal object ExternalAccountService {
     params: User.CreateExternalAccountParams
   ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
     HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
-    // Clear any existing pending external account connections
     currentPendingExternalAccountConnection = null
     val initialResult = ClerkApi.user.createExternalAccount(params.toMap())
     return when (initialResult) {

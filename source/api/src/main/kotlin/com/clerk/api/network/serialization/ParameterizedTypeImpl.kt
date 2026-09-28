@@ -102,7 +102,6 @@ private constructor(
       rawType: Type,
       vararg typeArguments: Type,
     ): ParameterizedTypeImpl {
-      // Require an owner type if the raw type needs it.
       if (rawType is Class<*>) {
         val enclosingClass = rawType.enclosingClass
         if (ownerType != null) {
@@ -153,7 +152,7 @@ internal fun Type.canonicalize(): Type {
       if (this is WildcardTypeImpl) return this
       WildcardTypeImpl(upperBounds, lowerBounds)
     }
-    else -> this // This type is unsupported!
+    else -> this
   }
 }
 

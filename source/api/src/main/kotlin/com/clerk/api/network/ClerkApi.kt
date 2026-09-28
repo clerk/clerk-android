@@ -85,7 +85,6 @@ internal object ClerkApi {
   val billing: BillingApi
     get() = _billing ?: error("ClerkApi is not configured.")
 
-  // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
     private set
 

@@ -93,10 +93,8 @@ internal val LocalClerkTypography =
 internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Unit) {
   val isDarkMode = isSystemInDarkTheme()
 
-  // Resolve colors - use provided values or system defaults
   val colors = remember(theme, isDarkMode) { resolveColors(theme = theme, isDarkMode = isDarkMode) }
 
-  // Resolve typography - use provided values or defaults
   val typography = remember(theme) { generateTypography(theme) }
 
   val design = remember(theme?.design) { theme?.design ?: ClerkDesign() }
@@ -131,7 +129,6 @@ internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors
   val modeOverrides = if (isDarkMode) theme?.darkColors else theme?.lightColors
 
   fun resolve(getter: (ClerkColors) -> Color?): Color {
-    // Prefer mode-specific overrides, otherwise fall back to global overrides and finally defaults.
     return modeOverrides?.let(getter)
       ?: baseOverrides?.let(getter)
       ?: getter(defaultColors)

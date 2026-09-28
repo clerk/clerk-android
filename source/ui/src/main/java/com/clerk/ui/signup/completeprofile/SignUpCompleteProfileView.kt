@@ -81,8 +81,6 @@ private fun SignUpCompleteProfileImpl(
   val firstEnabled = firstNameEnabled || signUp?.supportsField(FIRST_NAME_FIELD) == true
   val lastEnabled = lastNameEnabled || signUp?.supportsField(LAST_NAME_FIELD) == true
 
-  // Check if legal_accepted is required and missing. Mobile signup intentionally skips optional
-  // fields.
   val legalConsentRequired =
     legalConsentMissing ||
       (signUp?.requiredFields?.contains(LEGAL_ACCEPTED_FIELD) == true &&
@@ -92,8 +90,6 @@ private fun SignUpCompleteProfileImpl(
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
   val showLegalConsent = legalConsentRequired && hasLegalUrls
 
-  // Initialize authState values only once when provided (for previews/tests)
-  // This uses LaunchedEffect to prevent resetting user input on recomposition
   androidx.compose.runtime.LaunchedEffect(Unit) {
     if (firstName.isNotEmpty()) authState.signUpFirstName = firstName
     if (lastName.isNotEmpty()) authState.signUpLastName = lastName
@@ -200,8 +196,6 @@ private fun InputRow(
   val bothEnabled = firstEnabled && lastEnabled
   val lastNameFocusRequester = remember { FocusRequester() }
 
-  // When both fields are shown, first→Next moves focus; last→Done submits.
-  // When only one field is shown, Done submits directly.
   val firstNameImeAction = if (bothEnabled) ImeAction.Next else ImeAction.Done
   val firstNameKeyboardActions =
     if (bothEnabled) {
@@ -213,7 +207,6 @@ private fun InputRow(
   BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
     val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)
     val spacing = dp12
-    // Minimum width per field to comfortably show label/placeholder without truncation
     val minFieldWidth = 160.dp
     val shouldStack = enabledCount > 1 && maxWidth < (minFieldWidth * 2 + spacing)
 

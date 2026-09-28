@@ -58,7 +58,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onResume()
     if (resumeCallbackIfPresent()) return
 
-    // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
         ClerkLog.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
@@ -73,9 +72,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       return
     }
-    // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
-    // cancelled. If we have a response, complete the flow and only finish after completion to
-    // avoid cancelling the in-flight network request.
     intent.data?.takeIf(::isCallbackUri)?.let {
       if (completion == Completion.NONE) {
         completion = Completion.SSO
@@ -83,7 +79,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
         intent = Intent(intent).apply { data = null }
         authorizationComplete(it)
       }
-      // Do not call finish() here; authorizationComplete will finish when done
     }
       ?: run {
         authorizationFailed()
@@ -93,9 +88,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   private fun resumeCallbackIfPresent(): Boolean {
     val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
-    // Hosted auth completion re-attaches after activity recreation because
-    // HostedAuthService.complete() idempotently re-joins the pending flow; SSO completion is a
-    // one-shot network call that must never re-run.
     val shouldAttachObserver = !completionObserverAttached && completion != Completion.SSO
     if (callbackUri != null && shouldAttachObserver) {
       if (completion == Completion.NONE) {

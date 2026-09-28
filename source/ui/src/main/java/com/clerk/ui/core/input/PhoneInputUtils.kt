@@ -80,7 +80,6 @@ internal class PhoneInputUtils(
     private const val LOG_TAG = "PhoneInputUtils"
     private const val E164_MAX_DIGITS = 15
 
-    // Backward compatibility - default instance
     private val defaultInstance = PhoneInputUtils()
 
     fun detectCountry(context: Context): CountryInfo? = defaultInstance.detectCountry(context)
@@ -100,7 +99,6 @@ internal class PhoneInputUtils(
    */
   internal fun detectCountry(context: Context): CountryInfo? {
     return try {
-      // Try system locale first, then telephony manager for SIM and network country
       detectFromLocale() ?: detectFromTelephony(context)
     } catch (e: Exception) {
       logger.logWarning(LOG_TAG, "Failed to detect country", e)
@@ -141,7 +139,6 @@ internal class PhoneInputUtils(
    * @return Formatted phone number string
    */
   internal fun formatAsYouType(regionIso: String, raw: String): String {
-    // Keep '+' and digits only; AsYouType handles punctuation
     val filtered =
       buildString(raw.length) { raw.forEach { ch -> if (ch == '+' || ch.isDigit()) append(ch) } }
 
@@ -159,7 +156,7 @@ internal class PhoneInputUtils(
    */
   internal fun getAllCountries(): List<CountryInfo> {
     return phoneUtil.supportedRegions
-      .filter { it.length == 2 } // Filter out non-standard region codes
+      .filter { it.length == 2 }
       .map { region ->
         CountryInfo(
           flag = regionToFlagEmoji(region),
@@ -212,7 +209,6 @@ internal class PhoneInputUtils(
     val telephonyManager = telephonyManagerProvider.getTelephonyManager(context)
 
     return telephonyManager?.let { tm ->
-      // Try SIM country, then network country
       detectFromCountryCode(tm.simCountryIso) ?: detectFromCountryCode(tm.networkCountryIso)
     }
   }

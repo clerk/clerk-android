@@ -68,7 +68,6 @@ internal object NetworkConnectivityMonitor {
         if (Clerk.debugMode) {
           ClerkLog.d("NetworkConnectivityMonitor: Network lost")
         }
-        // Check if we still have any other network connection
         val stillConnected = checkCurrentConnectivity()
         if (!stillConnected) {
           handleConnectivityChange(false)
@@ -112,7 +111,6 @@ internal object NetworkConnectivityMonitor {
           as? ConnectivityManager
 
       connectivityManager?.let { cm ->
-        // Check initial connectivity state
         val initiallyConnected = checkCurrentConnectivity()
         _isConnected.value = initiallyConnected
         wasDisconnected = !initiallyConnected
@@ -121,7 +119,6 @@ internal object NetworkConnectivityMonitor {
           ClerkLog.d("NetworkConnectivityMonitor: Initial connectivity state = $initiallyConnected")
         }
 
-        // Register for network callbacks
         val networkRequest =
           NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)

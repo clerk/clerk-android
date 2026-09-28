@@ -56,7 +56,6 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
             onBackPressed = {},
             hasLogo = true,
             hasBackButton = true,
-            // Placeholder renders at the configured logo height, keeping this deterministic.
             logoUrl = null,
             clerkTheme = ClerkTheme(design = ClerkDesign(logoMaxHeight = 24.dp)),
           )

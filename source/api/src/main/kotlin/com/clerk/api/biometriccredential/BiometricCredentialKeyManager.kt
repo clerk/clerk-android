@@ -410,7 +410,6 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     val bytes = coordinate.toByteArray()
     return when {
       bytes.size == COORDINATE_SIZE_BYTES -> bytes
-      // Strip the sign byte added by BigInteger for values with the high bit set.
       bytes.size > COORDINATE_SIZE_BYTES ->
         bytes.copyOfRange(bytes.size - COORDINATE_SIZE_BYTES, bytes.size)
       else -> ByteArray(COORDINATE_SIZE_BYTES - bytes.size) + bytes

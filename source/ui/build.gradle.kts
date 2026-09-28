@@ -38,7 +38,6 @@ android {
 }
 
 tasks.withType<Test>().configureEach {
-  // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
   javaLauncher.set(
     project.extensions.getByType<JavaToolchainService>().launcherFor {
@@ -49,19 +48,13 @@ tasks.withType<Test>().configureEach {
   reports.html.required.set(false)
 }
 
-// Compose mapping collection can emit hundreds of parser/tokenizer warnings
-// for valid composable signatures on recent Kotlin/Compose toolchains.
-// Disable this non-critical reporting task when AGP creates it.
 tasks
   .matching { it.name.matches(Regex("report.+ComposeMappingErrors")) }
   .configureEach { enabled = false }
 
-// Configure Maven publishing for this module
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", property("CLERK_UI_VERSION") as String)
   publishToMavenCentral()
-  // Skip signing for local publishing: ./gradlew publishToMavenLocal
-  // -PRELEASE_SIGNING_ENABLED=false
   if (providers.gradleProperty("RELEASE_SIGNING_ENABLED").orNull != "false") {
     signAllPublications()
   }

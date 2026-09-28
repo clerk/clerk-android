@@ -214,10 +214,8 @@ class SignInPrepareHandlerTest {
   fun prepareForPhoneCodeShouldHandleNullPhoneNumberId() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = null)
 
-    // This should now handle null gracefully and not throw an exception
     handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
-    // Verify that no API call was made since phoneNumberId was null
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
   }
 
@@ -225,10 +223,8 @@ class SignInPrepareHandlerTest {
   fun prepareForEmailCodeShouldHandleNullEmailAddressId() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
 
-    // This should now handle null gracefully and not throw an exception
     handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
-    // Verify that no API call was made since emailAddressId was null
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
   }
 
@@ -284,7 +280,6 @@ class SignInPrepareHandlerTest {
       onError = { capturedMessage = it },
     )
 
-    // Falls back to default when no message present in error
     assertEquals("Error occurred with unknown message.", capturedMessage)
   }
 

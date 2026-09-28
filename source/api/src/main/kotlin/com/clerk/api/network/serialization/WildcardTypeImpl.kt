@@ -49,7 +49,6 @@ private constructor(private val upperBound: Type, private val lowerBound: Type?)
    * @return Hash code based on the upper and lower bounds
    */
   override fun hashCode(): Int {
-    // This equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds()).
     return (if (lowerBound != null) 31 + lowerBound.hashCode() else 1) xor
       31 + upperBound.hashCode()
   }

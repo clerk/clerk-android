@@ -73,7 +73,6 @@ internal class ConfigurationManager(
   internal var context: WeakReference<Context>? = null
     set(value) {
       field = value
-      // Don't initialize storage immediately - do it lazily when needed
     }
 
   /** Track if storage has been initialized to avoid duplicate initialization */
@@ -344,7 +343,6 @@ internal class ConfigurationManager(
       return
     }
 
-    // Cancel any ongoing jobs
     refreshJob?.cancel()
     refreshJob = scope.launch {
       while (isActive) {
@@ -354,7 +352,6 @@ internal class ConfigurationManager(
             if (Clerk.debugMode) {
               ClerkLog.d("Refreshing token for session: ${session.id}")
             }
-            // Use async to avoid blocking the refresh loop
             async { session.fetchToken(GetTokenOptions(skipCache = false)) }
           } else {
             if (Clerk.debugMode) {
@@ -425,7 +422,6 @@ internal class ConfigurationManager(
       expectedConfigurationVersion = configurationVersion,
     )
 
-  // Launches in a new coroutine so retries triggered inside the mutex do not deadlock.
   private fun queueClientAndEnvironmentRefresh(attempt: RefreshAttempt = currentRefreshAttempt()) {
     scope.launch { refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION) }
   }
@@ -714,7 +710,6 @@ internal class ConfigurationManager(
       return
     }
 
-    // Retry the initialization
     queueClientAndEnvironmentRefresh(attempt)
   }
 
@@ -756,7 +751,6 @@ internal class ConfigurationManager(
    */
   private fun configureConnectivityMonitor(context: Context) {
     NetworkConnectivityMonitor.configure(context) {
-      // Callback invoked when connectivity is restored
       if (!_isInitialized.value && hasConfigured) {
         ClerkLog.d("Connectivity restored - attempting automatic reinitialization")
         scope.launch {
@@ -764,7 +758,6 @@ internal class ConfigurationManager(
           refreshClientAndEnvironment(currentRefreshAttempt(), RefreshMode.INITIALIZATION)
         }
       } else if (_isInitialized.value) {
-        // Already initialized, but connectivity was restored - refresh data
         if (Clerk.debugMode) {
           ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
         }
