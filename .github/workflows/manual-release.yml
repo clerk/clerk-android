@@ -325,11 +325,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Native components moved from @clerk/expo to @clerk/expo-native; support both layouts.
-          if [ -f packages/expo-native/android/build.gradle ]; then
-            build_file="packages/expo-native/android/build.gradle"
-            package_name="@clerk/expo-native"
-            commit_scope="expo-native"
+          # Native components moved from @clerk/expo to @clerk/expo-native-components; support both layouts.
+          if [ -f packages/expo-native-components/android/build.gradle ]; then
+            build_file="packages/expo-native-components/android/build.gradle"
+            package_name="@clerk/expo-native-components"
+            commit_scope="expo-native-components"
           else
             build_file="packages/expo/android/build.gradle"
             package_name="@clerk/expo"
