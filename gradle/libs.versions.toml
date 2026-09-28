@@ -38,6 +38,8 @@ compileSdk = "36"
 
 
 [libraries]
+detekt-api = { module = "io.gitlab.arturbosch.detekt:detekt-api", version.ref = "detekt" }
+detekt-test = { module = "io.gitlab.arturbosch.detekt:detekt-test", version.ref = "detekt" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"

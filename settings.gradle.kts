@@ -25,6 +25,7 @@ dependencyResolutionManagement {
 rootProject.name = "Clerk"
 
 include(
+  ":detekt-rules",
   ":e2e",
   ":samples:quickstart",
   ":samples:custom-flows",

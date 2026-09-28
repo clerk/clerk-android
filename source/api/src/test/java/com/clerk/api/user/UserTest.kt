@@ -100,14 +100,11 @@ class UserTest {
 
   @Test
   fun `UpdateParams with empty unsafeMetadata should be handled correctly`() {
-    // Given
     val emptyMetadata = "{}"
     val params = User.UpdateParams(unsafeMetadata = emptyMetadata)
 
-    // When
     val paramsMap = params.toMap()
 
-    // Then
     assertNotNull("Map should not be null", paramsMap)
     assertEquals(
       "Should include unsafe_metadata with empty object",
@@ -118,15 +115,12 @@ class UserTest {
 
   @Test
   fun `UpdateParams with complex nested unsafeMetadata should be preserved`() {
-    // Given
     val complexMetadata =
       """{"user":{"preferences":{"theme":"dark","language":"en"},"settings":{"notifications":true}}}"""
     val params = User.UpdateParams(firstName = "Bob", unsafeMetadata = complexMetadata)
 
-    // When
     val paramsMap = params.toMap()
 
-    // Then
     assertNotNull("Map should not be null", paramsMap)
     assertEquals(
       "Should preserve complex nested metadata",

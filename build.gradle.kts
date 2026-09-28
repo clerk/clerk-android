@@ -58,6 +58,7 @@ allprojects {
   tasks.withType<Detekt>().configureEach {
     jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
+  dependencies.add("detektPlugins", project(":detekt-rules"))
 
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
