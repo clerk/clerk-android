@@ -243,7 +243,7 @@ object BiometricCredentials {
    */
   fun forgetLocalCredentials(deletedUserId: String): Int {
     val credentials = storedLocalCredentialsForCurrentApp().filter { it.userId == deletedUserId }
-    credentials.forEach { deleteLocalCredential(it, propagateKeyDeletionFailure = true) }
+    credentials.forEach { deleteLocalCredential(it, propagateFailures = true) }
     return credentials.size
   }
 
@@ -261,8 +261,10 @@ object BiometricCredentials {
 
   internal fun retryPendingLocalCredentialCleanup() {
     BiometricCredentialPendingCleanupStore.all().forEach { deletedUserId ->
-      runCatching { forgetLocalCredentials(deletedUserId) }
-        .onSuccess { BiometricCredentialPendingCleanupStore.remove(deletedUserId) }
+      runCatching {
+          forgetLocalCredentials(deletedUserId)
+          BiometricCredentialPendingCleanupStore.remove(deletedUserId)
+        }
         .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
     }
   }
@@ -512,7 +514,8 @@ object BiometricCredentials {
           localKeyId = localKey.localKeyId,
           userId = userId,
           appIdentifier = biometricCredential.appIdentifier,
-          identifierHint = BiometricCredentialLocalRecord.normalizedIdentifierHint(identifierHint),
+          identifierHintSha256 =
+            BiometricCredentialLocalRecord.identifierHintSha256(identifierHint),
           policy = localKey.policy,
           createdAt = biometricCredential.createdAt,
           updatedAt = biometricCredential.updatedAt,
@@ -691,14 +694,18 @@ object BiometricCredentials {
 
   private fun deleteLocalCredential(
     credential: BiometricCredentialLocalRecord,
-    propagateKeyDeletionFailure: Boolean = false,
+    propagateFailures: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
     keyDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric-credential private key.") }
-    if (propagateKeyDeletionFailure) {
+    if (propagateFailures) {
       keyDeletionResult.getOrThrow()
     }
-    credentialStore.delete(credential.id)
+    val recordDeletionResult = runCatching { credentialStore.delete(credential.id) }
+    recordDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric credential metadata.") }
+    if (propagateFailures) {
+      recordDeletionResult.getOrThrow()
+    }
   }
 
   private fun biometricCredentialFeatureUnavailableReason():
