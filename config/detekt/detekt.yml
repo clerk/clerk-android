@@ -788,4 +788,3 @@ style:
 clerk:
   NoExplanatoryComment:
     active: true
-    excludes: ['**/samples/**']

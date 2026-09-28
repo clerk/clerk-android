@@ -41,21 +41,13 @@ class OAuthViewModel : ViewModel() {
         .onSuccess {
           when (it.resultType) {
             ResultType.SIGN_IN -> {
-              // The OAuth flow resulted in a sign in
               if (it.signIn?.status == SignIn.Status.COMPLETE) {
                 _uiState.value = UiState.Authenticated
-              } else {
-                // If the status is not complete, check why. User may need to
-                // complete further steps.
               }
             }
             ResultType.SIGN_UP -> {
-              // The OAuth flow resulted in a sign up
               if (it.signUp?.status == SignUp.Status.COMPLETE) {
                 _uiState.value = UiState.Authenticated
-              } else {
-                // If the status is not complete, check why. User may need to
-                // complete further steps.
               }
             }
 
@@ -65,8 +57,6 @@ class OAuthViewModel : ViewModel() {
           }
         }
         .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
           Log.e("OAuthViewModel", it.errorMessage, it.throwable)
         }
     }

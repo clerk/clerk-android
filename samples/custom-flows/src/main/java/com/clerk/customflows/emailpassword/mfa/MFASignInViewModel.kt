@@ -25,17 +25,10 @@ class MFASignInViewModel : ViewModel() {
         }
         .onSuccess {
           if (it.status == SignIn.Status.NEEDS_SECOND_FACTOR) {
-            // Display TOTP Form
             _uiState.value = UiState.NeedsSecondFactor
-          } else {
-            // If the status is not needsSecondFactor, check why. User may need to
-            // complete different steps.
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 
@@ -46,15 +39,10 @@ class MFASignInViewModel : ViewModel() {
         .verifyMfaCode(code, MfaType.TOTP)
         .onSuccess {
           if (it.status == SignIn.Status.COMPLETE) {
-            // User is now signed in and verified.
-            // You can navigate to the next screen or perform other actions.
             _uiState.value = UiState.Verified
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 

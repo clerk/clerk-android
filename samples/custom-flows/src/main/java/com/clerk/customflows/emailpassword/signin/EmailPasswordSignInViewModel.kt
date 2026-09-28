@@ -38,10 +38,7 @@ class EmailPasswordSignInViewModel : ViewModel() {
           this.password = password
         }
         .onSuccess { _uiState.value = EmailPasswordSignInUiState.SignedIn }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 

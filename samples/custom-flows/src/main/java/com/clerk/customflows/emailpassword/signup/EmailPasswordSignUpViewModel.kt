@@ -41,10 +41,7 @@ class EmailPasswordSignUpViewModel : ViewModel() {
         }
         .flatMap { it.sendCode { this.email = email } }
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verifying }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 
@@ -54,10 +51,7 @@ class EmailPasswordSignUpViewModel : ViewModel() {
       inProgressSignUp
         .verifyCode(code, VerificationType.EMAIL)
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verified }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 

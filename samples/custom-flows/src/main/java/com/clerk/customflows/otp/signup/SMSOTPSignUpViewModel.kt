@@ -39,10 +39,7 @@ class SMSOTPSignUpViewModel : ViewModel() {
         .signUp { phone = phoneNumber }
         .flatMap { it.sendCode { phone = phoneNumber } }
         .onSuccess { _uiState.value = UiState.Verifying }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 
@@ -54,14 +51,9 @@ class SMSOTPSignUpViewModel : ViewModel() {
         .onSuccess {
           if (it.status == SignUp.Status.COMPLETE) {
             _uiState.value = UiState.Verified
-          } else {
-            // The user may need to complete further steps
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure {}
     }
   }
 

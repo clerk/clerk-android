@@ -46,8 +46,6 @@ class ForgotPasswordEmailViewModel : ViewModel() {
             }
         }
         .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
           Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
@@ -60,8 +58,6 @@ class ForgotPasswordEmailViewModel : ViewModel() {
         .verifyCode(code)
         .onSuccess { updateStateFromStatus(it.status) }
         .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
           Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
@@ -74,8 +70,6 @@ class ForgotPasswordEmailViewModel : ViewModel() {
         .resetPassword(password)
         .onSuccess { updateStateFromStatus(it.status) }
         .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
           Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
