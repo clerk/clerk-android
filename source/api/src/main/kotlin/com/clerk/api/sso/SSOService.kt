@@ -21,6 +21,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.get
 import com.clerk.api.signup.toUnsafeMetadataJsonString
 import com.clerk.api.user.User.CreateExternalAccountParams
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
 @Suppress("TooManyFunctions")
@@ -286,6 +287,9 @@ internal object SSOService {
           }
         }
       }
+    } catch (e: CancellationException) {
+      cancelPendingAuthentication()
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
       currentPendingAuth?.complete(ClerkResult.unknownFailure(e))

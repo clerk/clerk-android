@@ -15,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
@@ -133,6 +134,33 @@ class SSOServiceCancellationTest {
     assertSame(signUp, result.value.signUp)
     coVerify(exactly = 1) { SignUp.create(SignUp.CreateParams.Transfer) }
   }
+
+  @Test
+  fun `cancellation while completing redirect propagates and cancels pending auth`() =
+    runTest {
+      mockkObject(SignUp.Companion)
+      coEvery { SignUp.create(SignUp.CreateParams.Transfer) } throws
+        CancellationException("caller cancelled")
+      val pendingResult =
+        async(start = CoroutineStart.UNDISPATCHED) {
+          SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+        }
+
+      val thrown =
+        runCatching {
+            SSOService.completeAuthenticateWithRedirect(
+              Uri.parse(
+                "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+              )
+            )
+          }
+          .exceptionOrNull()
+
+      assertTrue(thrown is CancellationException)
+      assertFalse(SSOService.hasPendingAuthentication())
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertTrue(failure.throwable is SSOCancellationException)
+    }
 
   private companion object {
     const val AUTHORIZATION_URL = "https://accounts.example.com/oauth/authorize"
