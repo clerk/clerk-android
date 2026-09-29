@@ -535,8 +535,7 @@ internal object GoogleCredentialAuthenticationService {
    * and routes them to the appropriate authentication handlers:
    * - **[PublicKeyCredential]**: Handles WebAuthn passkey authentication by extracting the
    *   authentication response and completing the first factor verification with Clerk
-   * - **[PasswordCredential]**: Handles password-based authentication (currently returns success
-   *   without processing for demonstration purposes)
+   * - **[PasswordCredential]**: Not supported; returns a failure
    * - **[CustomCredential]**: Handles custom credentials such as Google ID tokens by delegating to
    *   specialized handlers like [GoogleSignInService]
    *
@@ -562,8 +561,7 @@ internal object GoogleCredentialAuthenticationService {
       }
 
       is PasswordCredential -> {
-        ClerkLog.d("Handling password credential")
-        ClerkResult.success(signIn)
+        ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
       }
 
       is CustomCredential -> {

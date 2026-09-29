@@ -119,7 +119,7 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `signInWithPasskey handles password credential`() = runTest {
+  fun `signInWithPasskey fails for password credential`() = runTest {
     val nonce = """{"challenge":"test-challenge"}"""
 
     every { mockSignIn.firstFactorVerification } returns mockVerification
@@ -131,11 +131,10 @@ class PasskeyAuthenticationServiceTest {
 
     val result =
       GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY)
+        credentialTypes = listOf(SignIn.CredentialType.PASSWORD)
       )
 
-    assertTrue(result is ClerkResult.Success)
-    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
+    assertTrue(result is ClerkResult.Failure)
   }
 
   @Test
@@ -151,13 +150,11 @@ class PasskeyAuthenticationServiceTest {
     coEvery { mockCredentialManager.getCredential(any(), capture(requestSlot)) } returns
       mockGetCredentialResponse
 
-    val result =
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-        preferImmediatelyAvailableCredentials = true,
-      )
+    GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+      credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      preferImmediatelyAvailableCredentials = true,
+    )
 
-    assertTrue(result is ClerkResult.Success)
     assertTrue(requestSlot.captured.preferImmediatelyAvailableCredentials)
   }
 
