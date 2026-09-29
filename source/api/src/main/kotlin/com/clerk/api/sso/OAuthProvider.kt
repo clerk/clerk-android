@@ -374,6 +374,7 @@ data class OAuthProviderData(val provider: String, val strategy: String, val nam
 val OAuthProvider.providerName: String
   get() = this.providerData.name
 
+/** In-memory override store used for tests to inject logo URLs. */
 private val logoUrlOverrides: MutableMap<OAuthProvider, String?> = mutableMapOf()
 
 /**

@@ -44,6 +44,7 @@ data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
+  /** Null if the session wasn't abandoned. */
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,

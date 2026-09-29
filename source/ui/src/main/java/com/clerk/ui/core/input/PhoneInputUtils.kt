@@ -80,6 +80,7 @@ internal class PhoneInputUtils(
     private const val LOG_TAG = "PhoneInputUtils"
     private const val E164_MAX_DIGITS = 15
 
+    /** Default instance kept for backward compatibility. */
     private val defaultInstance = PhoneInputUtils()
 
     fun detectCountry(context: Context): CountryInfo? = defaultInstance.detectCountry(context)

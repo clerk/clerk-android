@@ -28,6 +28,7 @@ data class UserOrganizationInvitation(
   val publicOrganizationData: PublicOrganizationData,
   @Serializable(with = JsonElementStringSerializer::class) val publicMetadata: String,
   val role: String,
+  /** One of `pending`, `accepted`, or `revoked`. */
   val status: String,
   @Serializable(with = EpochMillisecondsSerializer::class) val createdAt: Long,
   @Serializable(with = EpochMillisecondsSerializer::class) val updatedAt: Long,

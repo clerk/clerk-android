@@ -32,6 +32,10 @@ internal data class BiometricCredentialLocalRecord(
   @SerialName("userId") val userId: String,
   @SerialName("appIdentifier") val appIdentifier: String,
   @SerialName("identifierHint") val identifierHint: String? = null,
+  /**
+   * Older SDKs omitted this field for the former enrollment default. Keep decoding those keys as
+   * PIN-capable; changing metadata cannot strengthen an existing Android Keystore key.
+   */
   val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
   @SerialName("createdAt") val createdAt: Long,
   @SerialName("updatedAt") val updatedAt: Long,
@@ -75,6 +79,7 @@ internal interface BiometricCredentialLocalStore {
  * entry can't lock out biometric sign-in.
  */
 internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalStore {
+  /** Keep the trusted-device storage key so SDK upgrades can read existing enrollments. */
   @Suppress("ReturnCount")
   override fun all(): List<BiometricCredentialLocalRecord> {
     val stored =
@@ -131,6 +136,7 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
 
 /** Persistent queue of user-scoped local credential cleanup work. */
 internal object BiometricCredentialPendingCleanupStore {
+  /** Keep the trusted-device storage key so SDK upgrades can finish pending credential cleanup. */
   fun all(): Set<String> {
     val stored =
       StorageHelper.loadValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)

@@ -183,6 +183,7 @@ class SessionTokenRegistrationTest {
     }
   }
 
+  /** Hold a stale registration long enough for the new caller to join it on the broken path. */
   private class RegistrationBarrierMap :
     ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>() {
     val oldCaller = AtomicReference<Thread>()

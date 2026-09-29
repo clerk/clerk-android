@@ -422,6 +422,7 @@ internal class ConfigurationManager(
       expectedConfigurationVersion = configurationVersion,
     )
 
+  /** Launches in a new coroutine so retries triggered inside the mutex do not deadlock. */
   private fun queueClientAndEnvironmentRefresh(attempt: RefreshAttempt = currentRefreshAttempt()) {
     scope.launch { refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION) }
   }

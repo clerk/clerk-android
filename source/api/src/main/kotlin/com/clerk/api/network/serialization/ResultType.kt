@@ -14,5 +14,6 @@ internal annotation class ResultType(
   val rawType: KClass<*>,
   val typeArgs: Array<ResultType> = [],
   val ownerType: KClass<*> = Nothing::class,
+  /** If it is an array, the rawType is used as the component type. */
   val isArray: Boolean,
 )

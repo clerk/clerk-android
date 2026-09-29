@@ -184,6 +184,10 @@ class MergePatchTest {
     assertTrue("Patch must not be empty for a real change", (patch as JsonObject).isNotEmpty())
   }
 
+  /**
+   * RFC 7396 reference implementation of patch application. Used to validate that the patch we
+   * compute, when applied with merge semantics, reproduces the desired state.
+   */
   private fun applyMergePatch(target: JsonElement, patch: JsonElement): JsonElement {
     if (patch !is JsonObject) {
       return patch
