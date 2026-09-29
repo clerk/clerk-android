@@ -7,17 +7,7 @@ import java.net.URL
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-/** Strategy key used in API requests to identify the authentication method */
-// This constant is now centralized in Constants.Fields.STRATEGY
-
-/**
- * Helper utilities for passkey operations.
- *
- * Contains shared functionality used by both passkey creation and authentication services.
- */
 internal object PasskeyHelper {
-
-  /** Gets the passkey strategy value */
   val passkeyStrategy: String
     get() = PASSKEY_STRATEGY_VALUE
 

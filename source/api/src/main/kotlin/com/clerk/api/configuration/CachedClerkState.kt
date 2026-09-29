@@ -5,7 +5,6 @@ import com.clerk.api.network.model.environment.Environment
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Persisted SDK state used to provide a complete representation during offline cold starts. */
 @Serializable
 internal data class CachedClerkState(
   @SerialName("publishable_key") val publishableKey: String,

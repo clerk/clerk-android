@@ -25,40 +25,20 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
-/**
- * Helper object for handling device attestation using Google Play Integrity API.
- *
- * This object manages the integrity token provider preparation, token retrieval, and device
- * attestation verification with Clerk's backend services.
- *
- * Optimizations included:
- * - Caching of prepared integrity token providers
- * - LRU cache for computed hashes
- * - Thread-safe operations with proper synchronization
- * - Timeout handling for all async operations
- * - Retry logic and error recovery
- */
 internal object DeviceAttestationHelper {
-  /** Coroutine scope for handling asynchronous operations on the IO dispatcher. */
   val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-  /** Standard integrity manager instance for interacting with Google Play Integrity API. */
   var integrityManager: StandardIntegrityManager? = null
 
-  /** Current integrity token provider. */
   var integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider? = null
 
-  /** Cache for prepared providers to avoid re-preparation. Thread-safe map. */
   private val preparedProviders =
     ConcurrentHashMap<Long, StandardIntegrityManager.StandardIntegrityTokenProvider>()
 
-  /** LRU cache for computed hashes to avoid recomputation. */
   private val hashCache = LRUCache<String, String>(HASH_CACHE_MAX_SIZE)
 
-  /** Mutex to ensure thread-safe access to the integrity manager initialization. */
   private val initializationMutex = Mutex()
 
-  /** Track if the integrity manager has been initialized. */
   @Volatile private var isManagerInitialized = false
 
   /**
@@ -74,14 +54,12 @@ internal object DeviceAttestationHelper {
   suspend fun prepareIntegrityTokenProvider(context: Context, cloudProjectNumber: Long?) {
     requireNotNull(cloudProjectNumber) { "Cloud project number is required" }
 
-    // Check cache first - if we have a prepared provider, use it
     preparedProviders[cloudProjectNumber]?.let { cachedProvider ->
       integrityTokenProvider = cachedProvider
       ClerkLog.d("Using cached integrity token provider for project $cloudProjectNumber")
       return
     }
 
-    // Initialize integrity manager if needed
     initializeIntegrityManagerIfNeeded(context)
 
     val manager = requireNotNull(integrityManager) { "IntegrityManager is not initialized" }
@@ -102,7 +80,6 @@ internal object DeviceAttestationHelper {
                 "Integrity token provider prepared successfully for project $cloudProjectNumber"
               )
               integrityTokenProvider = tokenProvider
-              // Cache the provider for future use
               preparedProviders[cloudProjectNumber] = tokenProvider
               continuation.resume(Unit)
             }
@@ -115,7 +92,6 @@ internal object DeviceAttestationHelper {
               )
             }
 
-          // Handle cancellation
           continuation.invokeOnCancellation {
             ClerkLog.d("Integrity token preparation was cancelled for project $cloudProjectNumber")
           }
@@ -127,7 +103,6 @@ internal object DeviceAttestationHelper {
     }
   }
 
-  /** Thread-safe initialization of the integrity manager. */
   private suspend fun initializeIntegrityManagerIfNeeded(context: Context) {
     if (!isManagerInitialized) {
       initializationMutex.withLock {
@@ -189,7 +164,6 @@ internal object DeviceAttestationHelper {
               )
             }
 
-          // Handle cancellation
           continuation.invokeOnCancellation { ClerkLog.d("Integrity token request was cancelled") }
         }
       }
@@ -250,7 +224,6 @@ internal object DeviceAttestationHelper {
       }
   }
 
-  /** Computes the SHA-256 hash of the input string. */
   private fun computeHash(clientId: String): String {
     try {
       val digest = MessageDigest.getInstance("SHA-256")
@@ -269,10 +242,6 @@ internal object DeviceAttestationHelper {
     }
   }
 
-  /**
-   * Clears all cached data and resets the helper to initial state. Useful for testing or when
-   * switching between different configurations.
-   */
   fun clearCache() {
     preparedProviders.clear()
     hashCache.clear()
@@ -282,7 +251,6 @@ internal object DeviceAttestationHelper {
     ClerkLog.d("DeviceAttestationHelper cache cleared")
   }
 
-  /** Gets the current cache statistics for monitoring and debugging. */
   fun getCacheStats(): CacheStats {
     return CacheStats(
       preparedProvidersCount = preparedProviders.size,
@@ -291,14 +259,12 @@ internal object DeviceAttestationHelper {
     )
   }
 
-  /** Data class for cache statistics. */
   data class CacheStats(
     val preparedProvidersCount: Int,
     val hashCacheSize: Int,
     val hashCacheMaxSize: Int,
   )
 
-  /** Simple thread-safe LRU Cache implementation using LinkedHashMap. */
   private class LRUCache<K, V>(private val maxSize: Int) {
     private val cache =
       object : LinkedHashMap<K, V>(16, 0.75f, true) {
@@ -320,14 +286,6 @@ internal object DeviceAttestationHelper {
     @Synchronized fun containsKey(key: K): Boolean = cache.containsKey(key)
   }
 
-  /**
-   * Force preparation of integrity token provider without waiting for attestation. This can be
-   * called during app startup to warm up the provider.
-   *
-   * @param context Application context
-   * @param cloudProjectNumber Cloud project number
-   * @return true if preparation was successful, false otherwise
-   */
   suspend fun warmUpProvider(context: Context, cloudProjectNumber: Long?): Boolean {
     return try {
       if (cloudProjectNumber != null && !preparedProviders.containsKey(cloudProjectNumber)) {
@@ -344,7 +302,6 @@ internal object DeviceAttestationHelper {
     }
   }
 
-  /** Checks if a provider is already prepared for the given project number. */
   fun isProviderPrepared(cloudProjectNumber: Long?): Boolean {
     return cloudProjectNumber != null && preparedProviders.containsKey(cloudProjectNumber)
   }

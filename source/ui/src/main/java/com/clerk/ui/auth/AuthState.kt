@@ -72,7 +72,6 @@ internal class AuthState(
   private var initialFirstNameWasPrefilled by mutableStateOf(false)
   private var initialLastNameWasPrefilled by mutableStateOf(false)
 
-  // Auth start fields
   var authStartIdentifier: String
     get() = authStartIdentifierState
     set(value) {
@@ -94,13 +93,11 @@ internal class AuthState(
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
 
-  // Sign In
   var signInPassword by mutableStateOf("")
   var signInNewPassword by mutableStateOf("")
   var signInConfirmNewPassword by mutableStateOf("")
   var signInBackupCode by mutableStateOf("")
 
-  // Sign Up
   var signUpFirstName by mutableStateOf("")
   var signUpLastName by mutableStateOf("")
   var signUpPassword by mutableStateOf("")
@@ -157,7 +154,7 @@ internal class AuthState(
 
   override fun popTo(destination: AuthDestination) {
     val targetIndex = backStack.indexOfLast { it == destination }
-    if (targetIndex == -1) return // Not found → no-op
+    if (targetIndex == -1) return
 
     val toPop = (backStack.size - 1) - targetIndex
     if (toPop > 0) {

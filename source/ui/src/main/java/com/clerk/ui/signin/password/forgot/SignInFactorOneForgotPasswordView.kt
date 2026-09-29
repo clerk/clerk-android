@@ -71,14 +71,6 @@ fun SignInFactorOneForgotPasswordView(
   }
 }
 
-/**
- * The internal implementation of the [SignInFactorOneForgotPasswordView].
- *
- * @param alternativeFactors A list of alternative factors the user can use to sign in.
- * @param socialProviders A list of social providers available for sign-in.
- * @param modifier The [Modifier] to be applied to the view.
- * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
- */
 @Composable
 private fun SignInFactorOneForgotPasswordViewImpl(
   alternativeFactors: ImmutableList<Factor>,

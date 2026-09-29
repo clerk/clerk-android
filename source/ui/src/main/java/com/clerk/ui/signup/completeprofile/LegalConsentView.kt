@@ -28,16 +28,6 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/**
- * A composable that displays legal consent text with clickable links to Terms of Service and
- * Privacy Policy, along with a toggle switch for user acceptance.
- *
- * @param isAccepted Whether the user has accepted the legal terms.
- * @param onAcceptedChange Callback when the user toggles acceptance.
- * @param termsUrl The URL for the Terms of Service page, or null if not configured.
- * @param privacyPolicyUrl The URL for the Privacy Policy page, or null if not configured.
- * @param modifier Modifier for the composable.
- */
 @Composable
 internal fun LegalConsentView(
   isAccepted: Boolean,

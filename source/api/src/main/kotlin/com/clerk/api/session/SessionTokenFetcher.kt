@@ -11,19 +11,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
-/**
- * Internal service for fetching and managing session tokens.
- *
- * This class handles the retrieval of authentication tokens for sessions, including caching,
- * concurrent request deduplication, and token validation. It ensures that multiple concurrent
- * requests for the same token are deduplicated and that tokens are cached appropriately to reduce
- * network requests.
- *
- * The fetcher uses a concurrent task map to prevent multiple simultaneous requests for the same
- * token, improving performance and reducing server load.
- *
- * @param jwtManager The JWT manager used for token parsing and validation
- */
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
   internal companion object {
     internal val shared: SessionTokenFetcher by lazy { SessionTokenFetcher() }
@@ -54,7 +41,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val fallbackFactorVerificationAge: List<Int>?,
   )
 
-  /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>()
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
@@ -210,17 +196,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         context.sessionGeneration == (sessionGenerations[context.session.id] ?: 0L)
     }
 
-  /**
-   * Internal method to fetch a token from cache or network.
-   *
-   * This method first checks the token cache (unless skipCache is true) and validates any cached
-   * token. If no valid cached token exists, it makes a network request to fetch a new token and
-   * caches the result.
-   *
-   * @param session The session to fetch the token for
-   * @param options Options controlling the fetch behavior
-   * @return The token resource, or null if the fetch failed
-   */
   private suspend fun fetchToken(context: FetchContext, options: GetTokenOptions): TokenResource? {
     return if (!isCurrentRuntime(context)) {
       null
@@ -329,16 +304,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       }
     }
 
-  /**
-   * Validates whether a token is still valid based on its expiration time.
-   *
-   * This method parses the JWT token to extract the expiration time and compares it against the
-   * current time plus a buffer to determine if the token is still valid for use.
-   *
-   * @param token The token resource to validate
-   * @param bufferSeconds The buffer time in seconds before expiration to consider invalid
-   * @return true if the token is valid, false otherwise
-   */
   private fun isTokenValid(token: TokenResource, bufferSeconds: Long): Boolean {
     return try {
       val expiresAt = jwtManager.createFromString(token.jwt).expiresAt
@@ -378,14 +343,5 @@ data class GetTokenOptions(
   val expirationBuffer: Long = 10, // seconds
 )
 
-/**
- * Extension function to generate a cache key for session tokens.
- *
- * This function creates a unique cache key based on the session ID and either its active
- * organization or the optional template name.
- *
- * @param template Optional template name to include in the cache key
- * @return A unique cache key string for the session and template combination
- */
 internal fun Session.tokenCacheKey(template: String?): String =
   template?.let { "$id-template-$it" } ?: "$id-organization-${lastActiveOrganizationId.orEmpty()}"

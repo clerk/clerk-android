@@ -56,11 +56,9 @@ class SignOutServiceTest {
     Dispatchers.setMain(testDispatcher)
     context = RuntimeEnvironment.getApplication()
 
-    // Initialize StorageHelper with real context
     StorageHelper.initialize(context)
     StorageHelper.reset(context)
 
-    // Create mocks
     mockClient = mockk()
     mockEnvironment = mockk()
     mockSession = mockk(relaxed = true)
@@ -68,12 +66,10 @@ class SignOutServiceTest {
     mockSessionApi = mockk()
     mockClientApi = mockk()
 
-    // Mock ClerkApi apis
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns mockSessionApi
     every { ClerkApi.client } returns mockClientApi
 
-    // Setup environment mock
     val mockDisplayConfig = mockk<DisplayConfig>()
     val mockUserSettings = mockk<UserSettings>()
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
@@ -116,21 +112,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears device token on successful server sign-out`() = runTest {
-    // Given - active session with device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     assertNull("Session should be cleared", Clerk.session)
@@ -140,21 +131,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears device token even when server sign-out fails`() = runTest {
-    // Given - active session with device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock server sign-out failure (network error)
     coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
     assertNull(
       "Device token should still be deleted on failure",
@@ -180,22 +166,17 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears session and user state on successful sign-out`() = runTest {
-    // Given - active session
     setupActiveSession()
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
     assertTrue("User should exist before sign-out", Clerk.user != null)
     assertTrue("isSignedIn should be true before sign-out", Clerk.isSignedIn)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     assertNull("Session should be null after sign-out", Clerk.sessionFlow.value)
     assertNull("User should be null after sign-out", Clerk.userFlow.value)
@@ -203,21 +184,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears session and user state even when server sign-out fails`() = runTest {
-    // Given - active session
     setupActiveSession()
 
-    // Mock server sign-out failure
     coEvery { mockSessionApi.deleteSessions() } throws Exception("Server error")
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
     assertTrue("User should exist before sign-out", Clerk.user != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
     assertNull("Session should be null even on failure", Clerk.sessionFlow.value)
     assertNull("User should be null even on failure", Clerk.userFlow.value)
@@ -225,7 +201,6 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut succeeds when no session exists`() = runTest {
-    // Given - no active session
     val emptyClient = mockk<Client>()
     every { emptyClient.lastActiveSessionId } returns null
     every { emptyClient.sessions } returns emptyList()
@@ -240,28 +215,22 @@ class SignOutServiceTest {
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then - should succeed (nothing to sign out)
     assertTrue("Sign-out should succeed with no session", result is ClerkResult.Success)
   }
 
   @Test
   fun `signOut preserves device ID while clearing device token`() = runTest {
-    // Given - active session with both device ID and device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test_device_id")
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // When
     SignOutService.signOut()
 
-    // Then - device token should be deleted, but device ID should be preserved
     assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     assertTrue(
       "Device ID should be preserved",

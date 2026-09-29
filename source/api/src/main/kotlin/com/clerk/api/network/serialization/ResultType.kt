@@ -3,12 +3,6 @@ package com.clerk.api.network.serialization
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.KClass
 
-/**
- * Represents a [java.lang.reflect.Type] via its components. Retrieve it from Retrofit annotations
- * via [errorType] and piece this back into a real instance via `ResultType.toType()`.
- *
- * This API should be considered read-only.
- */
 @Retention(RUNTIME)
 internal annotation class ResultType(
   val rawType: KClass<*>,

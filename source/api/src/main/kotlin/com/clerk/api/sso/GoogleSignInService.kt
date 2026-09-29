@@ -13,12 +13,6 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
-/**
- * Service for handling Sign In with Google, previously known as Google One Tap.
- *
- * Note: Before using this service, you must configure Google Sign In in your Clerk Dashboard, as
- * well as add your Google Cloud Client ID to your Google OAuth configuration.
- */
 internal class GoogleSignInService(
   val googleCredentialManager: GoogleCredentialManager = GoogleCredentialManagerImpl()
 ) {
@@ -61,11 +55,9 @@ internal class GoogleSignInService(
     ) {
       val idToken = googleCredentialManager.getIdTokenFromCredential(credential.data)
 
-      // First try to authenticate (sign in)
       val authResult: ClerkResult<SignIn, ClerkErrorResponse> =
         ClerkApi.signIn.authenticateWithGoogle(token = idToken)
 
-      // Handle the result
       when (authResult) {
         is ClerkResult.Success -> authResult.signInToOAuthResult()
         is ClerkResult.Failure -> {

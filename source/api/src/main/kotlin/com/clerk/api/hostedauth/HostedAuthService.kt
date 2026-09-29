@@ -392,6 +392,5 @@ private const val HTTP_UNAUTHORIZED = 401
 private const val SIGNED_OUT_ERROR_CODE = "signed_out"
 private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
 
-/** Cancellation reason used when a newly started flow supersedes a pending hosted auth attempt. */
 internal const val HOSTED_AUTH_CANCELLED_BY_NEW_FLOW =
   "New authentication started, cancelling previous hosted auth attempt"

@@ -17,15 +17,6 @@ import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/**
- * A composable that displays a horizontal divider with text in the middle.
- *
- * This is typically used to separate sections of a UI, for example, to separate social providers
- * from other sign-in methods.
- *
- * @param text The text to display in the middle of the divider.
- * @param modifier The [Modifier] to be applied to the divider row.
- */
 @Composable
 internal fun TextDivider(
   text: String,

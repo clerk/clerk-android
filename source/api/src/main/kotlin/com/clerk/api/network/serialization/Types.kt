@@ -7,14 +7,11 @@ import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 
-/** Returns the raw [Class] type of this type. */
 internal val Type.rawType: Class<*>
   get() = Types.getRawType(this)
 
-/** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
 internal fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)
 
-/** Factory methods for types. */
 internal object Types {
   /**
    * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this method if
@@ -40,17 +37,11 @@ internal object Types {
     return ParameterizedTypeImpl(ownerType, rawType, *typeArguments)
   }
 
-  /** Returns an array type whose elements are all instances of `componentType`. */
   @JvmStatic
   internal fun arrayOf(componentType: Type): GenericArrayType {
     return GenericArrayTypeImpl(componentType)
   }
 
-  /**
-   * Returns a type that represents an unknown type that extends `bound`. For example, if `bound` is
-   * `CharSequence.class`, this returns `? extends CharSequence`. If `bound` is `Object.class`, this
-   * returns `?`, which is shorthand for `? extends Object`.
-   */
   @JvmStatic
   internal fun subtypeOf(bound: Type): WildcardType {
     val upperBounds =
@@ -62,10 +53,6 @@ internal object Types {
     return WildcardTypeImpl(upperBounds, EMPTY_TYPE_ARRAY)
   }
 
-  /**
-   * Returns a type that represents an unknown supertype of `bound`. For example, if `bound` is
-   * `String.class`, this returns `? super String`.
-   */
   @JvmStatic
   internal fun supertypeOf(bound: Type): WildcardType {
     val lowerBounds =
@@ -81,7 +68,6 @@ internal object Types {
   internal fun getRawType(type: Type?): Class<*> {
     return when (type) {
       is Class<*> -> {
-        // type is a normal class.
         type
       }
       is ParameterizedType -> {
@@ -112,13 +98,11 @@ internal object Types {
   }
 
   @Suppress("CyclomaticComplexMethod")
-  /** Returns true if `a` and `b` are equal. */
   @JvmStatic
   internal fun equals(a: Type?, b: Type?): Boolean {
     if (a === b) {
       return true // Also handles (a == null && b == null).
     }
-    // This isn't a supported type.
     when (a) {
       is Class<*> -> {
         return if (b is GenericArrayType) {
@@ -127,7 +111,7 @@ internal object Types {
           // Class instance with generic info, from method return types
           return a.typeParameters.flatMap { it.bounds.toList() } == b.actualTypeArguments.toList()
         } else {
-          a == b // Class already specifies equals().
+          a == b
         }
       }
       is ParameterizedType -> {

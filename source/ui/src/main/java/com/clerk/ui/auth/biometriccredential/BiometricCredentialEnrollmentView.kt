@@ -30,10 +30,6 @@ import com.clerk.ui.core.dimens.dp64
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/**
- * Prompt offered after sign-in or sign-up asking the user to enable biometric
- * (biometric-credential) sign-in for this device.
- */
 @Composable
 internal fun BiometricCredentialEnrollmentView(
   onAuthComplete: () -> Unit,

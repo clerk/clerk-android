@@ -14,7 +14,6 @@ import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-/**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
     type: Type,
@@ -45,7 +44,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         )
         successType
       } else {
-        // Check if the success type should be wrapped in ClientPiggybackedResponse
         val shouldWrap = shouldWrapInClientPiggybackedResponse(successType)
 
         if (shouldWrap) {
@@ -71,7 +69,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     }
     val rawType = getRawType(successType)
 
-    // Don't wrap the Environment type
     return rawType.name !in getExcludedTypeNames()
   }
 
@@ -109,7 +106,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     override fun convert(value: ResponseBody): ClerkResult<*, *>? {
 
       return delegate.convert(value)?.let { result ->
-        // If the result is a ClientPiggybackedResponse, unwrap it
         val unwrappedResult =
           if (result is ClientPiggybackedResponse<*>) {
             result.response

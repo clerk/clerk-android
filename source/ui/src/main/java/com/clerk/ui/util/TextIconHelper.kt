@@ -6,13 +6,6 @@ import com.clerk.ui.R
 import com.clerk.ui.core.common.StrategyKeys
 
 internal class TextIconHelper {
-  /**
-   * Returns the appropriate action text for a given sign-in factor.
-   *
-   * @param factor The [Factor] to get the action text for.
-   * @param context The current Android [Context].
-   * @return A formatted string describing the sign-in action.
-   */
   fun actionText(factor: Factor, context: Context): String? {
     return when (factor.strategy) {
       StrategyKeys.PHONE_CODE -> {
@@ -50,12 +43,6 @@ internal class TextIconHelper {
     }
   }
 
-  /**
-   * Returns the appropriate icon resource for a given sign-in factor.
-   *
-   * @param factor The [Factor] to get the icon for.
-   * @return A drawable resource ID for the factor's icon, or null if not applicable.
-   */
   fun iconResource(factor: Factor): Int? {
     return when (factor.strategy) {
       StrategyKeys.PHONE_CODE -> R.drawable.ic_sms

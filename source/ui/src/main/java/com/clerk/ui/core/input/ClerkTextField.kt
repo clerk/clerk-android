@@ -226,14 +226,6 @@ private fun getTextFieldColors(): TextFieldColors =
     errorSupportingTextColor = ClerkMaterialTheme.colors.danger,
   )
 
-/**
- * An icon used within the text field, optionally interactive for password visibility.
- *
- * @param resId The drawable resource ID for the icon
- * @param onClick Optional callback; without one the icon is decorative
- * @param tint The color tint to apply to the icon, defaults to muted foreground color
- * @param contentDescription Content description for accessibility support
- */
 @Composable
 private fun TextFieldIcon(
   @DrawableRes resId: Int,

@@ -8,7 +8,6 @@ import com.google.i18n.phonenumbers.AsYouTypeFormatter
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.util.Locale
 
-/** Data class representing country information for phone number formatting. */
 internal data class CountryInfo(
   val flag: String,
   val code: Int,
@@ -58,15 +57,6 @@ internal class DefaultLogger : Logger {
   }
 }
 
-/**
- * Utility class for phone number input handling and country detection.
- *
- * This class provides functionality to:
- * - Detect country from system locale or telephony information
- * - Format phone numbers as-you-type
- * - Generate country lists with flags
- * - Validate and cap phone number input
- */
 internal class PhoneInputUtils(
   private val phoneNumberUtilProvider: PhoneNumberUtilProvider = DefaultPhoneNumberUtilProvider(),
   private val localeProvider: LocaleProvider = DefaultLocaleProvider(),
@@ -92,15 +82,8 @@ internal class PhoneInputUtils(
 
   private val phoneUtil: PhoneNumberUtil by lazy { phoneNumberUtilProvider.getPhoneNumberUtil() }
 
-  /**
-   * Detects the country based on system locale first, then falls back to telephony information.
-   *
-   * @param context Android context for accessing telephony services
-   * @return CountryInfo if detection succeeds, null otherwise
-   */
   internal fun detectCountry(context: Context): CountryInfo? {
     return try {
-      // Try system locale first, then telephony manager for SIM and network country
       detectFromLocale() ?: detectFromTelephony(context)
     } catch (e: Exception) {
       logger.logWarning(LOG_TAG, "Failed to detect country", e)
@@ -108,12 +91,6 @@ internal class PhoneInputUtils(
     }
   }
 
-  /**
-   * Filters input to keep only dialable characters (+ and digits) and caps to E164 limit.
-   *
-   * @param input Raw input string
-   * @return Filtered string with only dialable characters, capped to E164 limits
-   */
   internal fun keepDialableCapped(input: String): String {
     val out = StringBuilder(input.length)
     var seenPlus = false
@@ -133,15 +110,7 @@ internal class PhoneInputUtils(
     return out.toString()
   }
 
-  /**
-   * Formats a phone number as the user types using the specified region.
-   *
-   * @param regionIso ISO country code for formatting
-   * @param raw Raw phone number input
-   * @return Formatted phone number string
-   */
   internal fun formatAsYouType(regionIso: String, raw: String): String {
-    // Keep '+' and digits only; AsYouType handles punctuation
     val filtered =
       buildString(raw.length) { raw.forEach { ch -> if (ch == '+' || ch.isDigit()) append(ch) } }
 
@@ -152,11 +121,6 @@ internal class PhoneInputUtils(
     return out
   }
 
-  /**
-   * Gets all supported countries with their flag emojis and phone codes.
-   *
-   * @return List of CountryInfo sorted by country short name
-   */
   internal fun getAllCountries(): List<CountryInfo> {
     return phoneUtil.supportedRegions
       .filter { it.length == 2 } // Filter out non-standard region codes
@@ -171,21 +135,10 @@ internal class PhoneInputUtils(
       .sortedBy { it.countryFullName }
   }
 
-  /**
-   * Detects the country code (phone prefix) based on system locale or telephony info.
-   *
-   * @param context Android context for accessing telephony services
-   * @return Country phone code if detection succeeds, null otherwise
-   */
   internal fun detectCountryCode(context: Context): Int? {
     return detectCountry(context)?.code
   }
 
-  /**
-   * Returns the default country (US) as fallback.
-   *
-   * @return CountryInfo for United States
-   */
   internal fun getDefaultCountry(): CountryInfo {
     return CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
   }
@@ -212,7 +165,6 @@ internal class PhoneInputUtils(
     val telephonyManager = telephonyManagerProvider.getTelephonyManager(context)
 
     return telephonyManager?.let { tm ->
-      // Try SIM country, then network country
       detectFromCountryCode(tm.simCountryIso) ?: detectFromCountryCode(tm.networkCountryIso)
     }
   }

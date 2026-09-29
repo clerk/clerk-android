@@ -347,7 +347,6 @@ object BiometricCredentials {
     }
   }
 
-  /** Selects a credential bound to the enrolled biometric set for the specified session user. */
   internal fun localCredentialForReverification(
     userId: String
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> =
@@ -365,7 +364,6 @@ object BiometricCredentials {
         clientFailure("Biometric reverification is unavailable for this session.")
     }
 
-  /** Signs the exact server challenge with the selected credential's existing key. */
   internal suspend fun signChallenge(
     challenge: BiometricCredentialChallenge,
     credential: BiometricCredentialLocalRecord,
@@ -788,6 +786,5 @@ object BiometricCredentials {
   // endregion
 }
 
-/** Whether this session status allows enrolling or revoking a biometric credential. */
 internal val Session.SessionStatus.allowsBiometricCredentialEnrollment: Boolean
   get() = this == Session.SessionStatus.ACTIVE || this == Session.SessionStatus.PENDING

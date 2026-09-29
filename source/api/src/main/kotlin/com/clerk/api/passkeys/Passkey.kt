@@ -8,8 +8,6 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 
-/** The verification strategy constant used for passkey verification. */
-
 /**
  * An object that represents a passkey associated with a user.
  *

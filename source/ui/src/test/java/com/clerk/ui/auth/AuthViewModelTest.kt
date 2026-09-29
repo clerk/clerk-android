@@ -34,13 +34,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Unit tests for AuthViewModel focusing on testable state management and logic.
- *
- * This test suite uses Turbine for testing StateFlow emissions and MockK for mocking dependencies.
- * The tests focus on the ViewModel's behavior, state transitions, and logic that can be tested
- * without complex static method mocking.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
 
@@ -66,12 +59,10 @@ class AuthViewModelTest {
 
   @Test
   fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
-    // Avoid real API calls
     mockkObject(SignIn.Companion)
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
       ClerkResult.apiFailure(null)
 
-    // Verify state transitions when starting SignInOrUp
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
 
@@ -245,7 +236,6 @@ class AuthViewModelTest {
 
   @Test
   fun oauthResultWithSignInResultTypeShouldSetCorrectSuccessState() {
-    // Test the OAuth result processing logic
     val mockSignIn = mockk<SignIn>(relaxed = true)
     val mockOAuthResult =
       mockk<OAuthResult> {
@@ -277,7 +267,6 @@ class AuthViewModelTest {
 
   @Test
   fun oauthResultWithSignUpResultTypeShouldSetCorrectSuccessState() {
-    // Test the OAuth result processing logic
     val mockSignUp = mockk<SignUp>(relaxed = true)
     val mockOAuthResult =
       mockk<OAuthResult> {
@@ -285,7 +274,6 @@ class AuthViewModelTest {
         every { signUp } returns mockSignUp
       }
 
-    // Simulate the OAuth result processing
     val expectedState =
       when (mockOAuthResult.resultType) {
         ResultType.SIGN_IN ->
@@ -308,7 +296,6 @@ class AuthViewModelTest {
 
   @Test
   fun oauthResultWithUnknownResultTypeShouldSetErrorState() {
-    // Test the OAuth result processing logic
     val mockOAuthResult =
       mockk<OAuthResult> {
         every { resultType } returns ResultType.UNKNOWN
@@ -316,7 +303,6 @@ class AuthViewModelTest {
         every { signUp } returns null
       }
 
-    // Simulate the OAuth result processing
     val expectedState =
       when (mockOAuthResult.resultType) {
         ResultType.SIGN_IN ->
@@ -339,7 +325,6 @@ class AuthViewModelTest {
 
   @Test
   fun signUpParamsShouldBeCreatedCorrectlyBasedOnInputType() {
-    // Test the sign-up parameter creation logic
     val emailIdentifier = "test@example.com"
     val usernameIdentifier = "testuser"
     val phoneNumber = "+1234567890"
@@ -351,7 +336,6 @@ class AuthViewModelTest {
     )
     assertTrue("Should not recognize username as email", !usernameIdentifier.contains("@"))
 
-    // Test parameter creation logic
     val emailParams =
       if (emailIdentifier.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) {
         "email"
@@ -436,7 +420,6 @@ class AuthViewModelTest {
 
   @Test
   fun enterpriseSSODetectionShouldWorkCorrectly() {
-    // Test the enterprise SSO detection logic directly
     val ssoStrategy = "enterprise_sso"
     val passwordStrategy = "password"
 
@@ -447,7 +430,6 @@ class AuthViewModelTest {
     assertTrue("Should detect enterprise SSO requirement", requiresSSO)
     assertTrue("Should not detect enterprise SSO for password", !doesNotRequireSSO)
 
-    // Test with nullable strategy (edge case)
     val nullStrategy: String? = null
     val requiresSSOWithNull = nullStrategy == "enterprise_sso"
     assertTrue("Should not require SSO with null strategy", !requiresSSOWithNull)
@@ -455,22 +437,18 @@ class AuthViewModelTest {
 
   @Test
   fun identifierResolutionShouldWorkCorrectly() {
-    // Test the identifier resolution logic used in startAuth
     val identifier = "test@example.com"
     val phoneNumber = "+1234567890"
 
-    // Test phone number field active
     val resolvedIdentifierWhenPhoneActive = if (true) phoneNumber else identifier
     assertEquals(phoneNumber, resolvedIdentifierWhenPhoneActive)
 
-    // Test phone number field not active
     val resolvedIdentifierWhenPhoneNotActive = if (false) phoneNumber else identifier
     assertEquals(identifier, resolvedIdentifierWhenPhoneNotActive)
   }
 
   @Test
   fun authModeEnumShouldHaveCorrectValues() {
-    // Test that all AuthMode values are available
     val signIn = AuthMode.SignIn
     val signUp = AuthMode.SignUp
     val signInOrUp = AuthMode.SignInOrUp
@@ -521,14 +499,12 @@ class AuthViewModelTest {
 
   @Test
   fun oauthProviderShouldHaveExpectedValues() {
-    // Test that OAuth providers work correctly with our ViewModel
     val google = OAuthProvider.GOOGLE
     val facebook = OAuthProvider.FACEBOOK
 
     assertEquals("GOOGLE", google.name)
     assertEquals("FACEBOOK", facebook.name)
 
-    // Test that we can use these in our ViewModel logic
     val testProviders = listOf(google, facebook)
     assertTrue("Should contain Google", testProviders.contains(OAuthProvider.GOOGLE))
     assertTrue("Should contain Facebook", testProviders.contains(OAuthProvider.FACEBOOK))

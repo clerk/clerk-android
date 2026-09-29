@@ -11,7 +11,6 @@ import retrofit2.http.POST
 internal interface DeviceAttestationApi {
   @POST(ApiPaths.Client.DeviceAttestation.CHALLENGES) fun getChallenge()
 
-  /** Verifies the given [token] for app attestation */
   @POST(ApiPaths.Client.DeviceAttestation.VERIFY)
   @FormUrlEncoded
   suspend fun verify(

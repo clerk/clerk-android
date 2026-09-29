@@ -2,10 +2,8 @@ package com.clerk.api.biometriccredential
 
 import kotlinx.serialization.Serializable
 
-/** The server-side validation result for a local biometric credential. */
 @Serializable
 internal data class BiometricCredentialValidation(
-  /** Whether the biometric credential can be used for sign-in. */
   val valid: Boolean
 )
 

@@ -19,12 +19,6 @@ import okhttp3.Response
  * token, because it must not overwrite a newer token written by a sibling app.
  */
 internal class DeviceTokenSavingMiddleware : Interceptor {
-  /**
-   * Intercepts the network response to save any device token present in the Authorization header.
-   *
-   * @param chain The interceptor chain containing the request and response information.
-   * @return The unmodified response after saving any device token found.
-   */
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
     val deviceToken = response.header(AUTHORIZATION_HEADER)

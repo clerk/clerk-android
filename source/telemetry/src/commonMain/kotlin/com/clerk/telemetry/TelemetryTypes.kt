@@ -18,11 +18,7 @@ data class TelemetryCollectorOptions(
   val normalizedFlushIntervalSeconds: Long = maxOf(1L, flushIntervalSeconds)
 }
 
-/**
- * A telemetry event as sent to the backend.
- *
- * Note: Android version also does not include `cv` / `sk` here; that’s handled elsewhere if needed.
- */
+/** A telemetry event as sent to the backend. */
 @Serializable
 data class TelemetryEvent(
   @SerialName("event") val event: String,

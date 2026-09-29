@@ -284,20 +284,6 @@ data class OAuthProvider private constructor(val strategy: String) {
         ?: throw IllegalArgumentException("No OAuthProvider with name $name")
   }
 
-  /**
-   * Internal property that provides the OAuth provider configuration data.
-   *
-   * This property returns the [OAuthProviderData] containing the provider identifier, strategy
-   * string, and display name for each OAuth provider. The data is used internally by the Clerk SDK
-   * to construct API requests and display provider information in the UI.
-   *
-   * The provider data includes:
-   * - **provider**: The internal provider identifier used by Clerk
-   * - **strategy**: The OAuth strategy string used in API requests
-   * - **name**: The human-readable display name for the provider
-   *
-   * @see [OAuthProviderData]
-   */
   internal val providerData: OAuthProviderData
     get() {
       providerDataByStrategy[strategy]?.let {
