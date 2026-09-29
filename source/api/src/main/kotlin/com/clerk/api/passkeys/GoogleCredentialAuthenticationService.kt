@@ -61,7 +61,7 @@ internal object GoogleCredentialAuthenticationService {
    * 1. Creates a new sign-in session with passkey strategy
    * 2. Requests available credentials from the Android Credential Manager
    * 3. Presents credentials to the user for selection
-   * 4. Handles the selected credential based on its type (passkey, password, or Google)
+   * 4. Handles the selected credential based on its type (passkey or Google)
    * 5. Completes the authentication with the Clerk API
    *
    * The method supports multiple credential types simultaneously, allowing users to choose their
@@ -72,7 +72,9 @@ internal object GoogleCredentialAuthenticationService {
    *   available credentials will be presented to the user.
    * @param credentialTypes List of credential types to request from the system. Defaults to only
    *   passkey credentials. Can include [SignIn.CredentialType.PASSKEY],
-   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE].
+   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE]. Requesting
+   *   [SignIn.CredentialType.PASSWORD] shows saved passwords in the picker, but signing in with a
+   *   selected password is not supported and returns an unsupported-credential failure.
    * @return A [ClerkResult] containing either a successful [SignIn] object on authentication
    *   success, or a [ClerkErrorResponse] detailing the failure reason.
    * @throws Exception If credential retrieval fails or an unexpected error occurs during
@@ -87,8 +89,7 @@ internal object GoogleCredentialAuthenticationService {
    * val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential(
    *   credentialTypes = listOf(
    *     CredentialType.PASSKEY,
-   *     CredentialType.GOOGLE,
-   *     CredentialType.PASSWORD
+   *     CredentialType.GOOGLE
    *   )
    * )
    * ```
