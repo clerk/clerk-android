@@ -255,10 +255,10 @@ private fun syncClerkClient(
 private fun Response.serverFetchAtMillis(): Long {
   val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
   return runCatching {
-    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-      .apply { timeZone = TimeZone.getTimeZone("GMT") }
-      .parse(serverDate)
-      ?.time
-  }
+      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+        .apply { timeZone = TimeZone.getTimeZone("GMT") }
+        .parse(serverDate)
+        ?.time
+    }
     .getOrNull() ?: System.currentTimeMillis()
 }

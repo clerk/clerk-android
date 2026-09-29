@@ -84,14 +84,13 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
   override fun all(): List<BiometricCredentialLocalRecord> {
     val stored =
       StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS) ?: return emptyList()
-    val elements = runCatching {
-      ClerkApi.json.parseToJsonElement(stored).jsonArray
-    }
-      .getOrElse {
-        ClerkLog.w("Biometric credential metadata is malformed, clearing it.")
-        deleteAll()
-        return emptyList()
-      }
+    val elements =
+      runCatching { ClerkApi.json.parseToJsonElement(stored).jsonArray }
+        .getOrElse {
+          ClerkLog.w("Biometric credential metadata is malformed, clearing it.")
+          deleteAll()
+          return emptyList()
+        }
     return elements.mapNotNull { element -> decodeCredential(element) }
   }
 
@@ -124,11 +123,11 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
 
   private fun decodeCredential(element: JsonElement): BiometricCredentialLocalRecord? {
     return runCatching {
-      ClerkApi.json.decodeFromJsonElement(
-        BiometricCredentialLocalRecord.serializer(),
-        element,
-      )
-    }
+        ClerkApi.json.decodeFromJsonElement(
+          BiometricCredentialLocalRecord.serializer(),
+          element,
+        )
+      }
       .onFailure { ClerkLog.w("Dropping malformed biometric credential record.") }
       .getOrNull()
   }
@@ -142,12 +141,12 @@ internal object BiometricCredentialPendingCleanupStore {
       StorageHelper.loadValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
         ?: return emptySet()
     return runCatching {
-      ClerkApi.json
-        .parseToJsonElement(stored)
-        .jsonArray
-        .mapNotNull { it.jsonPrimitive.contentOrNull }
-        .filterTo(mutableSetOf()) { it.isNotBlank() }
-    }
+        ClerkApi.json
+          .parseToJsonElement(stored)
+          .jsonArray
+          .mapNotNull { it.jsonPrimitive.contentOrNull }
+          .filterTo(mutableSetOf()) { it.isNotBlank() }
+      }
       .getOrElse {
         ClerkLog.w("Biometric credential cleanup metadata is malformed, clearing it.")
         StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)

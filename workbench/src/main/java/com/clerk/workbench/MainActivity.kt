@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
             if (normalizedKey.isBlank()) {
               StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             } else {
-              StorageHelper.saveValue(StorageKey.PUBLIC_KEY, normalizedKey)
+              StorageHelper.saveValue(StorageKey.PUBLIC_KEY,  normalizedKey)
             }
 
             if (normalizedProxy.isBlank()) {
@@ -218,7 +218,10 @@ private fun SettingsBottomSheetContent(onSave: (String, String) -> Unit, onClear
   var proxyUrl by remember { mutableStateOf(savedProxyUrl) }
 
   Column(
-    modifier = Modifier.fillMaxWidth().padding(Spacing.medium).padding(bottom = Spacing.large)
+    modifier =
+      Modifier.fillMaxWidth()
+        .padding(Spacing.medium)
+        .padding(bottom = Spacing.large)
   ) {
     Text(
       text = WorkbenchConstants.SETTINGS_TITLE,

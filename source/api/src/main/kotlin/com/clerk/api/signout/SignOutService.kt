@@ -49,12 +49,12 @@ internal object SignOutService {
       Clerk.updateClient(Client())
 
       runCatching {
-        when (val clientResult = Client.getSkippingClientId()) {
-          is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
-          is ClerkResult.Failure ->
-            ClerkLog.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
+          when (val clientResult = Client.getSkippingClientId()) {
+            is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
+            is ClerkResult.Failure ->
+              ClerkLog.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
+          }
         }
-      }
         .onFailure { ClerkLog.w("Client refresh after sign-out failed: ${it.message}") }
     }
 

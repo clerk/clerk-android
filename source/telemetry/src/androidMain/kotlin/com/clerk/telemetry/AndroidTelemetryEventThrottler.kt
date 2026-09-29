@@ -26,24 +26,25 @@ class AndroidTelemetryEventThrottler(
   private val mutex = Mutex()
   private var memoryCache: MutableMap<String, Long>? = null
 
-  override suspend fun isEventThrottled(event: TelemetryEvent): Boolean = mutex.withLock {
-    if (memoryCache == null) {
-      memoryCache = loadCache().toMutableMap()
-      cleanupExpiredEntries()
+  override suspend fun isEventThrottled(event: TelemetryEvent): Boolean =
+    mutex.withLock {
+      if (memoryCache == null) {
+        memoryCache = loadCache().toMutableMap()
+        cleanupExpiredEntries()
+      }
+
+      val now = System.currentTimeMillis()
+      val key = generateKey(event)
+
+      val lastSeen = memoryCache!![key]
+      if (lastSeen == null || now - lastSeen > cacheTtlMillis) {
+        memoryCache!![key] = now
+        saveCache(memoryCache!!)
+        return false
+      }
+
+      true
     }
-
-    val now = System.currentTimeMillis()
-    val key = generateKey(event)
-
-    val lastSeen = memoryCache!![key]
-    if (lastSeen == null || now - lastSeen > cacheTtlMillis) {
-      memoryCache!![key] = now
-      saveCache(memoryCache!!)
-      return false
-    }
-
-    true
-  }
 
   private fun generateKey(event: TelemetryEvent): String {
     val fields = mutableListOf<String>()
@@ -61,11 +62,11 @@ class AndroidTelemetryEventThrottler(
 
   private fun stableJsonString(map: Map<String, JsonElement>): String {
     return runCatching {
-      json.encodeToString(
-        MapSerializer(String.serializer(), JsonElement.serializer()),
-        map.toSortedMap(),
-      )
-    }
+        json.encodeToString(
+          MapSerializer(String.serializer(), JsonElement.serializer()),
+          map.toSortedMap(),
+        )
+      }
       .getOrElse { "{}" }
   }
 
@@ -73,8 +74,8 @@ class AndroidTelemetryEventThrottler(
     withContext(Dispatchers.IO) {
       val raw = prefs.getString(KEY_STORAGE, null) ?: return@withContext emptyMap()
       runCatching {
-        json.decodeFromString(MapSerializer(String.serializer(), Long.serializer()), raw)
-      }
+          json.decodeFromString(MapSerializer(String.serializer(), Long.serializer()), raw)
+        }
         .getOrElse { emptyMap() }
     }
 

@@ -152,12 +152,13 @@ class TelemetryCollector(
   }
 
   suspend fun flush() {
-    val events = mutex.withLock {
-      if (buffer.isEmpty()) return
-      val copy = buffer.toList()
-      buffer.clear()
-      copy
-    }
+    val events =
+      mutex.withLock {
+        if (buffer.isEmpty()) return
+        val copy = buffer.toList()
+        buffer.clear()
+        copy
+      }
 
     val envelope = TelemetryEnvelope(events)
     try {

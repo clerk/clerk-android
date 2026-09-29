@@ -245,9 +245,10 @@ class UserUpdateRoutingTest {
     val calls: MutableList<CapturedCall> = mutableListOf()
 
     /**
-     * When non-null, the mock embeds this value as `unsafe_metadata` in every successful response,
-     * simulating the server's view of the user. Tests set this to either match or diverge from the
-     * receiver's locally cached metadata depending on what behavior they want to exercise.
+     * When non-null, the mock embeds this value as `unsafe_metadata` in every successful
+     * response, simulating the server's view of the user. Tests set this to either match or
+     * diverge from the receiver's locally cached metadata depending on what behavior they
+     * want to exercise.
      */
     var serverUnsafeMetadata: JsonObject? = null
 
@@ -266,30 +267,28 @@ class UserUpdateRoutingTest {
         .protocol(Protocol.HTTP_1_1)
         .code(200)
         .message("OK")
-        .body(
-          buildUserResponseJson(serverUnsafeMetadata)
-            .toResponseBody("application/json".toMediaType())
-        )
+        .body(buildUserResponseJson(serverUnsafeMetadata).toResponseBody("application/json".toMediaType()))
         .build()
     }
 
-    private fun buildUserResponseJson(metadata: JsonObject?): String = buildJsonObject {
-      putJsonObject("response") {
-        put("id", "user_123")
-        put("image_url", "")
-        put("has_image", false)
-        put("first_name", "Fresh")
-        putJsonArray("passkeys") {}
-        put("password_enabled", false)
-        putJsonArray("phone_numbers") {}
-        put("totp_enabled", false)
-        put("two_factor_enabled", false)
-        put("updated_at", 0)
-        metadata?.let { put("unsafe_metadata", it) }
-      }
-      put("client", JsonNull)
-    }
-      .toString()
+    private fun buildUserResponseJson(metadata: JsonObject?): String =
+      buildJsonObject {
+          putJsonObject("response") {
+            put("id", "user_123")
+            put("image_url", "")
+            put("has_image", false)
+            put("first_name", "Fresh")
+            putJsonArray("passkeys") {}
+            put("password_enabled", false)
+            putJsonArray("phone_numbers") {}
+            put("totp_enabled", false)
+            put("two_factor_enabled", false)
+            put("updated_at", 0)
+            metadata?.let { put("unsafe_metadata", it) }
+          }
+          put("client", JsonNull)
+        }
+        .toString()
 
     private fun okhttp3.RequestBody?.readFormBody(): Map<String, String> {
       if (this == null) return emptyMap()
