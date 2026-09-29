@@ -112,7 +112,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                         retrofit
                           .responseBodyConverter<Any>(errorType, nextAnnotations)
                           .convert(responseBody)
-                      } catch (e: Throwable) {
+                      } catch (e: Exception) {
                         @Suppress("UNCHECKED_CAST")
                         callback.onResponse(
                           call,
