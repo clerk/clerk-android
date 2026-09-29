@@ -40,17 +40,6 @@ import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.coroutines.launch
 
-/**
- * A Composable that provides a user interface for adding a new Time-based One-Time Password (TOTP)
- * method for multi-factor authentication. It displays the secret key and a URI that can be used
- * with an authenticator app. Users can copy these values to the clipboard.
- *
- * This view is typically shown after the user has initiated the process of adding an authenticator
- * app as a second factor. It provides the necessary information for the user to configure their
- * app.
- *
- * @param modifier The [Modifier] to be applied to the layout.
- */
 @Composable
 internal fun UserProfileMfaAddTotpView(
   onDismiss: () -> Unit,

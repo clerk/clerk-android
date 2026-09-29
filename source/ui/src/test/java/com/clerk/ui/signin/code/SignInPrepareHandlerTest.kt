@@ -23,13 +23,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Comprehensive test suite for SignInPrepareHandler covering:
- * - Email code preparation for both regular and password reset scenarios
- * - Phone code preparation for first and second factor scenarios
- * - Phone code preparation for password reset scenarios
- * - Success and failure handling for all preparation methods
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SignInPrepareHandlerTest {
 
@@ -214,10 +207,8 @@ class SignInPrepareHandlerTest {
   fun prepareForPhoneCodeShouldHandleNullPhoneNumberId() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = null)
 
-    // This should now handle null gracefully and not throw an exception
     handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
-    // Verify that no API call was made since phoneNumberId was null
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
   }
 
@@ -225,10 +216,8 @@ class SignInPrepareHandlerTest {
   fun prepareForEmailCodeShouldHandleNullEmailAddressId() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
 
-    // This should now handle null gracefully and not throw an exception
     handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
-    // Verify that no API call was made since emailAddressId was null
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
   }
 
@@ -284,7 +273,6 @@ class SignInPrepareHandlerTest {
       onError = { capturedMessage = it },
     )
 
-    // Falls back to default when no message present in error
     assertEquals("Error occurred with unknown message.", capturedMessage)
   }
 

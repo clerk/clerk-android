@@ -83,20 +83,12 @@ internal val LocalClerkColors =
 internal val LocalClerkTypography =
   compositionLocalOf<Typography> { error("ClerkTypography not provided") }
 
-/**
- * Provides Clerk theme values through composition locals.
- *
- * @param theme The theme to provide. If null, uses system default theme.
- * @param content The composable content that will have access to the theme.
- */
 @Composable
 internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Unit) {
   val isDarkMode = isSystemInDarkTheme()
 
-  // Resolve colors - use provided values or system defaults
   val colors = remember(theme, isDarkMode) { resolveColors(theme = theme, isDarkMode = isDarkMode) }
 
-  // Resolve typography - use provided values or defaults
   val typography = remember(theme) { generateTypography(theme) }
 
   val design = remember(theme?.design) { theme?.design ?: ClerkDesign() }
@@ -131,7 +123,6 @@ internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors
   val modeOverrides = if (isDarkMode) theme?.darkColors else theme?.lightColors
 
   fun resolve(getter: (ClerkColors) -> Color?): Color {
-    // Prefer mode-specific overrides, otherwise fall back to global overrides and finally defaults.
     return modeOverrides?.let(getter)
       ?: baseOverrides?.let(getter)
       ?: getter(defaultColors)
@@ -165,7 +156,6 @@ internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors
   )
 }
 
-/** Object providing easy access to current theme values within composables. */
 internal object ClerkThemeProviderAccess {
   internal val colors: ClerkColors
     @Composable get() = LocalClerkColors.current

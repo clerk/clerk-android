@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
-/** A locally generated private key and its backend-facing public key material. */
 internal data class BiometricCredentialLocalKey(
   val localKeyId: String,
   val publicKeyJwk: String,
@@ -36,7 +35,6 @@ internal data class BiometricCredentialLocalKey(
   val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
 )
 
-/** A signed biometric-credential challenge payload ready to send to Clerk. */
 internal data class BiometricCredentialKeySignature(
   val clientData: String,
   val signature: String,
@@ -82,11 +80,7 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
   }
 }
 
-/** Manager for local biometric-credential private keys. */
 internal interface BiometricCredentialKeyManager {
-  /**
-   * Whether biometric-credential keys protected by [policy] can be created and used on this device.
-   */
   fun isSupported(policy: BiometricCredentialPolicy): Boolean
 
   /** Creates a new biometric-gated EC P-256 key pair and returns its public key material. */
@@ -104,7 +98,6 @@ internal interface BiometricCredentialKeyManager {
     promptSubtitle: String? = null,
   ): BiometricCredentialKeySignature
 
-  /** Returns whether the private key identified by [localKeyId] exists. */
   fun hasKey(localKeyId: String): Boolean
 
   /** Deletes the private key identified by [localKeyId]. Missing keys are ignored. */

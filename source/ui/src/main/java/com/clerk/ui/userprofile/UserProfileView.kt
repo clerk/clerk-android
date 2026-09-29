@@ -293,7 +293,6 @@ internal fun EntryProviderScope<NavKey>.userProfileEntries(
   entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
 
   // Always register the entry so that a restored CustomRouteNavKey does not crash the graph.
-  // If no destination is provided, pop back to the profile root.
   entry<CustomRouteNavKey> { key ->
     if (customDestination != null) {
       val navigator =

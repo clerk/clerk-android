@@ -30,7 +30,6 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/** Security-screen section with a toggle for biometric (biometric-credential) sign-in. */
 @Composable
 internal fun UserProfileBiometricCredentialsSection(
   onError: (String?) -> Unit,

@@ -1,32 +1,19 @@
 package com.clerk.api.network
 
-/**
- * Internal object containing all API endpoint path constants for the Clerk REST API.
- *
- * All paths are relative to the API base URL and version prefix. The paths are used by Retrofit
- * interfaces to define REST API endpoints.
- *
- * This is an internal utility and should not be used outside the Clerk SDK.
- */
 internal object ApiPaths {
-
-  /** Client-related API endpoints */
   internal object Client {
     internal const val BASE = "client"
 
-    /** Device attestation endpoints */
     internal object DeviceAttestation {
       internal const val BASE = "${Client.BASE}/device_attestation"
       internal const val CHALLENGES = "${BASE}/challenges"
       internal const val VERIFY = "${Client.BASE}/verify"
     }
 
-    /** Biometric credential sign-in endpoints */
     internal object BiometricCredential {
       internal const val VALIDATE = "${Client.BASE}/biometric_credentials/validate"
     }
 
-    /** Session management endpoints */
     internal object Sessions {
       internal const val BASE = "${Client.BASE}/sessions"
       internal const val WITH_ID = "${BASE}/{id}"
@@ -41,7 +28,6 @@ internal object ApiPaths {
       internal const val ATTEMPT_SECOND_FACTOR = "${VERIFY}/attempt_second_factor"
     }
 
-    /** Sign-in endpoints */
     internal object SignIn {
       internal const val BASE = "${Client.BASE}/sign_ins"
       internal const val WITH_ID = "${BASE}/{id}"
@@ -52,18 +38,15 @@ internal object ApiPaths {
       internal const val RESET_PASSWORD = "${WITH_ID}/reset_password"
     }
 
-    /** Hosted Account Portal auth endpoints */
     internal object HostedAuth {
       internal const val BASE = "${Client.BASE}/hosted_auth"
     }
 
-    /** Magic link endpoints */
     internal object MagicLinks {
       internal const val BASE = "${Client.BASE}/magic_links"
       internal const val COMPLETE = "${BASE}/complete"
     }
 
-    /** Sign-up endpoints */
     internal object SignUp {
       internal const val BASE = "${Client.BASE}/sign_ups"
       internal const val WITH_ID = "${BASE}/{id}"
@@ -72,10 +55,8 @@ internal object ApiPaths {
     }
   }
 
-  /** Environment configuration endpoint */
   internal const val ENVIRONMENT = "environment"
 
-  /** User-related endpoints */
   internal object User {
     internal const val BASE = "me"
     internal const val METADATA = "${BASE}/metadata"
@@ -94,20 +75,17 @@ internal object ApiPaths {
     internal const val ORGANIZATION_MEMBERSHIP_WITH_ID =
       "${ORGANIZATION_MEMBERSHIPS}/{organization_id}"
 
-    /** Password management */
     internal object Password {
       internal const val UPDATE = "${User.BASE}/change_password"
       internal const val DELETE = "${User.BASE}/remove_password"
     }
 
-    /** Session management */
     internal object Sessions {
       internal const val BASE = "${User.BASE}/sessions"
       internal const val REVOKE = "${BASE}/{session_id}/revoke"
       internal const val ACTIVE = "${BASE}/active"
     }
 
-    /** Email address management */
     internal object EmailAddress {
       internal const val BASE = "${User.BASE}/email_addresses"
       internal const val WITH_ID = "${BASE}/{email_id}"
@@ -115,7 +93,6 @@ internal object ApiPaths {
       internal const val PREPARE_VERIFICATION = "${WITH_ID}/prepare_verification"
     }
 
-    /** Phone number management */
     internal object PhoneNumber {
       internal const val BASE = "${User.BASE}/phone_numbers"
       internal const val WITH_ID = "${BASE}/{phone_number_id}"
@@ -123,14 +100,12 @@ internal object ApiPaths {
       internal const val PREPARE_VERIFICATION = "${WITH_ID}/prepare_verification"
     }
 
-    /** Passkey management */
     internal object Passkey {
       internal const val BASE = "${User.BASE}/passkeys"
       internal const val WITH_ID = "${BASE}/{passkey_id}"
       internal const val ATTEMPT_VERIFICATION = "${WITH_ID}/attempt_verification"
     }
 
-    /** Biometric credential management */
     internal object BiometricCredential {
       internal const val BASE = "${User.BASE}/biometric_credentials"
       internal const val WITH_ID = "${BASE}/{biometric_credential_id}"
@@ -138,7 +113,6 @@ internal object ApiPaths {
       internal const val ATTEMPT = "${BASE}/attempt"
     }
 
-    /** External account management */
     internal object ExternalAccount {
       internal const val BASE = "${User.BASE}/external_accounts"
       internal const val WITH_ID = "${BASE}/{external_account_id}"
@@ -146,14 +120,12 @@ internal object ApiPaths {
       internal const val REVOKE_TOKENS = "${WITH_ID}/tokens"
     }
 
-    /** TOTP management */
     internal object TOTP {
       internal const val BASE = "${User.BASE}/totp"
       internal const val ATTEMPT_VERIFICATION = "${BASE}/attempt_verification"
     }
   }
 
-  /** Organization endpoints */
   internal object Organization {
     internal const val BASE = "organizations"
     internal const val WITH_ID = "${BASE}/{organization_id}"
@@ -177,7 +149,6 @@ internal object ApiPaths {
 
     internal const val MEMBERSHIP_WITH_USER_ID = "${MEMBERSHIPS}/{user_id}"
 
-    /** Domain management */
     internal object Domain {
       internal const val BASE = "${Organization.WITH_ID}/domains"
       internal const val WITH_ID = "${BASE}/{domain_id}"
@@ -187,7 +158,6 @@ internal object ApiPaths {
     }
   }
 
-  /** Billing endpoints. Plans are unscoped; other resources are user (`me`) or organization. */
   internal object Billing {
     internal const val PLANS = "billing/plans"
     internal const val PLAN = "${PLANS}/{id}"

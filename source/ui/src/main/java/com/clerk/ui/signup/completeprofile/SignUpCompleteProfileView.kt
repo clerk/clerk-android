@@ -56,7 +56,6 @@ fun SignUpCompleteProfileView(
   }
 }
 
-/** Internal enum for focus tracking & label logic. */
 internal enum class CompleteProfileField {
   FirstName,
   LastName,
@@ -200,8 +199,6 @@ private fun InputRow(
   val bothEnabled = firstEnabled && lastEnabled
   val lastNameFocusRequester = remember { FocusRequester() }
 
-  // When both fields are shown, first→Next moves focus; last→Done submits.
-  // When only one field is shown, Done submits directly.
   val firstNameImeAction = if (bothEnabled) ImeAction.Next else ImeAction.Done
   val firstNameKeyboardActions =
     if (bothEnabled) {

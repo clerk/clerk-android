@@ -1,9 +1,3 @@
-/**
- * Internal serialization utilities for the Clerk API result handling.
- *
- * This file contains utility functions for creating status codes, result types, and handling Java
- * reflection types in the context of Clerk API serialization and deserialization.
- */
 @file:Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 
 package com.clerk.api.network.serialization
@@ -71,14 +65,6 @@ internal fun createResultType(type: Type): ResultType {
   )
 }
 
-/**
- * Extension function to remove subtype wildcards from a Type.
- *
- * This function handles wildcard types by removing subtype wildcards (? extends T) and returning
- * the upper bound type. It leaves other wildcard types unchanged.
- *
- * @return The type with subtype wildcards removed, or the original type if no wildcards
- */
 @Suppress("ReturnCount")
 internal fun Type.removeSubtypeWildcard(): Type {
   if (this !is WildcardType) return this

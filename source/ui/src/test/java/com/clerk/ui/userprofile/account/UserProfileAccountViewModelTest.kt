@@ -24,7 +24,6 @@ class UserProfileAccountViewModelTest {
   @BeforeTest
   fun setUp() {
     mockkObject(Clerk)
-    // Ensure launched coroutines run immediately for this simple verification
     kotlinx.coroutines.Dispatchers.setMain(UnconfinedTestDispatcher())
   }
 

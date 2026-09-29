@@ -73,7 +73,6 @@ private fun <T> clerkNavigationSlideSpec(): FiniteAnimationSpec<T> =
     easing = FastOutExtraSlowInEasing,
   )
 
-/** Applies the forward transition's incoming-screen transform at [progress]. */
 internal fun Modifier.clerkNavigationForwardEnterTransform(
   progress: Float,
   alpha: Float,
@@ -82,7 +81,6 @@ internal fun Modifier.clerkNavigationForwardEnterTransform(
   this.alpha = alpha
 }
 
-/** Applies the forward transition's previous-screen transform at [progress]. */
 internal fun Modifier.clerkNavigationForwardExitTransform(progress: Float): Modifier =
   graphicsLayer {
     translationX = -size.width * CLERK_NAVIGATION_TRANSITION_DISTANCE_FRACTION * progress

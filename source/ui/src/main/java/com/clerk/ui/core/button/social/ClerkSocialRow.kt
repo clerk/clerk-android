@@ -104,13 +104,10 @@ fun ClerkSocialRow(
 @Composable
 private fun Preview() {
   Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
-    // One provider: full button with text
     ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE))
 
-    // Multiple providers: icon-only layout
     ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK))
 
-    // Four providers: 2x2 icon grid
     ClerkSocialRow(
       providers =
         persistentListOf(

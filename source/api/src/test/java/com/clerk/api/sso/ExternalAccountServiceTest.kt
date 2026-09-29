@@ -39,11 +39,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * Unit tests for [com.clerk.externalaccount.ExternalAccountService].
- *
- * These tests focus on external account connection functionality for existing users.
- */
 @RunWith(RobolectricTestRunner::class)
 class ExternalAccountServiceTest {
   private val testDispatcher = StandardTestDispatcher()
@@ -62,7 +57,6 @@ class ExternalAccountServiceTest {
     Dispatchers.setMain(testDispatcher)
     ExternalAccountService.cancelPendingExternalAccountConnection()
 
-    // Mock objects
     mockContext = mockk(relaxed = true)
     mockUserApi = mockk(relaxed = true)
     mockClient = mockk(relaxed = true)
@@ -71,26 +65,22 @@ class ExternalAccountServiceTest {
     mockExternalAccount = mockk(relaxed = true)
     mockVerification = mockk(relaxed = true)
 
-    // Mock static objects
     mockkObject(ClerkApi)
     mockkObject(Clerk)
     mockkStatic(Client::class)
 
-    // Setup basic mocks
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
     every { Clerk.debugMode } returns false
     every { Clerk.session } returns mockSession
     every { Clerk.session?.id } returns "session_123"
 
-    // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED
     every { mockVerification.externalVerificationRedirectUrl } returns
       "https://oauth.example.com/auth"
     every { mockExternalAccount.verification } returns mockVerification
     every { mockExternalAccount.id } returns "ext_account_123"
 
-    // Setup client/session mocks
     every { mockClient.lastActiveSessionId } returns "session_123"
     every { mockClient.sessions } returns listOf(mockSession)
     every { mockSession.id } returns "session_123"
@@ -113,41 +103,32 @@ class ExternalAccountServiceTest {
 
   @Test
   fun `cancelPendingExternalAccountConnection clears state`() {
-    // Cancel any pending connection
     ExternalAccountService.cancelPendingExternalAccountConnection()
 
-    // Should have no pending connection
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
   @Test
   fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
-    // Should not throw when no pending connection
     ExternalAccountService.completeExternalConnection()
 
-    // Should still have no pending connection
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
   @Test
   fun `completeExternalConnection handles missing external account`() = runTest {
-    // Mock client with no matching external account
     every { mockUser.externalAccounts } returns emptyList()
     coEvery { Client.get() } returns ClerkResult.Success(mockClient, emptyMap())
 
-    // Complete the external connection (should handle gracefully with no pending connection)
     ExternalAccountService.completeExternalConnection()
 
-    // Should have no pending connection
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
   @Test
   fun `cancelPendingExternalAccountConnection completes with cancellation error`() {
-    // This test verifies that cancellation properly cleans up state
     ExternalAccountService.cancelPendingExternalAccountConnection()
 
-    // After cancellation, there should be no pending connection
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 

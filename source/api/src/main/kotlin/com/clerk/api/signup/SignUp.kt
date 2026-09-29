@@ -686,14 +686,6 @@ suspend fun SignUp.attemptVerification(
 
 // endregion
 
-/**
- * Converts the [SignUp] object to an [OAuthResult] object.
- *
- * This is an internal utility function used for OAuth flow integration. The resulting [OAuthResult]
- * wraps the sign-up data for OAuth processing.
- *
- * @return An [OAuthResult] containing this [SignUp] object.
- */
 internal fun SignUp.toOAuthResult() = OAuthResult(signUp = this)
 
 private const val EMAIL_ADDRESS = "email_address"

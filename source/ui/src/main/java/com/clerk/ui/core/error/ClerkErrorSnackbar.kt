@@ -18,16 +18,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.theme.colors.generateDangerPaletteHsl
 
-/**
- * A composable that displays a Snackbar with Clerk's danger/error styling.
- *
- * This component is a wrapper around [SnackbarHost] and is intended to be used as the
- * `snackbarHost` parameter in a Scaffold. It automatically applies Clerk's error color palette to
- * the snackbar elements.
- *
- * @param snackbarHostState The [SnackbarHostState] used to show snackbars.
- * @param modifier The [Modifier] to be applied to the [SnackbarHost].
- */
 @Composable
 internal fun ClerkErrorSnackbar(
   snackbarHostState: SnackbarHostState,

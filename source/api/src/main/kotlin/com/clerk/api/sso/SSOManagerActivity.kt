@@ -18,19 +18,6 @@ import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.coroutines.launch
 
-/**
- * Activity that manages the OAuth/SSO browser flow. This activity is responsible for launching the
- * CustomTabs browser session and handling its lifecycle.
- *
- * The authentication flow follows these steps:
- * 1. Activity receives the authentication URL in its extras
- * 2. On first resume, launches CustomTabs browser with the authentication URL
- * 3. When the browser returns (either via success or cancellation), processes the result
- * 4. Completes the authentication flow and finishes itself
- *
- * This activity is designed to handle configuration changes and process death, preserving the
- * authentication state throughout the flow.
- */
 internal class SSOManagerActivity : AppCompatActivity() {
   /** Which completion, if any, has claimed the pending callback. Survives process death. */
   private enum class Completion {
@@ -58,7 +45,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onResume()
     if (resumeCallbackIfPresent()) return
 
-    // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
         ClerkLog.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
@@ -133,12 +119,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     }
   }
 
-  /**
-   * Restores the activity state from a bundle. This is called both for new instances (from intent
-   * extras) and restored instances (from saved instance state).
-   *
-   * @param state Bundle containing the activity state
-   */
   private fun hydrateState(state: Bundle?) {
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
@@ -150,11 +130,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     pendingCallbackUri = state.getString(KEY_PENDING_CALLBACK_URI)?.toUri()
   }
 
-  /**
-   * Handles successful authentication callback by completing the authentication flow.
-   *
-   * @param uri The callback URI containing authentication results
-   */
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
       try {
@@ -202,7 +177,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     }
   }
 
-  /** Finishes an authentication attempt that could not be completed. */
   private fun authorizationFailed() {
     HostedAuthService.cancelPendingAuthentication()
     SSOService.cancelPendingAuthentication()
@@ -222,13 +196,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
         uri.getQueryParameter("error_description") != null
     }
 
-    /**
-     * Creates an intent to handle the OAuth/SSO response.
-     *
-     * @param context The context to create the intent from
-     * @param responseUri The URI received from the authentication provider
-     * @return Intent configured to handle the authentication response
-     */
     internal fun createResponseHandlingIntent(context: Context, responseUri: Uri?): Intent {
       val intent = createBaseIntent(context)
       intent.data = responseUri
@@ -240,12 +207,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     internal fun createAuthorizationIntent(context: Context, authorizationUri: Uri): Intent =
       createBaseIntent(context).apply { putExtra(URI_KEY, authorizationUri.toString()) }
 
-    /**
-     * Creates a base intent for the SSO manager activity.
-     *
-     * @param context The context to create the intent from
-     * @return Basic intent for the SSO manager activity
-     */
     internal fun createBaseIntent(context: Context): Intent =
       Intent(context, SSOManagerActivity::class.java)
 

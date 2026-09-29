@@ -61,8 +61,8 @@ object Constants {
   /** Device attestation constants */
   object Attestation {
     const val HASH_CONSTANT = 0xff
-    const val PREPARATION_TIMEOUT_MS = 30_000L // 30 seconds
-    const val ATTESTATION_TIMEOUT_MS = 15_000L // 15 seconds
+    const val PREPARATION_TIMEOUT_MS = 30_000L
+    const val ATTESTATION_TIMEOUT_MS = 15_000L
     const val HASH_CACHE_MAX_SIZE = 100
     const val SHA256_HEX_LENGTH = 64
   }
