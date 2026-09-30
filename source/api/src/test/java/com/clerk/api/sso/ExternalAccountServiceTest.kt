@@ -9,6 +9,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -36,6 +37,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -204,6 +206,35 @@ class ExternalAccountServiceTest {
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
+  fun `completeExternalConnection completes pending connection when client refresh fails`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val clientFailure =
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(message = "client refresh failed", code = "client_error"))
+          )
+        )
+      coEvery { Client.get() } returns clientFailure
+
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+      ExternalAccountService.completeExternalConnection()
+
+      val result = withTimeout(COMPLETION_TIMEOUT_MS) { pendingResult.await() }
+      assertSame(clientFailure, result)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun `cancelling external connection completion propagates and fails pending connection`() =
     runTest {
       val neverCompletes = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
@@ -262,5 +293,9 @@ class ExternalAccountServiceTest {
     assertFalse(failure.throwable is SSOCancellationException)
     assertFalse(failure.throwable is CancellationException)
     assertTrue(failure.throwable?.cause is CancellationException)
+  }
+
+  private companion object {
+    const val COMPLETION_TIMEOUT_MS = 5_000L
   }
 }

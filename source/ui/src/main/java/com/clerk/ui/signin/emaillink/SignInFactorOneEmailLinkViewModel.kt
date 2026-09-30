@@ -9,6 +9,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn
+import com.clerk.ui.core.extensions.isEmailAddress
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +52,7 @@ internal class SignInFactorOneEmailLinkViewModel(
 
     guardSignIn(_state) { inProgressSignIn ->
       val identifier = inProgressSignIn.identifier
-      if (identifier.isNullOrBlank() || !identifier.isEmailAddress()) {
+      if (identifier.isNullOrBlank() || !identifier.isEmailAddress) {
         _state.value = AuthenticationViewState.Error(null)
         return@guardSignIn
       }
@@ -86,7 +87,3 @@ internal class SignInFactorOneEmailLinkViewModel(
     }
   }
 }
-
-private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-private fun String.isEmailAddress(): Boolean = emailRegex.matches(this)
