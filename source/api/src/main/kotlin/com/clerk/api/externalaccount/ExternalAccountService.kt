@@ -17,6 +17,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
 internal object ExternalAccountService {
@@ -79,16 +80,20 @@ internal object ExternalAccountService {
    *
    * If any step fails, the connection is completed with an appropriate error.
    */
+  @Suppress("TooGenericExceptionCaught")
   suspend fun completeExternalConnection() {
+    ClerkLog.d("Completing external connection")
+
+    // Capture the connection this callback belongs to so a newer connection started while this
+    // completion is suspended is neither completed nor cleared by it.
+    val pendingConnection = currentPendingExternalAccountConnection
+    if (pendingConnection == null) {
+      ClerkLog.e("No pending external account connection found")
+      clearExternalConnectionState()
+      return
+    }
+
     try {
-      ClerkLog.d("Completing external connection")
-
-      val pendingConnection = currentPendingExternalAccountConnection
-      if (pendingConnection == null) {
-        ClerkLog.e("No pending external account connection found")
-        return
-      }
-
       val accountId = currentPendingExternalAccountConnectionId
       if (accountId == null) {
         completeWithError(pendingConnection, "External account ID is null")
@@ -119,11 +124,23 @@ internal object ExternalAccountService {
           }
         }
       }
+    } catch (e: CancellationException) {
+      // The completing coroutine was cancelled (e.g. the callback activity was recreated). The
+      // user finished the provider flow, so report an interruption rather than hanging the waiter.
+      ClerkLog.w("External connection completion interrupted: ${e.message}")
+      pendingConnection.complete(
+        ClerkResult.Companion.unknownFailure(
+          IllegalStateException(EXTERNAL_CONNECTION_INTERRUPTED, e)
+        )
+      )
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Failed to complete external connection: ${e.message}")
-      currentPendingExternalAccountConnection?.complete(ClerkResult.Companion.unknownFailure(e))
+      pendingConnection.complete(ClerkResult.Companion.unknownFailure(e))
     } finally {
-      clearExternalConnectionState()
+      if (currentPendingExternalAccountConnection === pendingConnection) {
+        clearExternalConnectionState()
+      }
     }
   }
 
@@ -164,4 +181,7 @@ internal object ExternalAccountService {
       ClerkResult.Failure.ErrorType.UNKNOWN ->
         ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
     }
+
+  private const val EXTERNAL_CONNECTION_INTERRUPTED =
+    "External account connection was interrupted before it could complete. Please try again."
 }

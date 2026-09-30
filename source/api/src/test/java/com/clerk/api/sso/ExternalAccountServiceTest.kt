@@ -8,6 +8,7 @@ import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -21,9 +22,12 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -158,4 +162,36 @@ class ExternalAccountServiceTest {
     ExternalAccountService.cancelPendingExternalAccountConnection()
     pendingResult.await()
   }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `cancelling external connection completion propagates and fails pending connection`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val neverCompletes = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
+      coEvery { Client.get() } coAnswers { neverCompletes.await() }
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+      val completionJob = launch { ExternalAccountService.completeExternalConnection() }
+      runCurrent()
+      assertTrue(completionJob.isActive)
+
+      completionJob.cancel()
+      completionJob.join()
+
+      assertTrue(completionJob.isCancelled)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertFalse(failure.throwable is SSOCancellationException)
+      assertFalse(failure.throwable is CancellationException)
+      assertTrue(failure.throwable?.cause is CancellationException)
+    }
 }
