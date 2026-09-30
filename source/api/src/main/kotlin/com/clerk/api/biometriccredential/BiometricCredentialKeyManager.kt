@@ -114,7 +114,6 @@ internal interface BiometricCredentialKeyManager {
 @Suppress("TooManyFunctions")
 internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyManager {
   private const val ANDROID_KEY_STORE = "AndroidKeyStore"
-  // Shared with other Clerk SDKs; see source/api/docs/biometric-credential-storage-contract.md.
   private const val KEY_ALIAS_PREFIX = "com.clerk.trusted_device."
   private const val SIGNATURE_ALGORITHM = "SHA256withECDSA"
   private const val EC_CURVE = "secp256r1"

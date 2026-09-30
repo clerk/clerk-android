@@ -563,7 +563,6 @@ class BiometricCredentialStorageContractTest {
 
   private fun parse(json: String): JsonElement = Json.parseToJsonElement(json)
 
-  /** Minimal v1 value encryption written from the contract, not the SDK. */
   private object SpecCipher {
     fun encrypt(key: SecretKey, plaintext: String): String {
       val iv = ByteArray(GCM_IV_BYTES).also(SecureRandom()::nextBytes)
@@ -580,10 +579,6 @@ class BiometricCredentialStorageContractTest {
     val generatedSpecs = mutableListOf<KeyGenParameterSpec>()
   }
 
-  /**
-   * Robolectric has no AndroidKeyStore, so this stands in for it with in-memory AES keys. The SDK's
-   * production [com.clerk.api.storage.AndroidKeystoreStorageCipher] runs unmodified against it.
-   */
   private class FakeAndroidKeyStoreProvider(state: FakeAndroidKeyStore) :
     Provider(ANDROID_KEY_STORE, 1.0, "Fake AndroidKeyStore for contract tests") {
     init {

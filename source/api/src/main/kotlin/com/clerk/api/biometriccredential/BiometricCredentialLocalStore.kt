@@ -11,8 +11,6 @@ import java.security.MessageDigest
  * @property localKeyId The Android Keystore alias suffix of the private key.
  * @property userId The ID of the user the credential belongs to.
  * @property appIdentifier The application ID the credential is bound to.
- * @property identifierHintSha256 Lowercase hex SHA-256 of the normalized, local-only user
- *   identifier hint.
  * @property policy The local authentication policy protecting the private key.
  * @property createdAt The time the credential was created, in milliseconds since epoch.
  * @property updatedAt The time the credential was last updated, in milliseconds since epoch.
@@ -60,7 +58,6 @@ internal interface BiometricCredentialLocalStore {
   fun delete(id: String)
 }
 
-/** Holds the process-wide [BiometricCredentialFileStore] once Clerk has a [Context]. */
 internal object BiometricCredentialStorage {
   @Volatile var fileStore: BiometricCredentialFileStore? = null
 
@@ -82,7 +79,6 @@ internal object BiometricCredentialStorage {
     checkNotNull(fileStore) { "Biometric credential storage is not initialized." }
 }
 
-/** Default [BiometricCredentialLocalStore] backed by the shared contract v2 file store. */
 internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalStore {
 
   override fun all(): List<BiometricCredentialLocalRecord> =

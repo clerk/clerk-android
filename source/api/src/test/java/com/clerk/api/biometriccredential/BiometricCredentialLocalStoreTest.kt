@@ -1,6 +1,7 @@
 package com.clerk.api.biometriccredential
 
 import java.io.File
+import java.io.IOException
 import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -93,6 +94,20 @@ class BiometricCredentialLocalStoreTest {
     val credential = credential(id = "td_1")
     store.save(credential)
     assertEquals(listOf(credential), store.all())
+  }
+
+  @Test
+  fun `a store file that cannot be read is never overwritten`() {
+    fileStore.dataFile.parentFile?.mkdirs()
+    fileStore.dataFile.writeText("unreadable")
+    check(fileStore.dataFile.setReadable(false)) { "Test file permissions are not supported here." }
+    try {
+      assertTrue(store.all().isEmpty())
+      assertFailsWith<IOException> { store.save(credential(id = "td_1")) }
+    } finally {
+      fileStore.dataFile.setReadable(true)
+    }
+    assertEquals("unreadable", fileStore.dataFile.readText())
   }
 
   @Test

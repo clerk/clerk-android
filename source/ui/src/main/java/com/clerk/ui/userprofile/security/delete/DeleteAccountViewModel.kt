@@ -42,12 +42,11 @@ internal class DeleteAccountViewModel(
     }
   }
 
-  // Blocks on disk I/O and may wait for another Clerk SDK's credential store lock.
   private suspend fun forgetBiometricLocalCredentials(deletedUserId: String) {
     withContext(workDispatcher) {
       runCatching {
-          Clerk.biometricCredentials.forgetLocalCredentialsAfterAccountDeletion(deletedUserId)
-        }
+        Clerk.biometricCredentials.forgetLocalCredentialsAfterAccountDeletion(deletedUserId)
+      }
         .onFailure {
           ClerkLog.e(
             "Failed to delete biometric local credentials after account deletion. " +

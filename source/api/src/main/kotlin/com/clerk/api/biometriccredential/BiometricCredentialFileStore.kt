@@ -22,14 +22,6 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
-/**
- * Biometric credential metadata shared by every Clerk SDK in the app (storage contract v2).
- *
- * See `source/api/docs/biometric-credential-storage-contract.md`. The file is plaintext JSON in
- * `noBackupFilesDir`, every read-modify-write runs under an exclusive lock on a sibling lock file,
- * and writes replace the file atomically. Fields and records this SDK does not understand are
- * preserved on rewrite.
- */
 @Suppress("TooManyFunctions")
 internal class BiometricCredentialFileStore(
   private val directory: File,
@@ -44,7 +36,6 @@ internal class BiometricCredentialFileStore(
   @Volatile private var lockChannel: FileChannel? = null
   @Volatile private var migrated = legacyStore == null
 
-  /** Records that can be decoded and whose policy is known; others are kept but not returned. */
   fun credentials(): List<BiometricCredentialLocalRecord> {
     ensureMigrated()
     return readDocumentOrNull()?.records().orEmpty()
@@ -91,7 +82,6 @@ internal class BiometricCredentialFileStore(
       .onFailure { ClerkLog.w("Failed to migrate biometric credential metadata: ${it.message}") }
   }
 
-  /** Merges contract v1 metadata into this store, then deletes it. Must hold the lock. */
   private fun migrateLegacyLocked() {
     if (migrated) return
     val legacy = legacyStore?.load()
@@ -123,8 +113,6 @@ internal class BiometricCredentialFileStore(
     .getOrNull()
     ?.takeIf { it.writable }
 
-  // A missing file or a non-object root reads as an empty, writable store (contract 3.2). I/O
-  // errors propagate so a writer never replaces a file it could not read.
   private fun readDocument(): StoreDocument {
     if (!dataFile.exists()) return StoreDocument.EMPTY
     val text = dataFile.readText(Charsets.UTF_8)
@@ -221,7 +209,6 @@ internal class BiometricCredentialFileStore(
           }
       }
 
-  /** Top-level JSON object of the store file. */
   private class StoreDocument(val root: JsonObject, val writable: Boolean = true) {
 
     fun credentialElements(): List<JsonElement> = (root[KEY_CREDENTIALS] as? JsonArray).orEmpty()
@@ -263,7 +250,6 @@ internal class BiometricCredentialFileStore(
         writable,
       )
 
-    /** Known keys first in a fixed order, then unknown keys in their original order. */
     fun normalized(): StoreDocument {
       val known =
         mapOf(
@@ -303,7 +289,6 @@ internal class BiometricCredentialFileStore(
   }
 }
 
-/** Contract v2 JSON encoding of a single credential record. */
 internal object BiometricCredentialRecordJson {
   const val ID = "id"
   const val LOCAL_KEY_ID = "local_key_id"
@@ -321,7 +306,9 @@ internal object BiometricCredentialRecordJson {
 
   private val wireValuesByPolicy = policiesByWireValue.entries.associate { it.value to it.key }
 
-  /** Returns null for records that are malformed or use a policy this SDK does not know. */
+  fun policy(wireValue: String?): BiometricCredentialPolicy? =
+    wireValue?.let(policiesByWireValue::get)
+
   @Suppress("ReturnCount")
   fun decode(element: JsonElement): BiometricCredentialLocalRecord? {
     val record = element as? JsonObject ?: return null
@@ -335,13 +322,12 @@ internal object BiometricCredentialRecordJson {
       userId = record.string(USER_ID) ?: return null,
       appIdentifier = record.string(APP_IDENTIFIER) ?: return null,
       identifierHintSha256 = hint,
-      policy = record.string(POLICY)?.let(policiesByWireValue::get) ?: return null,
+      policy = policy(record.string(POLICY)) ?: return null,
       createdAt = record.long(CREATED_AT) ?: return null,
       updatedAt = record.long(UPDATED_AT) ?: return null,
     )
   }
 
-  /** Encodes [record], keeping any fields of [preserving] that are not part of the schema. */
   fun encode(record: BiometricCredentialLocalRecord, preserving: JsonObject?): JsonObject {
     val known = buildMap {
       put(ID, JsonPrimitive(record.id))

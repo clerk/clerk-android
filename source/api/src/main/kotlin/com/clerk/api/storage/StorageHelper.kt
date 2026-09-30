@@ -163,7 +163,6 @@ internal enum class StorageKey {
   PENDING_NATIVE_MAGIC_LINK_FLOW,
   SHARED_SESSION_SYNC_SNAPSHOT,
   CACHED_CLERK_STATE,
-  // Legacy biometric credential storage (contract v1), only read to migrate it to v2.
   TRUSTED_DEVICE_CREDENTIALS,
   PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP,
 }

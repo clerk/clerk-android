@@ -49,7 +49,6 @@ object BiometricCredentials {
   @VisibleForTesting
   internal var credentialStore: BiometricCredentialLocalStore = DefaultBiometricCredentialLocalStore
 
-  /** Runs local metadata I/O, which can wait on another SDK's store lock, off the caller thread. */
   @VisibleForTesting internal var storageDispatcher: CoroutineDispatcher = Dispatchers.IO
 
   /**

@@ -1,30 +1,31 @@
 package com.clerk.api.biometriccredential
 
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
-/** Contract v1 metadata that still needs migrating into the v2 file store. */
 internal data class LegacyBiometricCredentialContents(
   val credentials: List<BiometricCredentialLocalRecord>,
   val pendingCleanupUserIds: Set<String>,
 )
 
-/** Read-only access to contract v1 metadata, kept only to migrate it into contract v2. */
 internal interface BiometricCredentialLegacyStore {
-  /** Returns the v1 metadata, or null when no v1 value is stored. */
   fun load(): LegacyBiometricCredentialContents?
 
   fun clear()
 }
 
-/** Contract v1 metadata stored encrypted in `clerk_preferences` through [StorageHelper]. */
 internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentialLegacyStore {
+  private val v1Json = Json {
+    isLenient = true
+    ignoreUnknownKeys = true
+  }
 
   override fun load(): LegacyBiometricCredentialContents? {
     val credentials = StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS)
@@ -44,14 +45,14 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
 
   fun decodeCredentials(json: String): List<BiometricCredentialLocalRecord> {
     val elements = runCatching {
-      ClerkApi.json.parseToJsonElement(json).jsonArray
+      v1Json.parseToJsonElement(json).jsonArray
     }
       .getOrElse {
         ClerkLog.w("Legacy biometric credential metadata is malformed, dropping it.")
         return emptyList()
       }
     return elements.mapNotNull { element ->
-      runCatching { ClerkApi.json.decodeFromJsonElement(LegacyRecord.serializer(), element) }
+      runCatching { v1Json.decodeFromJsonElement(LegacyRecord.serializer(), element) }
         .onFailure { ClerkLog.w("Dropping malformed legacy biometric credential record.") }
         .getOrNull()
         ?.toRecord()
@@ -59,7 +60,7 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
   }
 
   fun decodePendingCleanup(json: String): Set<String> = runCatching {
-    ClerkApi.json
+    v1Json
       .parseToJsonElement(json)
       .jsonArray
       .mapNotNull { it.jsonPrimitive.contentOrNull }
@@ -70,18 +71,16 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
       emptySet()
     }
 
-  /** v1 record; `ClerkApi.json` maps these property names to the v1 snake_case keys. */
   @Serializable
   private data class LegacyRecord(
     val id: String,
-    val localKeyId: String,
-    val userId: String,
-    val appIdentifier: String,
-    val identifierHint: String? = null,
-    // v1 reads a missing, null or unknown policy as PIN-capable.
-    val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
-    val createdAt: Long,
-    val updatedAt: Long,
+    @SerialName("local_key_id") val localKeyId: String,
+    @SerialName("user_id") val userId: String,
+    @SerialName("app_identifier") val appIdentifier: String,
+    @SerialName("identifier_hint") val identifierHint: String? = null,
+    val policy: String? = null,
+    @SerialName("created_at") val createdAt: Long,
+    @SerialName("updated_at") val updatedAt: Long,
   ) {
     fun toRecord() =
       BiometricCredentialLocalRecord(
@@ -90,7 +89,9 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
         userId = userId,
         appIdentifier = appIdentifier,
         identifierHintSha256 = BiometricCredentialLocalRecord.identifierHintSha256(identifierHint),
-        policy = policy,
+        policy =
+          BiometricCredentialRecordJson.policy(policy)
+            ?: BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
         createdAt = createdAt,
         updatedAt = updatedAt,
       )
