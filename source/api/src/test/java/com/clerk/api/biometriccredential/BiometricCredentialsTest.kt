@@ -229,7 +229,7 @@ class BiometricCredentialsTest {
     val result = BiometricCredentials.signIn()
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(LocaleProvider.locale.value.orEmpty(), createParams.captured["locale"])
+    assertEquals("fr-CA", createParams.captured["locale"])
     assertEquals(
       listOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE),
       keyManager.signingPolicies,

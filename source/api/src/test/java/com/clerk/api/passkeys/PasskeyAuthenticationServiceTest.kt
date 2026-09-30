@@ -5,6 +5,7 @@ import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -27,7 +28,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthResult
@@ -42,12 +42,14 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -90,24 +92,35 @@ class PasskeyAuthenticationServiceTest {
 
   @After
   fun tearDown() {
+    GoogleCredentialAuthenticationService.setCredentialManager(PasskeyCredentialManagerImpl())
     GoogleCredentialAuthenticationService.setGoogleSignInService(GoogleSignInService())
     unmockkAll()
   }
 
-  @Ignore
   @Test
   fun `signInWithPasskey succeeds with public key credential`() = runTest {
-    val nonce = """{"challenge":"test-challenge"}"""
-    val authResponseJson = """{"type":"webauthn.get","response":"test-response"}"""
+    val nonce = """{"challenge":"test-challenge","rpId":"passkeys.example.com"}"""
+    val authResponseJson = """{"type":"public-key","id":"credential-123"}"""
+    val passkeySignIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        firstFactorVerification = Verification(nonce = nonce, strategy = "passkey"),
+      )
+    val completedSignIn = passkeySignIn.copy(status = SignIn.Status.COMPLETE)
+    val requestSlot = slot<GetCredentialRequest>()
 
-    every { mockSignIn.firstFactorVerification } returns mockVerification
-    every { mockVerification.nonce } returns nonce
     every { mockGetCredentialResponse.credential } returns mockPublicKeyCredential
     every { mockPublicKeyCredential.authenticationResponseJson } returns authResponseJson
-
-    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
-    coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
-    coEvery { mockSignIn.attemptFirstFactor(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockSignInApi.createSignIn(any()) } returns ClerkResult.success(passkeySignIn)
+    coEvery { mockCredentialManager.getCredential(any(), capture(requestSlot)) } returns
+      mockGetCredentialResponse
+    coEvery {
+      mockSignInApi.attemptFirstFactor(
+        "sign_in_123",
+        mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+      )
+    } returns ClerkResult.success(completedSignIn)
 
     val result =
       GoogleCredentialAuthenticationService.signInWithGoogleCredential(
@@ -115,10 +128,20 @@ class PasskeyAuthenticationServiceTest {
       )
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
-    coVerify { ClerkApi.signIn.createSignIn(mapOf("strategy" to "passkey")) }
-    coVerify { mockCredentialManager.getCredential(mockActivity, any()) }
-    coVerify { mockSignIn.attemptFirstFactor(any()) }
+    assertEquals(completedSignIn, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { mockSignInApi.createSignIn(match { it["strategy"] == "passkey" }) }
+    coVerify(exactly = 1) { mockCredentialManager.getCredential(mockActivity, any()) }
+    val option = requestSlot.captured.credentialOptions.single() as GetPublicKeyCredentialOption
+    val requestJson = Json.parseToJsonElement(option.requestJson).jsonObject
+    assertEquals("test-challenge", requestJson.getValue("challenge").jsonPrimitive.content)
+    assertEquals("passkeys.example.com", requestJson.getValue("rpId").jsonPrimitive.content)
+    assertFalse(requestSlot.captured.preferImmediatelyAvailableCredentials)
+    coVerify(exactly = 1) {
+      mockSignInApi.attemptFirstFactor(
+        "sign_in_123",
+        mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+      )
+    }
   }
 
   @Test
@@ -219,6 +242,7 @@ class PasskeyAuthenticationServiceTest {
 
       assertTrue(result is ClerkResult.Success)
       val signIn = (result as ClerkResult.Success).value
+      assertEquals("sign_up_123", signIn.id)
       assertEquals(SignIn.Status.COMPLETE, signIn.status)
       assertEquals("sess_new", signIn.createdSessionId)
       assertEquals("new-user@example.com", signIn.identifier)
@@ -579,7 +603,11 @@ class PasskeyAuthenticationServiceTest {
       )
 
     assertTrue(result is ClerkResult.Failure)
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertTrue(failure.throwable is IllegalStateException)
+    assertEquals("Unknown credential type", failure.throwable?.message)
+    coVerify(exactly = 0) { mockSignInApi.attemptFirstFactor(any(), any()) }
   }
 
   @Test

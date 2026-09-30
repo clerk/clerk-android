@@ -1,58 +1,64 @@
 package com.clerk.api.passkeys
 
 import android.content.Context
+import androidx.credentials.CreateCredentialResponse
 import androidx.credentials.CreatePublicKeyCredentialRequest
+import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Assert.assertSame
+import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class PasskeyCredentialManagerTest {
 
-  @Test
-  fun `PasskeyCredentialManagerImpl can be used as PasskeyCredentialManager interface`() {
-    val manager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
+  private val context = mockk<Context>()
+  private val systemCredentialManager = mockk<CredentialManager>()
 
-    assert(manager is PasskeyCredentialManagerImpl) { "Should be the correct implementation" }
+  @Before
+  fun setup() {
+    mockkObject(CredentialManager.Companion)
+    every { CredentialManager.create(any()) } returns systemCredentialManager
+  }
+
+  @After
+  fun tearDown() {
+    unmockkAll()
   }
 
   @Test
-  fun `createCredential method exists and can be called`() = runTest {
-    // This is a basic smoke test to verify the interface contract
-    val mockContext = mockk<Context>(relaxed = true)
-    val mockRequest = mockk<CreatePublicKeyCredentialRequest>(relaxed = true)
+  fun `createCredential delegates to the system credential manager for the given context`() =
+    runTest {
+      val request = mockk<CreatePublicKeyCredentialRequest>()
+      val response = mockk<CreateCredentialResponse>()
+      coEvery { systemCredentialManager.createCredential(context, request) } returns response
 
-    // The actual implementation would call Android's CredentialManager
-    // which we cannot easily test in a unit test environment
-    // This test just verifies the method signature exists
-    val manager = PasskeyCredentialManagerImpl()
+      val result = PasskeyCredentialManagerImpl().createCredential(context, request)
 
-    // We expect this to fail in a unit test environment since Android CredentialManager
-    // is not available, but the method should exist
-    try {
-      manager.createCredential(mockContext, mockRequest)
-    } catch (e: Exception) {
-      // Expected in unit test environment
+      assertSame(response, result)
+      verify(exactly = 1) { CredentialManager.create(context) }
+      coVerify(exactly = 1) { systemCredentialManager.createCredential(context, request) }
     }
-  }
 
   @Test
-  fun `getCredential method exists and can be called`() = runTest {
-    // This is a basic smoke test to verify the interface contract
-    val mockContext = mockk<Context>(relaxed = true)
-    val mockRequest = mockk<GetCredentialRequest>(relaxed = true)
+  fun `getCredential delegates to the system credential manager for the given context`() = runTest {
+    val request = mockk<GetCredentialRequest>()
+    val response = mockk<GetCredentialResponse>()
+    coEvery { systemCredentialManager.getCredential(context, request) } returns response
 
-    val manager = PasskeyCredentialManagerImpl()
+    val result = PasskeyCredentialManagerImpl().getCredential(context, request)
 
-    // We expect this to fail in a unit test environment since Android CredentialManager
-    // is not available, but the method should exist
-    try {
-      manager.getCredential(mockContext, mockRequest)
-    } catch (e: Exception) {
-      // Expected in unit test environment
-    }
+    assertSame(response, result)
+    verify(exactly = 1) { CredentialManager.create(context) }
+    coVerify(exactly = 1) { systemCredentialManager.getCredential(context, request) }
   }
 }

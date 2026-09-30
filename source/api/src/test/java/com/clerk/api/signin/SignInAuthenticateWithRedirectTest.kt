@@ -11,6 +11,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -166,10 +167,15 @@ class SignInAuthenticateWithRedirectTest {
   @Test
   fun `authenticateWithPreparedRedirect fails when external verification URL is missing`() =
     runTest {
+      mockkObject(SSOService)
       val signIn = SignIn(id = "sign_in_123")
 
       val result = signIn.authenticateWithPreparedRedirect()
 
       assertTrue(result is ClerkResult.Failure)
+      val throwable = (result as ClerkResult.Failure).throwable
+      assertTrue(throwable is IllegalStateException)
+      assertEquals("External verification redirect URL is missing", throwable?.message)
+      coVerify(exactly = 0) { SSOService.authenticateWithPreparedRedirect(any(), any()) }
     }
 }
