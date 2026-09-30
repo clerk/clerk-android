@@ -32,8 +32,8 @@ data class Verification(
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
     @SerialName("transferable") TRANSFERABLE,
-    @SerialName("expired") FAILED,
-    @SerialName("failed") EXPIRED,
+    @SerialName("failed") FAILED,
+    @SerialName("expired") EXPIRED,
     @SerialName("state_unknown") UNKNOWN,
   }
 }
