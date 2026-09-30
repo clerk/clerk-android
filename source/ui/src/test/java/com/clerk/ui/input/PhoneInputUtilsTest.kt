@@ -3,6 +3,7 @@ package com.clerk.ui.input
 import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.ui.core.input.CountryCodeUtils
 import com.clerk.ui.core.input.LocaleProvider
 import com.clerk.ui.core.input.Logger
 import com.clerk.ui.core.input.PhoneInputUtils
@@ -130,9 +131,7 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `detectCountry returns null when region code is too long`() {
-    // Given - Mock a scenario where the locale has an invalid region code
-    // We can't create a Locale with "USA" as it throws IllformedLocaleException
-    // So we'll mock the locale provider to simulate this scenario
+    // Locale.Builder rejects three-letter regions, so the Locale itself is mocked.
     val mockLocale = mockk<Locale>(relaxed = true)
     every { mockLocale.country } returns "USA"
     every { mockLocale.displayCountry } returns "United States"
@@ -304,29 +303,14 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `regionToFlagEmoji returns empty string for invalid region codes`() {
-    // Test various invalid region codes by mocking the locale to avoid IllformedLocaleException
-    val testCases =
-      listOf(
-        "A" to 0, // Too short
-        "ABC" to 0, // Too long
-        "A1" to 0, // Contains number
-        "1A" to 0, // Contains number
-        "ab" to 0, // Lowercase (should still work after uppercase conversion)
-        "" to 0, // Empty
-        "001" to 0, // Non-standard code
-      )
-
-    testCases.forEach { (regionCode, expectedPhoneCode) ->
-      val mockLocale = mockk<Locale>(relaxed = true)
-      every { mockLocale.country } returns regionCode
-      every { mockLocale.displayCountry } returns "Invalid Country"
-      every { mockLocaleProvider.getDefaultLocale() } returns mockLocale
-      every { mockPhoneNumberUtil.getCountryCodeForRegion(regionCode.uppercase()) } returns
-        expectedPhoneCode
-
-      val result = phoneInputUtils.detectCountry(context)
-      assertNull("Expected null for region code: $regionCode", result)
+    listOf("A", "ABC", "A1", "1A", "", "001").forEach { regionCode ->
+      assertEquals("region code: $regionCode", "", CountryCodeUtils.regionToFlagEmoji(regionCode))
     }
+  }
+
+  @Test
+  fun `regionToFlagEmoji uppercases lowercase region codes`() {
+    assertEquals("🇦🇧", CountryCodeUtils.regionToFlagEmoji("ab"))
   }
 
   @Test
@@ -358,13 +342,17 @@ class PhoneInputUtilsTest {
   }
 
   @Test
-  fun `real world integration test - detectCountry with actual Android context`() {
-    val realPhoneInputUtils = PhoneInputUtils()
+  fun `detectCountry with default dependencies uses the default locale region`() {
+    val originalLocale = Locale.getDefault()
+    Locale.setDefault(Locale.Builder().setLanguage("de").setRegion("DE").build())
+    try {
+      val result = PhoneInputUtils().detectCountry(context)
 
-    val result = realPhoneInputUtils.detectCountry(context)
-
-    // Then - this might return null or a detected country depending on the simulated environment
-    // The important thing is that it doesn't crash
-    assertNotNull("Should not crash with real context", true)
+      assertEquals("DE", result?.countryShortName)
+      assertEquals(49, result?.code)
+      assertEquals("🇩🇪", result?.flag)
+    } finally {
+      Locale.setDefault(originalLocale)
+    }
   }
 }
