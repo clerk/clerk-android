@@ -292,37 +292,6 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun signUpParamsShouldBeCreatedCorrectlyBasedOnInputType() {
-    val emailIdentifier = "test@example.com"
-    val usernameIdentifier = "testuser"
-    val phoneNumber = "+1234567890"
-
-    // Test email recognition (this tests the private isEmailAddress extension)
-    assertTrue(
-      "Should recognize email format",
-      emailIdentifier.contains("@") && emailIdentifier.contains("."),
-    )
-    assertTrue("Should not recognize username as email", !usernameIdentifier.contains("@"))
-
-    val emailParams =
-      if (emailIdentifier.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) {
-        "email"
-      } else {
-        "username"
-      }
-
-    val usernameParams =
-      if (usernameIdentifier.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) {
-        "email"
-      } else {
-        "username"
-      }
-
-    assertEquals("email", emailParams)
-    assertEquals("username", usernameParams)
-  }
-
-  @Test
   fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
     val paramsSlot = slot<SignUp.CreateParams>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
@@ -464,38 +433,6 @@ class AuthViewModelTest {
     assertEquals(false, AuthMode.SignIn.transferable)
     assertEquals(true, AuthMode.SignUp.transferable)
     assertEquals(true, AuthMode.SignInOrUp.transferable)
-  }
-
-  @Test
-  fun emailRegexPatternShouldWorkCorrectly() {
-    // Test email validation regex pattern (same as used in the ViewModel)
-    val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-    val validEmails =
-      listOf(
-        "test@example.com",
-        "user.name@domain.co.uk",
-        "test123+tag@example.org",
-        "simple@test.com",
-        "user_name@test-domain.org",
-      )
-
-    val invalidEmails =
-      listOf(
-        "testexample.com",
-        "@example.com",
-        "test@",
-        "username",
-        "test@domain",
-        "test.domain.com",
-        "test@@domain.com",
-      )
-
-    validEmails.forEach { email -> assertTrue("$email should be valid", emailRegex.matches(email)) }
-
-    invalidEmails.forEach { email ->
-      assertTrue("$email should be invalid", !emailRegex.matches(email))
-    }
   }
 
   @Test

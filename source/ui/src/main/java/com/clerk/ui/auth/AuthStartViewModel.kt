@@ -20,6 +20,7 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
+import com.clerk.ui.core.extensions.isEmailAddress
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
@@ -453,8 +454,3 @@ internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =
     (throwable as? BiometricCredentialKeyManagerException)?.code ==
       BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
-
-private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-private val String.isEmailAddress: Boolean
-  get() = emailRegex.matches(this)
