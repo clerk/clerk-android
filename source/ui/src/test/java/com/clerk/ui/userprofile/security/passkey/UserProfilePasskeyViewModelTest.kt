@@ -89,6 +89,7 @@ class UserProfilePasskeyViewModelTest {
       viewModel.createPasskey()
       advanceUntilIdle()
       assertEquals(UserProfilePasskeyViewModel.State.Success, awaitItem())
+      expectNoEvents()
     }
     coVerify(exactly = 1) { user.createPasskey() }
   }
@@ -102,6 +103,8 @@ class UserProfilePasskeyViewModelTest {
       assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
     }
   }
 

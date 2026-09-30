@@ -131,9 +131,7 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `detectCountry returns null when region code is too long`() {
-    // Given - Mock a scenario where the locale has an invalid region code
-    // We can't create a Locale with "USA" as it throws IllformedLocaleException
-    // So we'll mock the locale provider to simulate this scenario
+    // Locale.Builder rejects three-letter regions, so the Locale itself is mocked.
     val mockLocale = mockk<Locale>(relaxed = true)
     every { mockLocale.country } returns "USA"
     every { mockLocale.displayCountry } returns "United States"
@@ -349,14 +347,17 @@ class PhoneInputUtilsTest {
   }
 
   @Test
-  fun `real world integration test - detectCountry with actual Android context`() {
-    val realPhoneInputUtils = PhoneInputUtils()
+  fun `detectCountry with default dependencies uses the default locale region`() {
+    val originalLocale = Locale.getDefault()
+    Locale.setDefault(Locale.Builder().setLanguage("de").setRegion("DE").build())
+    try {
+      val result = PhoneInputUtils().detectCountry(context)
 
-    // Robolectric's default qualifiers use the en-US locale.
-    val result = realPhoneInputUtils.detectCountry(context)
-
-    assertEquals("US", result?.countryShortName)
-    assertEquals(1, result?.code)
-    assertEquals("🇺🇸", result?.flag)
+      assertEquals("DE", result?.countryShortName)
+      assertEquals(49, result?.code)
+      assertEquals("🇩🇪", result?.flag)
+    } finally {
+      Locale.setDefault(originalLocale)
+    }
   }
 }

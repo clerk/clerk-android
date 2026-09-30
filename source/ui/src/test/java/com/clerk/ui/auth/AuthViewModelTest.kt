@@ -412,16 +412,21 @@ class AuthViewModelTest {
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
       ClerkResult.success(signIn)
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignIn,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "",
-      identifier = "user@example.com",
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
 
-    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
-    coVerify(exactly = 0) { signIn.prepareFirstFactor(any()) }
+      viewModel.startAuth(
+        authMode = AuthMode.SignIn,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "user@example.com",
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams>()) }
   }
 
   @Test
