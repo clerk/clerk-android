@@ -24,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import java.util.Base64
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runTest
@@ -221,19 +222,71 @@ class ClerkDeviceTokenUpdateTest {
   }
 
   @Test
-  fun `setDeviceToken does not refresh client or environment`() {
+  fun `setDeviceToken rotation for the same client does not refresh client or environment`() {
     configureClerkForDeviceTokenUpdate()
     val client = Client(id = "client_current")
     Clerk.updateClient(client)
-    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_old")
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val oldToken = deviceTokenJwt(clientId = "client_current", rotatingToken = "r1")
+    val newToken = deviceTokenJwt(clientId = "client_current", rotatingToken = "r2")
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
 
-    Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_old")
-    Clerk.setDeviceToken(token = null, expected = "device_token_new")
+    assertTrue(Clerk.setDeviceToken(token = newToken, expected = oldToken))
+    assertTrue(Clerk.setDeviceToken(token = "device_token_opaque", expected = newToken))
 
     assertEquals(client, Clerk.client)
+    assertEquals(1, SessionTokensCache.size)
     coVerify(exactly = 0) { Client.get() }
     coVerify(exactly = 0) { Client.getSkippingClientId() }
     coVerify(exactly = 0) { Environment.get() }
+  }
+
+  @Test
+  fun `setDeviceToken for a different client resets local state and refreshes the client`() {
+    configureClerkForDeviceTokenUpdate()
+    Clerk.updateClient(Client(id = "client_a"))
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val oldToken = deviceTokenJwt(clientId = "client_a", rotatingToken = "r1")
+    val newToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
+    coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client(id = "client_b"))
+    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
+
+    assertTrue(Clerk.setDeviceToken(token = newToken, expected = oldToken))
+
+    assertEquals(0, SessionTokensCache.size)
+    assertNull(Clerk.session)
+    coVerify(timeout = ASYNC_TIMEOUT_MS, exactly = 1) { Client.getSkippingClientId() }
+    awaitClientId("client_b")
+    assertEquals(newToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    coVerify(exactly = 0) { Client.get() }
+  }
+
+  @Test
+  fun `setDeviceToken with null token resets local state and refreshes the client`() {
+    configureClerkForDeviceTokenUpdate()
+    Clerk.updateClient(Client(id = "client_current"))
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+    coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client(id = "client_new"))
+    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
+
+    assertTrue(Clerk.setDeviceToken(token = null, expected = "device_token_123"))
+
+    assertEquals(0, SessionTokensCache.size)
+    coVerify(timeout = ASYNC_TIMEOUT_MS, exactly = 1) { Client.getSkippingClientId() }
+    awaitClientId("client_new")
+  }
+
+  @Test
+  fun `setDeviceToken treats a blank expected token as none stored`() {
+    configureClerkForDeviceTokenUpdate()
+
+    assertTrue(Clerk.setDeviceToken(token = "device_token_first", expected = "  "))
+    assertEquals("device_token_first", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    assertFalse(Clerk.setDeviceToken(token = "device_token_second", expected = ""))
+    assertEquals("device_token_first", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 
   @Test
@@ -262,10 +315,9 @@ class ClerkDeviceTokenUpdateTest {
   }
 
   @Test
-  fun `setDeviceToken fails when Clerk has not been initialized`() {
-    assertThrows(IllegalStateException::class.java) {
-      Clerk.setDeviceToken(token = "device_token_123", expected = null)
-    }
+  fun `setDeviceToken returns false when Clerk has not been initialized`() {
+    assertFalse(Clerk.setDeviceToken(token = "device_token_123", expected = null))
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 
   @Test
@@ -283,6 +335,22 @@ class ClerkDeviceTokenUpdateTest {
     setField(configurationManager, "storageInitialized", false)
     mutableStateFlow<Boolean>(configurationManager, "_isInitialized").value = isInitialized
     mutableStateFlow<Throwable?>(configurationManager, "_initializationError").value = null
+  }
+
+  private fun deviceTokenJwt(clientId: String, rotatingToken: String): String {
+    val encoder = Base64.getUrlEncoder().withoutPadding()
+    fun encode(json: String) = encoder.encodeToString(json.toByteArray())
+    val header = encode("""{"alg":"RS256","typ":"JWT"}""")
+    val payload = encode("""{"id":"$clientId","rotating_token":"$rotatingToken"}""")
+    return "$header.$payload.signature"
+  }
+
+  private fun awaitClientId(clientId: String) {
+    val deadline = System.currentTimeMillis() + ASYNC_TIMEOUT_MS
+    while (Clerk.clientFlow.value?.id != clientId && System.currentTimeMillis() < deadline) {
+      Thread.sleep(POLL_INTERVAL_MS)
+    }
+    assertEquals(clientId, Clerk.clientFlow.value?.id)
   }
 
   private fun deviceTokenFenceGeneration(): Int {
@@ -365,5 +433,10 @@ class ClerkDeviceTokenUpdateTest {
           passkeySettings = null,
         ),
     )
+  }
+
+  private companion object {
+    const val ASYNC_TIMEOUT_MS = 5_000L
+    const val POLL_INTERVAL_MS = 10L
   }
 }

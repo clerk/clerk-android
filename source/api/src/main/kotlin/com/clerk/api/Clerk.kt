@@ -1017,15 +1017,19 @@ object Clerk {
    *
    * Intended for framework integrations whose own runtime shares this client: pass the token the
    * integration's request was sent with as [expected] so a stale response cannot overwrite a newer
-   * token. A null [expected] means no token is stored, and a null [token] deletes the stored token.
-   * Unlike [updateDeviceToken], this makes no network request and does not refresh client state.
+   * token. A null or blank [expected] means no token is stored, and a null [token] deletes the
+   * stored token.
+   *
+   * A rotation of the same client's token is cheap: no network request and no client refresh. When
+   * the token is cleared or now belongs to a different client, the in-memory client, session and
+   * token caches are dropped and a client refresh is started in the background so native state
+   * follows the new token.
    *
    * @param token The non-blank device token to store, or null to delete the stored token.
    * @param expected The device token the caller expects to be stored, or null for none.
-   * @return true if the stored token matched [expected] and now equals [token]; false otherwise, in
-   *   which case the stored token is left unchanged.
+   * @return true if the stored token matched [expected] and now equals [token]; false otherwise
+   *   (including when Clerk is not initialized), in which case the stored token is left unchanged.
    * @throws IllegalArgumentException if [token] is blank.
-   * @throws IllegalStateException if Clerk has not been initialized.
    */
   @FrameworkIntegrationApi
   fun setDeviceToken(token: String?, expected: String?): Boolean =
@@ -1053,14 +1057,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources = cachedClient?.let { client ->
-      cachedEnvironment?.let { environment -> client to environment }
-    }
+    val cachedResources =
+      cachedClient?.let { client ->
+        cachedEnvironment?.let { environment -> client to environment }
+      }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration = cachedPublishableKey?.let { key ->
-      cachedBaseUrl?.let { url -> key to url }
-    }
+    val cachedConfiguration =
+      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1159,9 +1163,8 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1365,9 +1368,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

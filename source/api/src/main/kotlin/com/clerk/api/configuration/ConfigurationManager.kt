@@ -1,6 +1,7 @@
 package com.clerk.api.configuration
 
 import android.content.Context
+import com.auth0.android.jwt.JWT
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
@@ -241,35 +242,36 @@ internal class ConfigurationManager(
   private fun launchInitialization(
     options: ClerkConfigurationOptions?,
     configuredVersion: Int,
-  ): Job = scope.launch {
-    val attempt =
-      RefreshAttempt(
-        options = options,
-        retryDelaySeconds = 0,
-        expectedConfigurationVersion = configuredVersion,
-      )
-    Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
-    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
-    val dataRefreshJob = async {
-      refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-    }
+  ): Job =
+    scope.launch {
+      val attempt =
+        RefreshAttempt(
+          options = options,
+          retryDelaySeconds = 0,
+          expectedConfigurationVersion = configuredVersion,
+        )
+      Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
+      Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+      val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+      val dataRefreshJob = async {
+        refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+      }
 
-    deviceIdInitJob.await()
-    AppLifecycleListener.configure {
-      if (hasConfigured) {
-        scope.launch {
-          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-          if (shouldRefreshOnForeground(attempt.options)) {
-            deferForegroundRefreshDuringPendingAuth()
-            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+      deviceIdInitJob.await()
+      AppLifecycleListener.configure {
+        if (hasConfigured) {
+          scope.launch {
+            Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+            if (shouldRefreshOnForeground(attempt.options)) {
+              deferForegroundRefreshDuringPendingAuth()
+              refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+            }
+            startTokenRefresh()
           }
-          startTokenRefresh()
         }
       }
+      dataRefreshJob.await()
     }
-    dataRefreshJob.await()
-  }
 
   fun isConfigured(): Boolean = hasConfigured
 
@@ -310,28 +312,29 @@ internal class ConfigurationManager(
     }
 
     refreshJob?.cancel()
-    refreshJob = scope.launch {
-      while (isActive) {
-        try {
-          val session = Clerk.session
-          if (session != null) {
-            if (Clerk.debugMode) {
-              ClerkLog.d("Refreshing token for session: ${session.id}")
+    refreshJob =
+      scope.launch {
+        while (isActive) {
+          try {
+            val session = Clerk.session
+            if (session != null) {
+              if (Clerk.debugMode) {
+                ClerkLog.d("Refreshing token for session: ${session.id}")
+              }
+              // Use async to avoid blocking the refresh loop
+              async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+            } else {
+              if (Clerk.debugMode) {
+                ClerkLog.d("No session available for token refresh")
+              }
             }
-            // Use async to avoid blocking the refresh loop
-            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-          } else {
-            if (Clerk.debugMode) {
-              ClerkLog.d("No session available for token refresh")
-            }
+          } catch (e: Exception) {
+            ClerkLog.w("Token refresh failed: ${e.message}")
           }
-        } catch (e: Exception) {
-          ClerkLog.w("Token refresh failed: ${e.message}")
-        }
 
-        delay(REFRESH_TOKEN_INTERVAL.seconds)
+          delay(REFRESH_TOKEN_INTERVAL.seconds)
+        }
       }
-    }
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -348,16 +351,30 @@ internal class ConfigurationManager(
     )
   }
 
+  /**
+   * Compare-and-set for framework integrations. A blank [expectedDeviceToken] is treated as null
+   * (no stored token), since storage never holds a blank token. Returns false without touching
+   * storage when Clerk is not configured (for example during reset or re-initialization).
+   */
   fun setDeviceToken(deviceToken: String?, expectedDeviceToken: String?): Boolean {
     require(deviceToken == null || deviceToken.isNotBlank()) { "Device token must not be blank" }
-    check(hasConfigured) { "Clerk must be initialized before setting the device token" }
+    if (!hasConfigured) {
+      ClerkLog.w("Ignoring setDeviceToken: Clerk is not initialized")
+      return false
+    }
 
     ensureStorageInitialized()
+    val expected = expectedDeviceToken?.takeIf { it.isNotBlank() }
+    var changed = false
     val swapped =
-      StorageHelper.compareAndSetDeviceToken(expected = expectedDeviceToken, value = deviceToken)
-    // An out-of-band token change must discard in-flight refreshes, like a sibling-app change does.
-    if (swapped && deviceToken != expectedDeviceToken) {
-      fenceClientResponsesAfterSharedDeviceTokenChange()
+      StorageHelper.compareAndSetDeviceToken(expected = expected, value = deviceToken) {
+        // Fence inside the swap so no refresh can observe the new token with the old fence.
+        fenceClientResponsesAfterSharedDeviceTokenChange()
+        changed = true
+      }
+    if (changed && deviceTokenTargetsDifferentClient(previous = expected, next = deviceToken)) {
+      resetClientStateForDeviceTokenChange()
+      queueRefreshAfterDeviceTokenChange()
     }
     return swapped
   }
@@ -368,10 +385,7 @@ internal class ConfigurationManager(
 
     ensureStorageInitialized()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-    Clerk.updateClient(Client())
-    Clerk.clearSessionAndUserState()
-    SessionTokenFetcher.shared.reset()
-    SessionTokensCache.clear()
+    resetClientStateForDeviceTokenChange()
 
     val result =
       refreshClientAndEnvironment(
@@ -381,6 +395,23 @@ internal class ConfigurationManager(
       )
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     return result
+  }
+
+  /**
+   * Refreshes client state for the current device token. Keeps initialization semantics (retry with
+   * backoff and error reporting) when [initialization] is set or the SDK has not initialized yet.
+   * Launched separately so it can be called while holding [refreshMutex].
+   */
+  private fun queueRefreshAfterDeviceTokenChange(
+    attempt: RefreshAttempt = currentRefreshAttempt(),
+    initialization: Boolean = false,
+  ) {
+    val mode =
+      if (initialization || !_isInitialized.value) RefreshMode.INITIALIZATION
+      else RefreshMode.DEVICE_TOKEN_UPDATE
+    scope.launch {
+      refreshClientAndEnvironment(attempt = attempt, mode = mode, skipClientId = true)
+    }
   }
 
   private fun currentRefreshAttempt(): RefreshAttempt =
@@ -532,13 +563,13 @@ internal class ConfigurationManager(
 
       if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration) {
         ClerkLog.d("Discarding refresh started before a shared device-token change")
-        scope.launch {
-          refreshClientAndEnvironment(
-            attempt = currentRefreshAttempt(),
-            mode = RefreshMode.DEVICE_TOKEN_UPDATE,
-            skipClientId = true,
-          )
-        }
+        // A discarded initialization must stay an initialization, or a failed follow-up would
+        // leave the SDK uninitialized with no retry and no reported error.
+        val initialization = mode == RefreshMode.INITIALIZATION
+        queueRefreshAfterDeviceTokenChange(
+          attempt = if (initialization) attempt else currentRefreshAttempt(),
+          initialization = initialization,
+        )
         return@withTimeout ClerkResult.success(Unit)
       }
 
@@ -779,4 +810,36 @@ internal class ConfigurationManager(
       ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
     }
   }
+}
+
+private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
+
+/**
+ * Whether [next] belongs to a different client than the in-memory state, so that state must be
+ * dropped rather than kept across a same-client rotation. Clearing always counts. For an opaque
+ * token whose client cannot be read, the caller relies on the response fence alone.
+ */
+private fun deviceTokenTargetsDifferentClient(previous: String?, next: String?): Boolean {
+  val nextClientId = deviceTokenClientId(next)
+  return when {
+    next == null -> true
+    nextClientId == null -> false
+    else ->
+      nextClientId !=
+        (deviceTokenClientId(previous) ?: Clerk.clientFlow.value?.id?.takeIf { it.isNotBlank() })
+  }
+}
+
+private fun deviceTokenClientId(token: String?): String? =
+  token
+    ?.let { runCatching { JWT(it).getClaim(DEVICE_TOKEN_CLIENT_ID_CLAIM).asString() } }
+    ?.getOrNull()
+    ?.takeIf { it.isNotBlank() }
+
+/** Drops client, session and token caches that belonged to the previous device token. */
+private fun resetClientStateForDeviceTokenChange() {
+  Clerk.updateClient(Client())
+  Clerk.clearSessionAndUserState()
+  SessionTokenFetcher.shared.reset()
+  SessionTokensCache.clear()
 }
