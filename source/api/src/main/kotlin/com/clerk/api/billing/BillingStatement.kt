@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * The current status of a billing statement.
- *
- * Matches clerk-js `BillingStatementStatus`.
  */
 @Serializable
 enum class BillingStatementStatus {

@@ -2,8 +2,6 @@ package com.clerk.api.user
 
 import com.clerk.api.Clerk
 import com.clerk.api.billing.BillingPaymentMethod
-import com.clerk.api.billing.GetPaymentMethodsParams
-import com.clerk.api.billing.billingOffsetLimit
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
@@ -909,24 +907,18 @@ suspend fun User.getOrganizationCreationDefaults():
 }
 
 /**
- * Gets a list of payment methods that have been stored for the current user.
+ * Lists the user's saved payment methods.
  *
- * Matches clerk-js `User.getPaymentMethods`. Write methods (`initializePaymentMethod`,
- * `addPaymentMethod`) are not ported.
- *
- * @param params Optional clerk-js pagination (`initialPage`, `pageSize`). Converted to FAPI
- *   `offset` / `limit` using `offset = (initialPage - 1) * pageSize`. Defaults are `initialPage=1`
- *   and `pageSize=10`.
- * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [BillingPaymentMethod] objects
- *   on success, or a [ClerkErrorResponse] on failure.
+ * @param limit The maximum number of payment methods to return.
+ * @param offset The number of payment methods to skip.
  */
 suspend fun User.getPaymentMethods(
-  params: GetPaymentMethodsParams = GetPaymentMethodsParams()
+  limit: Int = 20,
+  offset: Int = 0,
 ): ClerkResult<ClerkPaginatedResponse<BillingPaymentMethod>, ClerkErrorResponse> {
-  val pagination = billingOffsetLimit(params.initialPage, params.pageSize)
   return ClerkApi.billing.getUserPaymentMethods(
-    offset = pagination.offset,
-    limit = pagination.limit,
+    offset = offset,
+    limit = limit,
     sessionId = currentSessionId(),
   )
 }

@@ -19,13 +19,6 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/**
- * Internal Retrofit API for Clerk Billing GET endpoints.
- *
- * Paths are relative to `/v1/`. [ClerkApiResultConverterFactory] unwraps FAPI `{ response: T,
- * client }` envelopes except for the raw-body GETs (`getPlans`, `getPlan`, `getPaymentAttempts`,
- * `getPaymentAttempt`), which match clerk-js.
- */
 internal interface BillingApi {
 
   @GET(ApiPaths.Billing.PLANS)
@@ -124,12 +117,16 @@ internal interface BillingApi {
 
   @GET(ApiPaths.Billing.User.CREDIT_HISTORY)
   suspend fun getUserCreditHistory(
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ClerkPaginatedResponse<BillingCreditLedger>, ClerkErrorResponse>
 
   @GET(ApiPaths.Billing.Organization.CREDIT_HISTORY)
   suspend fun getOrganizationCreditHistory(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ClerkPaginatedResponse<BillingCreditLedger>, ClerkErrorResponse>
 
