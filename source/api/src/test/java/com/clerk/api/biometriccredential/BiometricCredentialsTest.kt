@@ -302,10 +302,6 @@ class BiometricCredentialsTest {
       check(!deleteFails) { "delete failed" }
       credentials.removeAll { it.id == id }
     }
-
-    override fun deleteAll() {
-      credentials.clear()
-    }
   }
 
   private class FakeKeyManager : BiometricCredentialKeyManager {

@@ -63,8 +63,6 @@ internal class BiometricCredentialFileStore(
     document.withCredentialElements(document.credentialElements().filterNot { it.recordId == id })
   }
 
-  fun deleteAllCredentials() = update { it.withCredentialElements(emptyList()) }
-
   fun addPendingCleanupUserId(userId: String) = update {
     it.withPendingCleanupUserIds(it.pendingCleanupUserIds() + userId)
   }

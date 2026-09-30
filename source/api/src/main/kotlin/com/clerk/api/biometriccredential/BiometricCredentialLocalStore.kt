@@ -61,8 +61,6 @@ internal interface BiometricCredentialLocalStore {
   fun save(credential: BiometricCredentialLocalRecord)
 
   fun delete(id: String)
-
-  fun deleteAll()
 }
 
 /** Holds the process-wide [BiometricCredentialFileStore] once Clerk has a [Context]. */
@@ -99,10 +97,6 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
 
   override fun delete(id: String) {
     BiometricCredentialStorage.requireFileStore().deleteCredential(id)
-  }
-
-  override fun deleteAll() {
-    BiometricCredentialStorage.requireFileStore().deleteAllCredentials()
   }
 }
 

@@ -84,17 +84,6 @@ class BiometricCredentialLocalStoreTest {
   }
 
   @Test
-  fun `delete all keeps the pending cleanup queue`() {
-    store.save(credential(id = "td_1"))
-    BiometricCredentialPendingCleanupStore.add("user_1")
-
-    store.deleteAll()
-
-    assertTrue(store.all().isEmpty())
-    assertEquals(setOf("user_1"), BiometricCredentialPendingCleanupStore.all())
-  }
-
-  @Test
   fun `malformed store file is read as empty and replaced on the next write`() {
     fileStore.dataFile.parentFile?.mkdirs()
     fileStore.dataFile.writeText("not-json")
