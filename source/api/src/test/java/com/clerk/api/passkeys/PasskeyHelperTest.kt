@@ -4,6 +4,11 @@ import com.clerk.api.Clerk
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -43,15 +48,6 @@ class PasskeyHelperTest {
   }
 
   @Test
-  fun `getDomain returns empty string when host is null`() {
-    every { Clerk.baseUrl } returns "invalid-url"
-
-    val result = PasskeyHelper.getDomain()
-
-    assertEquals("", result)
-  }
-
-  @Test
   fun `getDomain handles malformed URL gracefully`() {
     every { Clerk.baseUrl } returns "not-a-url"
 
@@ -61,7 +57,7 @@ class PasskeyHelperTest {
   }
 
   @Test
-  fun `GetPasskeyRequest serializes correctly`() {
+  fun `GetPasskeyRequest serializes to WebAuthn request option JSON`() {
     val request =
       GetPasskeyRequest(
         challenge = "test-challenge",
@@ -75,30 +71,22 @@ class PasskeyHelperTest {
         rpId = "example.com",
       )
 
-    assertEquals("test-challenge", request.challenge)
-    assertEquals(2, request.allowCredentials.size)
-    assertEquals("credential-1", request.allowCredentials[0]["id"])
-    assertEquals("required", request.userVerification)
-  }
+    val json = Json.parseToJsonElement(Json.encodeToString(request)).jsonObject
 
-  @Test
-  fun `PublicKeyCredentialData holds correct data`() {
-    val responseMap =
-      mapOf("attestationObject" to "test-attestation", "clientDataJSON" to "test-client-data")
-
-    val credentialData =
-      PublicKeyCredentialData(
-        id = "test-id",
-        rawId = "test-raw-id",
-        type = "public-key",
-        response = responseMap,
-      )
-
-    assertEquals("test-id", credentialData.id)
-    assertEquals("test-raw-id", credentialData.rawId)
-    assertEquals("public-key", credentialData.type)
-    assertEquals("test-attestation", credentialData.response["attestationObject"])
-    assertEquals("test-client-data", credentialData.response["clientDataJSON"])
+    assertEquals(
+      setOf("challenge", "allowCredentials", "timeout", "userVerification", "rpId"),
+      json.keys,
+    )
+    assertEquals("test-challenge", json.getValue("challenge").jsonPrimitive.content)
+    assertEquals(60000L, json.getValue("timeout").jsonPrimitive.long)
+    assertEquals("required", json.getValue("userVerification").jsonPrimitive.content)
+    assertEquals("example.com", json.getValue("rpId").jsonPrimitive.content)
+    assertEquals(
+      listOf("credential-1", "credential-2"),
+      json.getValue("allowCredentials").jsonArray.map {
+        it.jsonObject.getValue("id").jsonPrimitive.content
+      },
+    )
   }
 
   @Test
