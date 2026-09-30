@@ -43,7 +43,9 @@ if [[ ! -z ${kts_files_list} ]]; then
     fi
 fi
 
-# Modified ktfmt and detekt section with proper checks
+# ktfmt and detekt. config/bin/ktfmt and config/bin/detekt-cli run the versions pinned in
+# gradle/libs.versions.toml (the same ones build.gradle.kts gives Spotless and detekt), and the
+# flags below mirror build.gradle.kts, so the hook agrees with `./gradlew spotlessCheck detekt`.
 kotlin_files_list="$(git diff --cached --name-only --diff-filter=ACMR "-G.*"  | grep -Ei "\.kt(s)?$")"
 if [[ ! -z ${kotlin_files_list} ]]; then
     # Run ktfmt only if there are Kotlin files
@@ -63,16 +65,17 @@ if [[ ! -z ${kotlin_files_list} ]]; then
             --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
             --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
             --build-upon-default-config \
+            --all-rules \
             --input "${kotlin_files_detekt_args}" &> /dev/null
 
         if [[ $? != 0 ]]; then
             echo -e "${RED}Detekt failed, re-running verbosely. Alternatively, you can run the format command locally" >&2
-            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${NC}" >&2
+            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --all-rules --input ${kotlin_files_detekt_args}'${NC}" >&2
             "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
                 --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
                 --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
                 --build-upon-default-config \
-                --build-upon-default-config \
+                --all-rules \
                 --input "${kotlin_files_detekt_args}" >&2
             exit $?
         fi
