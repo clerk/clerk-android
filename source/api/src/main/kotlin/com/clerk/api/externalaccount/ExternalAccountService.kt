@@ -15,6 +15,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.sso.SSOCancellationException
 import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
@@ -32,7 +33,7 @@ internal object ExternalAccountService {
     params: User.CreateExternalAccountParams
   ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
     HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
-    currentPendingExternalAccountConnection = null
+    cancelPendingExternalAccountConnection(EXTERNAL_CONNECTION_SUPERSEDED)
     val initialResult = ClerkApi.user.createExternalAccount(params.toMap())
     return when (initialResult) {
       is ClerkResult.Failure -> {
@@ -154,9 +155,9 @@ internal object ExternalAccountService {
     return currentPendingExternalAccountConnectionId != null
   }
 
-  fun cancelPendingExternalAccountConnection() {
+  fun cancelPendingExternalAccountConnection(reason: String = EXTERNAL_CONNECTION_CANCELLED) {
     currentPendingExternalAccountConnection?.complete(
-      ClerkResult.Companion.unknownFailure(Exception("External account connection cancelled"))
+      ClerkResult.Companion.unknownFailure(SSOCancellationException(reason))
     )
     clearExternalConnectionState()
   }
@@ -187,6 +188,11 @@ internal object ExternalAccountService {
       ClerkResult.Failure.ErrorType.UNKNOWN ->
         ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
     }
+
+  private const val EXTERNAL_CONNECTION_CANCELLED = "External account connection cancelled"
+
+  private const val EXTERNAL_CONNECTION_SUPERSEDED =
+    "New external account connection started, cancelling previous attempt"
 
   private const val EXTERNAL_CONNECTION_INTERRUPTED =
     "External account connection was interrupted before it could complete. Please try again."

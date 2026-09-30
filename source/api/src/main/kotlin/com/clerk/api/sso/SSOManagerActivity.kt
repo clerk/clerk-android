@@ -10,6 +10,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
+import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
@@ -180,6 +181,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun authorizationFailed() {
     HostedAuthService.cancelPendingAuthentication()
     SSOService.cancelPendingAuthentication()
+    ExternalAccountService.cancelPendingExternalAccountConnection()
     val response = Intent()
     setResult(RESULT_CANCELED, response)
   }
