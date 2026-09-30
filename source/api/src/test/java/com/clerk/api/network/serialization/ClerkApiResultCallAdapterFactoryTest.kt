@@ -4,9 +4,13 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import io.mockk.every
 import io.mockk.mockk
 import java.lang.reflect.Type
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -20,6 +24,7 @@ import retrofit2.Converter
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.http.GET
 
 class ClerkApiResultCallAdapterFactoryTest {
 
@@ -45,9 +50,55 @@ class ClerkApiResultCallAdapterFactoryTest {
     assertEquals(error, thrown)
   }
 
-  private fun retrofit(converterFactory: Converter.Factory): Retrofit =
+  @Test
+  fun `non-fatal error thrown while decoding error body becomes an unknown failure`() {
+    val error = AssertionError("decode")
+    val retrofit = retrofit(ThrowingConverterFactory(error))
+
+    val result = enqueueErrorResponse(retrofit, "{}")
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertEquals(error, failure.throwable)
+  }
+
+  @Test
+  fun `suspend call resumes when a non-fatal error is thrown while decoding error body`() {
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          okhttp3.Response.Builder()
+            .request(chain.request())
+            .protocol(Protocol.HTTP_1_1)
+            .code(400)
+            .message("Bad Request")
+            .body("{}".toResponseBody(JSON))
+            .build()
+        }
+        .build()
+    val error = NotImplementedError("decode")
+    val service = retrofit(ThrowingConverterFactory(error), client).create(ErrorService::class.java)
+
+    val result = runBlocking { withTimeout(SUSPEND_TIMEOUT_MS) { service.fetch() } }
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertEquals(error, failure.throwable)
+  }
+
+  private interface ErrorService {
+    @GET("error") suspend fun fetch(): ClerkResult<Unit, ClerkErrorResponse>
+  }
+
+  private fun retrofit(
+    converterFactory: Converter.Factory,
+    client: OkHttpClient = OkHttpClient(),
+  ): Retrofit =
     Retrofit.Builder()
       .baseUrl("https://example.com/")
+      .client(client)
       .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
       .addConverterFactory(converterFactory)
       .build()
@@ -100,5 +151,6 @@ class ClerkApiResultCallAdapterFactoryTest {
   private companion object {
     val JSON = "application/json".toMediaType()
     val ERROR_TYPE: Type = ClerkErrorResponse::class.java
+    const val SUSPEND_TIMEOUT_MS = 5_000L
   }
 }
