@@ -75,8 +75,8 @@ import org.robolectric.annotation.Config
 /**
  * Pins the on-device biometric credential storage format that other Clerk SDKs in the same app
  * (e.g. `@clerk/expo-biometrics`) read and write (contract v2), and the legacy v1 format that is
- * migrated from. See `source/api/docs/biometric-credential-storage-contract.md`. The literals below
- * are the contract; update them only together with a contract version bump and a migration.
+ * migrated from. These tests and the fixtures under `biometric-credential-storage/` are the
+ * contract; update them only together with a contract version bump and a migration.
  */
 @RunWith(RobolectricTestRunner::class)
 class BiometricCredentialStorageContractTest {
