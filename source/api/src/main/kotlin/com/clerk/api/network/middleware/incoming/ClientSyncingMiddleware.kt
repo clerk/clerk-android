@@ -204,11 +204,19 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   }
 
   private fun decodeSignIn(responseElement: JsonElement): SignIn? {
-    return runCatching { json.decodeFromJsonElement<SignIn>(responseElement) }.getOrNull()
+    return try {
+      json.decodeFromJsonElement<SignIn>(responseElement)
+    } catch (_: Exception) {
+      null
+    }
   }
 
   private fun decodeSignUp(responseElement: JsonElement): SignUp? {
-    return runCatching { json.decodeFromJsonElement<SignUp>(responseElement) }.getOrNull()
+    return try {
+      json.decodeFromJsonElement<SignUp>(responseElement)
+    } catch (_: Exception) {
+      null
+    }
   }
 
   private fun isSignInCreationRequest(path: String, method: String): Boolean {
@@ -239,11 +247,14 @@ private fun syncClerkClient(
 
 private fun Response.serverFetchAtMillis(): Long {
   val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
-  return runCatching {
+  val parsed =
+    try {
       SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
         .apply { timeZone = TimeZone.getTimeZone("GMT") }
         .parse(serverDate)
         ?.time
+    } catch (_: Exception) {
+      null
     }
-    .getOrNull() ?: System.currentTimeMillis()
+  return parsed ?: System.currentTimeMillis()
 }

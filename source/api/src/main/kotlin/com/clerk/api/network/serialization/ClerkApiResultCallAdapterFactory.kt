@@ -106,12 +106,23 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     val errorType = apiResultType.actualTypeArguments[1]
                     val statusCode = createStatusCode(response.code())
                     val nextAnnotations = annotations + statusCode
+                    // This runs inside Retrofit's callback.onResponse, which only rethrows
+                    // fatal errors (throwIfFatal) and logs and swallows everything else. An
+                    // uncaught non-fatal Throwable would leave the suspending caller hanging,
+                    // so rethrow the same fatal errors Retrofit does and map the rest to a
+                    // failure.
                     @Suppress("TooGenericExceptionCaught")
                     errorBody =
                       try {
                         retrofit
                           .responseBodyConverter<Any>(errorType, nextAnnotations)
                           .convert(responseBody)
+                      } catch (e: VirtualMachineError) {
+                        throw e
+                      } catch (@Suppress("DEPRECATION") e: ThreadDeath) {
+                        throw e
+                      } catch (e: LinkageError) {
+                        throw e
                       } catch (e: Throwable) {
                         @Suppress("UNCHECKED_CAST")
                         callback.onResponse(
