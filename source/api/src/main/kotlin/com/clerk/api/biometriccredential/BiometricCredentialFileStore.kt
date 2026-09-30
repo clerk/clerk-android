@@ -122,7 +122,8 @@ internal class BiometricCredentialFileStore(
       .getOrNull()
       ?.takeIf { it.writable }
 
-  // Only a missing file is an empty store; other read errors must not let a writer replace it.
+  // A missing file or a non-object root reads as an empty, writable store (contract 3.2). I/O
+  // errors propagate so a writer never replaces a file it could not read.
   private fun readDocument(): StoreDocument {
     if (!dataFile.exists()) return StoreDocument.EMPTY
     val text = dataFile.readText(Charsets.UTF_8)
@@ -238,13 +239,14 @@ internal class BiometricCredentialFileStore(
       val existing = elements.firstOrNull { it.recordId == credential.id } as? JsonObject
       val encoded = BiometricCredentialRecordJson.encode(credential, preserving = existing)
       var replaced = false
-      val updated = elements.mapNotNull { element ->
-        when {
-          element.recordId != credential.id -> element
-          replaced -> null
-          else -> encoded.also { replaced = true }
+      val updated =
+        elements.mapNotNull { element ->
+          when {
+            element.recordId != credential.id -> element
+            replaced -> null
+            else -> encoded.also { replaced = true }
+          }
         }
-      }
       return withCredentialElements(if (replaced) updated else updated + encoded)
     }
 

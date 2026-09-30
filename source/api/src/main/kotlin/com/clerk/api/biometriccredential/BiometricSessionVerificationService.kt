@@ -71,7 +71,7 @@ internal object BiometricSessionVerificationService {
       )
   }
 
-  private fun selectCredential(
+  private suspend fun selectCredential(
     session: Session,
     level: SessionVerification.Level,
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> {
