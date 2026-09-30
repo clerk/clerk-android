@@ -83,8 +83,8 @@ data class Session(
    * [reverification] alone. When you pass several, all of them must pass. Returns `false` when
    * there is no user or no condition is passed, and for [role] and [permission] when there is no
    * Active Organization. Prefix a [feature] or [plan] slug with `user:` or `org:` to check one
-   * payer only. [feature] and [plan] are read from the session token, so a Subscription change is
-   * reflected after the token refreshes.
+   * payer only. A Subscription change is reflected in [feature] and [plan] checks after the session
+   * token refreshes.
    */
   fun checkAuthorization(
     role: String? = null,

@@ -159,15 +159,27 @@ object Billing {
     }
   }
 
-  /** Gets every credit ledger entry of the signed-in user, or of the Organization with [orgId]. */
+  /**
+   * Lists the credit ledger entries of the signed-in user, or of the Organization with [orgId].
+   *
+   * @param limit The maximum number of entries to return.
+   * @param offset The number of entries to skip.
+   */
   suspend fun getCreditHistory(
-    orgId: String? = null
+    orgId: String? = null,
+    limit: Int = DEFAULT_BILLING_LIMIT,
+    offset: Int = 0,
   ): ClerkResult<ClerkPaginatedResponse<BillingCreditLedger>, ClerkErrorResponse> {
     val sessionId = currentSessionId()
     return if (orgId != null) {
-      ClerkApi.billing.getOrganizationCreditHistory(organizationId = orgId, sessionId = sessionId)
+      ClerkApi.billing.getOrganizationCreditHistory(
+        organizationId = orgId,
+        limit = limit,
+        offset = offset,
+        sessionId = sessionId,
+      )
     } else {
-      ClerkApi.billing.getUserCreditHistory(sessionId = sessionId)
+      ClerkApi.billing.getUserCreditHistory(limit = limit, offset = offset, sessionId = sessionId)
     }
   }
 }

@@ -117,12 +117,16 @@ internal interface BillingApi {
 
   @GET(ApiPaths.Billing.User.CREDIT_HISTORY)
   suspend fun getUserCreditHistory(
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ClerkPaginatedResponse<BillingCreditLedger>, ClerkErrorResponse>
 
   @GET(ApiPaths.Billing.Organization.CREDIT_HISTORY)
   suspend fun getOrganizationCreditHistory(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ClerkPaginatedResponse<BillingCreditLedger>, ClerkErrorResponse>
 

@@ -248,6 +248,30 @@ class BillingTest {
   }
 
   @Test
+  fun `getCreditHistory sends limit and offset for user and organization`() = runTest {
+    val billingApi = mockk<BillingApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.billing } returns billingApi
+    coEvery { billingApi.getUserCreditHistory(any(), any(), any()) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery { billingApi.getOrganizationCreditHistory(any(), any(), any(), any()) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    Billing.getCreditHistory()
+    coVerify { billingApi.getUserCreditHistory(limit = 20, offset = 0, sessionId = any()) }
+
+    Billing.getCreditHistory(orgId = "org_123", limit = 5, offset = 10)
+    coVerify {
+      billingApi.getOrganizationCreditHistory(
+        organizationId = "org_123",
+        limit = 5,
+        offset = 10,
+        sessionId = any(),
+      )
+    }
+  }
+
+  @Test
   fun `User getPaymentMethods hits me payment methods with offset limit`() = runTest {
     val billingApi = mockk<BillingApi>()
     mockkObject(ClerkApi)
