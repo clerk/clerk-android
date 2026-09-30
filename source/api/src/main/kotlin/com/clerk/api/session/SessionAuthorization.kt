@@ -16,16 +16,28 @@ internal data class CheckAuthorizationParams(
  * custom `{ level, afterMinutes }` object.
  */
 sealed class ReverificationConfig {
-  /** Multi-factor verification within the last 10 minutes. */
+  /**
+   * Multi-factor verification within the last 10 minutes. Falls back to first-factor verification
+   * when the user has no second factor enrolled.
+   */
   data object StrictMfa : ReverificationConfig()
 
-  /** Second-factor verification within the last 10 minutes. */
+  /**
+   * Second-factor verification within the last 10 minutes. Falls back to first-factor verification
+   * when the user has no second factor enrolled.
+   */
   data object Strict : ReverificationConfig()
 
-  /** Second-factor verification within the last hour. */
+  /**
+   * Second-factor verification within the last hour. Falls back to first-factor verification when
+   * the user has no second factor enrolled.
+   */
   data object Moderate : ReverificationConfig()
 
-  /** Second-factor verification within the last day. */
+  /**
+   * Second-factor verification within the last day. Falls back to first-factor verification when
+   * the user has no second factor enrolled.
+   */
   data object Lax : ReverificationConfig()
 
   /** Verification at [level] within the last [afterMinutes] minutes. */
