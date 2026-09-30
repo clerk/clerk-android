@@ -1,9 +1,13 @@
 package com.clerk.api.session
 
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.user.User
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import kotlinx.serialization.json.JsonObject
@@ -27,8 +31,9 @@ class SessionAuthorizationTest {
   fun clearTokenCacheAfter() {
     SessionTokensCache.clear()
   }
+
   @Test
-  fun `checkAuthorization and has share one implementation`() {
+  fun `Clerk has delegates to the current session`() {
     val session =
       session(
         orgId = "org_123",
@@ -37,11 +42,20 @@ class SessionAuthorizationTest {
         features = "o:reservations,u:dashboard",
         plans = "u:plus",
       )
+    mockkObject(Clerk)
+    try {
+      every { Clerk.session } returns session
+      assertTrue(Clerk.has(plan = "plus"))
+      assertTrue(Clerk.has(role = "org:admin"))
+      assertFalse(Clerk.has(plan = "missing"))
 
-    assertEquals(session.has(plan = "plus"), session.checkAuthorization(plan = "plus"))
-    assertTrue(session.has(plan = "plus"))
-    assertEquals(session.has(plan = "missing"), session.checkAuthorization(plan = "missing"))
-    assertFalse(session.has(plan = "missing"))
+      every { Clerk.session } returns null
+      assertFalse(Clerk.has(plan = "plus"))
+      assertFalse(Clerk.has(role = "org:admin"))
+      assertFalse(Clerk.has(reverification = ReverificationConfig.Lax))
+    } finally {
+      unmockkObject(Clerk)
+    }
   }
 
   @Test

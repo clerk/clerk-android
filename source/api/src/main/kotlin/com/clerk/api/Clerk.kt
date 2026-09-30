@@ -37,6 +37,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.restorecredentials.RestoreCredentials
+import com.clerk.api.session.ReverificationConfig
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
@@ -572,6 +573,26 @@ object Clerk {
    */
   val activeSession: Session?
     get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
+
+  /**
+   * Returns whether the signed-in user passes the given authorization checks. Returns `false` when
+   * no user is signed in. See [Session.has].
+   */
+  fun has(
+    role: String? = null,
+    permission: String? = null,
+    feature: String? = null,
+    plan: String? = null,
+    reverification: ReverificationConfig? = null,
+  ): Boolean {
+    return session?.has(
+      role = role,
+      permission = permission,
+      feature = feature,
+      plan = plan,
+      reverification = reverification,
+    ) ?: false
+  }
 
   /**
    * The active locale for the current session.

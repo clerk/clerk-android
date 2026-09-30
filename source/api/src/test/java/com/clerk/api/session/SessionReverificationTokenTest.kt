@@ -97,7 +97,7 @@ class SessionReverificationTokenTest {
     val updatedSession = updateSnapshot(updatedToken)
 
     assertTrue(updatedSession.has(feature = "write"))
-    assertTrue(updatedSession.checkAuthorization(feature = "write"))
+    assertTrue(updatedSession.has(feature = "write"))
     assertFalse(updatedSession.has(feature = "read"))
     assertEquals(updatedToken, fetcher.getToken(session))
     assertEquals(updatedToken, SessionTokensCache.getToken(session.tokenCacheKey(null)))
@@ -228,7 +228,7 @@ class SessionReverificationTokenTest {
         )
       assertEquals(verifiedToken, fetcher.getToken(snapshot))
       assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
-      assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
+      assertTrue(snapshot.has(reverification = ReverificationConfig.StrictMfa))
       assertTrue(snapshot.has(feature = "read"))
       assertFalse(snapshot.has(feature = "stale"))
     }
@@ -248,7 +248,7 @@ class SessionReverificationTokenTest {
       val snapshot = updateSnapshot(token(now + 1, permission = "stale", factorAges = "[20,20]"))
       assertEquals(verifiedToken, fetcher.getToken(snapshot))
       assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
-      assertTrue(snapshot.checkAuthorization(feature = "read"))
+      assertTrue(snapshot.has(feature = "read"))
       assertFalse(snapshot.has(feature = "stale"))
     }
 
@@ -260,7 +260,7 @@ class SessionReverificationTokenTest {
     fetcher.invalidateSession(session.id)
 
     assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
-    assertFalse(snapshot.checkAuthorization(feature = "read"))
+    assertFalse(snapshot.has(feature = "read"))
     coVerify(exactly = 0) { api.tokens(session.id, "org_123", any(), any()) }
 
     val verifiedToken = token(now + 1)
@@ -268,7 +268,7 @@ class SessionReverificationTokenTest {
       ClerkResult.success(verifiedToken)
     assertEquals(verifiedToken, fetcher.getToken(snapshot))
     assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
-    assertTrue(snapshot.checkAuthorization(feature = "read"))
+    assertTrue(snapshot.has(feature = "read"))
   }
 
   @Test
@@ -282,7 +282,7 @@ class SessionReverificationTokenTest {
     assertEquals(verifiedToken, fetcher.getToken(snapshot))
 
     assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
-    assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
+    assertFalse(snapshot.has(reverification = ReverificationConfig.StrictMfa))
     assertTrue(snapshot.has(feature = "read"))
   }
 
@@ -295,7 +295,7 @@ class SessionReverificationTokenTest {
     fetcher.reset()
 
     assertTrue(snapshot.has(feature = "read"))
-    assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
+    assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
