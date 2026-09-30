@@ -11,8 +11,7 @@ import kotlinx.serialization.encoding.Encoder
 /**
  * The status of a Billing Subscription or subscription item.
  *
- * Matches clerk-js `BillingSubscriptionStatus`. The top-level subscription is `active` or
- * `past_due`.
+ * A top-level Subscription is [ACTIVE] or [PAST_DUE].
  */
 @Serializable
 enum class BillingSubscriptionStatus {
@@ -25,8 +24,6 @@ enum class BillingSubscriptionStatus {
 
 /**
  * The billing period for a Plan.
- *
- * Matches clerk-js `BillingSubscriptionPlanPeriod`.
  */
 @Serializable
 enum class BillingSubscriptionPlanPeriod {
@@ -89,8 +86,6 @@ data class BillingSubscriptionItemNextPayment(
 
 /**
  * An item in a Billing Subscription.
- *
- * The clerk-js `cancel` write method is not ported.
  *
  * @property id The unique identifier for the subscription item.
  * @property plan The Plan associated with the subscription item.

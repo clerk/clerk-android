@@ -18,6 +18,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
@@ -27,6 +28,9 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
+import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.GoogleSignInService
+import com.clerk.api.sso.OAuthResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -57,7 +61,6 @@ class PasskeyAuthenticationServiceTest {
   private lateinit var mockSignIn: SignIn
   private lateinit var mockVerification: Verification
   private lateinit var mockPublicKeyCredential: PublicKeyCredential
-  private lateinit var mockPasswordCredential: PasswordCredential
   private lateinit var mockCustomCredential: CustomCredential
   private lateinit var mockSignInApi: SignInApi
   private lateinit var mockSessionApi: SessionApi
@@ -70,7 +73,6 @@ class PasskeyAuthenticationServiceTest {
     mockSignIn = mockk(relaxed = true)
     mockVerification = mockk(relaxed = true)
     mockPublicKeyCredential = mockk(relaxed = true)
-    mockPasswordCredential = mockk(relaxed = true)
     mockCustomCredential = mockk(relaxed = true)
 
     mockkObject(Clerk)
@@ -88,6 +90,7 @@ class PasskeyAuthenticationServiceTest {
 
   @After
   fun tearDown() {
+    GoogleCredentialAuthenticationService.setGoogleSignInService(GoogleSignInService())
     unmockkAll()
   }
 
@@ -119,35 +122,140 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `signInWithPasskey handles password credential`() = runTest {
+  fun `signInWithGoogleCredential signs in with a selected saved password`() = runTest {
     val nonce = """{"challenge":"test-challenge"}"""
+    val passwordCredential = PasswordCredential("user@example.com", "secret-password")
+    val passwordSignIn = SignIn(id = "sign_in_password", status = SignIn.Status.COMPLETE)
 
+    every { mockSignIn.id } returns "sign_in_passkey"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { mockGetCredentialResponse.credential } returns mockPasswordCredential
+    every { mockGetCredentialResponse.credential } returns passwordCredential
 
-    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockSignInApi.createSignIn(any()) } answers
+      {
+        if (firstArg<Map<String, String>>()["strategy"] == "password") {
+          ClerkResult.success(passwordSignIn)
+        } else {
+          ClerkResult.success(mockSignIn)
+        }
+      }
     coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
 
     val result =
       GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY)
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY, SignIn.CredentialType.PASSWORD)
       )
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
+    assertEquals(passwordSignIn, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      mockSignInApi.createSignIn(
+        match {
+          it["strategy"] == "password" &&
+            it["identifier"] == "user@example.com" &&
+            it["password"] == "secret-password"
+        }
+      )
+    }
+    coVerify(exactly = 0) { mockSignInApi.attemptFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `signInWithGoogleCredential returns password sign in failure`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val passwordCredential = PasswordCredential("user@example.com", "wrong-password")
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = "form_password_incorrect",
+              message = "Incorrect password",
+              longMessage = "Password is incorrect.",
+            )
+          ),
+        clerkTraceId = "test-trace",
+      )
+
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { mockGetCredentialResponse.credential } returns passwordCredential
+
+    coEvery { mockSignInApi.createSignIn(any()) } answers
+      {
+        if (firstArg<Map<String, String>>()["strategy"] == "password") {
+          ClerkResult.apiFailure(errorResponse)
+        } else {
+          ClerkResult.success(mockSignIn)
+        }
+      }
+    coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSWORD)
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals(errorResponse, (result as ClerkResult.Failure).error)
+    coVerify(exactly = 0) { mockSignInApi.attemptFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `signInWithGoogleCredential returns completed Google sign up as completed sign in`() =
+    runTest {
+      val signUp = mockk<SignUp>(relaxed = true)
+      every { signUp.id } returns "sign_up_123"
+      every { signUp.status } returns SignUp.Status.COMPLETE
+      every { signUp.emailAddress } returns "new-user@example.com"
+      every { signUp.createdSessionId } returns "sess_new"
+      stubGoogleCredentialResult(ClerkResult.success(OAuthResult(signUp = signUp)))
+
+      val result =
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+          credentialTypes = listOf(SignIn.CredentialType.GOOGLE)
+        )
+
+      assertTrue(result is ClerkResult.Success)
+      val signIn = (result as ClerkResult.Success).value
+      assertEquals(SignIn.Status.COMPLETE, signIn.status)
+      assertEquals("sess_new", signIn.createdSessionId)
+      assertEquals("new-user@example.com", signIn.identifier)
+    }
+
+  @Test
+  fun `signInWithGoogleCredential fails clearly for incomplete Google sign up`() = runTest {
+    val signUp = mockk<SignUp>(relaxed = true)
+    every { signUp.status } returns SignUp.Status.MISSING_REQUIREMENTS
+    stubGoogleCredentialResult(ClerkResult.success(OAuthResult(signUp = signUp)))
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.GOOGLE)
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue(
+      (result as ClerkResult.Failure).throwable is CredentialFlowException.SignUpIncomplete
+    )
   }
 
   @Test
   fun `signInWithPasskey can prefer immediately available credentials`() = runTest {
     val nonce = """{"challenge":"test-challenge"}"""
+    val authResponseJson = """{"type":"public-key","id":"credential-123"}"""
     val requestSlot = slot<GetCredentialRequest>()
 
+    every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { mockGetCredentialResponse.credential } returns mockPasswordCredential
+    every { mockGetCredentialResponse.credential } returns mockPublicKeyCredential
+    every { mockPublicKeyCredential.authenticationResponseJson } returns authResponseJson
 
-    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockSignInApi.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockSignInApi.attemptFirstFactor(any(), any()) } returns
+      ClerkResult.success(mockSignIn)
     coEvery { mockCredentialManager.getCredential(any(), capture(requestSlot)) } returns
       mockGetCredentialResponse
 
@@ -159,6 +267,21 @@ class PasskeyAuthenticationServiceTest {
 
     assertTrue(result is ClerkResult.Success)
     assertTrue(requestSlot.captured.preferImmediatelyAvailableCredentials)
+  }
+
+  private fun stubGoogleCredentialResult(result: ClerkResult<OAuthResult, ClerkErrorResponse>) {
+    val googleCredential = mockk<CustomCredential>(relaxed = true)
+    val googleSignInService = mockk<GoogleSignInService>()
+    val environment = mockk<Environment>(relaxed = true)
+    every { environment.displayConfig.googleOneTapClientId } returns "google-client-id"
+    every { Clerk.environment } returns environment
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns """{"challenge":"test-challenge"}"""
+    every { mockGetCredentialResponse.credential } returns googleCredential
+    coEvery { mockSignInApi.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
+    coEvery { googleSignInService.handleSignInResult(googleCredential, any()) } returns result
+    GoogleCredentialAuthenticationService.setGoogleSignInService(googleSignInService)
   }
 
   @Test

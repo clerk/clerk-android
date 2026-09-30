@@ -30,8 +30,10 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.attemptSecondFactor
 import com.clerk.api.signin.prepareSecondFactor
+import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.GoogleCredentialManagerImpl
 import com.clerk.api.sso.GoogleSignInService
+import com.clerk.api.sso.OAuthResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -53,6 +55,11 @@ internal object GoogleCredentialAuthenticationService {
     credentialManager = manager
   }
 
+  @VisibleForTesting
+  internal fun setGoogleSignInService(service: GoogleSignInService) {
+    googleSignInService = service
+  }
+
   /**
    * Initiates and completes a sign-in flow using Google credentials and other supported credential
    * types.
@@ -72,7 +79,10 @@ internal object GoogleCredentialAuthenticationService {
    *   available credentials will be presented to the user.
    * @param credentialTypes List of credential types to request from the system. Defaults to only
    *   passkey credentials. Can include [SignIn.CredentialType.PASSKEY],
-   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE].
+   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE]. A selected saved
+   *   password signs in with a new password-strategy sign-in. A Google account that has no Clerk
+   *   user is transferred to a sign-up; a completed sign-up is returned as a completed [SignIn]
+   *   carrying the new session ID, and an incomplete one returns a failure.
    * @return A [ClerkResult] containing either a successful [SignIn] object on authentication
    *   success, or a [ClerkErrorResponse] detailing the failure reason.
    * @throws Exception If credential retrieval fails or an unexpected error occurs during
@@ -535,8 +545,8 @@ internal object GoogleCredentialAuthenticationService {
    * and routes them to the appropriate authentication handlers:
    * - **[PublicKeyCredential]**: Handles WebAuthn passkey authentication by extracting the
    *   authentication response and completing the first factor verification with Clerk
-   * - **[PasswordCredential]**: Handles password-based authentication (currently returns success
-   *   without processing for demonstration purposes)
+   * - **[PasswordCredential]**: Signs in with the saved identifier and password using a new
+   *   password-strategy sign-in
    * - **[CustomCredential]**: Handles custom credentials such as Google ID tokens by delegating to
    *   specialized handlers like [GoogleSignInService]
    *
@@ -562,8 +572,7 @@ internal object GoogleCredentialAuthenticationService {
       }
 
       is PasswordCredential -> {
-        ClerkLog.d("Handling password credential")
-        ClerkResult.success(signIn)
+        handlePasswordCredential(credential)
       }
 
       is CustomCredential -> {
@@ -600,13 +609,68 @@ internal object GoogleCredentialAuthenticationService {
     }
 
     return when (val result = googleSignInService.handleSignInResult(credential)) {
-      is ClerkResult.Success -> {
-        ClerkResult.success(result.value.signIn!!)
-      }
+      is ClerkResult.Success -> result.value.toSignInResult()
       is ClerkResult.Failure -> {
         ClerkLog.e("Google sign-in failed: ${result.error}")
         result
       }
+    }
+  }
+
+  /**
+   * Signs in with a saved password selected from the Credential Manager.
+   *
+   * The sign-in created up front uses the passkey strategy and cannot be reused for a password
+   * attempt, so a new sign-in is created with the password strategy. Creating it replaces the
+   * client's in-progress passkey sign-in.
+   */
+  private suspend fun handlePasswordCredential(
+    credential: PasswordCredential
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    ClerkLog.d("Attempting password authentication with saved credential")
+    val result =
+      SignIn.create(
+        SignIn.CreateParams.Strategy.Password(
+          identifier = credential.id,
+          password = credential.password,
+        )
+      )
+
+    if (result is ClerkResult.Failure) {
+      ClerkLog.e("Password authentication failed: ${result.error}")
+    }
+
+    return result
+  }
+
+  /**
+   * Maps a Google ID token result onto this service's [SignIn]-typed result.
+   *
+   * New Google users are transferred to a sign-up, so the result can hold a [SignUp] instead of a
+   * [SignIn]. A completed sign-up has already created a session and is reported as a completed
+   * sign-in carrying that session (its ID is the sign-up's ID, since no sign-in exists). A sign-up
+   * that still needs more fields is reported as a [CredentialFlowException.SignUpIncomplete]
+   * failure; it remains on the client's sign-up so the caller can continue it.
+   */
+  private fun OAuthResult.toSignInResult(): ClerkResult<SignIn, ClerkErrorResponse> {
+    val completedSignIn = signIn
+    val transferredSignUp = signUp
+    return when {
+      completedSignIn != null -> ClerkResult.success(completedSignIn)
+      transferredSignUp != null && transferredSignUp.status == SignUp.Status.COMPLETE ->
+        ClerkResult.success(
+          SignIn(
+            id = transferredSignUp.id,
+            status = SignIn.Status.COMPLETE,
+            identifier = transferredSignUp.emailAddress,
+            createdSessionId = transferredSignUp.createdSessionId,
+          )
+        )
+      transferredSignUp != null -> {
+        ClerkLog.d("Google sign-in transferred to a sign-up that needs more fields")
+        ClerkResult.unknownFailure(CredentialFlowException.SignUpIncomplete())
+      }
+      else -> ClerkResult.unknownFailure(IllegalStateException("Google sign-in returned no result"))
     }
   }
 }
@@ -619,25 +683,25 @@ private fun JsonObject.passkeyRpId(): String? {
 
   return topLevelRpId
     ?: runCatching {
-        this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-      }
+      this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+    }
       .getOrNull()
 }
 
 private fun JsonObject.passkeyAllowCredentials(): List<Map<String, String>> {
   return runCatching {
-      this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
-        val credentialJson = credential.jsonObject
-        val credentialId =
-          credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: return@mapNotNull null
-        val credentialType =
-          credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: "public-key"
+    this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
+      val credentialJson = credential.jsonObject
+      val credentialId =
+        credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: return@mapNotNull null
+      val credentialType =
+        credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: "public-key"
 
-        mapOf("type" to credentialType, "id" to credentialId)
-      }
+      mapOf("type" to credentialType, "id" to credentialId)
     }
+  }
     .getOrNull()
     .orEmpty()
 }

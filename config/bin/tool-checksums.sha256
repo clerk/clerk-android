@@ -1,0 +1,5 @@
+# SHA-256 of the tool jars the config/bin wrappers download from Maven Central.
+# When a version changes in gradle/libs.versions.toml, add the new jar's line
+# here (verify it independently, e.g. against the release's published checksum).
+5b3d5286fd2defcc7dc8e28c21ddf156cc6b2d8682bdcd929ce4333e7a6201f2  ktfmt-0.64-with-dependencies.jar
+3afe89a11120303c73c9bdda3d8fe558dd9070a6937d27819ddc04b275381245  detekt-cli-1.23.8-all.jar
