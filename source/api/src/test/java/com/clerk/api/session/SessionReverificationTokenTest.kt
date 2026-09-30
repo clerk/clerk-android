@@ -97,7 +97,6 @@ class SessionReverificationTokenTest {
     val updatedSession = updateSnapshot(updatedToken)
 
     assertTrue(updatedSession.checkAuthorization(feature = "write"))
-    assertTrue(updatedSession.checkAuthorization(feature = "write"))
     assertFalse(updatedSession.checkAuthorization(feature = "read"))
     assertEquals(updatedToken, fetcher.getToken(session))
     assertEquals(updatedToken, SessionTokensCache.getToken(session.tokenCacheKey(null)))

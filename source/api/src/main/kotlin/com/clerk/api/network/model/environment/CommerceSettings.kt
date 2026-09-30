@@ -2,10 +2,7 @@ package com.clerk.api.network.model.environment
 
 import kotlinx.serialization.Serializable
 
-/**
- * The Billing settings from the Clerk Dashboard. Read them through
- * [com.clerk.api.Clerk.commerceSettings].
- */
+/** The Billing settings from the Clerk Dashboard. */
 @Serializable
 data class CommerceSettings(val billing: Billing = Billing()) {
   @Serializable

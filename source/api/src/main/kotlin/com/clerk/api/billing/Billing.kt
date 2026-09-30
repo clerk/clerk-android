@@ -9,11 +9,9 @@ import com.clerk.api.user.currentSessionId
 /**
  * Reads Clerk Billing data: Plans, Subscriptions, statements, payment attempts, and credits.
  *
- * Access it through [com.clerk.api.Clerk.billing]. Methods that read a payer's data take an
- * optional `orgId`: omit it for the signed-in user, or pass an Organization ID to read that
- * Organization's data, which requires the `org:sys_billing:read` Permission. Payment methods are
- * read from [com.clerk.api.user.getPaymentMethods] and
- * [com.clerk.api.organizations.getPaymentMethods].
+ * Methods that read a payer's data take an optional `orgId`: omit it for the signed-in user, or
+ * pass an Organization ID to read that Organization's data, which requires the
+ * `org:sys_billing:read` Permission.
  *
  * This is a beta API and may change.
  */
