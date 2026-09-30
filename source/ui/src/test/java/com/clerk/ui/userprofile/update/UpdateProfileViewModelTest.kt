@@ -25,6 +25,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -120,8 +121,9 @@ class UpdateProfileViewModelTest {
     viewModel.state.test {
       assertEquals(UpdateProfileViewModel.State.Idle, awaitItem())
       viewModel.removeProfileImage()
-      // When user is null, guard emits Error without going through Loading
       assertEquals(UpdateProfileViewModel.State.Error("User not authenticated"), awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
     }
   }
 }
