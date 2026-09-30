@@ -576,7 +576,7 @@ object Clerk {
 
   /**
    * Returns whether the signed-in user passes the given authorization checks. Returns `false` when
-   * no user is signed in. See [Session.has].
+   * no user is signed in. See [Session.checkAuthorization].
    */
   fun has(
     role: String? = null,
@@ -585,7 +585,7 @@ object Clerk {
     plan: String? = null,
     reverification: ReverificationConfig? = null,
   ): Boolean {
-    return session?.has(
+    return session?.checkAuthorization(
       role = role,
       permission = permission,
       feature = feature,

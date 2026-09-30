@@ -86,7 +86,7 @@ data class Session(
    * payer only. [feature] and [plan] are read from the session token, so a Subscription change is
    * reflected after the token refreshes.
    */
-  fun has(
+  fun checkAuthorization(
     role: String? = null,
     permission: String? = null,
     feature: String? = null,
