@@ -20,6 +20,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -85,11 +86,21 @@ class UserProfileChangePasswordViewModelTest {
   }
 
   @Test
-  fun resetState_setsIdle() {
+  fun resetState_afterError_setsIdle() = runTest {
+    every { Clerk.user } returns null
+
     val viewModel = UserProfileChangePasswordViewModel()
-    // Already Idle; ensure it's Idle
-    assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
-    viewModel.resetState()
-    assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
+      viewModel.resetPassword("old", "new", false)
+      assertEquals(
+        UserProfileChangePasswordViewModel.State.Error("User does not exist"),
+        awaitItem(),
+      )
+      viewModel.resetState()
+      assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
+    }
   }
 }

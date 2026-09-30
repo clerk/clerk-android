@@ -235,91 +235,59 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthResultWithSignInResultTypeShouldSetCorrectSuccessState() {
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.SIGN_IN
-        every { signIn } returns mockSignIn
-        every { signUp } returns null
-      }
+  fun oauthRedirectWithSignInResultSetsSignInSuccessState() = runTest {
+    val signIn = SignIn(id = "sign_in_oauth")
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = signIn))
 
-    // Simulate the OAuth result processing (this logic is extracted from the ViewModel)
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create success state with SignIn",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.SignInSuccess,
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GITHUB,
+      preferGoogleOneTap = false,
     )
+    testDispatcher.scheduler.advanceUntilIdle()
+
     assertEquals(
-      mockSignIn,
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.SignInSuccess).signIn,
+      AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn),
+      viewModel.state.value,
     )
   }
 
   @Test
-  fun oauthResultWithSignUpResultTypeShouldSetCorrectSuccessState() {
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.SIGN_UP
-        every { signUp } returns mockSignUp
-      }
+  fun oauthRedirectWithSignUpResultSetsSignUpSuccessState() = runTest {
+    val signUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signUp = signUp))
 
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create success state with SignUp",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess,
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GITHUB,
+      preferGoogleOneTap = false,
     )
+    testDispatcher.scheduler.advanceUntilIdle()
+
     assertEquals(
-      mockSignUp,
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.SignUpSuccess).signUp,
+      AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp),
+      viewModel.state.value,
     )
   }
 
   @Test
-  fun oauthResultWithUnknownResultTypeShouldSetErrorState() {
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.UNKNOWN
-        every { signIn } returns null
-        every { signUp } returns null
-      }
+  fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
+    val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(unknownResult)
 
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create error state for unknown result type",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.Error,
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GITHUB,
+      preferGoogleOneTap = false,
     )
+    testDispatcher.scheduler.advanceUntilIdle()
+
     assertEquals(
-      "Unknown result type from OAuth provider",
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.Error).message,
+      AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider"),
+      viewModel.state.value,
     )
   }
 
@@ -419,32 +387,65 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun enterpriseSSODetectionShouldWorkCorrectly() {
-    val ssoStrategy = "enterprise_sso"
-    val passwordStrategy = "password"
+  fun startAuthWithoutEnterpriseSSOFactorSkipsSSOPreparation() = runTest {
+    val signIn =
+      SignIn(
+        id = "sign_in_password",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        identifier = "user@example.com",
+        supportedFirstFactors = listOf(Factor(strategy = "password")),
+      )
+    mockkObject(SignIn.Companion)
+    mockkStatic("com.clerk.api.signin.SignInKt")
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.success(signIn)
 
-    // Test the requiresEnterpriseSSO logic that the ViewModel uses
-    val requiresSSO = ssoStrategy == "enterprise_sso"
-    val doesNotRequireSSO = passwordStrategy == "enterprise_sso"
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
 
-    assertTrue("Should detect enterprise SSO requirement", requiresSSO)
-    assertTrue("Should not detect enterprise SSO for password", !doesNotRequireSSO)
+      viewModel.startAuth(
+        authMode = AuthMode.SignIn,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "user@example.com",
+      )
 
-    val nullStrategy: String? = null
-    val requiresSSOWithNull = nullStrategy == "enterprise_sso"
-    assertTrue("Should not require SSO with null strategy", !requiresSSOWithNull)
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams>()) }
   }
 
   @Test
-  fun identifierResolutionShouldWorkCorrectly() {
-    val identifier = "test@example.com"
-    val phoneNumber = "+1234567890"
+  fun startAuthUsesPhoneNumberAsIdentifierOnlyWhenPhoneFieldIsActive() = runTest {
+    val createdParams = mutableListOf<SignIn.CreateParams.Strategy>()
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(capture(createdParams)) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "x"))))
 
-    val resolvedIdentifierWhenPhoneActive = if (true) phoneNumber else identifier
-    assertEquals(phoneNumber, resolvedIdentifierWhenPhoneActive)
+    viewModel.startAuth(
+      authMode = AuthMode.SignIn,
+      isPhoneNumberFieldActive = true,
+      phoneNumber = "+1234567890",
+      identifier = "test@example.com",
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.startAuth(
+      authMode = AuthMode.SignIn,
+      isPhoneNumberFieldActive = false,
+      phoneNumber = "+1234567890",
+      identifier = "test@example.com",
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
 
-    val resolvedIdentifierWhenPhoneNotActive = if (false) phoneNumber else identifier
-    assertEquals(identifier, resolvedIdentifierWhenPhoneNotActive)
+    assertEquals(
+      listOf(
+        SignIn.CreateParams.Strategy.Identifier(identifier = "+1234567890"),
+        SignIn.CreateParams.Strategy.Identifier(identifier = "test@example.com"),
+      ),
+      createdParams,
+    )
   }
 
   @Test
