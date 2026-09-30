@@ -1,17 +1,8 @@
 package com.clerk.api.biometriccredential
 
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.ClerkApi
-import com.clerk.api.storage.StorageHelper
-import com.clerk.api.storage.StorageKey
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
+import android.content.Context
+import java.io.File
+import java.security.MessageDigest
 
 /**
  * Local metadata that links a Clerk biometric credential to its on-device private key.
@@ -20,33 +11,36 @@ import kotlinx.serialization.json.jsonPrimitive
  * @property localKeyId The Android Keystore alias suffix of the private key.
  * @property userId The ID of the user the credential belongs to.
  * @property appIdentifier The application ID the credential is bound to.
- * @property identifierHint A normalized, local-only user identifier hint.
  * @property policy The local authentication policy protecting the private key.
  * @property createdAt The time the credential was created, in milliseconds since epoch.
  * @property updatedAt The time the credential was last updated, in milliseconds since epoch.
  */
-@Serializable
 internal data class BiometricCredentialLocalRecord(
   val id: String,
-  @SerialName("localKeyId") val localKeyId: String,
-  @SerialName("userId") val userId: String,
-  @SerialName("appIdentifier") val appIdentifier: String,
-  @SerialName("identifierHint") val identifierHint: String? = null,
-  // Older SDKs omitted this field for the former enrollment default. Keep decoding those keys as
-  // PIN-capable; changing metadata cannot strengthen an existing Android Keystore key.
+  val localKeyId: String,
+  val userId: String,
+  val appIdentifier: String,
+  val identifierHintSha256: String? = null,
   val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
-  @SerialName("createdAt") val createdAt: Long,
-  @SerialName("updatedAt") val updatedAt: Long,
+  val createdAt: Long,
+  val updatedAt: Long,
 ) {
   fun matches(identifierHint: String?): Boolean {
-    val normalized = normalizedIdentifierHint(identifierHint) ?: return true
-    return this.identifierHint == normalized
+    val hash = identifierHintSha256(identifierHint) ?: return true
+    return identifierHintSha256 == hash
   }
 
   companion object {
     fun normalizedIdentifierHint(identifierHint: String?): String? {
       val normalized = identifierHint?.trim()?.lowercase()
       return normalized?.takeIf { it.isNotEmpty() }
+    }
+
+    fun identifierHintSha256(identifierHint: String?): String? {
+      val normalized = normalizedIdentifierHint(identifierHint) ?: return null
+      return MessageDigest.getInstance("SHA-256")
+        .digest(normalized.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
     }
   }
 }
@@ -62,111 +56,52 @@ internal interface BiometricCredentialLocalStore {
   fun save(credential: BiometricCredentialLocalRecord)
 
   fun delete(id: String)
-
-  fun deleteAll()
 }
 
-/**
- * Default [BiometricCredentialLocalStore] persisting credential metadata as encrypted JSON via
- * [StorageHelper].
- *
- * Malformed records are dropped on read instead of failing the whole list, so a single corrupt
- * entry can't lock out biometric sign-in.
- */
-internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalStore {
+internal object BiometricCredentialStorage {
+  @Volatile var fileStore: BiometricCredentialFileStore? = null
 
-  // Keep the trusted-device storage key so SDK upgrades can read existing enrollments.
-  @Suppress("ReturnCount")
-  override fun all(): List<BiometricCredentialLocalRecord> {
-    val stored =
-      StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS) ?: return emptyList()
-    val elements =
-      runCatching { ClerkApi.json.parseToJsonElement(stored).jsonArray }
-        .getOrElse {
-          ClerkLog.w("Biometric credential metadata is malformed, clearing it.")
-          deleteAll()
-          return emptyList()
-        }
-    return elements.mapNotNull { element -> decodeCredential(element) }
+  @Synchronized
+  fun initialize(context: Context) {
+    if (fileStore == null) {
+      fileStore =
+        BiometricCredentialFileStore(
+          directory = directory(context),
+          legacyStore = StorageHelperLegacyBiometricCredentialStore,
+        )
+    }
   }
 
+  fun directory(context: Context): File =
+    File(context.applicationContext.noBackupFilesDir, BiometricCredentialFileStore.DIRECTORY_NAME)
+
+  fun requireFileStore(): BiometricCredentialFileStore =
+    checkNotNull(fileStore) { "Biometric credential storage is not initialized." }
+}
+
+internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalStore {
+
+  override fun all(): List<BiometricCredentialLocalRecord> =
+    BiometricCredentialStorage.fileStore?.credentials().orEmpty()
+
   override fun save(credential: BiometricCredentialLocalRecord) {
-    persist(all().filterNot { it.id == credential.id } + credential)
+    BiometricCredentialStorage.requireFileStore().saveCredential(credential)
   }
 
   override fun delete(id: String) {
-    persist(all().filterNot { it.id == id })
-  }
-
-  override fun deleteAll() {
-    StorageHelper.deleteValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS)
-  }
-
-  private fun persist(credentials: List<BiometricCredentialLocalRecord>) {
-    if (credentials.isEmpty()) {
-      deleteAll()
-      return
-    }
-
-    val elements = credentials.map {
-      ClerkApi.json.encodeToJsonElement(BiometricCredentialLocalRecord.serializer(), it)
-    }
-    StorageHelper.saveValue(
-      StorageKey.TRUSTED_DEVICE_CREDENTIALS,
-      ClerkApi.json.encodeToString(JsonArray.serializer(), JsonArray(elements)),
-    )
-  }
-
-  private fun decodeCredential(element: JsonElement): BiometricCredentialLocalRecord? {
-    return runCatching {
-        ClerkApi.json.decodeFromJsonElement(
-          BiometricCredentialLocalRecord.serializer(),
-          element,
-        )
-      }
-      .onFailure { ClerkLog.w("Dropping malformed biometric credential record.") }
-      .getOrNull()
+    BiometricCredentialStorage.requireFileStore().deleteCredential(id)
   }
 }
 
 internal object BiometricCredentialPendingCleanupStore {
 
-  // Keep the trusted-device storage key so SDK upgrades can finish pending credential cleanup.
-  fun all(): Set<String> {
-    val stored =
-      StorageHelper.loadValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
-        ?: return emptySet()
-    return runCatching {
-        ClerkApi.json
-          .parseToJsonElement(stored)
-          .jsonArray
-          .mapNotNull { it.jsonPrimitive.contentOrNull }
-          .filterTo(mutableSetOf()) { it.isNotBlank() }
-      }
-      .getOrElse {
-        ClerkLog.w("Biometric credential cleanup metadata is malformed, clearing it.")
-        StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
-        emptySet()
-      }
-  }
+  fun all(): Set<String> = BiometricCredentialStorage.fileStore?.pendingCleanupUserIds().orEmpty()
 
   fun add(userId: String) {
-    persist(all() + userId)
+    BiometricCredentialStorage.requireFileStore().addPendingCleanupUserId(userId)
   }
 
   fun remove(userId: String) {
-    persist(all() - userId)
-  }
-
-  private fun persist(userIds: Set<String>) {
-    if (userIds.isEmpty()) {
-      StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
-      return
-    }
-    val encoded = JsonArray(userIds.sorted().map(::JsonPrimitive))
-    StorageHelper.saveValue(
-      StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP,
-      ClerkApi.json.encodeToString(JsonArray.serializer(), encoded),
-    )
+    BiometricCredentialStorage.requireFileStore().removePendingCleanupUserId(userId)
   }
 }

@@ -53,6 +53,8 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AuthStartView(
@@ -373,7 +375,9 @@ private fun dismissTrailingContent(
 @Suppress("ReturnCount")
 private suspend fun resolveBiometricSignInAvailability(): Boolean {
   if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
-  if (!Clerk.biometricCredentials.localAvailability().isAvailable) return false
+  val localAvailability =
+    withContext(Dispatchers.IO) { Clerk.biometricCredentials.localAvailability() }
+  if (!localAvailability.isAvailable) return false
 
   return when (Clerk.biometricCredentials.validateLocalCredentialIfPossible()) {
     is BiometricCredentialValidationResult.Invalid -> false

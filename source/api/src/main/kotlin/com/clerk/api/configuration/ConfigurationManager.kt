@@ -7,6 +7,7 @@ import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
+import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.hostedauth.HostedAuthService
@@ -122,6 +123,7 @@ internal class ConfigurationManager(
     if (!storageInitialized) {
       context?.get()?.let { context ->
         StorageHelper.initialize(context)
+        BiometricCredentialStorage.initialize(context)
         storageInitialized = true
         ClerkLog.d("Storage initialized")
       }
