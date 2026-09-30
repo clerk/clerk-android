@@ -14,6 +14,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -24,11 +25,13 @@ import io.mockk.verify
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -37,6 +40,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -90,6 +94,9 @@ class ExternalAccountServiceTest {
     every { mockSession.id } returns "session_123"
     every { mockSession.user } returns mockUser
     every { mockUser.externalAccounts } returns listOf(mockExternalAccount)
+
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.success(mockExternalAccount)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -101,54 +108,71 @@ class ExternalAccountServiceTest {
   }
 
   @Test
-  fun `hasPendingExternalAccountConnection returns false initially`() {
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `cancelPendingExternalAccountConnection clears state`() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
-
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
+  fun `completeExternalConnection without pending connection makes no requests`() = runTest {
     ExternalAccountService.completeExternalConnection()
 
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    coVerify(exactly = 0) { Client.get() }
   }
 
   @Test
-  fun `completeExternalConnection handles missing external account`() = runTest {
+  fun `completeExternalConnection resolves pending connection with verified account`() = runTest {
+    coEvery { Client.get() } returns ClerkResult.success(mockClient)
+    val pendingResult = startPendingConnection()
+
+    ExternalAccountService.completeExternalConnection()
+
+    val result = pendingResult.await() as ClerkResult.Success
+    assertSame(mockExternalAccount, result.value)
+    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+  }
+
+  @Test
+  fun `completeExternalConnection fails pending connection when account is missing`() = runTest {
     every { mockUser.externalAccounts } returns emptyList()
-    coEvery { Client.get() } returns ClerkResult.Success(mockClient, emptyMap())
+    coEvery { Client.get() } returns ClerkResult.success(mockClient)
+    val pendingResult = startPendingConnection()
 
     ExternalAccountService.completeExternalConnection()
 
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertEquals("External account not found for ID: ext_account_123", failure.throwable?.message)
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
   @Test
-  fun `cancelPendingExternalAccountConnection completes with cancellation error`() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+  fun `completeExternalConnection fails pending connection when account is not verified`() =
+    runTest {
+      coEvery { Client.get() } returns ClerkResult.success(mockClient)
+      val pendingResult = startPendingConnection()
+      every { mockVerification.status } returns Verification.Status.UNVERIFIED
 
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
+      ExternalAccountService.completeExternalConnection()
+
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertTrue(
+        failure.throwable?.message.orEmpty().startsWith("External account verification failed")
+      )
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
 
   @Test
-  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `cancelPendingExternalAccountConnection completes pending connection with cancellation error`() =
+    runTest {
+      val pendingResult = startPendingConnection()
+
+      ExternalAccountService.cancelPendingExternalAccountConnection()
+
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertEquals("External account connection cancelled", failure.throwable?.message)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
+
+  @Test
   fun `connectExternalAccount launches authorization through non-exported manager`() = runTest {
-    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
-      ClerkResult.success(mockExternalAccount)
     val startedIntent = slot<Intent>()
 
-    val pendingResult = async {
-      ExternalAccountService.connectExternalAccount(
-        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-      )
-    }
-    runCurrent()
+    val pendingResult = startPendingConnection()
 
     verify(exactly = 1) { mockContext.startActivity(capture(startedIntent)) }
     assertEquals(SSOManagerActivity::class.java.name, startedIntent.captured.component?.className)
@@ -164,20 +188,27 @@ class ExternalAccountServiceTest {
   }
 
   @Test
+  fun `cancellation thrown while completing external connection is rethrown`() = runTest {
+    coEvery { Client.get() } throws CancellationException("caller cancelled")
+    val pendingResult = startPendingConnection()
+
+    val thrown = runCatching {
+      ExternalAccountService.completeExternalConnection()
+    }
+      .exceptionOrNull()
+
+    assertTrue(thrown is CancellationException)
+    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertInterrupted(pendingResult.await())
+  }
+
+  @Test
   @OptIn(ExperimentalCoroutinesApi::class)
   fun `cancelling external connection completion propagates and fails pending connection`() =
     runTest {
-      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
-        ClerkResult.success(mockExternalAccount)
       val neverCompletes = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
       coEvery { Client.get() } coAnswers { neverCompletes.await() }
-      val pendingResult = async {
-        ExternalAccountService.connectExternalAccount(
-          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-        )
-      }
-      runCurrent()
-      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+      val pendingResult = startPendingConnection()
 
       val completionJob = launch { ExternalAccountService.completeExternalConnection() }
       runCurrent()
@@ -188,10 +219,48 @@ class ExternalAccountServiceTest {
 
       assertTrue(completionJob.isCancelled)
       assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-      val failure = pendingResult.await() as ClerkResult.Failure
-      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
-      assertFalse(failure.throwable is SSOCancellationException)
-      assertFalse(failure.throwable is CancellationException)
-      assertTrue(failure.throwable?.cause is CancellationException)
+      assertInterrupted(pendingResult.await())
     }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `stale completion does not clear a newer external account connection`() = runTest {
+    val clientResponse = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
+    coEvery { Client.get() } coAnswers { clientResponse.await() }
+    val firstResult = startPendingConnection()
+    val staleCompletion = launch { ExternalAccountService.completeExternalConnection() }
+    runCurrent()
+
+    val secondResult = startPendingConnection()
+    clientResponse.complete(ClerkResult.success(mockClient))
+    staleCompletion.join()
+
+    assertSame(mockExternalAccount, (firstResult.await() as ClerkResult.Success).value)
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertFalse(secondResult.isCompleted)
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    assertTrue(secondResult.await() is ClerkResult.Failure)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun TestScope.startPendingConnection():
+    Deferred<ClerkResult<ExternalAccount, ClerkErrorResponse>> {
+    val pendingResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+    }
+    runCurrent()
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    return pendingResult
+  }
+
+  private fun assertInterrupted(result: ClerkResult<ExternalAccount, ClerkErrorResponse>) {
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertFalse(failure.throwable is SSOCancellationException)
+    assertFalse(failure.throwable is CancellationException)
+    assertTrue(failure.throwable?.cause is CancellationException)
+  }
 }

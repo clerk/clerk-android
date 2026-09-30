@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -212,6 +213,39 @@ class SSOServiceCancellationTest {
     assertTrue(firstFailure.throwable is SSOCancellationException)
     assertTrue(SSOService.hasPendingAuthentication())
     assertFalse(secondResult.isCompleted)
+
+    SSOService.cancelPendingAuthentication()
+    val secondFailure = secondResult.await() as ClerkResult.Failure
+    assertTrue(secondFailure.throwable is SSOCancellationException)
+  }
+
+  @Test
+  fun `stale completion that succeeds does not resolve or clear a newer redirect flow`() = runTest {
+    mockkObject(SignUp.Companion)
+    val staleSignUp = mockk<SignUp>(relaxed = true)
+    val signUpResponse = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
+    coEvery { SignUp.create(SignUp.CreateParams.Transfer) } coAnswers { signUpResponse.await() }
+    val firstResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+    val staleCompletion = launch {
+      SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
+    }
+    runCurrent()
+
+    val secondResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+    signUpResponse.complete(ClerkResult.success(staleSignUp))
+    advanceUntilIdle()
+
+    assertTrue(staleCompletion.isCompleted)
+    val firstFailure = firstResult.await() as ClerkResult.Failure
+    assertTrue(firstFailure.throwable is SSOCancellationException)
+    assertFalse(secondResult.isCompleted)
+    assertTrue(SSOService.hasPendingAuthentication())
 
     SSOService.cancelPendingAuthentication()
     val secondFailure = secondResult.await() as ClerkResult.Failure

@@ -20,6 +20,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,6 +61,7 @@ class SSOManagerActivityTest {
 
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_OK, shadow.resultCode)
+    coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(responseUri) }
   }
 
   @Test
@@ -258,13 +260,16 @@ class SSOManagerActivityTest {
   }
 
   @Test
-  fun authorizationComplete_setsResultOk_evenWhenServiceThrows() {
+  fun authorizationComplete_setsResultCanceledAndFinishes_whenServiceThrows() {
     mockkObject(SSOService)
     every { SSOService.hasPendingExternalAccountConnection() } returns false
     coEvery { SSOService.completeAuthenticateWithRedirect(any()) } throws RuntimeException("boom")
 
+    // RESULT_CANCELED is also the Activity default, so the uncaught-exception check is what proves
+    // the failure was handled inside authorizationComplete rather than escaping the coroutine.
+    val uncaught = mutableListOf<Throwable>()
     val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
-    Thread.setDefaultUncaughtExceptionHandler { _, _ -> /* swallow coroutine exception */ }
+    Thread.setDefaultUncaughtExceptionHandler { _, throwable -> uncaught += throwable }
     try {
       val app = ApplicationProvider.getApplicationContext<Application>()
       val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
@@ -276,8 +281,10 @@ class SSOManagerActivityTest {
       val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
       val activity = controller.create().resume().get()
 
-      val shadow = Shadows.shadowOf(activity)
-      assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
+      coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(responseUri) }
+      assertEquals(emptyList<Throwable>(), uncaught)
+      assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+      assertTrue(activity.isFinishing)
     } finally {
       Thread.setDefaultUncaughtExceptionHandler(originalHandler)
     }
@@ -361,5 +368,7 @@ class SSOManagerActivityTest {
 
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
+    coVerify(exactly = 1) { NativeMagicLinkService.handleMagicLinkDeepLink(responseUri) }
+    assertTrue(activity.isFinishing)
   }
 }
