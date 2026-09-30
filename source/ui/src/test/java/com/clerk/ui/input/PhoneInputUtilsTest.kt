@@ -3,6 +3,7 @@ package com.clerk.ui.input
 import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.ui.core.input.CountryCodeUtils
 import com.clerk.ui.core.input.LocaleProvider
 import com.clerk.ui.core.input.Logger
 import com.clerk.ui.core.input.PhoneInputUtils
@@ -304,33 +305,23 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `regionToFlagEmoji returns empty string for invalid region codes`() {
-    // Test various invalid region codes by mocking the locale to avoid IllformedLocaleException
-    val testCases =
-      listOf(
-        "A" to 0, // Too short
-        "ABC" to 0, // Too long
-        "A1" to 0, // Contains number
-        "1A" to 0, // Contains number
-        "ab" to 0, // Lowercase (should still work after uppercase conversion)
-        "" to 0, // Empty
-        "001" to 0, // Non-standard code
+    listOf("A", "ABC", "A1", "1A", "", "001").forEach { regionCode ->
+      assertEquals(
+        "Expected no flag for region code: $regionCode",
+        "",
+        CountryCodeUtils.regionToFlagEmoji(regionCode),
       )
-
-    testCases.forEach { (regionCode, expectedPhoneCode) ->
-      val mockLocale = mockk<Locale>(relaxed = true)
-      every { mockLocale.country } returns regionCode
-      every { mockLocale.displayCountry } returns "Invalid Country"
-      every { mockLocaleProvider.getDefaultLocale() } returns mockLocale
-      every { mockPhoneNumberUtil.getCountryCodeForRegion(regionCode.uppercase()) } returns
-        expectedPhoneCode
-
-      val result = phoneInputUtils.detectCountry(context)
-      assertNull("Expected null for region code: $regionCode", result)
     }
   }
 
   @Test
-  fun `getAllCountries prioritizes US for phone code 1`() {
+  fun `regionToFlagEmoji builds flag for valid region codes regardless of case`() {
+    assertEquals("🇺🇸", CountryCodeUtils.regionToFlagEmoji("US"))
+    assertEquals("🇬🇧", CountryCodeUtils.regionToFlagEmoji("gb"))
+  }
+
+  @Test
+  fun `getAllCountries includes US among multiple plus one countries`() {
     val realPhoneInputUtils = PhoneInputUtils()
 
     val result = realPhoneInputUtils.getAllCountries()
@@ -361,10 +352,11 @@ class PhoneInputUtilsTest {
   fun `real world integration test - detectCountry with actual Android context`() {
     val realPhoneInputUtils = PhoneInputUtils()
 
+    // Robolectric's default qualifiers use the en-US locale.
     val result = realPhoneInputUtils.detectCountry(context)
 
-    // Then - this might return null or a detected country depending on the simulated environment
-    // The important thing is that it doesn't crash
-    assertNotNull("Should not crash with real context", true)
+    assertEquals("US", result?.countryShortName)
+    assertEquals(1, result?.code)
+    assertEquals("🇺🇸", result?.flag)
   }
 }

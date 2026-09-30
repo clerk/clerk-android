@@ -141,7 +141,7 @@ class AuthStateForceMfaTest {
   }
 
   @Test
-  fun `resolveCorrespondingSession does not fallback when created session id is present but missing`() {
+  fun `resolveCorrespondingSession uses fallback not an unrelated session when created session is missing`() {
     val fallback =
       session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
     val sessions =
@@ -155,6 +155,31 @@ class AuthStateForceMfaTest {
       )
 
     assertEquals(fallback, resolved)
+  }
+
+  @Test
+  fun `resolveCorrespondingSession prefers the created session over the fallback`() {
+    val fallback =
+      session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
+    val created =
+      session(
+        id = "sess_target",
+        status = Session.SessionStatus.PENDING,
+        tasks = listOf(SessionTask("setup-mfa")),
+      )
+
+    val resolved =
+      resolveCorrespondingSession(
+        createdSessionId = "sess_target",
+        sessions =
+          listOf(
+            session(id = "sess_other", status = Session.SessionStatus.ACTIVE, tasks = emptyList()),
+            created,
+          ),
+        fallbackSession = fallback,
+      )
+
+    assertEquals(created, resolved)
   }
 
   private fun session(

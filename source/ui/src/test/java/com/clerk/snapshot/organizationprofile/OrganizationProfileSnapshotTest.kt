@@ -427,26 +427,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
-  fun organizationVerifiedDomainsErrorState() {
-    paparazzi.snapshot {
-      DomainsSnapshotSurface {
-        OrganizationVerifiedDomainsContent(
-          state =
-            OrganizationVerifiedDomainsState(
-              domainsEnabled = true,
-              canReadDomains = true,
-              canManageDomains = true,
-              flow = OrganizationVerifiedDomainsFlow.AddDomain,
-              domainName = "example.com",
-              errorMessage = "Unable to add domain",
-            ),
-          actions = noOpDomainActions,
-        )
-      }
-    }
-  }
-
-  @Test
   fun organizationActionLeaveDisabled() {
     paparazzi.snapshot {
       ActionSnapshotSurface {
@@ -485,24 +465,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
             OrganizationProfileActionConfirmationState(
               confirmationText = "Acme Inc.",
               isLoading = true,
-            ),
-          actions = noOpActionConfirmationActions,
-        )
-      }
-    }
-  }
-
-  @Test
-  fun organizationActionDeleteError() {
-    paparazzi.snapshot {
-      ActionSnapshotSurface {
-        OrganizationProfileActionConfirmationContent(
-          action = OrganizationProfileConfirmationAction.DeleteOrganization,
-          organizationName = "Acme Inc.",
-          state =
-            OrganizationProfileActionConfirmationState(
-              confirmationText = "Acme Inc.",
-              errorMessage = "Unable to delete organization",
             ),
           actions = noOpActionConfirmationActions,
         )

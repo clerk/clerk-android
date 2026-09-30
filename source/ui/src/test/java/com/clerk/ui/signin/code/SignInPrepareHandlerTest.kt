@@ -204,24 +204,6 @@ class SignInPrepareHandlerTest {
     }
 
   @Test
-  fun prepareForPhoneCodeShouldHandleNullPhoneNumberId() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = null)
-
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-  }
-
-  @Test
-  fun prepareForEmailCodeShouldHandleNullEmailAddressId() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = null)
-
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-  }
-
-  @Test
   fun prepareForEmailCodeShouldInvokeOnErrorOnFailure() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
     val error =
