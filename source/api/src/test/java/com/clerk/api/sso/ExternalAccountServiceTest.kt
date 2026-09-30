@@ -33,6 +33,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -194,4 +195,57 @@ class ExternalAccountServiceTest {
       assertFalse(failure.throwable is CancellationException)
       assertTrue(failure.throwable?.cause is CancellationException)
     }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `starting a new connection completes the superseded pending connection`() = runTest {
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.success(mockExternalAccount)
+    val firstResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+    }
+    runCurrent()
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    val secondResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GITHUB)
+      )
+    }
+    runCurrent()
+
+    val failure = withTimeout(TIMEOUT_MS) { firstResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    withTimeout(TIMEOUT_MS) { secondResult.await() }
+  }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `cancelPendingExternalAccountConnection fails waiter with SSOCancellationException`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+
+      ExternalAccountService.cancelPendingExternalAccountConnection()
+
+      val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertTrue(failure.throwable is SSOCancellationException)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
+
+  private companion object {
+    const val TIMEOUT_MS = 5_000L
+  }
 }
