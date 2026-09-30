@@ -1,13 +1,11 @@
 package com.clerk.api.session
 
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.user.User
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import kotlinx.serialization.json.JsonObject
@@ -33,7 +31,7 @@ class SessionAuthorizationTest {
   }
 
   @Test
-  fun `Clerk has delegates to the current session`() {
+  fun `Clerk has delegates to the active session`() {
     val session =
       session(
         orgId = "org_123",
@@ -42,19 +40,44 @@ class SessionAuthorizationTest {
         features = "o:reservations,u:dashboard",
         plans = "u:plus",
       )
-    mockkObject(Clerk)
     try {
-      every { Clerk.session } returns session
+      Clerk.updateClient(clientWith(session))
       assertTrue(Clerk.has(plan = "plus"))
       assertTrue(Clerk.has(role = "org:admin"))
       assertFalse(Clerk.has(plan = "missing"))
 
-      every { Clerk.session } returns null
+      Clerk.updateClient(Client())
       assertFalse(Clerk.has(plan = "plus"))
       assertFalse(Clerk.has(role = "org:admin"))
       assertFalse(Clerk.has(reverification = ReverificationConfig.Lax))
     } finally {
-      unmockkObject(Clerk)
+      Clerk.updateClient(Client())
+    }
+  }
+
+  @Test
+  fun `Clerk has returns false for a pending session`() {
+    val pendingSession =
+      session(
+          orgId = "org_123",
+          orgRole = "org:admin",
+          orgPermissions = listOf("org:sys_memberships:read"),
+          features = "o:reservations,u:dashboard",
+          plans = "u:plus",
+        )
+        .copy(status = Session.SessionStatus.PENDING)
+    // The pending session's own claims would pass; Clerk.has must still treat it as signed out.
+    assertTrue(pendingSession.checkAuthorization(plan = "plus"))
+    try {
+      Clerk.updateClient(clientWith(pendingSession))
+      assertEquals(pendingSession, Clerk.session)
+      assertFalse(Clerk.has(plan = "plus"))
+      assertFalse(Clerk.has(role = "org:admin"))
+      assertFalse(Clerk.has(permission = "org:sys_memberships:read"))
+      assertFalse(Clerk.has(feature = "dashboard"))
+      assertFalse(Clerk.has(reverification = ReverificationConfig.Lax))
+    } finally {
+      Clerk.updateClient(Client())
     }
   }
 
@@ -100,7 +123,9 @@ class SessionAuthorizationTest {
         reverification = ReverificationConfig.Strict,
       )
     )
-    assertFalse(session.checkAuthorization(role = "org:admin", reverification = ReverificationConfig.Strict))
+    assertFalse(
+      session.checkAuthorization(role = "org:admin", reverification = ReverificationConfig.Strict)
+    )
   }
 
   @Test
@@ -135,8 +160,18 @@ class SessionAuthorizationTest {
         orgPermissions = listOf("org:sys_memberships:read"),
         features = "o:reservations",
       )
-    assertFalse(session.checkAuthorization(permission = "org:sys_profile:delete", feature = "org:reservations"))
-    assertTrue(session.checkAuthorization(permission = "org:sys_memberships:read", feature = "org:reservations"))
+    assertFalse(
+      session.checkAuthorization(
+        permission = "org:sys_profile:delete",
+        feature = "org:reservations",
+      )
+    )
+    assertTrue(
+      session.checkAuthorization(
+        permission = "org:sys_memberships:read",
+        feature = "org:reservations",
+      )
+    )
   }
 
   @Test
@@ -147,9 +182,15 @@ class SessionAuthorizationTest {
         orgRole = "org:admin",
         orgPermissions = listOf("org:sys_memberships:read"),
       )
-    assertFalse(session.checkAuthorization(role = "org:admin", permission = "org:sys_profile:delete"))
-    assertTrue(session.checkAuthorization(role = "org:admin", permission = "org:sys_memberships:read"))
-    assertFalse(session.checkAuthorization(role = "org:member", permission = "org:sys_memberships:read"))
+    assertFalse(
+      session.checkAuthorization(role = "org:admin", permission = "org:sys_profile:delete")
+    )
+    assertTrue(
+      session.checkAuthorization(role = "org:admin", permission = "org:sys_memberships:read")
+    )
+    assertFalse(
+      session.checkAuthorization(role = "org:member", permission = "org:sys_memberships:read")
+    )
   }
 
   @Test
@@ -212,7 +253,12 @@ class SessionAuthorizationTest {
         orgPermissions = listOf("org:sys_profile:delete"),
         features = "",
       )
-    assertFalse(session.checkAuthorization(feature = "org:premium", reverification = ReverificationConfig.Strict))
+    assertFalse(
+      session.checkAuthorization(
+        feature = "org:premium",
+        reverification = ReverificationConfig.Strict,
+      )
+    )
   }
 
   @Test
@@ -386,21 +432,14 @@ class SessionAuthorizationTest {
   fun `fails org-scoped feature when snapshot token belongs to another organization`() {
     val session =
       session(
-        orgId = "org_b",
-        orgRole = "org:admin",
-        orgPermissions = listOf("org:read"),
-        features = "o:feature_b",
-      )
+          orgId = "org_b",
+          orgRole = "org:admin",
+          orgPermissions = listOf("org:read"),
+          features = "o:feature_b",
+        )
         .copy(
           lastActiveToken =
-            TokenResource(
-              jwt =
-                jwtWithClaims(
-                  fea = "o:feature_a",
-                  pla = null,
-                  orgId = "org_a",
-                )
-            )
+            TokenResource(jwt = jwtWithClaims(fea = "o:feature_a", pla = null, orgId = "org_a"))
         )
 
     assertFalse(session.checkAuthorization(feature = "o:feature_a"))
@@ -410,11 +449,7 @@ class SessionAuthorizationTest {
   @Test
   fun `uses freshest matching cache token after an organization switch`() {
     val session =
-      session(
-        orgId = "org_b",
-        orgRole = "org:admin",
-        orgPermissions = listOf("org:read"),
-      )
+      session(orgId = "org_b", orgRole = "org:admin", orgPermissions = listOf("org:read"))
         .copy(
           lastActiveToken =
             TokenResource(
@@ -448,11 +483,11 @@ class SessionAuthorizationTest {
   fun `fails Strict when matching token without fva ages the session snapshot`() {
     val session =
       session(
-        orgId = "org_123",
-        orgRole = "org:admin",
-        orgPermissions = listOf("org:sys_memberships:read"),
-        factorVerificationAge = listOf(0, 0),
-      )
+          orgId = "org_123",
+          orgRole = "org:admin",
+          orgPermissions = listOf("org:sys_memberships:read"),
+          factorVerificationAge = listOf(0, 0),
+        )
         .copy(
           lastActiveToken =
             TokenResource(
@@ -473,11 +508,11 @@ class SessionAuthorizationTest {
   fun `fails Strict when matching token fva ages past ten minutes without a Client refresh`() {
     val session =
       session(
-        orgId = "org_123",
-        orgRole = "org:admin",
-        orgPermissions = listOf("org:sys_memberships:read"),
-        factorVerificationAge = listOf(0, 0),
-      )
+          orgId = "org_123",
+          orgRole = "org:admin",
+          orgPermissions = listOf("org:sys_memberships:read"),
+          factorVerificationAge = listOf(0, 0),
+        )
         .copy(
           lastActiveToken =
             TokenResource(
@@ -518,6 +553,9 @@ class SessionAuthorizationTest {
   }
 }
 
+private fun clientWith(session: Session): Client =
+  Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
+
 @Suppress("DEPRECATION")
 private fun session(
   userId: String = "user_123",
@@ -548,12 +586,7 @@ private fun session(
 }
 
 @Suppress("DEPRECATION")
-private fun user(
-  id: String,
-  orgId: String?,
-  role: String?,
-  permissions: List<String>?,
-): User {
+private fun user(id: String, orgId: String?, role: String?, permissions: List<String>?): User {
   return User(
     id = id,
     hasImage = false,

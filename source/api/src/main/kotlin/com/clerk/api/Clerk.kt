@@ -575,8 +575,9 @@ object Clerk {
     get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
 
   /**
-   * Returns whether the signed-in user passes the given authorization checks. Returns `false` when
-   * no user is signed in. See [Session.checkAuthorization].
+   * Returns whether the signed-in user passes the given authorization checks against the
+   * [activeSession]. Returns `false` when no user is signed in or when the current session is not
+   * ACTIVE (e.g., PENDING while session tasks are outstanding). See [Session.checkAuthorization].
    */
   fun has(
     role: String? = null,
@@ -585,7 +586,7 @@ object Clerk {
     plan: String? = null,
     reverification: ReverificationConfig? = null,
   ): Boolean {
-    return session?.checkAuthorization(
+    return activeSession?.checkAuthorization(
       role = role,
       permission = permission,
       feature = feature,
@@ -1055,14 +1056,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources = cachedClient?.let { client ->
-      cachedEnvironment?.let { environment -> client to environment }
-    }
+    val cachedResources =
+      cachedClient?.let { client ->
+        cachedEnvironment?.let { environment -> client to environment }
+      }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration = cachedPublishableKey?.let { key ->
-      cachedBaseUrl?.let { url -> key to url }
-    }
+    val cachedConfiguration =
+      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1161,9 +1162,8 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1367,9 +1367,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
