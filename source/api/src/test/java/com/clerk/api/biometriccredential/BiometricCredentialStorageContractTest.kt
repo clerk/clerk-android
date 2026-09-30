@@ -5,9 +5,21 @@ import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.core.content.edit
+import com.clerk.api.Clerk
+import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
+import com.clerk.api.configuration.ConfigurationManager
+import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
+import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -38,6 +50,9 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.concurrent.thread
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
@@ -317,6 +332,44 @@ class BiometricCredentialStorageContractTest {
     assertFalse(preferences().contains(CREDENTIALS_KEY))
     assertFalse(preferences().contains(PENDING_CLEANUP_KEY))
     assertEquals("device-token", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `configuring Clerk migrates v1 metadata without any biometric call`() = runTest {
+    writeRaw(CREDENTIALS_KEY, SpecCipher.encrypt(masterKey, fixture(V1, CREDENTIALS_FIXTURE)))
+    Clerk.reset()
+    mockkObject(
+      Client.Companion,
+      Environment.Companion,
+      NetworkConnectivityMonitor,
+      AppLifecycleListener,
+    )
+    every { Client.serializer() } answers { callOriginal() }
+    every { Environment.serializer() } answers { callOriginal() }
+    coEvery { Client.get() } returns ClerkResult.unknownFailure(IOException("offline"))
+    coEvery { Environment.get() } returns ClerkResult.unknownFailure(IOException("offline"))
+    every { NetworkConnectivityMonitor.configure(any(), any()) } returns Unit
+    every { AppLifecycleListener.configure(any()) } returns Unit
+    val manager = ConfigurationManager(backgroundScope)
+    try {
+      manager.configure(
+        context = context,
+        publishableKey = "pk_test_biometric_migration",
+        options = ClerkConfigurationOptions(proxyUrl = "https://proxy.example.com"),
+      )
+      runCurrent()
+
+      val dataFile = File(File(context.noBackupFilesDir, DIRECTORY_NAME), DATA_FILE_NAME)
+      assertTrue(dataFile.isFile)
+      assertFalse(preferences().contains(CREDENTIALS_KEY))
+      assertEquals(fixtureRecords(), BiometricCredentialStorage.requireFileStore().credentials())
+    } finally {
+      manager.reset()
+      Clerk.reset()
+      unmockkAll()
+      NetworkConnectivityMonitor.resetForTesting()
+    }
   }
 
   @Test
