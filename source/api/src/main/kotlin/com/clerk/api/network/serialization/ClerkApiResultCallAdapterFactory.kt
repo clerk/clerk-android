@@ -12,11 +12,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 
-/**
- * A custom [CallAdapter.Factory] for [ClerkResult] calls. This creates a delegating adapter for
- * suspend function calls that return [ClerkResult]. This facilitates returning all error types
- * through a single [ClerkResult.Failure] type.
- */
 internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
   @Suppress("ReturnCount")
   override fun get(
@@ -83,7 +78,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 response: Response<ClerkResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
-                  // Repackage the initial result with new tags with this call's request + response
                   val tags = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {

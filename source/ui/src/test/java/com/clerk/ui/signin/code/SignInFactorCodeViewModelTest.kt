@@ -27,13 +27,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Comprehensive test suite for SignInFactorCodeViewModel covering:
- * - State management (Idle, Verifying, Success, Error transitions)
- * - Prepare operations for different factor strategies (EMAIL_CODE, PHONE_CODE, etc.)
- * - Attempt operations for different factor strategies and success/error scenarios
- * - Error handling for missing sign-in context
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SignInFactorCodeViewModelTest {
 
@@ -306,7 +299,6 @@ class SignInFactorCodeViewModelTest {
 
       viewModel.attempt(factor, isSecondFactor = false, code)
 
-      // First, the view model emits Loading; then, error from the handler
       assertEquals(AuthenticationViewState.Loading, awaitItem())
       assertEquals(AuthenticationViewState.Error("error"), awaitItem())
     }

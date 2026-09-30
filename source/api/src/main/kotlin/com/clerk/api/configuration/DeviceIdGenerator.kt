@@ -6,16 +6,6 @@ import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.util.UUID
 
-/**
- * Internal utility for generating and managing unique device identifiers.
- *
- * This object provides thread-safe generation and caching of device IDs that persist across
- * application sessions. The device ID is used for device attestation and analytics purposes.
- *
- * The device ID is generated once per device installation and stored in persistent storage. If
- * storage is unavailable, a temporary device ID is generated that will be replaced with a
- * persistent one when storage becomes available.
- */
 internal object DeviceIdGenerator {
   @Volatile private var cachedDeviceId: String? = null
 
@@ -36,15 +26,12 @@ internal object DeviceIdGenerator {
       synchronized(this) {
         if (cachedDeviceId == null) {
           try {
-            // Try to load existing device ID from storage
             val storedId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
 
             if (!storedId.isNullOrEmpty()) {
-              // Use existing stored ID
               cachedDeviceId = storedId
               ClerkLog.d("Loaded existing device ID from storage")
             } else {
-              // Generate new ID and save it
               val newId = UUID.randomUUID().toString()
               cachedDeviceId = newId
 
@@ -57,7 +44,6 @@ internal object DeviceIdGenerator {
               }
             }
           } catch (e: Exception) {
-            // If storage fails, generate a temporary device ID
             ClerkLog.w("Storage not available, generating temporary device ID: ${e.message}")
             cachedDeviceId = UUID.randomUUID().toString()
           }
@@ -78,36 +64,21 @@ internal object DeviceIdGenerator {
   fun getDeviceId(): String {
     return cachedDeviceId
       ?: run {
-        // If not initialized yet, try to initialize now
         initialize()
         cachedDeviceId ?: error("Device ID initialization failed")
       }
   }
 
-  /**
-   * Retrieves the device ID, generating one if necessary.
-   *
-   * This method provides lazy initialization and can be called safely from anywhere without
-   * requiring prior initialization. If no device ID exists, it will generate a temporary one and
-   * attempt to persist it asynchronously when storage becomes available.
-   *
-   * @return The device ID string, either from cache, storage, or newly generated
-   */
-  // Lazy initialization version that can be called safely from anywhere
   fun getOrGenerateDeviceId(): String {
-    // Return cached device ID if available
     cachedDeviceId?.let {
       return it
     }
 
-    // Generate new device ID with proper synchronization
     return synchronized(this) {
-      // Check again after acquiring lock (double-checked locking)
       cachedDeviceId?.let {
         return@synchronized it
       }
 
-      // Try to load existing device ID from storage first
       val deviceId =
         try {
           val existingId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
@@ -115,38 +86,25 @@ internal object DeviceIdGenerator {
             ClerkLog.d("Loaded existing device ID from storage during lazy initialization")
             existingId
           } else {
-            // No existing ID found, generate a new one
             val newId = UUID.randomUUID().toString()
             ClerkLog.d("Generated temporary device ID (will persist when storage is ready)")
 
-            // Try to persist the new ID
             tryPersistDeviceIdAsync(newId)
 
             newId
           }
         } catch (e: Exception) {
           ClerkLog.w("Storage not available during lazy initialization: ${e.message}")
-          // Generate temporary ID if storage fails
           UUID.randomUUID().toString()
         }
 
-      // Cache and return the device ID
       cachedDeviceId = deviceId
       deviceId
     }
   }
 
-  /**
-   * Attempts to persist the device ID to storage asynchronously.
-   *
-   * This method tries to save the device ID to persistent storage. Since we now check for existing
-   * storage before generating, this should only save new IDs.
-   *
-   * @param deviceId The device ID to persist
-   */
   private fun tryPersistDeviceIdAsync(deviceId: String) {
     try {
-      // Try to save the device ID if storage is available
       StorageHelper.saveValue(StorageKey.DEVICE_ID, deviceId)
       ClerkLog.d("Persisted device ID to storage")
     } catch (e: Exception) {
@@ -154,12 +112,6 @@ internal object DeviceIdGenerator {
     }
   }
 
-  /**
-   * Clears the cached device ID for testing purposes.
-   *
-   * This method is only available for testing and should not be used in production code. It resets
-   * the internal state to allow for clean test scenarios.
-   */
   @VisibleForTesting
   internal fun clearCache() {
     cachedDeviceId = null

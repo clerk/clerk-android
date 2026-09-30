@@ -40,44 +40,14 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * Service responsible for authenticating users with Google credentials and passkeys.
- *
- * This service handles the complete authentication flow for multiple credential types including:
- * - **Passkey authentication**: WebAuthn-based authentication using biometric or device credentials
- * - **Password authentication**: Traditional username/password authentication
- * - **Google authentication**: Sign-in using Google ID tokens through Credential Manager
- *
- * ## Authentication Flow
- * 1. Creates a sign-in session with the appropriate strategy
- * 2. Requests credentials from Android Credential Manager
- * 3. Presents available credentials to the user for selection
- * 4. Processes the selected credential based on its type
- * 5. Completes authentication with the Clerk API
- *
- * The service integrates with Android's Credential Manager API to provide a unified authentication
- * experience across different credential types.
- *
- * @see PasskeyCredentialManager
- * @see GoogleSignInService
- */
 @Suppress("TooManyFunctions")
 internal object GoogleCredentialAuthenticationService {
-
-  /** The credential manager used for passkey operations. */
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
-  /** The Google sign-in service used for Google ID token authentication. */
   private var googleSignInService: GoogleSignInService = GoogleSignInService()
 
-  /** The Google credential manager used for Google ID token operations. */
   private val googleCredentialManager = GoogleCredentialManagerImpl()
 
-  /**
-   * Sets the credential manager for testing purposes.
-   *
-   * @param manager The credential manager implementation to use
-   */
   @VisibleForTesting
   internal fun setCredentialManager(manager: PasskeyCredentialManager) {
     credentialManager = manager
@@ -189,9 +159,6 @@ internal object GoogleCredentialAuthenticationService {
     }
   }
 
-  /**
-   * Authenticates an existing sign-in with a passkey when passkey is offered as a second factor.
-   */
   suspend fun authenticateWithPasskey(
     signIn: SignIn,
     allowedCredentialIds: List<String> = emptyList(),
@@ -417,22 +384,6 @@ internal object GoogleCredentialAuthenticationService {
     }
   }
 
-  /**
-   * Creates a new sign-in session configured for passkey authentication.
-   *
-   * This method initiates a sign-in session with the Clerk API using the passkey strategy. The
-   * returned sign-in object contains the WebAuthn challenge and other authentication data needed
-   * for credential-based authentication.
-   *
-   * The sign-in session includes:
-   * - A unique session identifier
-   * - WebAuthn challenge data in the first factor verification nonce
-   * - Supported authentication factors
-   * - Session status and metadata
-   *
-   * @return A [ClerkResult] containing either a [SignIn] session configured for passkey
-   *   authentication, or a [ClerkErrorResponse] if session creation fails.
-   */
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
     return ClerkApi.signIn.createSignIn(
       mapOf(STRATEGY to PasskeyHelper.passkeyStrategy, "locale" to Clerk.locale.value.orEmpty())
@@ -491,26 +442,6 @@ internal object GoogleCredentialAuthenticationService {
     return result.credential
   }
 
-  /**
-   * Builds a credential request for the Android Credential Manager.
-   *
-   * This method constructs a [GetCredentialRequest] that can handle multiple credential types
-   * simultaneously. The request will include options for each requested credential type:
-   * - **Passkey credentials**: Uses WebAuthn parameters from the sign-in session
-   * - **Password credentials**: Requests saved password credentials from the system
-   * - **Google ID credentials**: Requests Google ID token credentials for OAuth authentication
-   *
-   * The credential manager will present all available credentials matching the requested types and
-   * allow the user to select their preferred authentication method.
-   *
-   * @param nonce The JSON-encoded WebAuthn challenge metadata.
-   * @param allowedCredentialIds Optional list of credential IDs to restrict selection to specific
-   *   credentials. If empty, all available credentials of the requested types will be included.
-   * @param credentialRequestTypes List of credential types to include in the request. Each type
-   *   will be converted to the appropriate [CredentialOption] for the credential manager.
-   * @return A [GetCredentialRequest] configured with the appropriate credential options for the
-   *   specified types and restrictions.
-   */
   private fun buildCredentialRequest(
     nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
@@ -528,9 +459,7 @@ internal object GoogleCredentialAuthenticationService {
         SignIn.CredentialType.PASSWORD -> requestOptions.add(GetPasswordOption())
         SignIn.CredentialType.GOOGLE ->
           requestOptions.add(googleCredentialManager.getGoogleIdOption())
-        SignIn.CredentialType.UNKNOWN -> {
-          // Skip unknown credential types
-        }
+        SignIn.CredentialType.UNKNOWN -> {}
       }
     }
 
@@ -591,19 +520,6 @@ internal object GoogleCredentialAuthenticationService {
     )
   }
 
-  /**
-   * Builds a public key credential option for the credential request.
-   *
-   * This method serializes the WebAuthn request into JSON format and wraps it in a
-   * [GetPublicKeyCredentialOption] for use with the Android Credential Manager. The serialized
-   * request follows the WebAuthn specification format and includes all necessary parameters for
-   * passkey authentication.
-   *
-   * @param webAuthnRequest The WebAuthn request parameters containing the challenge, allowed
-   *   credentials, timeout, and other authentication metadata.
-   * @return A [GetPublicKeyCredentialOption] containing the serialized WebAuthn request in JSON
-   *   format, ready for use with the credential manager.
-   */
   private fun buildPublicKeyCredentialOption(
     webAuthnRequest: GetPasskeyRequest
   ): GetPublicKeyCredentialOption {
@@ -660,27 +576,6 @@ internal object GoogleCredentialAuthenticationService {
     }
   }
 
-  /**
-   * Handles authentication with a public key credential (passkey).
-   *
-   * This method processes WebAuthn passkey authentication by extracting the authentication response
-   * from the credential and using it to complete the first factor verification with the Clerk API.
-   * The authentication response contains the cryptographic proof that the user possesses the
-   * private key corresponding to the registered passkey.
-   *
-   * The process involves:
-   * 1. Extracting the authentication response JSON from the credential
-   * 2. Creating a passkey authentication attempt with the response
-   * 3. Submitting the attempt to complete the first factor verification
-   * 4. Processing the result and handling any authentication errors
-   *
-   * @param credential The public key credential containing the WebAuthn authentication response and
-   *   other metadata from the passkey authentication ceremony.
-   * @param signIn The sign-in session to authenticate against. This contains the challenge and
-   *   other session state needed for verification.
-   * @return A [ClerkResult] containing either the updated [SignIn] object with successful
-   *   authentication state, or a [ClerkErrorResponse] if passkey authentication fails.
-   */
   private suspend fun handlePublicKeyCredential(
     credential: PublicKeyCredential,
     signIn: SignIn,
@@ -697,27 +592,6 @@ internal object GoogleCredentialAuthenticationService {
     return result
   }
 
-  /**
-   * Handles authentication with a custom credential.
-   *
-   * This method processes custom credential types that don't fit into the standard credential
-   * categories. Currently, it specifically handles Google ID token credentials by delegating to the
-   * [GoogleSignInService], but the architecture allows for easy extension to support additional
-   * custom credential types.
-   *
-   * The method:
-   * 1. Identifies the type of custom credential received
-   * 2. Routes Google ID token credentials to the appropriate Google sign-in handler
-   * 3. Processes the authentication result and extracts the sign-in object
-   * 4. Returns a consistent [ClerkResult] interface regardless of the custom credential type
-   *
-   * @param credential The custom credential to process. Currently supports
-   *   [GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL] for Google OAuth authentication.
-   *   Additional custom credential types can be added as needed.
-   * @return A [ClerkResult] containing either a successful [SignIn] object extracted from the
-   *   custom credential authentication result, or a [ClerkErrorResponse] if the custom credential
-   *   authentication fails.
-   */
   private suspend fun handleCustomCredential(
     credential: CustomCredential
   ): ClerkResult<SignIn, ClerkErrorResponse> {

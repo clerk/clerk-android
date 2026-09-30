@@ -38,8 +38,6 @@ internal data class BiometricCredentialLocalRecord(
   @SerialName("createdAt") val createdAt: Long,
   @SerialName("updatedAt") val updatedAt: Long,
 ) {
-
-  /** Returns whether this credential matches the given user identifier hint. */
   fun matches(identifierHint: String?): Boolean {
     val normalized = normalizedIdentifierHint(identifierHint) ?: return true
     return this.identifierHint == normalized
@@ -53,7 +51,6 @@ internal data class BiometricCredentialLocalRecord(
   }
 }
 
-/** Store for local biometric credential metadata. */
 internal interface BiometricCredentialLocalStore {
   fun all(): List<BiometricCredentialLocalRecord>
 
@@ -132,7 +129,6 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
   }
 }
 
-/** Persistent queue of user-scoped local credential cleanup work. */
 internal object BiometricCredentialPendingCleanupStore {
 
   // Keep the trusted-device storage key so SDK upgrades can finish pending credential cleanup.

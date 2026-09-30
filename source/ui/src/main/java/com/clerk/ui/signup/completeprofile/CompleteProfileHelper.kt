@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import com.clerk.ui.R
 import kotlinx.collections.immutable.ImmutableList
 
-/** Small helper to centralize enabled-fields, current focus, label, and validation logic. */
 internal class CompleteProfileHelper(
   private val enabled: List<CompleteProfileField>,
   initial: CompleteProfileField,
@@ -47,7 +46,6 @@ internal class CompleteProfileHelper(
   }
 }
 
-/** Remember an instance of [CompleteProfileHelper] for a given set of enabled fields. */
 @Composable
 internal fun rememberCompleteProfileHelper(
   enabledFields: ImmutableList<CompleteProfileField>

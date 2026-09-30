@@ -64,12 +64,6 @@ fun SignInClientTrustView(
   }
 }
 
-/**
- * A composable that displays a warning message for device trust verification.
- *
- * This message informs the user that they are signing in from a new device and explains why
- * additional verification is being requested.
- */
 @Composable
 internal fun ClientTrustWarningMessage(modifier: Modifier = Modifier) {
   Text(

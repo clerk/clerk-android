@@ -67,7 +67,6 @@ object Clerk {
 
   // region Configuration & Initialization
 
-  /** Internal configuration manager responsible for SDK initialization and API client setup. */
   private val configurationManager = ConfigurationManager()
 
   /** Coordinates persisted Clerk state between same-signed sibling apps when enabled. */
@@ -103,10 +102,8 @@ object Clerk {
    */
   internal lateinit var baseUrl: String
 
-  /** Application context used for setting up deep links and SSO Receivers */
   internal var applicationContext: WeakReference<Context>? = null
 
-  /** The current foreground activity used for Credential Manager operations. */
   internal var currentActivity: WeakReference<Activity>? = null
 
   private var trackedApplication: Application? = null
@@ -156,7 +153,6 @@ object Clerk {
    */
   val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
 
-  /** Internal environment configuration containing display settings and authentication options. */
   internal var environment: Environment? = null
 
   /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
@@ -183,7 +179,6 @@ object Clerk {
    */
   val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
 
-  /** Internal property to check if the client has been initialized. */
   internal val clientInitialized: Boolean
     get() = ::client.isInitialized
 
@@ -213,12 +208,6 @@ object Clerk {
    */
   var telemetryEnabled: Boolean = true
 
-  /**
-   * The name of the application, as configured in the Clerk Dashboard.
-   *
-   * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
-   * not yet initialized or the application name is not set.
-   */
   /**
    * Reactive state for initialization errors.
    *
@@ -536,7 +525,6 @@ object Clerk {
 
   // region Session Management
 
-  /** Internal mutable state flow for all sessions on the current client. */
   private val _sessions = MutableStateFlow<List<Session>>(emptyList())
 
   /**
@@ -547,7 +535,6 @@ object Clerk {
    */
   val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
 
-  /** Internal mutable state flow for session changes. */
   private val _session = MutableStateFlow<Session?>(null)
 
   /**
@@ -606,7 +593,6 @@ object Clerk {
 
   // region User Management
 
-  /** Internal mutable state flow for user changes. */
   private val _userFlow = MutableStateFlow<User?>(null)
 
   /**
@@ -957,13 +943,6 @@ object Clerk {
     currentActivity = WeakReference(activity)
   }
 
-  /**
-   * Walks a [Context]/[ContextWrapper] chain looking for an [Activity].
-   *
-   * Returns the first Activity found, or null if the chain bottoms out at the Application context
-   * (or any other non-Activity context). Used by [initialize] so callers that pass an Activity (or
-   * a wrapper around one) automatically seed [currentActivity].
-   */
   private fun Context.findActivityOrNull(): Activity? {
     var ctx: Context? = this
     while (ctx is ContextWrapper) {
@@ -1056,13 +1035,6 @@ object Clerk {
 
   // region Internal Methods
 
-  /**
-   * Internal method to update the environment configuration.
-   *
-   * Called by [ConfigurationManager] when environment data is refreshed from the server.
-   *
-   * @param environment The updated environment configuration.
-   */
   internal fun updateEnvironment(environment: Environment) {
     val previousEnvironment = this.environment
     this.environment = environment
@@ -1113,13 +1085,6 @@ object Clerk {
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
-  /**
-   * Internal method to update the client and trigger state updates.
-   *
-   * Called by [ConfigurationManager] when client data is refreshed from the server.
-   *
-   * @param client The updated client configuration.
-   */
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
     val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
     val serverFetchAtMillis =
@@ -1252,11 +1217,6 @@ object Clerk {
     }
   }
 
-  /**
-   * Internal method to clear session and user state flows.
-   *
-   * Should be called when signing out to immediately clear local session state.
-   */
   internal fun clearSessionAndUserState() {
     val previousSession = _session.value
     _sessions.value = emptyList()

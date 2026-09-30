@@ -14,30 +14,14 @@ import androidx.credentials.GetCredentialResponse
  * tests.
  */
 internal interface PasskeyCredentialManager {
-
-  /**
-   * Creates a credential using the provided request.
-   *
-   * @param context Android context
-   * @param request The credential creation request
-   * @return Response containing the created credential data
-   */
   suspend fun createCredential(
     context: Context,
     request: CreatePublicKeyCredentialRequest,
   ): CreateCredentialResponse
 
-  /**
-   * Retrieves credentials using the provided request.
-   *
-   * @param context Android context
-   * @param request The credential retrieval request
-   * @return Response containing the selected credential
-   */
   suspend fun getCredential(context: Context, request: GetCredentialRequest): GetCredentialResponse
 }
 
-/** Default implementation of PasskeyCredentialManager using Android's CredentialManager. */
 internal class PasskeyCredentialManagerImpl : PasskeyCredentialManager {
 
   override suspend fun createCredential(

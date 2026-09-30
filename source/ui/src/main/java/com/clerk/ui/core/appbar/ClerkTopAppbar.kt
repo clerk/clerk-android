@@ -49,7 +49,7 @@ internal fun ClerkTopAppBar(
   hasBackButton: Boolean = true,
   usesHostBackAction: Boolean = false,
   title: String? = null,
-  backgroundColor: Color? = null, // sensible default
+  backgroundColor: Color? = null,
   clerkTheme: ClerkTheme? = null,
   logoUrl: String? = Clerk.organizationLogoUrl,
   contentPadding: PaddingValues = PaddingValues(),

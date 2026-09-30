@@ -29,12 +29,6 @@ internal fun ClerkResult<SignIn, ClerkErrorResponse>.signInToOAuthResult():
   }
 }
 
-/**
- * Converts a [ClerkResult] of [SignUp] to a [ClerkResult] of [OAuthResult].
- *
- * Since Clerk handles the transfer flow internally (i.e. moving a SignIn to a SignUp) this handles
- * the case where calling [SignIn.create] returns a SignUp instead.
- */
 internal fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResult():
   ClerkResult<OAuthResult, ClerkErrorResponse> {
   return when (this) {

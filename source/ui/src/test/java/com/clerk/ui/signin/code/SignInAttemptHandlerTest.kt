@@ -20,14 +20,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Comprehensive test suite for SignInAttemptHandler covering:
- * - Email code attempts for both regular and password reset scenarios
- * - Phone code attempts for first and second factor scenarios
- * - TOTP attempts for two-factor authentication
- * - Password reset attempts for phone and email
- * - Success and failure callback handling for all attempt methods
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SignInAttemptHandlerTest {
 

@@ -125,7 +125,6 @@ private fun saveLinesToFileCompat(
 ) {
   try {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      // Android 10+
       val resolver = context.contentResolver
       val values =
         ContentValues().apply {
@@ -145,7 +144,6 @@ private fun saveLinesToFileCompat(
       resolver.update(fileUri, values, null, null)
       fileUri
     } else {
-      // Pre-Android 10
       val downloadsDir =
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
       if (!downloadsDir.exists()) downloadsDir.mkdirs()

@@ -80,11 +80,6 @@ internal fun SessionTaskResetPasswordView(
   }
 }
 
-/**
- * The internal implementation of the [SignInSetNewPasswordView].
- *
- * @param modifier The [Modifier] to be applied to the view.
- */
 @Composable
 private fun SignInSetNewPasswordViewImpl(
   mode: ResetPasswordMode,
@@ -198,12 +193,6 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
   )
 }
 
-/**
- * A row containing a label and a [Switch] to toggle signing out of other devices.
- *
- * @param signOutOtherDevices The current state of the switch.
- * @param onCheckChange A callback to be invoked when the switch is toggled.
- */
 @Composable
 private fun SignOutOfOtherDevicesRow(
   signOutOtherDevices: Boolean,

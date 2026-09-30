@@ -29,7 +29,7 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
 
   override fun popTo(destination: UserProfileDestination) {
     val targetIndex = backStack.indexOfLast { it == destination }
-    if (targetIndex == -1) return // Not found → no-op
+    if (targetIndex == -1) return
 
     val toPop = (backStack.size - 1) - targetIndex
     if (toPop > 0) {

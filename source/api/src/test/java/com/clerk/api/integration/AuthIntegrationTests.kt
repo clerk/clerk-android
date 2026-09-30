@@ -39,7 +39,6 @@ class AuthIntegrationTests {
     var didCreateSignUp = false
 
     try {
-      // ── Sign Up (provide all required fields upfront) ──
       val signUp =
         assertSuccess(
           "signUp",
@@ -53,7 +52,6 @@ class AuthIntegrationTests {
         )
       didCreateSignUp = true
 
-      // ── Verify email ──
       val afterEmailSend = assertSuccess("sendEmailCode", signUp.sendCode { email = testEmail })
       val afterEmailVerify =
         assertSuccess(
@@ -61,7 +59,6 @@ class AuthIntegrationTests {
           afterEmailSend.verifyCode(TEST_VERIFICATION_CODE, VerificationType.EMAIL),
         )
 
-      // ── Verify phone (if still required) ──
       var latestSignUp = afterEmailVerify
       if ("phone_number" in latestSignUp.unverifiedFields) {
         val afterPhoneSend =
@@ -73,20 +70,16 @@ class AuthIntegrationTests {
           )
       }
 
-      // ── Sign Out ──
       assertSuccess("signOut", Clerk.auth.signOut())
 
-      // ── Sign In with OTP (creates sign-in and sends code in one call) ──
       val signIn = assertSuccess("signInWithOtp", Clerk.auth.signInWithOtp { email = testEmail })
 
-      // ── Verify sign-in code ──
       assertSuccess("signIn verifyCode", signIn.verifyCode(TEST_VERIFICATION_CODE))
     } finally {
       deleteTestAccountIfExists(testEmail, didCreateSignUp)
     }
   }
 
-  /** Asserts a [ClerkResult] is [ClerkResult.Success], printing the API error on failure. */
   private fun <T : Any> assertSuccess(step: String, result: ClerkResult<T, ClerkErrorResponse>): T {
     if (result is ClerkResult.Failure) {
       val errors = result.error?.errors?.joinToString { "${it.code}: ${it.longMessage}" }

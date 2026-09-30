@@ -56,12 +56,9 @@ tasks
   .matching { it.name.matches(Regex("report.+ComposeMappingErrors")) }
   .configureEach { enabled = false }
 
-// Configure Maven publishing for this module
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", property("CLERK_UI_VERSION") as String)
   publishToMavenCentral()
-  // Skip signing for local publishing: ./gradlew publishToMavenLocal
-  // -PRELEASE_SIGNING_ENABLED=false
   if (providers.gradleProperty("RELEASE_SIGNING_ENABLED").orNull != "false") {
     signAllPublications()
   }

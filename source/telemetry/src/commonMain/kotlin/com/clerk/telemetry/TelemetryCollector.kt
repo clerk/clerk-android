@@ -149,7 +149,6 @@ class TelemetryCollector(
   private suspend fun scheduleFlushIfNeeded() {
     val shouldFlush = mutex.withLock { buffer.size >= config.maxBufferSize }
     if (shouldFlush) {
-      // fire-and-forget
       scope.launch { flush() }
     }
   }

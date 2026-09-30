@@ -240,10 +240,8 @@ private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, S
       else -> "UN"
     }
 
-  // Safely build the flag emoji
   val flag = runCatching { CountryCodeUtils.regionToFlagEmoji(resolvedRegion) }.getOrElse { "🏳️" }
 
-  // Format nicely for display if valid
   val displayNumber: String =
     when {
       proto != null && phoneUtil.isValidNumber(proto) ->

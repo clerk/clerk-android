@@ -9,8 +9,6 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 
-/** The verification strategy constant used for phone number verification via SMS code. */
-
 /**
  * The `PhoneNumber` object is a model around a phone number entity.
  *

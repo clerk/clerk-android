@@ -111,14 +111,12 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
   get() {
     val availableFirstFactors = supportedFirstFactors ?: return null
 
-    // Prefer passkey
     availableFirstFactors
       .firstOrNull { it.strategy == "passkey" }
       ?.let {
         return it
       }
 
-    // Then password
     availableFirstFactors
       .firstOrNull { it.strategy == "password" }
       ?.let {
@@ -129,7 +127,6 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
       return it
     }
 
-    // Then: sort by password-pref comparator, but first try to match current identifier
     val sorted = availableFirstFactors.sortedWith(FactorComparators.passwordPrefComparator)
     return availableFirstFactors.firstOrNull { it.safeIdentifier == identifier }
       ?: sorted.firstOrNull()
@@ -139,7 +136,6 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
   get() {
     val availableFirstFactors = supportedFirstFactors ?: return null
 
-    // Prefer passkey
     availableFirstFactors
       .firstOrNull { it.strategy == "passkey" }
       ?.let {
@@ -150,7 +146,6 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
       return it
     }
 
-    // Then: sort by OTP-pref comparator; prefer matching identifier if present
     val sorted = availableFirstFactors.sortedWith(FactorComparators.otpPrefComparator)
     return sorted.firstOrNull { it.safeIdentifier == identifier } ?: sorted.firstOrNull()
   }
@@ -311,7 +306,6 @@ private fun invalidEmailLinkPrepareState(
  * ```
  */
 suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
-  // Infer the strategy from firstFactorVerification
   val strategy = firstFactorVerification?.strategy ?: EMAIL_CODE
 
   val params =
