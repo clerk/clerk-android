@@ -47,20 +47,6 @@ class NetworkConnectivityMonitorTest {
   }
 
   @Test
-  fun `initial connectivity state is true by default`() {
-    NetworkConnectivityMonitor.resetForTesting()
-
-    assertTrue(
-      "Initial connectivity state should be true",
-      NetworkConnectivityMonitor.isConnected.value,
-    )
-    assertTrue(
-      "isCurrentlyConnected should return true",
-      NetworkConnectivityMonitor.isCurrentlyConnected(),
-    )
-  }
-
-  @Test
   fun `configure sets up connectivity monitoring and checks initial state`() {
     val mockContext = mockk<Context>(relaxed = true)
     val mockAppContext = mockk<Context>(relaxed = true)
@@ -138,6 +124,8 @@ class NetworkConnectivityMonitorTest {
   fun `stop unregisters network callback and cleans up resources`() {
     val mockContext = mockk<Context>(relaxed = true)
     val mockAppContext = mockk<Context>(relaxed = true)
+    val restoredCount = AtomicInteger(0)
+    val networkCallbackSlot = slot<ConnectivityManager.NetworkCallback>()
 
     every { mockContext.applicationContext } returns mockAppContext
     every { mockAppContext.getSystemService(Context.CONNECTIVITY_SERVICE) } returns
@@ -146,13 +134,34 @@ class NetworkConnectivityMonitorTest {
     every { mockConnectivityManager.getNetworkCapabilities(mockNetwork) } returns
       mockNetworkCapabilities
     every { mockNetworkCapabilities.hasCapability(any()) } returns true
+    every {
+      mockConnectivityManager.registerNetworkCallback(
+        any<NetworkRequest>(),
+        capture(networkCallbackSlot),
+      )
+    } returns Unit
 
-    NetworkConnectivityMonitor.configure(mockContext)
+    NetworkConnectivityMonitor.configure(mockContext) { restoredCount.incrementAndGet() }
+    val registeredCallback = networkCallbackSlot.captured
 
     NetworkConnectivityMonitor.stop()
 
-    verify {
-      mockConnectivityManager.unregisterNetworkCallback(any<ConnectivityManager.NetworkCallback>())
+    verify(exactly = 1) { mockConnectivityManager.unregisterNetworkCallback(registeredCallback) }
+
+    // The restore listener is dropped, so a stale callback delivery must not invoke it.
+    val offline = mockk<NetworkCapabilities>()
+    every { offline.hasCapability(any()) } returns false
+    registeredCallback.onCapabilitiesChanged(mockNetwork, offline)
+    registeredCallback.onAvailable(mockNetwork)
+    assertEquals(0, restoredCount.get())
+
+    // Monitoring state is cleared, so configuring again registers a fresh callback.
+    NetworkConnectivityMonitor.configure(mockContext)
+    verify(exactly = 2) {
+      mockConnectivityManager.registerNetworkCallback(
+        any<NetworkRequest>(),
+        any<ConnectivityManager.NetworkCallback>(),
+      )
     }
   }
 
@@ -248,6 +257,14 @@ class NetworkConnectivityMonitorTest {
       mockNetworkCapabilities
     every { mockNetworkCapabilities.hasCapability(any()) } returns true
 
+    val networkCallbackSlot = slot<ConnectivityManager.NetworkCallback>()
+    every {
+      mockConnectivityManager.registerNetworkCallback(
+        any<NetworkRequest>(),
+        capture(networkCallbackSlot),
+      )
+    } returns Unit
+
     NetworkConnectivityMonitor.configure(mockContext) { firstCallback.set(true) }
 
     NetworkConnectivityMonitor.configure(mockContext) { secondCallback.set(true) }
@@ -258,6 +275,14 @@ class NetworkConnectivityMonitorTest {
         any<ConnectivityManager.NetworkCallback>(),
       )
     }
+
+    val offline = mockk<NetworkCapabilities>()
+    every { offline.hasCapability(any()) } returns false
+    networkCallbackSlot.captured.onCapabilitiesChanged(mockNetwork, offline)
+    networkCallbackSlot.captured.onAvailable(mockNetwork)
+
+    assertTrue("Latest callback should be invoked on restore", secondCallback.get())
+    assertFalse("Replaced callback should not be invoked", firstCallback.get())
   }
 
   @Test

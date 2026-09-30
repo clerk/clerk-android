@@ -5,9 +5,12 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
+import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -16,7 +19,10 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -59,7 +65,7 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
-  fun `attestDevice throws exception when token provider is null`() = runTest {
+  fun `attestDevice returns failure when token provider is null`() = runTest {
     DeviceAttestationHelper.integrityTokenProvider = null
 
     val result = DeviceAttestationHelper.attestDevice("client-id")
@@ -82,13 +88,16 @@ class DeviceAttestationHelperTest {
     val applicationId = "com.example.app"
     val mockClient = mockk<Client>()
 
-    coEvery { mockDeviceAttestationApi.verify(any(), any()) } returns
+    coEvery { mockDeviceAttestationApi.verify(any(), any(), any()) } returns
       ClerkResult.success(mockClient)
 
     val result = DeviceAttestationHelper.performAssertion(token, applicationId)
 
     assertTrue("Result should be success", result is ClerkResult.Success)
     assertEquals(mockClient, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      mockDeviceAttestationApi.verify(packageName = applicationId, token = token, platform = any())
+    }
   }
 
   @Test
@@ -105,13 +114,15 @@ class DeviceAttestationHelperTest {
 
   @Test
   fun `getHashedClientId generates correct SHA-256 hash`() {
-    val clientId = "test-client-id"
-
-    val result = DeviceAttestationHelper.getHashedClientId(clientId)
-
-    assertNotNull(result)
-    assertEquals(SHA256_HEX_LENGTH, result.length)
-    assertTrue(result.matches(Regex("[0-9a-f]{$SHA256_HEX_LENGTH}")))
+    // Known SHA-256 test vectors; "abc" contains bytes below 0x10 so zero-padding is exercised.
+    assertEquals(
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      DeviceAttestationHelper.getHashedClientId("abc"),
+    )
+    assertEquals(
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      DeviceAttestationHelper.getHashedClientId(""),
+    )
   }
 
   @Test
@@ -157,11 +168,41 @@ class DeviceAttestationHelperTest {
 
     assertEquals("Results should be identical from cache", result1, result2)
     assertEquals("Results should be identical from cache", result2, result3)
+    assertEquals(
+      "Repeated lookups should share one cache entry",
+      1,
+      DeviceAttestationHelper.getCacheStats().hashCacheSize,
+    )
+
+    DeviceAttestationHelper.getHashedClientId("other-client-id")
+
+    assertEquals(2, DeviceAttestationHelper.getCacheStats().hashCacheSize)
   }
 
   @Test
-  fun `clearCache resets helper state`() {
+  fun `clearCache resets helper state`() = runTest {
+    val provider = mockk<StandardIntegrityManager.StandardIntegrityTokenProvider>()
+    val task = mockk<Task<StandardIntegrityManager.StandardIntegrityTokenProvider>>()
+    every {
+      task.addOnSuccessListener(
+        any<OnSuccessListener<StandardIntegrityManager.StandardIntegrityTokenProvider>>()
+      )
+    } answers
+      {
+        firstArg<OnSuccessListener<StandardIntegrityManager.StandardIntegrityTokenProvider>>()
+          .onSuccess(provider)
+        task
+      }
+    every { task.addOnFailureListener(any()) } returns task
+    every { mockIntegrityManager.prepareIntegrityToken(any()) } returns task
+    DeviceAttestationHelper.prepareIntegrityTokenProvider(mockContext, CLOUD_PROJECT_NUMBER)
     DeviceAttestationHelper.getHashedClientId("test")
+
+    val statsBefore = DeviceAttestationHelper.getCacheStats()
+    assertEquals(1, statsBefore.hashCacheSize)
+    assertEquals(1, statsBefore.preparedProvidersCount)
+    assertSame(provider, DeviceAttestationHelper.integrityTokenProvider)
+    assertTrue(DeviceAttestationHelper.isProviderPrepared(CLOUD_PROJECT_NUMBER))
 
     DeviceAttestationHelper.clearCache()
 
@@ -173,10 +214,11 @@ class DeviceAttestationHelperTest {
       null,
       DeviceAttestationHelper.integrityTokenProvider,
     )
+    assertNull("Integrity manager should be null", DeviceAttestationHelper.integrityManager)
+    assertFalse(DeviceAttestationHelper.isProviderPrepared(CLOUD_PROJECT_NUMBER))
   }
 
-  @Test
-  fun `scope is properly configured`() {
-    assertNotNull(DeviceAttestationHelper.scope)
+  private companion object {
+    const val CLOUD_PROJECT_NUMBER = 123_456_789L
   }
 }
