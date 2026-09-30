@@ -4,7 +4,8 @@
 # The pre-commit hook must run exactly the same tool versions as Gradle
 # (Spotless ktfmt, detekt). Versions are read from gradle/libs.versions.toml,
 # which build.gradle.kts also uses, so there is a single source of truth.
-# Jars are downloaded once from Maven Central and cached per version.
+# Jars are downloaded once from Maven Central, verified against the SHA-256
+# pinned in config/bin/tool-checksums.sha256, and cached per version.
 
 die() {
   printf '%s\n' "$*" >&2
@@ -19,14 +20,22 @@ catalog_version() {
   printf '%s\n' "$version"
 }
 
-sha1_of() {
+sha256_of() {
   if command -v shasum >/dev/null 2>&1; then
-    shasum -a 1 "$1" | cut -d ' ' -f 1
-  elif command -v sha1sum >/dev/null 2>&1; then
-    sha1sum "$1" | cut -d ' ' -f 1
+    shasum -a 256 "$1" | cut -d ' ' -f 1
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d ' ' -f 1
   else
-    die "ERROR: neither 'shasum' nor 'sha1sum' is available to verify downloads"
+    die "ERROR: neither 'shasum' nor 'sha256sum' is available to verify downloads"
   fi
+}
+
+# pinned_sha256 <file name> -> prints the checksum pinned for <file name>.
+pinned_sha256() {
+  checksums="$REPO_ROOT_DIR/config/bin/tool-checksums.sha256"
+  sum="$(awk -v name="$1" '$1 !~ /^#/ && $2 == name { print $1; exit }' "$checksums")"
+  [ -n "$sum" ] || die "ERROR: no SHA-256 pinned for $1 in $checksums"
+  printf '%s\n' "$sum"
 }
 
 # tool_jar <maven directory> <file name> -> prints the local path of the cached
@@ -35,6 +44,7 @@ tool_jar() {
   cache_root="${CLERK_TOOLS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/clerk-android/tools}"
   jar="$cache_root/$2"
   if [ ! -f "$jar" ]; then
+    expected="$(pinned_sha256 "$2")" || exit 1
     command -v curl >/dev/null 2>&1 || die "ERROR: 'curl' is required to download $2"
     mkdir -p "$cache_root" || die "ERROR: cannot create $cache_root"
     url="https://repo1.maven.org/maven2/$1/$2"
@@ -44,11 +54,7 @@ tool_jar() {
       rm -f "$tmp"
       die "ERROR: failed to download $url"
     fi
-    if ! expected="$(curl -fsSL "$url.sha1" | cut -c 1-40)"; then
-      rm -f "$tmp"
-      die "ERROR: failed to download $url.sha1"
-    fi
-    actual="$(sha1_of "$tmp")"
+    actual="$(sha256_of "$tmp")"
     if [ "$expected" != "$actual" ]; then
       rm -f "$tmp"
       die "ERROR: checksum mismatch for $url (expected $expected, got $actual)"
