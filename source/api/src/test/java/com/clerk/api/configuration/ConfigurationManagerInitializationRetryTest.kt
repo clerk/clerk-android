@@ -128,6 +128,8 @@ class ConfigurationManagerInitializationRetryTest {
 
       assertTrue(manager.isInitialized.value)
       assertNull(manager.initializationError.value)
+      assertEquals("client_recovered", Clerk.client.id)
+      assertEquals("Recovered App", Clerk.applicationName)
     }
 
   @Test

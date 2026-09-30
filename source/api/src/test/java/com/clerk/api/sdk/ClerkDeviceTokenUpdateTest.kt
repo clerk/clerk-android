@@ -16,6 +16,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import com.clerk.api.storage.failCommitsForTesting
 import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,9 +26,15 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
 import java.util.Base64
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -222,44 +229,183 @@ class ClerkDeviceTokenUpdateTest {
   }
 
   @Test
-  fun `setDeviceToken rotation for the same client does not refresh client or environment`() {
+  fun `setDeviceToken rotation for the same client keeps state and queues no refresh`() {
     configureClerkForDeviceTokenUpdate()
-    val client = Client(id = "client_current")
-    Clerk.updateClient(client)
+    stubRefreshFailure()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_current", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    val client = Clerk.client
     SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
     val oldToken = deviceTokenJwt(clientId = "client_current", rotatingToken = "r1")
     val newToken = deviceTokenJwt(clientId = "client_current", rotatingToken = "r2")
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
+    val pendingWork = configurationScopeChildren()
 
     assertTrue(Clerk.setDeviceToken(token = newToken, expected = oldToken))
-    assertTrue(Clerk.setDeviceToken(token = "device_token_opaque", expected = newToken))
 
+    assertEquals(pendingWork, configurationScopeChildren())
+    awaitConfigurationScopeIdle()
+    assertEquals(newToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     assertEquals(client, Clerk.client)
+    assertEquals(session, Clerk.session)
     assertEquals(1, SessionTokensCache.size)
-    coVerify(exactly = 0) { Client.get() }
-    coVerify(exactly = 0) { Client.getSkippingClientId() }
-    coVerify(exactly = 0) { Environment.get() }
+    verifyNoRefresh()
+  }
+
+  @Test
+  fun `setDeviceToken swap to an opaque token keeps state and queues no refresh`() {
+    configureClerkForDeviceTokenUpdate()
+    stubRefreshFailure()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_current", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    val client = Clerk.client
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val oldToken = deviceTokenJwt(clientId = "client_current", rotatingToken = "r1")
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
+    val pendingWork = configurationScopeChildren()
+
+    assertTrue(Clerk.setDeviceToken(token = "device_token_opaque", expected = oldToken))
+
+    assertEquals(pendingWork, configurationScopeChildren())
+    awaitConfigurationScopeIdle()
+    assertEquals("device_token_opaque", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(client, Clerk.client)
+    assertEquals(session, Clerk.session)
+    assertEquals(1, SessionTokensCache.size)
+    verifyNoRefresh()
   }
 
   @Test
   fun `setDeviceToken for a different client resets local state and refreshes the client`() {
     configureClerkForDeviceTokenUpdate()
-    Clerk.updateClient(Client(id = "client_a"))
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_a", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
     SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
     val oldToken = deviceTokenJwt(clientId = "client_a", rotatingToken = "r1")
     val newToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
-    coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client(id = "client_b"))
-    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
+    val releaseRefresh = stubGatedRefresh(Client(id = "client_b"))
+    assertEquals(session, Clerk.session)
 
     assertTrue(Clerk.setDeviceToken(token = newToken, expected = oldToken))
 
-    assertEquals(0, SessionTokensCache.size)
+    assertNull(Clerk.clientFlow.value?.id)
     assertNull(Clerk.session)
-    coVerify(timeout = ASYNC_TIMEOUT_MS, exactly = 1) { Client.getSkippingClientId() }
-    awaitClientId("client_b")
+    assertEquals(0, SessionTokensCache.size)
+    releaseRefresh.complete(Unit)
+    awaitConfigurationScopeIdle()
+    assertEquals("client_b", Clerk.client.id)
     assertEquals(newToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    coVerify(exactly = 1) { Client.getSkippingClientId() }
     coVerify(exactly = 0) { Client.get() }
+  }
+
+  @Test
+  fun `setDeviceToken first token for a different client than the in-memory one resets state`() {
+    configureClerkForDeviceTokenUpdate()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_a", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val newToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
+    val releaseRefresh = stubGatedRefresh(Client(id = "client_b"))
+
+    assertTrue(Clerk.setDeviceToken(token = newToken, expected = null))
+
+    assertNull(Clerk.clientFlow.value?.id)
+    assertNull(Clerk.session)
+    assertEquals(0, SessionTokensCache.size)
+    releaseRefresh.complete(Unit)
+    awaitConfigurationScopeIdle()
+    assertEquals("client_b", Clerk.client.id)
+    coVerify(exactly = 1) { Client.getSkippingClientId() }
+  }
+
+  @Test
+  fun `setDeviceToken first token for the in-memory client keeps state and queues no refresh`() {
+    configureClerkForDeviceTokenUpdate()
+    stubRefreshFailure()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_a", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    val client = Clerk.client
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val newToken = deviceTokenJwt(clientId = "client_a", rotatingToken = "r1")
+    val pendingWork = configurationScopeChildren()
+
+    assertTrue(Clerk.setDeviceToken(token = newToken, expected = null))
+
+    assertEquals(pendingWork, configurationScopeChildren())
+    awaitConfigurationScopeIdle()
+    assertEquals(newToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(client, Clerk.client)
+    assertEquals(session, Clerk.session)
+    assertEquals(1, SessionTokensCache.size)
+    verifyNoRefresh()
+  }
+
+  @Test
+  fun `setDeviceToken no-op clear keeps state and queues no refresh`() {
+    configureClerkForDeviceTokenUpdate()
+    stubRefreshFailure()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_a", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    val client = Clerk.client
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    val initialFence = deviceTokenFenceGeneration()
+    val pendingWork = configurationScopeChildren()
+
+    assertTrue(Clerk.setDeviceToken(token = null, expected = null))
+
+    assertEquals(pendingWork, configurationScopeChildren())
+    awaitConfigurationScopeIdle()
+    assertEquals(initialFence, deviceTokenFenceGeneration())
+    assertEquals(client, Clerk.client)
+    assertEquals(session, Clerk.session)
+    assertEquals(1, SessionTokensCache.size)
+    verifyNoRefresh()
+  }
+
+  @Test
+  fun `setDeviceToken leaves token, fence and state unchanged when the write fails to commit`() {
+    configureClerkForDeviceTokenUpdate()
+    stubRefreshFailure()
+    val session = testSession("sess_123")
+    Clerk.updateClient(
+      Client(id = "client_a", sessions = listOf(session), lastActiveSessionId = session.id)
+    )
+    val client = Clerk.client
+    val oldToken = deviceTokenJwt(clientId = "client_a", rotatingToken = "r1")
+    val newToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
+    val initialFence = deviceTokenFenceGeneration()
+    val pendingWork = configurationScopeChildren()
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    val result =
+      try {
+        Clerk.setDeviceToken(token = newToken, expected = oldToken)
+      } finally {
+        restoreCommits()
+      }
+
+    assertFalse(result)
+    assertEquals(pendingWork, configurationScopeChildren())
+    assertEquals(oldToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(initialFence, deviceTokenFenceGeneration())
+    assertEquals(client, Clerk.client)
+    assertEquals(session, Clerk.session)
+    verifyNoRefresh()
   }
 
   @Test
@@ -268,14 +414,16 @@ class ClerkDeviceTokenUpdateTest {
     Clerk.updateClient(Client(id = "client_current"))
     SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
-    coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client(id = "client_new"))
-    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
+    val releaseRefresh = stubGatedRefresh(Client(id = "client_new"))
 
     assertTrue(Clerk.setDeviceToken(token = null, expected = "device_token_123"))
 
+    assertNull(Clerk.clientFlow.value?.id)
     assertEquals(0, SessionTokensCache.size)
-    coVerify(timeout = ASYNC_TIMEOUT_MS, exactly = 1) { Client.getSkippingClientId() }
-    awaitClientId("client_new")
+    releaseRefresh.complete(Unit)
+    awaitConfigurationScopeIdle()
+    assertEquals("client_new", Clerk.client.id)
+    coVerify(exactly = 1) { Client.getSkippingClientId() }
   }
 
   @Test
@@ -315,9 +463,16 @@ class ClerkDeviceTokenUpdateTest {
   }
 
   @Test
-  fun `setDeviceToken returns false when Clerk has not been initialized`() {
-    assertFalse(Clerk.setDeviceToken(token = "device_token_123", expected = null))
-    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  fun `setDeviceToken returns false and leaves storage untouched when Clerk is not initialized`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_sentinel")
+    val initialFence = deviceTokenFenceGeneration()
+
+    assertFalse(
+      Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_sentinel")
+    )
+
+    assertEquals("device_token_sentinel", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(initialFence, deviceTokenFenceGeneration())
   }
 
   @Test
@@ -345,12 +500,62 @@ class ClerkDeviceTokenUpdateTest {
     return "$header.$payload.signature"
   }
 
-  private fun awaitClientId(clientId: String) {
-    val deadline = System.currentTimeMillis() + ASYNC_TIMEOUT_MS
-    while (Clerk.clientFlow.value?.id != clientId && System.currentTimeMillis() < deadline) {
-      Thread.sleep(POLL_INTERVAL_MS)
+  private fun testSession(id: String): Session =
+    Session(
+      id = id,
+      status = Session.SessionStatus.ACTIVE,
+      expireAt = 10_000,
+      lastActiveAt = 1_000,
+      createdAt = 1_000,
+      updatedAt = 1_000,
+    )
+
+  /** Stubs a refresh that returns [client] once the returned signal is completed. */
+  private fun stubGatedRefresh(client: Client): CompletableDeferred<Unit> {
+    val release = CompletableDeferred<Unit>()
+    coEvery { Client.getSkippingClientId() } coAnswers
+      {
+        release.await()
+        ClerkResult.success(client)
+      }
+    coEvery { Client.get() } returns
+      ClerkResult.unknownFailure(IllegalStateException("Client.get() should not be called"))
+    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
+    return release
+  }
+
+  private fun stubRefreshFailure() {
+    coEvery { Client.getSkippingClientId() } returns
+      ClerkResult.unknownFailure(IllegalStateException("No refresh expected"))
+    coEvery { Client.get() } returns
+      ClerkResult.unknownFailure(IllegalStateException("No refresh expected"))
+    coEvery { Environment.get() } returns
+      ClerkResult.unknownFailure(IllegalStateException("No refresh expected"))
+  }
+
+  private fun verifyNoRefresh() {
+    coVerify(exactly = 0) { Client.get() }
+    coVerify(exactly = 0) { Client.getSkippingClientId() }
+    coVerify(exactly = 0) { Environment.get() }
+  }
+
+  /** Active jobs launched by the configuration manager; a queued refresh shows up here. */
+  private fun configurationScopeChildren(): Set<Job> {
+    val field = ConfigurationManager::class.java.getDeclaredField("scope")
+    field.isAccessible = true
+    val scope = field.get(configurationManager()) as CoroutineScope
+    return scope.coroutineContext.job.children.filter { it.isActive }.toSet()
+  }
+
+  /** Joins every job the configuration manager launched, including ones launched while joining. */
+  private fun awaitConfigurationScopeIdle() = runBlocking {
+    withTimeout(ASYNC_TIMEOUT_MS) {
+      var active = configurationScopeChildren()
+      while (active.isNotEmpty()) {
+        active.joinAll()
+        active = configurationScopeChildren()
+      }
     }
-    assertEquals(clientId, Clerk.clientFlow.value?.id)
   }
 
   private fun deviceTokenFenceGeneration(): Int {
@@ -437,6 +642,5 @@ class ClerkDeviceTokenUpdateTest {
 
   private companion object {
     const val ASYNC_TIMEOUT_MS = 5_000L
-    const val POLL_INTERVAL_MS = 10L
   }
 }
