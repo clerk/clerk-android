@@ -76,13 +76,15 @@ data class Session(
   }
 
   /**
-   * Checks whether this session is authorized for the requested role, permission, feature, plan,
-   * and/or reverification.
+   * Returns whether the user has [role] or [permission] in the Active Organization, has the Billing
+   * [feature] or is subscribed to the Billing [plan], and reverified within [reverification].
    *
-   * Shares one implementation with [has]. Returns `false` when the user is missing or any requested
-   * dimension fails. Org role and permission come from the active organization membership. Feature
-   * and plan come from the `fea` / `pla` claims of the freshest token that matches this session and
-   * organization, from the snapshot or the token cache.
+   * Pass one of [role], [permission], [feature], or [plan], optionally with [reverification], or
+   * [reverification] alone. When you pass several, all of them must pass. Returns `false` when
+   * there is no user or no condition is passed, and for [role] and [permission] when there is no
+   * Active Organization. Prefix a [feature] or [plan] slug with `user:` or `org:` to check one
+   * payer only. A Subscription change is reflected in [feature] and [plan] checks after the session
+   * token refreshes.
    */
   fun checkAuthorization(
     role: String? = null,
@@ -101,23 +103,6 @@ data class Session(
           plan = plan,
           reverification = reverification,
         ),
-    )
-  }
-
-  /** Alias for [checkAuthorization]. Matches the `useAuth().has` / `auth().has` name. */
-  fun has(
-    role: String? = null,
-    permission: String? = null,
-    feature: String? = null,
-    plan: String? = null,
-    reverification: ReverificationConfig? = null,
-  ): Boolean {
-    return checkAuthorization(
-      role = role,
-      permission = permission,
-      feature = feature,
-      plan = plan,
-      reverification = reverification,
     )
   }
 

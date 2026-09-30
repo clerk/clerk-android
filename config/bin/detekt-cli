@@ -1,3 +1,12 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2655f48c7c303a5f9bf920a33229408b8571bb1d29e4e57cf7be3e151bceecb1
-size 70780590
+#!/bin/sh
+# Runs the same detekt version that Gradle uses (the `detekt` entry in
+# gradle/libs.versions.toml). Arguments are passed through to detekt-cli.
+
+REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"
+
+version="$(catalog_version detekt)" || exit 1
+jar="$(tool_jar "io/gitlab/arturbosch/detekt/detekt-cli/$version" "detekt-cli-$version-all.jar")" || exit 1
+java="$(java_cmd)" || exit 1
+
+exec "$java" -jar "$jar" "$@"

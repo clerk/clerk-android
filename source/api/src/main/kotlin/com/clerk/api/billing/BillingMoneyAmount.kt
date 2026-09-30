@@ -22,8 +22,6 @@ data class BillingMoneyAmount(
 
 /**
  * Whether a catalog discount subtracts a percentage or a fixed amount.
- *
- * Matches clerk-js `BillingAppliedDiscount.effect`.
  */
 @Serializable
 enum class BillingDiscountEffect {
@@ -34,8 +32,6 @@ enum class BillingDiscountEffect {
 
 /**
  * How a discount was applied to a subscription item.
- *
- * Matches clerk-js `BillingDiscountRedemption.source`.
  */
 @Serializable
 enum class BillingDiscountSource {
@@ -47,8 +43,6 @@ enum class BillingDiscountSource {
 
 /**
  * The current status of a discount redemption.
- *
- * Matches clerk-js `BillingDiscountRedemption.status`.
  */
 @Serializable
 enum class BillingDiscountRedemptionStatus {

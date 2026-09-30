@@ -22,6 +22,10 @@ plugins {
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
+// Shared with config/bin/ktfmt and config/bin/detekt-cli (pre-commit hook) via the version catalog.
+val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
+val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
+
 allprojects {
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -33,14 +37,14 @@ allprojects {
     }
     kotlin {
       target("**/*.kt")
-      ktfmt().googleStyle()
+      ktfmt(ktfmtVersion).googleStyle()
       trimTrailingWhitespace()
       endWithNewline()
       targetExclude("**/spotless.kt")
     }
     kotlinGradle {
       target("*.kts")
-      ktfmt().googleStyle()
+      ktfmt(ktfmtVersion).googleStyle()
       trimTrailingWhitespace()
       endWithNewline()
       targetExclude("**/spotless.gradle")
@@ -49,7 +53,7 @@ allprojects {
 
   apply(plugin = "io.gitlab.arturbosch.detekt")
   configure<DetektExtension> {
-    toolVersion = "1.23.8"
+    toolVersion = detektVersion
     allRules = true
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))

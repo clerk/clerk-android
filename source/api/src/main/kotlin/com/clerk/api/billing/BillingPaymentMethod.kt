@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * The status of a payment method.
- *
- * Matches clerk-js `BillingPaymentMethodStatus`.
  */
 @Serializable
 enum class BillingPaymentMethodStatus {
@@ -18,8 +16,6 @@ enum class BillingPaymentMethodStatus {
 
 /**
  * A stored payment method for a user or Organization.
- *
- * Write methods from clerk-js (`remove`, `makeDefault`) are not ported.
  *
  * @property id The unique identifier for the payment method.
  * @property last4 The last four digits of the payment method.
