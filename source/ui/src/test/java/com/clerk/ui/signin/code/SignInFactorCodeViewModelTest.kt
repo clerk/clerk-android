@@ -77,7 +77,7 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
+  fun prepareShouldSetNotStartedWhenNoSignInIsInProgress() = runTest {
     every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
@@ -305,7 +305,7 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
+  fun attemptShouldSetNotStartedWhenNoSignInIsInProgress() = runTest {
     every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
@@ -314,33 +314,6 @@ class SignInFactorCodeViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
-  }
-
-  @Test
-  fun stateShouldTransitionFromIdleToVerifyingDuringPrepare() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
-
-    viewModel.state.test {
-      assertEquals(AuthenticationViewState.Idle, awaitItem())
-
-      viewModel.prepare(factor, isSecondFactor = false)
-
-      assertEquals(AuthenticationViewState.Loading, awaitItem())
-    }
-  }
-
-  @Test
-  fun stateShouldTransitionFromIdleToVerifyingDuringAttempt() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
-    val code = "123456"
-
-    viewModel.state.test {
-      assertEquals(AuthenticationViewState.Idle, awaitItem())
-
-      viewModel.attempt(factor, isSecondFactor = false, code)
-
-      assertEquals(AuthenticationViewState.Loading, awaitItem())
-    }
   }
 
   @Test
@@ -440,6 +413,7 @@ class SignInFactorCodeViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 0) { mockPrepareHandler.prepareForPhoneCode(any(), any(), any(), any()) }
+    assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
   }
 
   @Test

@@ -1,5 +1,9 @@
 package com.clerk.snapshot.appbar
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color as AndroidColor
+import android.graphics.Paint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -7,7 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
+import coil3.annotation.ExperimentalCoilApi
+import coil3.asImage
+import coil3.compose.AsyncImagePreviewHandler
+import coil3.compose.LocalAsyncImagePreviewHandler
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
@@ -36,12 +45,21 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
     unmockkAll()
   }
 
+  @OptIn(ExperimentalCoilApi::class)
   @Test
   fun authTopBar_preservesWideLogoAspectRatio() {
+    // Coil cannot decode the SVG data URI under Paparazzi, which silently fell back to the
+    // placeholder icon. Serve a deterministic 5:1 bitmap so the wide logo is actually rendered.
+    val wideLogo = wideLogoBitmap().asImage()
     paparazzi.snapshot {
-      Box(Modifier.size(width = 360.dp, height = 72.dp)) {
-        ClerkMaterialTheme {
-          ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
+      CompositionLocalProvider(
+        LocalInspectionMode provides true,
+        LocalAsyncImagePreviewHandler provides AsyncImagePreviewHandler { wideLogo },
+      ) {
+        Box(Modifier.size(width = 360.dp, height = 72.dp)) {
+          ClerkMaterialTheme {
+            ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
+          }
         }
       }
     }
@@ -103,6 +121,18 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
         }
       }
     }
+  }
+
+  private fun wideLogoBitmap(): Bitmap {
+    val bitmap = Bitmap.createBitmap(240, 48, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    canvas.drawColor(AndroidColor.rgb(0x08, 0x16, 0x3d))
+    paint.color = AndroidColor.rgb(0x91, 0xd4, 0x3b)
+    canvas.drawRect(12f, 8f, 44f, 40f, paint)
+    paint.color = AndroidColor.WHITE
+    canvas.drawRect(56f, 12f, 212f, 36f, paint)
+    return bitmap
   }
 
   private companion object {

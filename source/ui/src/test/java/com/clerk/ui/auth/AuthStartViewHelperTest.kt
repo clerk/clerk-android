@@ -111,11 +111,20 @@ class AuthStartViewHelperTest {
     val helper = AuthStartViewHelper()
     helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "username"))
 
-    val contentType = helper.identifierContentType()
+    val hints = helper.identifierContentType().autofillHints()
 
-    assertFalse(contentType == ContentType.EmailAddress)
-    assertFalse(contentType == ContentType.Username)
+    assertEquals(
+      ContentType.EmailAddress.autofillHints() + ContentType.Username.autofillHints(),
+      hints,
+    )
+    assertEquals(2, hints.size)
   }
+
+  // ContentType has no structural equality, so compare the autofill hints it carries.
+  @Suppress("UNCHECKED_CAST")
+  private fun ContentType.autofillHints(): Set<String> =
+    javaClass.getDeclaredField("androidAutofillHints").apply { isAccessible = true }.get(this)
+      as Set<String>
 
   @Test
   fun automaticPasskeySignInIsEnabledForUnlockedSignInWhenPasskeyAutofillIsEnabled() {
