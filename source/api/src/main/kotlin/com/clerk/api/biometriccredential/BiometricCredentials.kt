@@ -14,6 +14,7 @@ import com.clerk.api.signin.SignIn
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -533,6 +534,11 @@ object BiometricCredentials {
       onStorage { credentialStore.save(record) }
       null
     } catch (e: CancellationException) {
+      withContext(NonCancellable) {
+        runCatching { ClerkApi.biometricCredential.revoke(biometricCredential.id) }
+        runCatching { onStorage { credentialStore.delete(biometricCredential.id) } }
+        runCatching { keyManager.deleteKey(localKey.localKeyId) }
+      }
       throw e
     } catch (e: Exception) {
       ClerkApi.biometricCredential.revoke(biometricCredential.id)

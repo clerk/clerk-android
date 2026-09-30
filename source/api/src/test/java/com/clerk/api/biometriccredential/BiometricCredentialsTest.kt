@@ -25,6 +25,7 @@ import io.mockk.unmockkAll
 import java.io.File
 import java.io.IOException
 import java.util.Locale
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -115,6 +116,19 @@ class BiometricCredentialsTest {
     val result = BiometricCredentials.enroll()
 
     assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `enrollment cancelled while saving rolls back the credential, record and key`() = runTest {
+    credentialStore.cancelAfterSave = true
+    val api = mockEnrollment()
+    coEvery { api.revoke(any(), any()) } returns ClerkResult.success(biometricCredential("td_1"))
+
+    assertFailsWith<CancellationException> { BiometricCredentials.enroll() }
+
     coVerify(exactly = 1) { api.revoke("td_1", any()) }
     assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
     assertTrue(credentialStore.credentials.isEmpty())
@@ -289,6 +303,7 @@ class BiometricCredentialsTest {
     val credentials = mutableListOf<BiometricCredentialLocalRecord>()
     var deleteFails = false
     var saveFails = false
+    var cancelAfterSave = false
 
     override fun all(): List<BiometricCredentialLocalRecord> = credentials.toList()
 
@@ -296,6 +311,7 @@ class BiometricCredentialsTest {
       if (saveFails) throw IOException("save failed")
       credentials.removeAll { it.id == credential.id }
       credentials += credential
+      if (cancelAfterSave) throw CancellationException("cancelled")
     }
 
     override fun delete(id: String) {
