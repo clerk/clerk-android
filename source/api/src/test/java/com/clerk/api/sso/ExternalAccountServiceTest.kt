@@ -166,6 +166,7 @@ class ExternalAccountServiceTest {
       ExternalAccountService.cancelPendingExternalAccountConnection()
 
       val failure = pendingResult.await() as ClerkResult.Failure
+      assertTrue(failure.throwable is SSOCancellationException)
       assertEquals("External account connection cancelled", failure.throwable?.message)
       assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
     }
@@ -228,7 +229,7 @@ class ExternalAccountServiceTest {
 
       ExternalAccountService.completeExternalConnection()
 
-      val result = withTimeout(COMPLETION_TIMEOUT_MS) { pendingResult.await() }
+      val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
       assertSame(clientFailure, result)
       assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
     }
@@ -255,6 +256,21 @@ class ExternalAccountServiceTest {
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
+  fun `starting a new connection cancels the superseded pending connection`() = runTest {
+    val firstResult = startPendingConnection()
+
+    val secondResult = startPendingConnection()
+
+    val failure = firstResult.await() as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse(secondResult.isCompleted)
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    secondResult.await()
+  }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun `stale completion does not clear a newer external account connection`() = runTest {
     val clientResponse = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
     coEvery { Client.get() } coAnswers { clientResponse.await() }
@@ -266,7 +282,8 @@ class ExternalAccountServiceTest {
     clientResponse.complete(ClerkResult.success(mockClient))
     staleCompletion.join()
 
-    assertSame(mockExternalAccount, (firstResult.await() as ClerkResult.Success).value)
+    val superseded = firstResult.await() as ClerkResult.Failure
+    assertTrue(superseded.throwable is SSOCancellationException)
     assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
     assertFalse(secondResult.isCompleted)
 
@@ -296,6 +313,6 @@ class ExternalAccountServiceTest {
   }
 
   private companion object {
-    const val COMPLETION_TIMEOUT_MS = 5_000L
+    const val TIMEOUT_MS = 5_000L
   }
 }
