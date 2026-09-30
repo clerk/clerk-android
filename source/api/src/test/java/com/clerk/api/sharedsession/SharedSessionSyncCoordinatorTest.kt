@@ -165,6 +165,23 @@ class SharedSessionSyncCoordinatorTest {
     coordinator.close()
   }
 
+  @Test
+  fun `late device token notification does not publish a token that was since replaced`() {
+    val transport = FakeTransport()
+    val coordinator = coordinator(transport)
+    coordinator.start()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "newer-token")
+    val publishedVersion = transport.local?.deviceToken?.version
+
+    // A writer that stored "stale-token" before "newer-token" is notified only now.
+    StorageHelper.valueChangeListener?.invoke(StorageKey.DEVICE_TOKEN, "older-token", "stale-token")
+
+    assertEquals("newer-token", transport.local?.deviceToken?.value)
+    assertEquals(publishedVersion, transport.local?.deviceToken?.version)
+    assertEquals(1, transport.notificationCount)
+    coordinator.close()
+  }
+
   private fun coordinator(transport: FakeTransport): SharedSessionSyncCoordinator =
     SharedSessionSyncCoordinator(instanceId = INSTANCE_ID, transport = transport, clock = { 500 })
 

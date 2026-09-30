@@ -63,8 +63,16 @@ internal object StorageHelper {
   /**
    * Atomically replaces the device token with [value] (deleting it when null) only if the stored
    * token equals [expected]. Returns true when the stored token equals [value] after this call.
+   *
+   * [onChangedLocked] runs inside the device-token lock, only when the stored token actually
+   * changed, so callers can publish side effects (such as a response fence) atomically with the
+   * swap. It must be cheap and must not take other locks.
    */
-  internal fun compareAndSetDeviceToken(expected: String?, value: String?): Boolean {
+  internal fun compareAndSetDeviceToken(
+    expected: String?,
+    value: String?,
+    onChangedLocked: () -> Unit = {},
+  ): Boolean {
     val key = StorageKey.DEVICE_TOKEN
     val previousValue: String?
     val swapped: Boolean
@@ -77,6 +85,7 @@ internal object StorageHelper {
           value == null -> removeValue(key)
           else -> writeValue(key, value)
         }
+      if (swapped && previousValue != value) onChangedLocked()
     }
     if (swapped) notifyDeviceTokenChange(previousValue, value)
     return swapped
@@ -100,13 +109,11 @@ internal object StorageHelper {
       }
       else -> {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
-          .onSuccess { encryptedValue ->
-            prefs.edit(commit = true) { putString(key.name, encryptedValue) }
-          }
           .onFailure { error ->
             ClerkLog.w("Failed to encrypt value for key ${key.name}: ${error.message}")
           }
-          .isSuccess
+          .map { encryptedValue -> commitEdit(prefs, key) { putString(key.name, encryptedValue) } }
+          .getOrDefault(false)
       }
     }
   }
@@ -165,8 +172,7 @@ internal object StorageHelper {
       )
       return false
     }
-    prefs.edit(commit = true) { remove(key.name) }
-    return true
+    return commitEdit(prefs, key) { remove(key.name) }
   }
 
   private fun notifyDeviceTokenChange(previousValue: String?, value: String?) {
@@ -210,6 +216,17 @@ internal object StorageHelper {
         ClerkLog.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
       }
   }
+}
+
+/** Commits synchronously and reports whether the write reached disk. */
+private inline fun commitEdit(
+  prefs: SharedPreferences,
+  key: StorageKey,
+  edit: SharedPreferences.Editor.() -> Unit,
+): Boolean {
+  val committed = prefs.edit().apply(edit).commit()
+  if (!committed) ClerkLog.w("Failed to commit storage change for key: ${key.name}")
+  return committed
 }
 
 internal enum class StorageKey {
