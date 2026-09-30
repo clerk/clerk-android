@@ -39,12 +39,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * Unit tests for [com.clerk.sso.sso.SSOService].
- *
- * These tests focus on OAuth authentication flows and redirect handling. Tests for external account
- * connection functionality can be found in [ExternalAccountServiceTest].
- */
 @Ignore("TODO: Fix these tests")
 @RunWith(RobolectricTestRunner::class)
 class SSOServiceTest {
@@ -67,7 +61,6 @@ class SSOServiceTest {
   fun setup() {
     Dispatchers.setMain(testDispatcher)
 
-    // Mock objects
     mockContext = mockk(relaxed = true)
     mockSignInApi = mockk(relaxed = true)
     mockUserApi = mockk(relaxed = true)
@@ -80,13 +73,11 @@ class SSOServiceTest {
     mockVerification = mockk(relaxed = true)
     mockAuth = mockk(relaxed = true)
 
-    // Mock static objects
     mockkObject(ClerkApi)
     mockkObject(Clerk)
     mockkStatic(Client::class)
     mockkStatic(SignUp::class)
 
-    // Setup basic mocks
     every { ClerkApi.signIn } returns mockSignInApi
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
@@ -94,17 +85,14 @@ class SSOServiceTest {
     every { Clerk.debugMode } returns false
     every { mockAuth.currentSignIn } returns mockSignIn
 
-    // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED
     every { mockVerification.externalVerificationRedirectUrl } returns
       "https://oauth.example.com/auth"
     every { mockExternalAccount.verification } returns mockVerification
     every { mockExternalAccount.id } returns "ext_account_123"
 
-    // Setup sign-in mock
     every { mockSignIn.firstFactorVerification } returns mockVerification
 
-    // Setup client/session mocks
     every { mockClient.lastActiveSessionId } returns "session_123"
     every { mockClient.sessions } returns listOf(mockSession)
     every { mockSession.id } returns "session_123"
@@ -131,10 +119,8 @@ class SSOServiceTest {
 
   @Test
   fun `cancelPendingAuthentication clears state`() {
-    // Cancel any pending auth
     SSOService.cancelPendingAuthentication()
 
-    // Should have no pending authentication
     assertFalse(SSOService.hasPendingAuthentication())
   }
 
@@ -158,32 +144,25 @@ class SSOServiceTest {
     val mockUri = mockk<Uri>(relaxed = true)
     every { mockUri.getQueryParameter("rotating_token_nonce") } returns "test_nonce"
 
-    // Should not throw when no pending authentication
     SSOService.completeAuthenticateWithRedirect(mockUri)
 
-    // Should still have no pending authentication
     assertFalse(SSOService.hasPendingAuthentication())
   }
 
   @Test
   fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
-    // Should not throw when no pending connection
     SSOService.completeExternalConnection()
 
-    // Should still have no pending connection
     assertFalse(SSOService.hasPendingExternalAccountConnection())
   }
 
   @Test
   fun `completeExternalConnection handles missing external account`() = runTest {
-    // Mock client with no matching external account
     every { mockUser.externalAccounts } returns emptyList()
     coEvery { Client.get() } returns ClerkResult.Success(mockClient, emptyMap())
 
-    // Complete the external connection (should handle gracefully with no pending connection)
     SSOService.completeExternalConnection()
 
-    // Should have no pending connection
     assertFalse(SSOService.hasPendingExternalAccountConnection())
   }
 }

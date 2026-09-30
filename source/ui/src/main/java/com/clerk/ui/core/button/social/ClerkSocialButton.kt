@@ -209,7 +209,6 @@ internal fun ClerkSocialButtonImpl(
   }
 }
 
-/** Returns the button colors based on the pressed state. */
 @Composable
 private fun getButtonColors(isPressedCombined: Boolean) =
   ButtonDefaults.buttonColors(
@@ -221,7 +220,6 @@ private fun getButtonColors(isPressedCombined: Boolean) =
     disabledContentColor = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = 0.5f),
   )
 
-/** Displays the adaptive content of the social button based on available width. */
 @Composable
 private fun SocialButtonContent(
   provider: OAuthProvider,
@@ -242,7 +240,6 @@ private fun SocialButtonContent(
   }
 }
 
-/** Displays the social button with both icon and text. */
 @Composable
 private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   Row(
@@ -258,7 +255,6 @@ private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   }
 }
 
-/** Displays the social button with icon only. */
 @Composable
 private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   SocialButtonIcon(
@@ -268,7 +264,6 @@ private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   )
 }
 
-/** Displays the social provider icon. */
 @Composable
 private fun SocialButtonIcon(
   provider: OAuthProvider,
@@ -323,11 +318,6 @@ private fun SocialButtonIcon(
   )
 }
 
-/**
- * Preview composable for showcasing [ClerkSocialButton] in different states and widths. Displays
- * the button normally, pressed, disabled, and at different widths to show the adaptive
- * text/icon-only behavior.
- */
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
@@ -339,19 +329,14 @@ private fun PreviewSocialButton() {
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      // Full width with text (>180dp)
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(min = 200.dp))
-      // Icon only - constrained width but will be at least 120dp
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(max = 150.dp))
-      // Icon only - very narrow constraint, button will still be 120dp minimum
       ClerkSocialButton(provider = provider)
-      // Pressed state
       ClerkSocialButton(
         provider = provider,
         isPressed = true,
         modifier = Modifier.widthIn(min = 200.dp),
       )
-      // Disabled state
       ClerkSocialButton(
         provider = provider,
         isEnabled = false,
@@ -361,11 +346,6 @@ private fun PreviewSocialButton() {
   }
 }
 
-/**
- * Preview composable for showcasing [ClerkSocialButton] in different states and widths. Displays
- * the button normally, pressed, disabled, and at different widths to show the adaptive
- * text/icon-only behavior.
- */
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable

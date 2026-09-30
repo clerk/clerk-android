@@ -49,16 +49,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
-/**
- * Internal configuration manager responsible for Clerk SDK initialization and lifecycle management.
- *
- * This class handles:
- * - API client configuration and base URL extraction
- * - Storage initialization for session persistence
- * - Concurrent client and environment data fetching
- * - Application lifecycle monitoring for state refresh
- * - Context memory leak prevention through weak references
- */
 internal class ConfigurationManager(
   private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
@@ -70,17 +60,13 @@ internal class ConfigurationManager(
 
   private val refreshMutex = Mutex()
 
-  /** Weak reference to application context to prevent memory leaks. */
   internal var context: WeakReference<Context>? = null
     set(value) {
       field = value
-      // Don't initialize storage immediately - do it lazily when needed
     }
 
-  /** Track if storage has been initialized to avoid duplicate initialization */
   private var storageInitialized = false
 
-  /** Internal mutable state flow for initialization status. */
   private val _isInitialized = MutableStateFlow(false)
 
   /**
@@ -90,38 +76,18 @@ internal class ConfigurationManager(
    */
   val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
-  /** Internal mutable state flow for initialization errors. */
   private val _initializationError = MutableStateFlow<Throwable?>(null)
 
-  /**
-   * Public read-only state flow for initialization errors.
-   *
-   * Emits the last error that occurred during initialization, or null if no error. This allows apps
-   * to detect and handle initialization failures gracefully.
-   */
   val initializationError: StateFlow<Throwable?> = _initializationError.asStateFlow()
 
-  /**
-   * The publishable key from Clerk Dashboard used for API authentication.
-   *
-   * This key determines the API base URL and connects the app to the correct Clerk instance.
-   */
   internal lateinit var publishableKey: String
 
-  /** Flag to track if configuration has been started to prevent duplicate initialization. */
   @Volatile private var hasConfigured = false
 
-  /** Stored configuration options for use in retry attempts. */
   private var storedOptions: ClerkConfigurationOptions? = null
 
-  /**
-   * Internal job reference for ongoing refresh token operations.
-   *
-   * Used to cancel ongoing refresh operations if needed.
-   */
   private var refreshJob: Job? = null
 
-  /** Internal job reference for ongoing initialization operations. */
   private var initializationJob: Job? = null
 
   /** Pending retry, replaced when another refresh starts. */
@@ -153,7 +119,6 @@ internal class ConfigurationManager(
       )
   }
 
-  /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
     if (!storageInitialized) {
       context?.get()?.let { context ->
@@ -346,7 +311,6 @@ internal class ConfigurationManager(
       return
     }
 
-    // Cancel any ongoing jobs
     refreshJob?.cancel()
     refreshJob = scope.launch {
       while (isActive) {
@@ -407,19 +371,6 @@ internal class ConfigurationManager(
     return result
   }
 
-  /**
-   * Refreshes client and environment data by making concurrent API requests.
-   *
-   * This method:
-   * - Performs client and environment requests in parallel for better performance
-   * - Handles errors gracefully with detailed logging
-   * - Updates Clerk state when both requests succeed
-   * - Sets initialization status based on operation success
-   * - Starts token refresh as soon as client data is available
-   * - Retries with exponential backoff on failure, capped at one minute between attempts
-   *
-   * The method is safe to call multiple times and will not interfere with ongoing requests.
-   */
   private fun currentRefreshAttempt(): RefreshAttempt =
     RefreshAttempt(
       options = storedOptions,
@@ -689,7 +640,6 @@ internal class ConfigurationManager(
     }
   }
 
-  /** Handles initialization failure by setting error state and scheduling another retry. */
   private fun handleInitializationFailure(error: Throwable, attempt: RefreshAttempt) {
     if (!hasConfigured || attempt.expectedConfigurationVersion != configurationVersion) {
       return
@@ -716,7 +666,6 @@ internal class ConfigurationManager(
       return
     }
 
-    // Retry the initialization
     queueClientAndEnvironmentRefresh(attempt)
   }
 
@@ -746,19 +695,8 @@ internal class ConfigurationManager(
     return true
   }
 
-  /**
-   * Configures the network connectivity monitor to automatically retry initialization when
-   * connectivity is restored.
-   *
-   * This enables proactive initialization without requiring a background/foreground app cycle. When
-   * the device regains internet access after being offline, the SDK will automatically attempt to
-   * initialize if it hasn't completed initialization yet.
-   *
-   * @param context The application context used for ConnectivityManager access.
-   */
   private fun configureConnectivityMonitor(context: Context) {
     NetworkConnectivityMonitor.configure(context) {
-      // Callback invoked when connectivity is restored
       if (!_isInitialized.value && hasConfigured) {
         ClerkLog.d("Connectivity restored - attempting automatic reinitialization")
         scope.launch {
@@ -766,7 +704,6 @@ internal class ConfigurationManager(
           refreshClientAndEnvironment(currentRefreshAttempt(), RefreshMode.INITIALIZATION)
         }
       } else if (_isInitialized.value) {
-        // Already initialized, but connectivity was restored - refresh data
         if (Clerk.debugMode) {
           ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
         }
@@ -777,11 +714,6 @@ internal class ConfigurationManager(
     }
   }
 
-  /**
-   * Handles the client API result with appropriate logging.
-   *
-   * Note: updating clerk state happens in [updateClerkState]
-   */
   private fun handleClientResult(result: ClerkResult<Client, *>) {
     result.fold(
       onSuccess = { client ->
@@ -796,11 +728,6 @@ internal class ConfigurationManager(
     )
   }
 
-  /**
-   * Handles the environment API result with appropriate logging.
-   *
-   * Note: updating clerk state happens in [updateClerkState]
-   */
   private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
@@ -815,7 +742,6 @@ internal class ConfigurationManager(
     )
   }
 
-  /** Logs API errors with appropriate detail based on error type. */
   private fun logApiError(
     operation: String,
     errorType: ClerkResult.Failure.ErrorType,

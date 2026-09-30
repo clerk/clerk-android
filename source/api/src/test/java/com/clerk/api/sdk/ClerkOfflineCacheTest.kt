@@ -34,7 +34,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** Covers persistence and restoration of complete SDK state for offline cold starts. */
 @RunWith(RobolectricTestRunner::class)
 class ClerkOfflineCacheTest {
   private lateinit var context: Context

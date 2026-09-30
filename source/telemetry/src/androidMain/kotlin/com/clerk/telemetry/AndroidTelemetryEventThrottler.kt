@@ -17,7 +17,7 @@ class AndroidTelemetryEventThrottler(
     encodeDefaults = true
     ignoreUnknownKeys = true
   },
-  private val cacheTtlMillis: Long = 24L * 60L * 60L * 1000L, // 24h
+  private val cacheTtlMillis: Long = 24L * 60L * 60L * 1000L,
 ) : TelemetryEventThrottler {
 
   private val prefs: SharedPreferences =
@@ -61,7 +61,6 @@ class AndroidTelemetryEventThrottler(
   }
 
   private fun stableJsonString(map: Map<String, JsonElement>): String {
-    // Stable JSON string by sorting keys and re-encoding; fall back to {}
     return runCatching {
         json.encodeToString(
           MapSerializer(String.serializer(), JsonElement.serializer()),

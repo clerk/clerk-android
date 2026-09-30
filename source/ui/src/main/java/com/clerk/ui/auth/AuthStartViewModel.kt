@@ -36,21 +36,10 @@ private const val FORM_IDENTIFIER_NOT_FOUND = "form_identifier_not_found"
 
 private const val INVITATION_ACCOUNT_NOT_EXISTS = "invitation_account_not_exists"
 
-/**
- * ViewModel responsible for handling the authentication logic for both sign-in and sign-up flows.
- *
- * This ViewModel manages the overall authentication state ([AuthState]) and interacts with the
- * Clerk SDK to perform operations like creating sign-in/sign-up attempts, and handling social
- * provider authentication.
- */
 internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) :
   ViewModel() {
 
   private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
-  /**
-   * The current state of the authentication process, observed by the UI. See [AuthState] for
-   * possible states.
-   */
   val state: StateFlow<AuthState> = _state.asStateFlow()
 
   private var automaticPasskeySignInJob: Job? = null
@@ -151,15 +140,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     }
   }
 
-  /**
-   * Initiates the authentication process based on the provided [authMode].
-   *
-   * @param authMode Determines whether to start a sign-in or sign-up flow. See [AuthMode].
-   * @param isPhoneNumberFieldActive Indicates if the phone number input field is currently
-   *   active/focused by the user.
-   * @param phoneNumber The phone number entered by the user (if applicable).
-   * @param identifier The primary identifier (email or username) entered by the user.
-   */
   internal fun startAuth(
     authMode: AuthMode,
     isPhoneNumberFieldActive: Boolean,
@@ -437,42 +417,23 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       }
   }
 
-  /** Represents the various states of the authentication process. */
   internal sealed interface AuthState {
-    /** The initial state before any authentication attempt has started. */
     object Idle : AuthState
 
-    /** Indicates that an authentication operation is currently in progress. */
     object Loading : AuthState
 
-    /**
-     * Indicates that an authentication attempt was successful.
-     *
-     * @property signIn The [SignIn] object if the successful attempt was a sign-in.
-     * @property signUp The [SignUp] object if the successful attempt was a sign-up.
-     */
     sealed interface Success : AuthState {
       data class SignInSuccess(val signIn: SignIn?) : Success
 
       data class SignUpSuccess(val signUp: SignUp?) : Success
     }
 
-    /** States specific to biometric sign-in. */
     sealed interface BiometricCredentialState : AuthState {
       data object Loading : BiometricCredentialState
     }
 
-    /**
-     * Indicates that an authentication attempt failed.
-     *
-     * @property message A descriptive error message, if available.
-     */
     data class Error(val message: String?) : AuthState
 
-    /**
-     * Represents the states specifically related to OAuth (social provider) authentication.
-     * Inherits from [AuthState] as OAuth is a type of authentication.
-     */
     sealed interface OAuthState : AuthState {
       data object Loading : OAuthState
 

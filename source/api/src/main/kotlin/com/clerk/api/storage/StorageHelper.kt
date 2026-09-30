@@ -7,10 +7,6 @@ import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLog
 
-/**
- * Helper class to manage secure storage of data. SharedPreferences are used as the persistence
- * backend, while values are encrypted before they are written to disk.
- */
 internal object StorageHelper {
   private const val ENCRYPTED_VALUE_PREFIX = "clerk:v1:"
 
@@ -19,7 +15,6 @@ internal object StorageHelper {
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
-  /** Receives encrypted-storage changes that affect coordinated SDK state. */
   @Volatile
   internal var valueChangeListener:
     ((key: StorageKey, previous: String?, value: String?) -> Unit)? =
@@ -48,7 +43,6 @@ internal object StorageHelper {
     }
   }
 
-  /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
     val prefs = secureStorage
     val cipher = storageCipher
@@ -79,7 +73,6 @@ internal object StorageHelper {
     }
   }
 
-  /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
     val prefs = secureStorage
     val storedValue = prefs?.getString(key.name, null)
@@ -112,7 +105,6 @@ internal object StorageHelper {
     }
   }
 
-  /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
     val prefs = secureStorage
     if (prefs == null) {
@@ -142,7 +134,6 @@ internal object StorageHelper {
     }
     storageCipher = null
     if (context != null) {
-      // Reinitialize to ensure clean state
       initialize(context)
     } else {
       // Allow tests to simulate uninitialized state.

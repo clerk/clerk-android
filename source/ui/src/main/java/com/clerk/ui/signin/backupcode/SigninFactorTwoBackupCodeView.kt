@@ -52,12 +52,6 @@ fun SignInFactorTwoBackupCodeView(
   }
 }
 
-/**
- * The internal implementation of the [SignInFactorTwoBackupCodeView].
- *
- * @param modifier The [Modifier] to be applied to the view.
- * @param viewModel The [BackupCodeViewModel] used to manage the state and actions of the view.
- */
 @Composable
 private fun SignInFactorTwoBackupCodeViewImpl(
   factor: Factor,

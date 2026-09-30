@@ -14,7 +14,6 @@ class PasskeyCredentialManagerTest {
 
   @Test
   fun `PasskeyCredentialManagerImpl can be used as PasskeyCredentialManager interface`() {
-    // Given/When
     val manager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
     assert(manager is PasskeyCredentialManagerImpl) { "Should be the correct implementation" }

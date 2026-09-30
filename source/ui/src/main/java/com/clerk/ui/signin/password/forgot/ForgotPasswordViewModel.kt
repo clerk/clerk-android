@@ -78,12 +78,6 @@ internal class ForgotPasswordViewModel(
   }
 }
 
-/**
- * Represents the various states of an authentication process.
- *
- * This sealed interface is used to model the different stages that an authentication flow can be
- * in, such as not started, idle, loading, successful, or encountering an error.
- */
 internal sealed interface ResetPasswordViewState {
   data object NotStarted : ResetPasswordViewState
 

@@ -30,22 +30,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 private const val SERVER_DATE_HEADER = "Date"
 private const val SERVER_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
-/**
- * Network middleware that automatically syncs the Clerk client state from API responses.
- *
- * This middleware intercepts successful JSON responses and checks for either a direct client
- * response or a piggybacked "client" field. If found, it deserializes the client data and updates
- * the global [Clerk.client] state.
- *
- * @property json The JSON serializer used for deserializing the client data.
- */
 internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
-  /**
-   * Intercepts network responses to sync client state.
-   *
-   * @param chain The interceptor chain.
-   * @return The original response, potentially with a new body if it was read for client syncing.
-   */
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
@@ -70,13 +55,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   @Suppress("NestedBlockDepth")
   private fun syncResponse(request: Request, response: Response): Response {
-    // Only process JSON responses
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
       responseBody.let {
         try {
-          // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
           val authEvents =
             if (jsonElement is JsonObject) {
@@ -96,7 +79,6 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
           authEvents.forEach(Clerk.auth::send)
 
-          // Return the original response with its body
           val newBody = it.toResponseBody(body.contentType())
           return response.newBuilder().body(newBody).build()
         } catch (e: SerializationException) {

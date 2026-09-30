@@ -31,7 +31,6 @@ class ClerkTypographyDefaultsTest {
 
     assertEquals(18.sp, typography.titleMedium?.fontSize)
     assertEquals(FontWeight.Bold, typography.titleMedium?.fontWeight)
-    // Ensure untouched styles remain at defaults.
     assertEquals(ClerkTypographyDefaults.displaySmall, typography.displaySmall)
     assertEquals(ClerkTypographyDefaults.bodySmall, typography.bodySmall)
   }

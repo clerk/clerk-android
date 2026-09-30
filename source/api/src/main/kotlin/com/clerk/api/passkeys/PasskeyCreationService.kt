@@ -16,14 +16,6 @@ import com.clerk.api.network.serialization.onSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * Service responsible for creating new passkeys for users.
- *
- * This service handles the complete passkey creation flow including:
- * - Initiating passkey creation with the Clerk API to get the challenge
- * - Using Android's CredentialManager to create the passkey credential
- * - Verifying the created passkey with the Clerk API
- */
 internal object PasskeyCreationService {
 
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
@@ -37,19 +29,6 @@ internal object PasskeyCreationService {
     credentialManager = manager
   }
 
-  /**
-   * Creates a new passkey for the current user.
-   *
-   * This method performs the following steps:
-   * 1. Requests passkey creation from the Clerk API to get the challenge
-   * 2. Uses Android's CredentialManager to create the passkey credential
-   * 3. Parses the credential response from the system
-   * 4. Sends the credential data back to Clerk for verification and storage
-   *
-   * The method handles both success and failure cases, logging appropriate messages. On failure
-   * during the initial API request, the method returns early. On success, it proceeds with the full
-   * credential creation and verification flow.
-   */
   @SuppressLint("PublicKeyCredential")
   suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
     val activity = Clerk.credentialActivity()
@@ -116,7 +95,6 @@ internal object PasskeyCreationService {
    * @throws IllegalArgumentException if the registration response JSON is not found in the bundle
    */
   private fun parsePasskeyDataDirectFromBundle(result: Bundle): PublicKeyCredentialData {
-    // Extract JSON string from the Bundle
     val jsonString =
       result.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
         ?: throw IllegalArgumentException("No registration response JSON found in bundle")
@@ -124,7 +102,6 @@ internal object PasskeyCreationService {
     val json = Json { ignoreUnknownKeys = true }
     val fullResponse = json.decodeFromString<FullPasskeyResponse>(jsonString)
 
-    // Convert response JsonObject to Map<String, String> with only the required fields
     val responseMap =
       mapOf(
         "attestationObject" to

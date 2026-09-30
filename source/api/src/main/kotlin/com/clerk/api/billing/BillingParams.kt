@@ -118,7 +118,6 @@ data class GetCreditHistoryParams(val orgId: String? = null)
  */
 data class GetPaymentMethodsParams(val initialPage: Int? = null, val pageSize: Int? = null)
 
-/** FAPI `offset` / `limit` values derived from clerk-js `initialPage` / `pageSize`. */
 internal data class BillingOffsetLimit(val offset: Int, val limit: Int)
 
 /**

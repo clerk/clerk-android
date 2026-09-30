@@ -11,13 +11,6 @@ import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 
-/**
- * Service responsible for signing out users by removing every session on the current client.
- *
- * The SignOutService handles the complete all-account sign-out process, including deleting client
- * sessions from the Clerk API and cleaning up local client state. Single-session sign-out is
- * handled by [com.clerk.api.auth.Auth.signOut] when a session ID is provided.
- */
 internal object SignOutService {
 
   /**
@@ -44,7 +37,6 @@ internal object SignOutService {
       ClerkLog.w("Server sign-out failed: ${e.message}")
       serverError = e
     } finally {
-      // Always clear local credentials regardless of server response
       RestoreCredentials.clearSilently()
       StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
       Clerk.updateClient(Client())

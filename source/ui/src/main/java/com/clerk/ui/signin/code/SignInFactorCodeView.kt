@@ -71,19 +71,6 @@ fun SignInFactorCodeView(
   }
 }
 
-/**
- * Internal implementation of the SignInFactorCodeView that manages the UI state and interactions.
- *
- * This component handles:
- * - View model state management
- * - Factor preparation on composition
- * - Timer countdown for resend functionality
- * - Code input and automatic submission when complete
- * - Navigation actions (back, use another method)
- *
- * @param factor The authentication factor to process
- * @param modifier Optional modifier for styling
- */
 @Composable
 private fun SignInFactorCodeViewImpl(
   factor: Factor,
@@ -196,11 +183,6 @@ private fun SignInCodeInput(
   )
 }
 
-/**
- * Preview function for the SignInFactorCodeView component.
- *
- * Demonstrates the component with a phone code factor for development and design purposes.
- */
 @PreviewLightDark
 @Composable
 private fun PreviewSignInFactorCodeView() {

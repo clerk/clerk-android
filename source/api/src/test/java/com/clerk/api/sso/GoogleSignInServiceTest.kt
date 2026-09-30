@@ -59,21 +59,17 @@ class GoogleSignInServiceTest {
     mockDisplayConfig = mockk(relaxed = true)
     every { mockSignUp.verifications } returns emptyMap()
 
-    // Mock Clerk object and its environment
     mockkObject(Clerk)
     every { Clerk.environment } returns mockEnvironment
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
     every { mockDisplayConfig.googleOneTapClientId } returns "test_client_id"
 
-    // Mock the ClerkApi
     mockkObject(ClerkApi)
     every { ClerkApi.signIn } returns mockk(relaxed = true)
 
-    // Mock SignUp.create
     mockkObject(SignUp.Companion)
     mockkObject(SignIn.Companion)
 
-    // Create service instance with mocked credential manager
     googleSignInService = GoogleSignInService(mockGoogleCredentialManager)
   }
 
@@ -84,7 +80,6 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle succeeds when authentication is successful`() = runTest {
-    // Given
     val idToken = "test_id_token"
 
     every { mockGetCredentialResponse.credential } returns mockCustomCredential
@@ -99,10 +94,8 @@ class GoogleSignInServiceTest {
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.success(mockSignIn)
 
-    // When
     val result = googleSignInService.signInWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Success)
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(mockSignIn, oauthResult.signIn)
@@ -112,7 +105,6 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle creates account when external_account_not_found error occurs`() = runTest {
-    // Given
     val idToken = "test_id_token"
     val error =
       Error(
@@ -136,10 +128,8 @@ class GoogleSignInServiceTest {
     coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
       ClerkResult.success(mockSignUp)
 
-    // When
     val result = googleSignInService.signInWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Success)
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(null, oauthResult.signIn)
@@ -150,7 +140,6 @@ class GoogleSignInServiceTest {
   @Test
   fun `signInWithGoogle transfers created sign-up back to sign-in when external account exists`() =
     runTest {
-      // Given
       val idToken = "test_id_token"
       val error =
         Error(
@@ -181,10 +170,8 @@ class GoogleSignInServiceTest {
       coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
         ClerkResult.success(mockSignIn)
 
-      // When
       val result = googleSignInService.signInWithGoogle()
 
-      // Then
       assertTrue(result is ClerkResult.Success)
       val oauthResult = (result as ClerkResult.Success).value
       assertEquals(mockSignIn, oauthResult.signIn)
@@ -195,7 +182,6 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle returns error when authentication fails with other error`() = runTest {
-    // Given
     val idToken = "test_id_token"
     val error =
       Error(
@@ -217,10 +203,8 @@ class GoogleSignInServiceTest {
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
 
-    // When
     val result = googleSignInService.signInWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(errorResponse, failure.error)
@@ -228,17 +212,14 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle returns error when credential type is unsupported`() = runTest {
-    // Given
     every { mockGetCredentialResponse.credential } returns mockCustomCredential
     every { mockCustomCredential.type } returns "unsupported_type"
 
     coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
       mockGetCredentialResponse
 
-    // When
     val result = googleSignInService.signInWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
@@ -248,15 +229,12 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle returns error when GetCredentialException is thrown`() = runTest {
-    // Given
     val exception = GetCredentialUnknownException("Credential retrieval failed")
 
     coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws exception
 
-    // When
     val result = googleSignInService.signInWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
@@ -288,7 +266,6 @@ class GoogleSignInServiceTest {
 
   @Test
   fun `signInWithGoogle verifies correct SignUp CreateParams are used`() = runTest {
-    // Given
     val idToken = "test_id_token"
     val error =
       Error(
@@ -312,16 +289,13 @@ class GoogleSignInServiceTest {
       ClerkResult.apiFailure(errorResponse)
     coEvery { SignUp.create(capture(createParamsSlot)) } returns ClerkResult.success(mockSignUp)
 
-    // When
     googleSignInService.signInWithGoogle()
 
-    // Then
     assertEquals(idToken, createParamsSlot.captured.token)
   }
 
   @Test
   fun `signUpWithGoogle transfers existing external account to sign-in`() = runTest {
-    // Given
     val idToken = "test_id_token"
     val transferableSignUp =
       testSignUp(
@@ -343,10 +317,8 @@ class GoogleSignInServiceTest {
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
       ClerkResult.success(mockSignIn)
 
-    // When
     val result = googleSignInService.signUpWithGoogle()
 
-    // Then
     assertTrue(result is ClerkResult.Success)
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(mockSignIn, oauthResult.signIn)

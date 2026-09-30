@@ -116,11 +116,12 @@ internal class BiometricCredentialFileStore(
     migrated = true
   }
 
-  private fun readDocumentOrNull(): StoreDocument? =
-    runCatching { readDocument() }
-      .onFailure { ClerkLog.w("Failed to read biometric credential metadata: ${it.message}") }
-      .getOrNull()
-      ?.takeIf { it.writable }
+  private fun readDocumentOrNull(): StoreDocument? = runCatching {
+    readDocument()
+  }
+    .onFailure { ClerkLog.w("Failed to read biometric credential metadata: ${it.message}") }
+    .getOrNull()
+    ?.takeIf { it.writable }
 
   // A missing file or a non-object root reads as an empty, writable store (contract 3.2). I/O
   // errors propagate so a writer never replaces a file it could not read.
@@ -239,14 +240,13 @@ internal class BiometricCredentialFileStore(
       val existing = elements.firstOrNull { it.recordId == credential.id } as? JsonObject
       val encoded = BiometricCredentialRecordJson.encode(credential, preserving = existing)
       var replaced = false
-      val updated =
-        elements.mapNotNull { element ->
-          when {
-            element.recordId != credential.id -> element
-            replaced -> null
-            else -> encoded.also { replaced = true }
-          }
+      val updated = elements.mapNotNull { element ->
+        when {
+          element.recordId != credential.id -> element
+          replaced -> null
+          else -> encoded.also { replaced = true }
         }
+      }
       return withCredentialElements(if (replaced) updated else updated + encoded)
     }
 

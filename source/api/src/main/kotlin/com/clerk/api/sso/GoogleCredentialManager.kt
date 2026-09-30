@@ -16,16 +16,8 @@ import java.util.UUID
  * Credential Manager API so it can be mocked in tests.
  */
 internal interface GoogleCredentialManager {
-
-  /**
-   * Retrieves a Google credential for sign-in purposes.
-   *
-   * @param context The context used to access the credential manager.
-   * @return A [GetCredentialResponse] containing the retrieved Google credential.
-   */
   suspend fun getSignInWithGoogleCredential(): GetCredentialResponse
 
-  /** Take a [GoogleIdTokenCredential] and extract the ID token from it. */
   fun getIdTokenFromCredential(credentialData: Bundle): String
 
   fun getGoogleIdOption(): GetGoogleIdOption

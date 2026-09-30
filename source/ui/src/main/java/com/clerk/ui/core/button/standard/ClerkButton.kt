@@ -138,23 +138,6 @@ internal fun ClerkButtonWithPressedState(
   )
 }
 
-/**
- * The core implementation of the Clerk button.
- *
- * This private composable handles the button's appearance based on its state and configuration. It
- * combines all parameters to render the final button surface and its content.
- *
- * @param text Label displayed on the button.
- * @param onClick Invoked when the button is pressed.
- * @param clerkButtonState A state object containing `isEnabled`, `isLoading`, and
- *   `isPressedCombined`.
- * @param configuration Configuration controlling size, emphasis, and other visuals.
- * @param modifier Compose `Modifier` for layout and semantics.
- * @param paddingValues The padding to apply to the button content.
- * @param icons Optional leading and trailing icons, including their colors.
- * @param interactionSource The [MutableInteractionSource] that will be used to dispatch press
- *   events.
- */
 @Composable
 private fun ClerkButtonImpl(
   text: String?,
@@ -213,18 +196,6 @@ data class ClerkButtonState(
   val isPressedCombined: Boolean,
 )
 
-/**
- * Renders the content inside the button, which can be either the text with icons, or a loading
- * indicator.
- *
- * @param isLoading If true, shows a [CircularProgressIndicator]. Otherwise, shows the button's
- *   [text] and [icons].
- * @param padding The padding to apply around the content.
- * @param icons The icons to display.
- * @param isEnabled Controls the alpha of the content to reflect the enabled state.
- * @param text The text to display.
- * @param tokens The style tokens determining the appearance of the content (colors, text style).
- */
 @Composable
 private fun ButtonContent(
   isLoading: Boolean,

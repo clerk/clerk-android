@@ -122,7 +122,7 @@ private fun Preview() {
             DropDownItem(
               id = PreviewItemMoreMenu.VERIFY,
               text = stringResource(R.string.verify),
-              leadingIcon = Icons.Outlined.MoreVert, // example
+              leadingIcon = Icons.Outlined.MoreVert,
             ),
             DropDownItem(
               id = PreviewItemMoreMenu.REMOVE_EMAIL,

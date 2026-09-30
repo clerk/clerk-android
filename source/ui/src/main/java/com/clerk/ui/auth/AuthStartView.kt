@@ -495,7 +495,6 @@ private val String.isEmailAddress: Boolean
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val authViewHelper = AuthStartViewHelper()
 
   authViewHelper.setTestValues(

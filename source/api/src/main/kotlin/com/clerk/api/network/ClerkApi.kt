@@ -29,7 +29,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-/** Singleton responsible for configuring and exposing the Clerk API service. */
 internal object ClerkApi {
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -95,7 +94,6 @@ internal object ClerkApi {
   internal var configuredCustomHeaders: Map<String, String> = emptyMap()
     private set
 
-  /** Initializes the API client with the given [baseUrl]. */
   @Suppress("UnusedParameter")
   fun configure(
     baseUrl: String,
@@ -119,7 +117,6 @@ internal object ClerkApi {
     _billing = retrofit.create(BillingApi::class.java)
   }
 
-  /** Clears all configured Retrofit services. */
   fun reset() {
     _client = null
     _environment = null
@@ -137,7 +134,6 @@ internal object ClerkApi {
     configuredCustomHeaders = emptyMap()
   }
 
-  /** Builds and configures the Retrofit instance. */
   private fun buildRetrofit(baseUrl: String, customHeaders: Map<String, String>): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion

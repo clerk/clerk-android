@@ -27,8 +27,6 @@ internal data class BiometricCredentialLocalRecord(
   val createdAt: Long,
   val updatedAt: Long,
 ) {
-
-  /** Returns whether this credential matches the given user identifier hint. */
   fun matches(identifierHint: String?): Boolean {
     val hash = identifierHintSha256(identifierHint) ?: return true
     return identifierHintSha256 == hash
@@ -49,7 +47,6 @@ internal data class BiometricCredentialLocalRecord(
   }
 }
 
-/** Store for local biometric credential metadata. */
 internal interface BiometricCredentialLocalStore {
   fun all(): List<BiometricCredentialLocalRecord>
 
@@ -100,7 +97,6 @@ internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalS
   }
 }
 
-/** Persistent queue of user-scoped local credential cleanup work. */
 internal object BiometricCredentialPendingCleanupStore {
 
   fun all(): Set<String> = BiometricCredentialStorage.fileStore?.pendingCleanupUserIds().orEmpty()

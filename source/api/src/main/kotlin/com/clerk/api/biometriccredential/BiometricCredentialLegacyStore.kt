@@ -43,12 +43,13 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
   }
 
   fun decodeCredentials(json: String): List<BiometricCredentialLocalRecord> {
-    val elements =
-      runCatching { ClerkApi.json.parseToJsonElement(json).jsonArray }
-        .getOrElse {
-          ClerkLog.w("Legacy biometric credential metadata is malformed, dropping it.")
-          return emptyList()
-        }
+    val elements = runCatching {
+      ClerkApi.json.parseToJsonElement(json).jsonArray
+    }
+      .getOrElse {
+        ClerkLog.w("Legacy biometric credential metadata is malformed, dropping it.")
+        return emptyList()
+      }
     return elements.mapNotNull { element ->
       runCatching { ClerkApi.json.decodeFromJsonElement(LegacyRecord.serializer(), element) }
         .onFailure { ClerkLog.w("Dropping malformed legacy biometric credential record.") }
@@ -57,18 +58,17 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
     }
   }
 
-  fun decodePendingCleanup(json: String): Set<String> =
-    runCatching {
-        ClerkApi.json
-          .parseToJsonElement(json)
-          .jsonArray
-          .mapNotNull { it.jsonPrimitive.contentOrNull }
-          .filterTo(mutableSetOf()) { it.isNotBlank() }
-      }
-      .getOrElse {
-        ClerkLog.w("Legacy biometric credential cleanup metadata is malformed, dropping it.")
-        emptySet()
-      }
+  fun decodePendingCleanup(json: String): Set<String> = runCatching {
+    ClerkApi.json
+      .parseToJsonElement(json)
+      .jsonArray
+      .mapNotNull { it.jsonPrimitive.contentOrNull }
+      .filterTo(mutableSetOf()) { it.isNotBlank() }
+  }
+    .getOrElse {
+      ClerkLog.w("Legacy biometric credential cleanup metadata is malformed, dropping it.")
+      emptySet()
+    }
 
   /** v1 record; `ClerkApi.json` maps these property names to the v1 snake_case keys. */
   @Serializable

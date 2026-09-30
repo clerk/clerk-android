@@ -3,28 +3,12 @@ package com.clerk.api.sso
 import com.clerk.api.Clerk
 import java.net.URL
 
-/**
- * Internal configuration object for OAuth redirect URLs.
- *
- * This object contains default configuration values used for OAuth authentication flows,
- * particularly the redirect URLs that OAuth providers use to return users to the application after
- * authentication.
- *
- * This is an internal utility and should not be used outside the Clerk SDK.
- */
 internal object RedirectConfiguration {
   private const val SCHEME = "clerk"
   private const val DEFAULT_HOST_SUFFIX = "callback"
   private const val LEGACY_HOST_SUFFIX = "oauth"
   private const val DEFAULT_HTTPS_PORT = 443
 
-  /**
-   * The default redirect URL used for OAuth authentication flows.
-   *
-   * This URL is used as the redirect target when users complete OAuth authentication with external
-   * providers. The custom scheme "clerk://" allows the application to handle the OAuth callback and
-   * complete the authentication process.
-   */
   val DEFAULT_REDIRECT_URL: String
     get() = buildRedirectUrl(DEFAULT_HOST_SUFFIX)
 

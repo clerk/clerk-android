@@ -16,7 +16,6 @@ import com.clerk.api.session.prepareSecondFactorVerification
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
-/** Coordinates session reverification using the existing biometric credential store and signer. */
 internal object BiometricSessionVerificationService {
   suspend fun verifySession(
     session: Session,

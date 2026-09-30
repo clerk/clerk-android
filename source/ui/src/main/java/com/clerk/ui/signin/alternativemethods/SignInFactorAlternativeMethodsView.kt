@@ -73,16 +73,6 @@ fun SignInFactorAlternativeMethodsView(
   }
 }
 
-/**
- * The internal implementation of the [SignInFactorAlternativeMethodsView].
- *
- * @param providers A list of social providers to display.
- * @param alternativeFactors A list of alternative factors (e.g., password, passkey) to display.
- * @param modifier The [Modifier] to be applied to the view.
- * @param textIconHelper A helper class to get the appropriate text and icon for each factor.
- * @param viewModel The [AlternativeMethodsViewModel] for handling the view's logic, such as social
- *   sign-in.
- */
 @Composable
 private fun SignInFactorAlternativeMethodsViewImpl(
   providers: ImmutableList<OAuthProvider>,

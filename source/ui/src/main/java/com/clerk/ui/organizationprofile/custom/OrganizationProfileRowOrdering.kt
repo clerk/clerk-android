@@ -27,9 +27,6 @@ internal fun effectiveOrganizationProfileCustomRows(
   hasDestination: Boolean,
 ): List<OrganizationProfileCustomRow> = if (hasDestination) customRows else emptyList()
 
-/**
- * Merges [customRows] into [builtInRows] for the given [section], respecting each row placement.
- */
 internal fun buildOrganizationProfileRenderedRows(
   builtInRows: List<OrganizationProfileRow>,
   section: OrganizationProfileSection,

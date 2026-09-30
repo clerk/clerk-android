@@ -273,9 +273,9 @@ object BiometricCredentials {
   internal fun retryPendingLocalCredentialCleanup() {
     BiometricCredentialPendingCleanupStore.all().forEach { deletedUserId ->
       runCatching {
-          forgetLocalCredentials(deletedUserId)
-          BiometricCredentialPendingCleanupStore.remove(deletedUserId)
-        }
+        forgetLocalCredentials(deletedUserId)
+        BiometricCredentialPendingCleanupStore.remove(deletedUserId)
+      }
         .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
     }
   }
@@ -360,7 +360,6 @@ object BiometricCredentials {
     }
   }
 
-  /** Selects a credential bound to the enrolled biometric set for the specified session user. */
   internal suspend fun localCredentialForReverification(
     userId: String
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> =
@@ -378,7 +377,6 @@ object BiometricCredentials {
         clientFailure("Biometric reverification is unavailable for this session.")
     }
 
-  /** Signs the exact server challenge with the selected credential's existing key. */
   internal suspend fun signChallenge(
     challenge: BiometricCredentialChallenge,
     credential: BiometricCredentialLocalRecord,
@@ -607,8 +605,9 @@ object BiometricCredentials {
               return LocalCredentialResult.Available(credential)
           }
 
-      val biometricCredential =
-        activeUserBiometricCredentials.firstOrNull { it.id == credential.id }
+      val biometricCredential = activeUserBiometricCredentials.firstOrNull {
+        it.id == credential.id
+      }
       if (biometricCredential == null) {
         onStorage { deleteLocalCredential(credential) }
         firstUnavailableReason =
@@ -804,6 +803,5 @@ object BiometricCredentials {
   // endregion
 }
 
-/** Whether this session status allows enrolling or revoking a biometric credential. */
 internal val Session.SessionStatus.allowsBiometricCredentialEnrollment: Boolean
   get() = this == Session.SessionStatus.ACTIVE || this == Session.SessionStatus.PENDING
