@@ -13,6 +13,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.user.User
@@ -100,7 +101,12 @@ internal object ExternalAccountService {
         return
       }
 
-      Client.Companion.get().onSuccess { client ->
+      val clientResult = Client.Companion.get()
+      clientResult.onFailure { failure ->
+        ClerkLog.e("Failed to refresh client for external connection: ${failure.errorMessage}")
+        pendingConnection.complete(failure)
+      }
+      clientResult.onSuccess { client ->
         val externalAccount =
           client.sessions
             .find { it.id == client.lastActiveSessionId }
