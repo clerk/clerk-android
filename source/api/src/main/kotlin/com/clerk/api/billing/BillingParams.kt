@@ -12,7 +12,6 @@ enum class ForPayerType {
   @SerialName("user") USER,
 }
 
-/** Maps [ForPayerType] to the FAPI `payer_type` query value. */
 internal fun ForPayerType.toPayerTypeQueryValue(): String {
   return if (this == ForPayerType.ORGANIZATION) "org" else "user"
 }

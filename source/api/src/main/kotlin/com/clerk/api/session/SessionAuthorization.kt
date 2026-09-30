@@ -1,6 +1,5 @@
 package com.clerk.api.session
 
-/** The conditions evaluated by [Session.checkAuthorization]. Matches clerk-js `CheckAuthorizationParams`. */
 internal data class CheckAuthorizationParams(
   val role: String? = null,
   val permission: String? = null,
@@ -10,10 +9,8 @@ internal data class CheckAuthorizationParams(
 )
 
 /**
- * Reverification requirement for [Session.checkAuthorization].
- *
- * Matches clerk-js `ReverificationConfig`: presets `strict_mfa`, `strict`, `moderate`, `lax`, or a
- * custom `{ level, afterMinutes }` object.
+ * How recently the user must have verified their identity. Use a preset, or [Custom] for a
+ * specific level and time window.
  */
 sealed class ReverificationConfig {
   /**

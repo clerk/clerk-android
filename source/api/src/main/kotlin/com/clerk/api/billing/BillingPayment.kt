@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 
 /**
  * The type of charge a payment represents.
- *
- * Matches clerk-js `BillingPaymentChargeType`.
  */
 @Serializable
 enum class BillingPaymentChargeType {
@@ -18,8 +16,6 @@ enum class BillingPaymentChargeType {
 
 /**
  * The current status of a payment.
- *
- * Matches clerk-js `BillingPaymentStatus`.
  */
 @Serializable
 enum class BillingPaymentStatus {

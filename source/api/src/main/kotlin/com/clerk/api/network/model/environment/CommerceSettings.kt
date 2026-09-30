@@ -3,9 +3,7 @@ package com.clerk.api.network.model.environment
 import kotlinx.serialization.Serializable
 
 /**
- * Billing configuration from `/v1/environment`.
- *
- * Mirrors clerk-js `CommerceSettingsResource`. Apps read this through
+ * The Billing settings from the Clerk Dashboard. Read them through
  * [com.clerk.api.Clerk.commerceSettings].
  */
 @Serializable
