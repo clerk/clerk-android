@@ -83,11 +83,11 @@ class UserProfilePasskeyViewModelTest {
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      // No explicit Loading for createPasskey; just assert success eventually
-      awaitItem()
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       advanceUntilIdle()
       assertEquals(UserProfilePasskeyViewModel.State.Success, awaitItem())
+      expectNoEvents()
     }
   }
 
@@ -97,9 +97,11 @@ class UserProfilePasskeyViewModelTest {
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      awaitItem()
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
     }
   }
 

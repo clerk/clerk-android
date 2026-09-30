@@ -9,6 +9,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -38,6 +39,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -163,6 +165,35 @@ class ExternalAccountServiceTest {
     ExternalAccountService.cancelPendingExternalAccountConnection()
     pendingResult.await()
   }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `completeExternalConnection completes pending connection when client refresh fails`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val clientFailure =
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(message = "client refresh failed", code = "client_error"))
+          )
+        )
+      coEvery { Client.get() } returns clientFailure
+
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+      ExternalAccountService.completeExternalConnection()
+
+      val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
+      assertSame(clientFailure, result)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
