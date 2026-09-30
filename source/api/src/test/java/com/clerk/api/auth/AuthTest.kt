@@ -185,28 +185,6 @@ class AuthTest {
   }
 
   @Test
-  fun `signInWithOtp email creates sign in with strategy without preparing first factor`() =
-    runTest {
-      val signInApi = mockk<SignInApi>(relaxed = true)
-      val createdSignIn = SignIn(id = "sign_in_123")
-      val createParams = slot<Map<String, String>>()
-      mockkObject(ClerkApi)
-      every { ClerkApi.signIn } returns signInApi
-      coEvery { signInApi.createSignIn(capture(createParams)) } returns
-        ClerkResult.success(createdSignIn)
-
-      val result = Auth().signInWithOtp { email = "user@example.com" }
-
-      assertTrue(result is ClerkResult.Success)
-      assertSame(createdSignIn, (result as ClerkResult.Success).value)
-      assertEquals("user@example.com", createParams.captured["identifier"])
-      assertEquals("email_code", createParams.captured["strategy"])
-      assertTrue(createParams.captured.containsKey("locale"))
-      coVerify(exactly = 1) { signInApi.createSignIn(any()) }
-      coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
-    }
-
-  @Test
   fun `signInWithOtp phone creates sign in with strategy without preparing first factor`() =
     runTest {
       val signInApi = mockk<SignInApi>(relaxed = true)

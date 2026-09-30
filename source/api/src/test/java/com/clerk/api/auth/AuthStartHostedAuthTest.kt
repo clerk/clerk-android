@@ -17,6 +17,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -85,7 +86,7 @@ class AuthStartHostedAuthTest {
 
     val result = auth.startHostedAuth()
 
-    assertTrue(result is ClerkResult.Failure)
+    assertSame(failure, result)
     coVerify(exactly = 0) { clientApi.setActive(any(), any(), any()) }
   }
 
