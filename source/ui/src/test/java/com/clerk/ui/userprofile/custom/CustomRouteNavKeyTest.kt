@@ -14,13 +14,4 @@ class CustomRouteNavKeyTest {
 
     assertEquals(original, restored)
   }
-
-  @Test
-  fun `deserialization restores the correct route key`() {
-    val key = CustomRouteNavKey(routeKey = "preferences")
-    val json = Json.encodeToString(CustomRouteNavKey.serializer(), key)
-    val decoded = Json.decodeFromString(CustomRouteNavKey.serializer(), json)
-
-    assertEquals("preferences", decoded.routeKey)
-  }
 }

@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.account
 import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -16,15 +17,16 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileAccountViewModelTest {
 
+  // Resets Dispatchers.Main after each test so the test dispatcher doesn't leak into other classes.
+  @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(UnconfinedTestDispatcher())
+
   @BeforeTest
   fun setUp() {
     mockkObject(Clerk)
-    kotlinx.coroutines.Dispatchers.setMain(UnconfinedTestDispatcher())
   }
 
   @AfterTest

@@ -9,6 +9,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.updatePassword
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -52,6 +53,15 @@ class UserProfileChangePasswordViewModelTest {
       viewModel.resetPassword("old", "new", true)
       assertEquals(UserProfileChangePasswordViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) {
+      user.updatePassword(
+        User.UpdatePasswordParams(
+          currentPassword = "old",
+          newPassword = "new",
+          signOutOfOtherSessions = true,
+        )
+      )
+    }
   }
 
   @Test
@@ -86,10 +96,16 @@ class UserProfileChangePasswordViewModelTest {
 
   @Test
   fun resetState_setsIdle() {
+    every { Clerk.user } returns null
     val viewModel = UserProfileChangePasswordViewModel()
-    // Already Idle; ensure it's Idle
-    assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
+    viewModel.resetPassword("old", "new", false)
+    assertEquals(
+      UserProfileChangePasswordViewModel.State.Error("User does not exist"),
+      viewModel.state.value,
+    )
+
     viewModel.resetState()
+
     assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
   }
 }

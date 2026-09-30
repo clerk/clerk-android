@@ -11,6 +11,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -59,6 +60,9 @@ class DeviceViewModelTest {
       assertEquals(DeviceViewModel.State.Loading, awaitItem())
       assertEquals(DeviceViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) { session.revoke() }
+    // Success refreshes the device list before reporting completion.
+    coVerify(exactly = 1) { user.activeSessions() }
   }
 
   @Test

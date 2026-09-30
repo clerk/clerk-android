@@ -12,6 +12,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.createPasskey
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -83,12 +84,13 @@ class UserProfilePasskeyViewModelTest {
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      // No explicit Loading for createPasskey; just assert success eventually
-      awaitItem()
+      // No explicit Loading for createPasskey: Idle goes straight to Success.
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       advanceUntilIdle()
       assertEquals(UserProfilePasskeyViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) { user.createPasskey() }
   }
 
   @Test
@@ -97,7 +99,7 @@ class UserProfilePasskeyViewModelTest {
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      awaitItem()
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
     }
@@ -117,6 +119,9 @@ class UserProfilePasskeyViewModelTest {
       advanceUntilIdle()
       expectNoEvents()
     }
+    // The cancelled flow must have actually run; otherwise "no events" proves nothing.
+    coVerify(exactly = 1) { user.createPasskey() }
+    assertEquals(UserProfilePasskeyViewModel.State.Idle, viewModel.state.value)
   }
 
   @Test
