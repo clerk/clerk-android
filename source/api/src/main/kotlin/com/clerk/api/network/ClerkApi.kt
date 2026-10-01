@@ -25,7 +25,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
@@ -147,11 +146,7 @@ internal object ClerkApi {
           addInterceptor(UrlAppendingMiddleware())
 
           if (Clerk.debugMode) {
-            addInterceptor(
-              RequestLoggingMiddleware(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-              )
-            )
+            addInterceptor(RequestLoggingMiddleware.create())
           }
         }
         .build()
