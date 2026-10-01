@@ -78,9 +78,6 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           )
 
           authEvents.forEach(Clerk.auth::send)
-
-          val newBody = it.toResponseBody(body.contentType())
-          return response.newBuilder().body(newBody).build()
         } catch (e: SerializationException) {
           ClerkLog.e("Error deserializing client: ${e.message}")
         } catch (e: IOException) {
@@ -88,6 +85,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         } catch (e: IllegalArgumentException) {
           ClerkLog.e("Error parsing JSON: ${e.message}")
         }
+
+        val newBody = it.toResponseBody(body.contentType())
+        return response.newBuilder().body(newBody).build()
       }
     }
 
