@@ -1,6 +1,7 @@
 package com.clerk.api.network
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
@@ -84,13 +85,15 @@ internal object ClerkApi {
   val billing: BillingApi
     get() = _billing ?: error("ClerkApi is not configured.")
 
-  // Exposed for internal testing/verification
+  @VisibleForTesting
   internal var configuredBaseUrl: String? = null
     private set
 
+  @VisibleForTesting
   internal var configuredUrlWithVersion: String? = null
     private set
 
+  @VisibleForTesting
   internal var configuredCustomHeaders: Map<String, String> = emptyMap()
     private set
 

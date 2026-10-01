@@ -120,25 +120,22 @@ internal object StorageHelper {
     }
   }
 
-  /**
-   * Resets the storage helper for testing purposes. This method should only be used in tests.
-   * Clears all stored values. To test uninitialized state, tests should call this and then test
-   * methods before calling initialize().
-   */
   @VisibleForTesting
-  internal fun reset(context: Context? = null) {
+  internal fun reset(context: Context) {
+    clearStoredState()
+    initialize(context)
+  }
+
+  @VisibleForTesting
+  internal fun resetToUninitializedForTesting() {
+    clearStoredState()
+    secureStorage = null
+  }
+
+  private fun clearStoredState() {
     valueChangeListener = null
-    val prefs = secureStorage
-    if (prefs != null) {
-      prefs.edit().clear().commit()
-    }
+    secureStorage?.edit()?.clear()?.commit()
     storageCipher = null
-    if (context != null) {
-      initialize(context)
-    } else {
-      // Allow tests to simulate uninitialized state.
-      secureStorage = null
-    }
   }
 
   private fun migrateLegacyPlaintextValue(key: StorageKey, value: String) {

@@ -2,6 +2,7 @@ package com.clerk.api.passkeys
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.exceptions.CreateCredentialException
 import com.clerk.api.Clerk
@@ -20,11 +21,7 @@ internal object PasskeyCreationService {
 
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
-  /**
-   * Sets the credential manager for testing purposes.
-   *
-   * @param manager The credential manager implementation to use
-   */
+  @VisibleForTesting
   internal fun setCredentialManager(manager: PasskeyCredentialManager) {
     credentialManager = manager
   }

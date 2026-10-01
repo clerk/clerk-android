@@ -76,7 +76,7 @@ class BiometricCredentialsTest {
     Clerk.updateClient(com.clerk.api.network.model.client.Client())
     Locale.setDefault(previousLocale)
     LocaleProvider.cleanup()
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = null
     BiometricCredentialStorage.fileStore = null
     unmockkAll()
