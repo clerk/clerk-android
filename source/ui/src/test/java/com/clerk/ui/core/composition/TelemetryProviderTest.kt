@@ -1,5 +1,8 @@
 package com.clerk.ui.core.composition
 
+import android.os.Looper
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,7 +12,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class TelemetryProviderTest {
@@ -42,6 +47,21 @@ class TelemetryProviderTest {
     composeTestRule.waitForIdle()
     composeTestRule.runOnUiThread { showProvider = true }
     composeTestRule.waitForIdle()
+
+    assertEquals(2, provided.size)
+    assertEquals(1, provided.distinct().size)
+  }
+
+  @Test
+  fun providersInSeparateActivitiesShareOneCollector() {
+    val provided = mutableListOf<TelemetryCollector>()
+
+    repeat(2) {
+      Robolectric.buildActivity(ComponentActivity::class.java).setup().get().setContent {
+        TelemetryProvider { provided += LocalTelemetryCollector.current }
+      }
+      shadowOf(Looper.getMainLooper()).idle()
+    }
 
     assertEquals(2, provided.size)
     assertEquals(1, provided.distinct().size)
