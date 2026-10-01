@@ -12,8 +12,6 @@ import com.clerk.api.user.currentSessionId
  * Methods that read a payer's data take an optional `orgId`: omit it for the signed-in user, or
  * pass an Organization ID to read that Organization's data, which requires the
  * `org:sys_billing:read` Permission.
- *
- * This is a beta API and may change.
  */
 object Billing {
 

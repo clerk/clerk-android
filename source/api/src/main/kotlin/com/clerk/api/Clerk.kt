@@ -405,16 +405,7 @@ object Clerk {
   val commerceSettings: CommerceSettings
     get() = environment?.commerceSettings ?: CommerceSettings()
 
-  /**
-   * Billing GET APIs for plans, subscriptions, statements, payments, and credits.
-   *
-   * This is an experimental public-beta API and is subject to change. Pin the SDK version to avoid
-   * breaking changes.
-   *
-   * Apps call methods such as `Clerk.billing.getPlans(...)`. Payment methods live on
-   * [com.clerk.api.user.User.getPaymentMethods] and
-   * [com.clerk.api.organizations.Organization.getPaymentMethods].
-   */
+  /** Reads Plans, Subscriptions, statements, payment attempts, and credits. */
   val billing: Billing
     get() = Billing
 
