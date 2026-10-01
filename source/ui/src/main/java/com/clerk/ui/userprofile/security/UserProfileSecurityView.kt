@@ -101,6 +101,7 @@ private fun UserProfileSecurityViewImpl(
               ?.sessions
               .orEmpty()
               .toImmutableList(),
+          onSignOutDevice = viewModel::signOut,
         )
       }
     }
@@ -118,6 +119,7 @@ private fun UserProfileSecurityMainContent(
   isBiometricCredentialEnabled: Boolean,
   snackbarHostState: SnackbarHostState,
   sessions: ImmutableList<Session>,
+  onSignOutDevice: (Session, (String?) -> Unit) -> Unit,
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
@@ -150,6 +152,7 @@ private fun UserProfileSecurityMainContent(
           isDeleteSelfEnabled = isDeleteSelfEnabled,
           isBiometricCredentialEnabled = isBiometricCredentialEnabled,
         ),
+      onSignOutDevice = onSignOutDevice,
       onAdd = {
         showBottomSheet = true
         currentSheetType = BottomSheetType.ChooseMfa
@@ -214,6 +217,7 @@ private fun UserProfileSecurityMainContent(
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun UserProfileSecurityContent(
   innerPadding: PaddingValues,
   configuration: SecurityContentConfiguration,
@@ -221,6 +225,7 @@ private fun UserProfileSecurityContent(
   onClickDeleteAccount: () -> Unit,
   onClickAddPassword: (PasswordAction) -> Unit,
   onAdd: () -> Unit,
+  onSignOutDevice: (Session, (String?) -> Unit) -> Unit,
 ) {
   val scrollState = rememberScrollState()
   Column(
@@ -247,7 +252,10 @@ private fun UserProfileSecurityContent(
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-      UserProfileDevicesSection(devices = configuration.sessions)
+      UserProfileDevicesSection(
+        devices = configuration.sessions,
+        onSignOut = { onSignOutDevice(it, onError) },
+      )
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isDeleteSelfEnabled) {
