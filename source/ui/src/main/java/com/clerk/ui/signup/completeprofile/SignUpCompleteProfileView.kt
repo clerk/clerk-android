@@ -40,11 +40,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Public, production-friendly wrapper that pulls enablement from Clerk and owns its own state. Use
- * [SignUpCompleteProfileView] in the app, and [SignUpCompleteProfileImpl] in previews/tests to
- * inject specific values and flags.
- */
+/** Public wrapper that pulls field enablement from Clerk and owns its own state. */
 @Composable
 fun SignUpCompleteProfileView(
   modifier: Modifier = Modifier,
