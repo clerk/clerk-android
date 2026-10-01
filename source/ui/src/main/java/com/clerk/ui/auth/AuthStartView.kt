@@ -1,6 +1,5 @@
 package com.clerk.ui.auth
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -488,17 +487,18 @@ private fun storeIdentifierType(
   authState.storeLastUsedIdentifierType(identifierType)
 }
 
-@SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val authViewHelper = AuthStartViewHelper()
-
-  authViewHelper.setTestValues(
-    enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
-    applicationName = "Acme Co",
-    socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
-  )
+  val authViewHelper =
+    AuthStartViewHelper(
+      FixedAuthStartConfig(
+        enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
+        applicationName = "Acme Co",
+        authenticatableSocialProviders =
+          listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
+      )
+    )
 
   PreviewAuthStateProvider {
     AuthStartViewImpl(authViewHelper = authViewHelper, onAuthComplete = {})
