@@ -85,14 +85,14 @@ internal interface SessionApi {
    * This method revokes the specified session, making it invalid for future authentication. The
    * revoked session will no longer be usable for API calls or authentication.
    *
-   * @param sessionId Optional session ID of the current session making the request
    * @param sessionIdToRevoke The unique identifier of the session to revoke
+   * @param sessionId Optional session ID of the current session making the request
    * @return A [ClerkResult] containing the revoked [Session] on success, or a [ClerkErrorResponse]
    *   on failure
    */
   @POST(ApiPaths.User.Sessions.REVOKE)
   suspend fun revokeSession(
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Path("session_id") sessionIdToRevoke: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse>
 }
