@@ -42,7 +42,6 @@ import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
-import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
@@ -323,7 +322,6 @@ private fun SocialButtonIcon(
 @Composable
 private fun PreviewSocialButton() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -351,7 +349,6 @@ private fun PreviewSocialButton() {
 @Composable
 private fun PreviewSocialRow() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
