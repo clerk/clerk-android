@@ -52,7 +52,8 @@ private val SENSITIVE_FORM_FIELDS =
 private val SENSITIVE_JSON_KEYS =
   listOf("jwt", "secret", "token", "ticket", "code_verifier", "id_token", "approval_token")
 
-private val formFieldPattern = Regex("(^|&)(${SENSITIVE_FORM_FIELDS.joinToString("|")})=[^&\\s]*")
+private val formFieldPattern =
+  Regex("(^|[?&])(${SENSITIVE_FORM_FIELDS.joinToString("|")})=[^&\\s]*")
 
 private val jsonStringPattern =
   Regex("(\"(?:${SENSITIVE_JSON_KEYS.joinToString("|")})\"\\s*:\\s*)\"(?:[^\"\\\\]|\\\\.)*\"")

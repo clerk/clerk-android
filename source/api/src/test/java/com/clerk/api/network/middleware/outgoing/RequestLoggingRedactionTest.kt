@@ -83,6 +83,22 @@ class RequestLoggingRedactionTest {
   }
 
   @Test
+  fun `debug logging never prints a rotating token nonce in the url`() {
+    val request =
+      Request.Builder()
+        .url(
+          "https://example.com/v1/client/sign_ins/sia_1" +
+            "?rotating_token_nonce=nonce_secret&_is_native=true"
+        )
+        .build()
+
+    val log = logFor(request, """{"response":{"object":"sign_in_attempt","id":"sia_1"}}""")
+
+    assertFalse("log leaked the nonce:\n$log", log.contains("nonce_secret"))
+    assertTrue("other query params should stay visible:\n$log", log.contains("_is_native=true"))
+  }
+
+  @Test
   fun `debug logging never prints regenerated backup codes`() {
     val request =
       Request.Builder()
