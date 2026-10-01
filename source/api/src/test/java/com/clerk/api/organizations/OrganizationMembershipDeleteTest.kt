@@ -6,6 +6,7 @@ import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockkObject
@@ -20,6 +21,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
@@ -39,7 +41,7 @@ class OrganizationMembershipDeleteTest {
             .protocol(Protocol.HTTP_1_1)
             .code(200)
             .message("OK")
-            .body("{}".toResponseBody(JSON))
+            .body(DELETED_MEMBERSHIP.toResponseBody(JSON))
             .build()
         }
         .build()
@@ -68,8 +70,9 @@ class OrganizationMembershipDeleteTest {
     val other = session("sess_other")
     Clerk.updateClient(Client(sessions = listOf(active, other), lastActiveSessionId = active.id))
 
-    membership().delete()
+    val result = membership().delete()
 
+    assertTrue(result is ClerkResult.Success)
     val url = requests.single().url
     assertEquals("/v1/me/organization_memberships/org_123", url.encodedPath)
     assertEquals("sess_active", url.queryParameter("_clerk_session_id"))
@@ -109,5 +112,7 @@ class OrganizationMembershipDeleteTest {
 
   private companion object {
     val JSON = "application/json; charset=utf-8".toMediaType()
+    const val DELETED_MEMBERSHIP =
+      """{"response":{"object":"organization_membership","id":"orgmem_123","deleted":true}}"""
   }
 }
