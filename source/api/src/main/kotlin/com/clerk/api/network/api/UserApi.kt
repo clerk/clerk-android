@@ -98,7 +98,7 @@ internal interface UserApi {
   ): ClerkResult<User, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST
+  @POST(ApiPaths.User.Password.DELETE)
   suspend fun deletePassword(
     @Field("current_password") password: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
