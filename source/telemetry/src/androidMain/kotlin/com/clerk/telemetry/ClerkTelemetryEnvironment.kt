@@ -1,6 +1,7 @@
 package com.clerk.telemetry
 
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.environment.InstanceEnvironmentType
 
 private const val CLERK_ANDROID = "clerk-android"
 
@@ -16,7 +17,11 @@ class ClerkTelemetryEnvironment(
   constructor() :
     this(
       sdkVersion = Clerk.version,
-      instanceTypeProvider = { Clerk.instanceEnvironmentType.name },
+      instanceTypeProvider = {
+        InstanceEnvironmentType.serializer()
+          .descriptor
+          .getElementName(Clerk.instanceEnvironmentType.ordinal)
+      },
       telemetryEnabledProvider = { Clerk.telemetryEnabled },
       debugModeEnabledProvider = { Clerk.debugMode },
       publishableKeyProvider = { Clerk.publishableKey },
