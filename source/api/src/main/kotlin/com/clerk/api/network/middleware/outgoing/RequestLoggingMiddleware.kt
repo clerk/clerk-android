@@ -57,7 +57,7 @@ private val formFieldPattern = Regex("(^|&)(${SENSITIVE_FORM_FIELDS.joinToString
 private val jsonStringPattern =
   Regex("(\"(?:${SENSITIVE_JSON_KEYS.joinToString("|")})\"\\s*:\\s*)\"(?:[^\"\\\\]|\\\\.)*\"")
 
-private val backupCodesPattern = Regex("(\"backup_codes\"\\s*:\\s*)\\[[^\\]]*]")
+private val backupCodesPattern = Regex("(\"(?:backup_codes|codes)\"\\s*:\\s*)\\[[^\\]]*]")
 
 private val otpAuthUriPattern = Regex("otpauth://[^\"\\s]*")
 

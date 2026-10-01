@@ -81,4 +81,25 @@ class RequestLoggingRedactionTest {
     )
     assertTrue("error codes should stay visible:\n$log", log.contains("form_password_incorrect"))
   }
+
+  @Test
+  fun `debug logging never prints regenerated backup codes`() {
+    val request =
+      Request.Builder()
+        .url("https://example.com/v1/me/backup_codes")
+        .post(FormBody.Builder().build())
+        .build()
+    val responseBody =
+      """
+      {"response":{"object":"backup_code","id":"bc_1","codes":["backup-one","backup-two"]},
+      "errors":[{"code":"form_code_incorrect"}]}
+      """
+        .trimIndent()
+
+    val log = logFor(request, responseBody)
+
+    assertFalse("log leaked a backup code:\n$log", log.contains("backup-one"))
+    assertFalse("log leaked a backup code:\n$log", log.contains("backup-two"))
+    assertTrue("error codes should stay visible:\n$log", log.contains("form_code_incorrect"))
+  }
 }
