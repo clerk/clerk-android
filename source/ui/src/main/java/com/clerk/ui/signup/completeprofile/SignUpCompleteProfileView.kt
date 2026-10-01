@@ -63,13 +63,10 @@ internal enum class CompleteProfileField {
 
 private const val LEGAL_ACCEPTED_FIELD = "legal_accepted"
 
-/** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  firstName: String = "",
-  lastName: String = "",
   firstNameEnabled: Boolean = false,
   lastNameEnabled: Boolean = false,
   legalConsentMissing: Boolean = false,
@@ -90,13 +87,6 @@ private fun SignUpCompleteProfileImpl(
   val privacyPolicyUrl = Clerk.privacyPolicyUrl
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
   val showLegalConsent = legalConsentRequired && hasLegalUrls
-
-  // Initialize authState values only once when provided (for previews/tests)
-  // This uses LaunchedEffect to prevent resetting user input on recomposition
-  androidx.compose.runtime.LaunchedEffect(Unit) {
-    if (firstName.isNotEmpty()) authState.signUpFirstName = firstName
-    if (lastName.isNotEmpty()) authState.signUpLastName = lastName
-  }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -283,83 +273,73 @@ private fun InputRow(
   }
 }
 
-@PreviewLightDark
 @Composable
-private fun Preview_BothEnabled_Filled() {
+private fun CompleteProfilePreview(
+  firstNameEnabled: Boolean,
+  lastNameEnabled: Boolean,
+  firstName: String = "",
+  lastName: String = "",
+  legalConsentMissing: Boolean = false,
+) {
   PreviewAuthStateProvider {
+    val authState = LocalAuthState.current
+    remember(authState) {
+      authState.signUpFirstName = firstName
+      authState.signUpLastName = lastName
+    }
     ClerkMaterialTheme {
       SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
+        firstNameEnabled = firstNameEnabled,
+        lastNameEnabled = lastNameEnabled,
+        legalConsentMissing = legalConsentMissing,
         onAuthComplete = {},
       )
     }
   }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview_BothEnabled_Filled() {
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+  )
 }
 
 @Preview(widthDp = 200)
 @Composable
 private fun Preview_BothEnabled_Filled_Small_Screen() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+  )
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyFirstEnabled_Empty() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = false,
-        firstName = "",
-        lastName = "",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(firstNameEnabled = true, lastNameEnabled = false)
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyLastEnabled_Partial() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = false,
-        lastNameEnabled = true,
-        firstName = "",
-        lastName = "Daniels",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(firstNameEnabled = false, lastNameEnabled = true, lastName = "Daniels")
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_WithLegalConsent() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
-        legalConsentMissing = true,
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+    legalConsentMissing = true,
+  )
 }
