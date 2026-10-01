@@ -22,15 +22,17 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun UserProfileDevicesSection(
   devices: ImmutableList<Session>,
+  onSignOut: (Session) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  UserProfileDevicesSectionImpl(modifier = modifier, devices = devices)
+  UserProfileDevicesSectionImpl(modifier = modifier, devices = devices, onSignOut = onSignOut)
 }
 
 @Composable
 private fun UserProfileDevicesSectionImpl(
   devices: ImmutableList<Session>,
   modifier: Modifier = Modifier,
+  onSignOut: (Session) -> Unit = {},
 ) {
   ClerkMaterialTheme {
     Column(
@@ -48,7 +50,7 @@ private fun UserProfileDevicesSectionImpl(
       )
       Column(modifier = Modifier.fillMaxWidth()) {
         devices.forEach { session ->
-          UserProfileDeviceRow(session = session, onError = {})
+          UserProfileDeviceRow(session = session, onSignOut = onSignOut)
         }
       }
     }

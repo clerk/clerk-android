@@ -85,6 +85,7 @@ kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
 ktor-client-core = "io.ktor:ktor-client-core:3.5.2"
 ktor-client-negototiation = "io.ktor:ktor-client-content-negotiation:3.5.2"
+ktor-client-mock = "io.ktor:ktor-client-mock:3.5.2"
 ktor-client-okhttp = "io.ktor:ktor-client-okhttp:3.5.2"
 ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:3.5.2"
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }

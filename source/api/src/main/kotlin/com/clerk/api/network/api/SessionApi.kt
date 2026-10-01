@@ -1,5 +1,6 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.Clerk
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.client.Client
@@ -85,14 +86,14 @@ internal interface SessionApi {
    * This method revokes the specified session, making it invalid for future authentication. The
    * revoked session will no longer be usable for API calls or authentication.
    *
-   * @param sessionId Optional session ID of the current session making the request
    * @param sessionIdToRevoke The unique identifier of the session to revoke
+   * @param sessionId The session making the request; defaults to the active session
    * @return A [ClerkResult] containing the revoked [Session] on success, or a [ClerkErrorResponse]
    *   on failure
    */
   @POST(ApiPaths.User.Sessions.REVOKE)
   suspend fun revokeSession(
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Path("session_id") sessionIdToRevoke: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<Session, ClerkErrorResponse>
 }

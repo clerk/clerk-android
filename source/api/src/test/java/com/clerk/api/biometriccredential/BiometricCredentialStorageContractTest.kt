@@ -106,7 +106,7 @@ class BiometricCredentialStorageContractTest {
     BiometricCredentialStorage.fileStore = null
     File(context.noBackupFilesDir, DIRECTORY_NAME).deleteRecursively()
     preferences().edit(commit = true) { clear() }
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     Security.removeProvider(ANDROID_KEY_STORE)
   }
 

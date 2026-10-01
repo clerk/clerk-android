@@ -33,7 +33,7 @@ class AuthStartViewHelperTest {
 
       assertEquals(
         listOf(OAuthProvider.custom("oauth_custom_patreon")),
-        AuthStartViewHelper().authenticatableSocialProviders,
+        ClerkAuthStartConfig.authenticatableSocialProviders,
       )
     } finally {
       unmockkObject(Clerk)
@@ -42,8 +42,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun shouldStartOnPhoneNumberReturnsFalseWhenIdentifierMethodsAreEnabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+      )
 
     val result =
       helper.shouldStartOnPhoneNumber(authStartPhoneNumber = "", authStartIdentifier = "")
@@ -53,8 +55,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun shouldStartOnPhoneNumberReturnsTrueWhenPhoneIsOnlyIdentifierMethod() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("phone_number"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("phone_number"))
+      )
 
     val result =
       helper.shouldStartOnPhoneNumber(authStartPhoneNumber = "", authStartIdentifier = "")
@@ -64,8 +68,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun shouldStartOnPhoneNumberReturnsTrueWhenPhoneWasAlreadyEntered() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+      )
 
     val result =
       helper.shouldStartOnPhoneNumber(
@@ -78,8 +84,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun shouldStartOnPhoneNumberReturnsFalseWhenIdentifierWasAlreadyEntered() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("email_address", "phone_number"))
+      )
 
     val result =
       helper.shouldStartOnPhoneNumber(
@@ -92,24 +100,28 @@ class AuthStartViewHelperTest {
 
   @Test
   fun identifierContentTypeReturnsEmailAddressWhenOnlyEmailIsEnabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("email_address"))
+      )
 
     assertEquals(ContentType.EmailAddress, helper.identifierContentType())
   }
 
   @Test
   fun identifierContentTypeReturnsUsernameWhenOnlyUsernameIsEnabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("username"))
+    val helper =
+      AuthStartViewHelper(FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("username")))
 
     assertEquals(ContentType.Username, helper.identifierContentType())
   }
 
   @Test
   fun identifierContentTypeReturnsEmailAndUsernameWhenBothAreEnabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "username"))
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(enabledFirstFactorAttributes = listOf("email_address", "username"))
+      )
 
     val hints = helper.identifierContentType().autofillHints()
 
@@ -128,8 +140,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun automaticPasskeySignInIsEnabledForUnlockedSignInWhenPasskeyAutofillIsEnabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(passkeyFirstFactorIsEnabled = true, passkeyAutofillIsEnabled = true)
+      )
 
     val result =
       shouldStartAutomaticPasskeySignIn(
@@ -143,8 +157,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun automaticPasskeySignInIsDisabledForSignUp() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(passkeyFirstFactorIsEnabled = true, passkeyAutofillIsEnabled = true)
+      )
 
     val result =
       shouldStartAutomaticPasskeySignIn(
@@ -158,8 +174,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun automaticPasskeySignInIsDisabledWhenInitialIdentifierIsLocked() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(passkeyFirstFactorIsEnabled = true, passkeyAutofillIsEnabled = true)
+      )
 
     val result =
       shouldStartAutomaticPasskeySignIn(
@@ -173,8 +191,10 @@ class AuthStartViewHelperTest {
 
   @Test
   fun automaticPasskeySignInIsDisabledWhenPasskeyAutofillIsDisabled() {
-    val helper = AuthStartViewHelper()
-    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = false)
+    val helper =
+      AuthStartViewHelper(
+        FixedAuthStartConfig(passkeyFirstFactorIsEnabled = true, passkeyAutofillIsEnabled = false)
+      )
 
     val result =
       shouldStartAutomaticPasskeySignIn(

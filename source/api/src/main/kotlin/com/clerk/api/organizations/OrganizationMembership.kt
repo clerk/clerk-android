@@ -124,5 +124,5 @@ suspend fun OrganizationMembership.updateMembership(
  *   failure
  */
 suspend fun OrganizationMembership.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
-  return ClerkApi.user.deleteMembership(this.organization.id)
+  return ClerkApi.user.deleteMembership(this.organization.id, sessionId = currentSessionId())
 }
