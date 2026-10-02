@@ -5,8 +5,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.engine.mock.toByteArray
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,6 +13,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
 
 class TelemetryCollectorTest {
 
@@ -78,7 +81,28 @@ class TelemetryCollectorTest {
       publishableKeyProvider = { null },
     )
 
-  private fun sentInstanceTypes(environment: TelemetryEnvironment): List<String> = runBlocking {
+  @Test
+  fun postsJsonToTheEventEndpoint() {
+    val requests = mutableListOf<okhttp3.Request>()
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          requests += chain.request()
+          okResponse(chain.request())
+        }
+        .build()
+
+    runBlocking { recordAndFlush(collector(environment("development"), client)) }
+
+    val request = requests.single()
+    assertEquals("POST", request.method)
+    assertEquals("https://clerk-telemetry.com/v1/event", request.url.toString())
+    assertEquals("application/json; charset=utf-8", request.body?.contentType().toString())
+  }
+
+  @Suppress("DEPRECATION")
+  @Test
+  fun deprecatedKtorConstructorStillPostsEvents() {
     val bodies = mutableListOf<String>()
     val engine = MockEngine { request ->
       bodies += request.body.toByteArray().decodeToString()
@@ -87,20 +111,60 @@ class TelemetryCollectorTest {
     val collector =
       TelemetryCollector(
         options = TelemetryCollectorOptions(disableThrottling = true),
-        client = HttpClient(engine) { install(ContentNegotiation) { json() } },
-        environment = environment,
+        client = HttpClient(engine),
+        environment = environment("development"),
         throttler = NeverThrottled,
       )
 
+    runBlocking { recordAndFlush(collector) }
+
+    assertEquals(listOf("development"), instanceTypes(bodies))
+  }
+
+  private fun sentInstanceTypes(environment: TelemetryEnvironment): List<String> = runBlocking {
+    val bodies = mutableListOf<String>()
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          val buffer = Buffer()
+          chain.request().body?.writeTo(buffer)
+          bodies += buffer.readUtf8()
+          okResponse(chain.request())
+        }
+        .build()
+
+    recordAndFlush(collector(environment, client))
+
+    instanceTypes(bodies)
+  }
+
+  private fun collector(environment: TelemetryEnvironment, client: OkHttpClient) =
+    TelemetryCollector(
+      options = TelemetryCollectorOptions(disableThrottling = true),
+      environment = environment,
+      throttler = NeverThrottled,
+      client = client,
+    )
+
+  private suspend fun recordAndFlush(collector: TelemetryCollector) {
     collector.record(TelemetryEventRaw(event = "test_event", payload = emptyMap()))
     collector.flush()
+  }
 
-    bodies.flatMap { body ->
-      Json.parseToJsonElement(body).jsonObject.getValue("events").jsonArray.map {
-        it.jsonObject.getValue("it").jsonPrimitive.content
-      }
+  private fun instanceTypes(bodies: List<String>): List<String> = bodies.flatMap { body ->
+    Json.parseToJsonElement(body).jsonObject.getValue("events").jsonArray.map {
+      it.jsonObject.getValue("it").jsonPrimitive.content
     }
   }
+
+  private fun okResponse(request: okhttp3.Request): Response =
+    Response.Builder()
+      .request(request)
+      .protocol(Protocol.HTTP_1_1)
+      .code(200)
+      .message("OK")
+      .body("".toResponseBody())
+      .build()
 
   private object NeverThrottled : TelemetryEventThrottler {
     override suspend fun isEventThrottled(event: TelemetryEvent) = false

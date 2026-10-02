@@ -8,7 +8,10 @@ android {
   namespace = "com.clerk.telemetry"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
-  defaultConfig { minSdk = libs.versions.minSdk.get().toInt() }
+  defaultConfig {
+    minSdk = libs.versions.minSdk.get().toInt()
+    consumerProguardFiles("consumer-rules.pro")
+  }
 }
 
 mavenPublishing {
@@ -45,15 +48,19 @@ mavenPublishing {
 }
 
 dependencies {
+  api(libs.okhttp)
+
   implementation(libs.kotlin.stdlib)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.serialization)
-  implementation(libs.ktor.client.core)
-  implementation(libs.ktor.client.negototiation)
-  implementation(libs.ktor.client.okhttp)
-  implementation(libs.ktor.serialization.kotlinx.json)
-  implementation(libs.okhttp)
   implementation(projects.source.api)
+
+  // Only the deprecated Ktor overloads in TelemetryCollector and TelemetryModule use Ktor, so it
+  // stays off consumers' runtime classpath. Callers of those overloads ship Ktor themselves.
+  compileOnly(libs.ktor.client.core)
+  compileOnly(libs.ktor.client.negototiation)
+  compileOnly(libs.ktor.client.okhttp)
+  compileOnly(libs.ktor.serialization.kotlinx.json)
 
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
