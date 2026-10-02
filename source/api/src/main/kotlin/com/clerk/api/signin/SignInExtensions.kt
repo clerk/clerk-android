@@ -20,7 +20,9 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.FactorComparators
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
+import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
 
 // region Factor Selection Extensions
@@ -207,6 +209,62 @@ suspend fun SignIn.authenticateWithPreparedRedirect(
       externalVerificationRedirectUrl = externalVerificationRedirectUrl,
       transferable = transferable,
     )
+  }
+
+/**
+ * Continues this sign-in with an OAuth provider.
+ *
+ * Use this when the user has already entered an identifier and then picks a social provider, so the
+ * existing sign-in attempt is kept. To start a fresh OAuth sign-in, use
+ * [com.clerk.api.auth.Auth.signInWithOAuth].
+ *
+ * @param provider The OAuth provider to authenticate with.
+ * @param transferable Whether the flow may turn into a sign-up when the provider account has no
+ *   Clerk user yet. Defaults to `true`.
+ * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+ * @return A [ClerkResult] containing the redirect authentication result on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.authenticateWithOAuth(
+  provider: OAuthProvider,
+  transferable: Boolean = true,
+  redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  authenticateWithRedirectFactor(
+    SignIn.PrepareFirstFactorParams.OAuth(strategy = provider.strategy, redirectUrl = redirectUrl),
+    transferable,
+  )
+
+/**
+ * Continues this sign-in with Enterprise SSO.
+ *
+ * Use this when the sign-in's identifier belongs to an Enterprise SSO connection, for example when
+ * [SignIn.supportedFirstFactors] contains `enterprise_sso` after the user entered their email.
+ *
+ * @param transferable Whether the flow may turn into a sign-up when the user has no Clerk account
+ *   yet. Defaults to `true`.
+ * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+ * @return A [ClerkResult] containing the redirect authentication result on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.authenticateWithEnterpriseSso(
+  transferable: Boolean = true,
+  redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  authenticateWithRedirectFactor(
+    SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl),
+    transferable,
+  )
+
+private suspend fun SignIn.authenticateWithRedirectFactor(
+  params: SignIn.PrepareFirstFactorParams,
+  transferable: Boolean,
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    when (val prepared = prepareFirstFactor(params)) {
+      is ClerkResult.Failure -> prepared
+      is ClerkResult.Success -> prepared.value.authenticateWithPreparedRedirect(transferable)
+    }
   }
 
 /**
@@ -490,7 +548,7 @@ suspend fun SignIn.sendResetPasswordCode(
       val emailAddressId =
         factor?.emailAddressId
           ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
-      prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId))
+      sendResetPasswordEmailCode(emailAddressId)
     } else {
       val factor =
         firstFactorFor(
@@ -501,10 +559,48 @@ suspend fun SignIn.sendResetPasswordCode(
       val phoneNumberId =
         factor?.phoneNumberId
           ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)
-      prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId))
+      sendResetPasswordPhoneCode(phoneNumberId)
     }
   }
 }
+
+/**
+ * Sends a password reset code to one of the user's email addresses.
+ *
+ * @param emailAddressId The ID of the email address, from a `reset_password_email_code` factor in
+ *   [SignIn.supportedFirstFactors]. Defaults to the first such factor.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when there is no such factor.
+ */
+suspend fun SignIn.sendResetPasswordEmailCode(
+  emailAddressId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    val id =
+      emailAddressId
+        ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_EMAIL_CODE }?.emailAddressId
+        ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
+    prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = id))
+  }
+
+/**
+ * Sends a password reset code to one of the user's phone numbers.
+ *
+ * @param phoneNumberId The ID of the phone number, from a `reset_password_phone_code` factor in
+ *   [SignIn.supportedFirstFactors]. Defaults to the first such factor.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when there is no such factor.
+ */
+suspend fun SignIn.sendResetPasswordPhoneCode(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    val id =
+      phoneNumberId
+        ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_PHONE_CODE }?.phoneNumberId
+        ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)
+    prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = id))
+  }
 
 /**
  * Resets the password after verification.

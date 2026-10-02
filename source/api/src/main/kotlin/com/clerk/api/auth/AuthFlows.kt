@@ -6,7 +6,6 @@ import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.toMap
 import com.clerk.api.signup.SignUp
@@ -25,7 +24,7 @@ internal suspend fun Auth.createSignIn(
   params: SignIn.CreateParams.Strategy
 ): ClerkResult<SignIn, ClerkErrorResponse> = reportingFailures {
   when (params) {
-    is SignIn.CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
+    is SignIn.CreateParams.Strategy.Passkey -> signInWithPasskey()
     is SignIn.CreateParams.Strategy.BiometricCredential ->
       BiometricCredentials.signIn(
         id = params.id,
