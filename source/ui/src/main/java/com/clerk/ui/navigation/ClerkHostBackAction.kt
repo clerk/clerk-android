@@ -32,9 +32,5 @@ fun ClerkHostBackActionProvider(onHostBack: () -> Unit, content: @Composable () 
   CompositionLocalProvider(LocalClerkHostBackAction provides onHostBack, content = content)
 }
 
-/**
- * The host's back action for an embedded component's root screen, or `null` when the component is
- * not embedded. Component root screens opt into showing a back button while this is non-null.
- */
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalClerkHostBackAction = staticCompositionLocalOf<(() -> Unit)?> { null }

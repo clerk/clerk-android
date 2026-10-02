@@ -232,19 +232,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     }
   }
 
-  /**
-   * Initiates authentication using a specified social (OAuth) provider.
-   *
-   * If [preferGoogleOneTap] is true, Google One Tap is enabled, and the provider is Google, it
-   * attempts Google One Tap authentication. Otherwise, it proceeds with the standard OAuth redirect
-   * flow for the given provider.
-   *
-   * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
-   * @param transferable Whether the flow can transfer between sign-in and sign-up.
-   * @param preferGoogleOneTap Whether Google should prefer native One Tap over browser OAuth.
-   * @param startOAuthWithSignUp Whether browser OAuth should create a sign-up attempt first.
-   * @param unsafeMetadata Custom metadata to attach when browser OAuth starts from sign-up.
-   */
   internal fun authenticateWithSocialProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,

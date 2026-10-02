@@ -9,18 +9,6 @@ import java.util.UUID
 internal object DeviceIdGenerator {
   @Volatile private var cachedDeviceId: String? = null
 
-  /**
-   * Initializes the device ID generator and loads or creates a device ID.
-   *
-   * This method should be called during app initialization to ensure the device ID is available
-   * when needed. It uses double-checked locking to ensure thread safety and prevent multiple device
-   * ID generation.
-   *
-   * If a device ID exists in storage, it will be loaded. Otherwise, a new UUID will be generated
-   * and saved to storage. If storage operations fail, the device ID will still be cached in memory
-   * for the current session.
-   */
-  // Call this during app initialization
   fun initialize() {
     if (cachedDeviceId == null) {
       synchronized(this) {
@@ -34,14 +22,8 @@ internal object DeviceIdGenerator {
             } else {
               val newId = UUID.randomUUID().toString()
               cachedDeviceId = newId
-
-              try {
-                StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
-                ClerkLog.d("Generated and saved new device ID")
-              } catch (e: Exception) {
-                ClerkLog.w("Failed to save device ID to storage: ${e.message}")
-                // Continue with generated ID even if save fails
-              }
+              StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
+              ClerkLog.d("Generated and saved new device ID")
             }
           } catch (e: Exception) {
             ClerkLog.w("Storage not available, generating temporary device ID: ${e.message}")

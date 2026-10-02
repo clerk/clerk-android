@@ -13,7 +13,6 @@ private val phoneUtil: PhoneNumberUtil by lazy { PhoneNumberUtil.getInstance() }
 
 internal fun phoneVisualTransformation(regionIso: String): VisualTransformation =
   VisualTransformation { text ->
-    // RAW: must already be filtered/capped (only '+' and digits)
     val raw = text.text
 
     val fmt: AsYouTypeFormatter = phoneUtil.getAsYouTypeFormatter(regionIso)

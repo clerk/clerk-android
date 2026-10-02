@@ -95,12 +95,6 @@ object Clerk {
   var proxyUrl: String? = null
     private set
 
-  /**
-   * The base URL for the Clerk API.
-   *
-   * This is the publishable key from your Clerk Dashboard that connects your app to Clerk, Base64
-   * decoded.
-   */
   internal lateinit var baseUrl: String
 
   internal var applicationContext: WeakReference<Context>? = null
@@ -1171,12 +1165,7 @@ object Clerk {
         lastClientServerFetchAtMillis = serverFetchAtMillis
         _clientFlow.value = resolvedClient
         clientUpdates += 1
-        // Only update state if flows are initialized (not during static initialization)
-        try {
-          updateSessionAndUserState()
-        } catch (e: Exception) {
-          ClerkLog.e("${e.message}")
-        }
+        updateSessionAndUserState()
         resolvedClient
       }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)

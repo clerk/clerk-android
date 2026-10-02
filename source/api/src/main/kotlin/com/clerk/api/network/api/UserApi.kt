@@ -50,10 +50,6 @@ internal interface UserApi {
   ): ClerkResult<User, ClerkErrorResponse>
 
   /**
-   * Updates the current user's metadata. Performs a deep merge: keys present in the request body
-   * are merged into the existing metadata, and any key whose value is `null` is removed at any
-   * nesting level.
-   *
    * @param fields Map of metadata field names to JSON-encoded values. Only `unsafe_metadata` is
    *   writable from the Frontend API.
    * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]

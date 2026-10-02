@@ -6,12 +6,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 
-/**
- * Converts a [ClerkResult] of [SignIn] to a [ClerkResult] of [OAuthResult].
- *
- * Since Clerk handles the transfer flow internally (i.e. moving a SignIn to a SignUp) this handles
- * the case where calling [SignIn.create] returns a SignUp instead.
- */
 internal fun ClerkResult<SignIn, ClerkErrorResponse>.signInToOAuthResult():
   ClerkResult<OAuthResult, ClerkErrorResponse> {
   return when (this) {
@@ -48,10 +42,6 @@ internal fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResult():
   }
 }
 
-/**
- * Converts a [SignUp] to OAuth output, following the reverse transfer flow used by native ID-token
- * providers when the selected external account already belongs to an existing Clerk user.
- */
 internal suspend fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResultWithTransfer():
   ClerkResult<OAuthResult, ClerkErrorResponse> {
   return when (this) {
