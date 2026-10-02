@@ -1,0 +1,49 @@
+name: Checks
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    name: format, lint, published artifacts
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: zulu
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # spotlessCheck: ktfmt and misc formatting for every module (the pre-commit hook is opt-in).
+      # lint: Android lint for the SDK modules, with existing findings in each module's baseline.
+      # verifyPublishedArtifacts: consumer rules and POM/module metadata must not leak forbidden
+      # entries (see build.gradle.kts).
+      - name: Run checks
+        run: >-
+          ./gradlew spotlessCheck
+          :source:api:lint
+          :source:ui:lint
+          :source:telemetry:lint
+          verifyPublishedArtifacts
+          --build-cache --parallel --continue
+
+      - name: Upload lint reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lint-reports
+          retention-days: 7
+          path: source/*/build/reports/lint-results-*.*
+          if-no-files-found: ignore
