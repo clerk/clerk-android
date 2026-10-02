@@ -29,6 +29,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -36,6 +37,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -215,6 +217,37 @@ class RestoreCredentialsTest {
   }
 
   @Test
+  fun `create rethrows cancellation instead of reporting a failure`() = runTest {
+    coEvery { userApi.createPasskey(any()) } returns ClerkResult.success(preparedPasskey())
+    coEvery { credentialManager.createCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.create() }
+    coVerify(exactly = 0) { userApi.attemptPasskeyVerification(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun `signIn rethrows cancellation instead of reporting a failure`() = runTest {
+    every { Clerk.activeSession } returns null
+    every { Clerk.session } returns null
+    every { Clerk.user } returns null
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(pendingSignIn())
+    coEvery { credentialManager.getCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.signIn() }
+    coVerify(exactly = 0) { signInApi.attemptFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `clear rethrows cancellation instead of reporting a failure`() = runTest {
+    coEvery { credentialManager.clearCredentialState(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.clear() }
+  }
+
+  @Test
   @Config(sdk = [27])
   fun `create reports restore credentials unavailable before Android 9`() = runTest {
     val result = RestoreCredentials.create()
@@ -238,6 +271,16 @@ class RestoreCredentialsTest {
     assertTrue(result is ClerkResult.Failure)
     assertFalse(result is ClerkResult.Success)
     coVerify(exactly = 0) { userApi.createPasskey(any()) }
+  }
+
+  private suspend fun assertCancels(block: suspend () -> ClerkResult<*, *>) {
+    val result =
+      try {
+        block()
+      } catch (_: CancellationException) {
+        return
+      }
+    fail("Expected CancellationException, got $result")
   }
 
   private fun preparedPasskey(): Passkey {
