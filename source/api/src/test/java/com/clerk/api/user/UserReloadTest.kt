@@ -81,6 +81,19 @@ class UserReloadTest {
   }
 
   @Test
+  fun `reload does not apply a client from a stale device token response`() = runTest {
+    val stale = user(firstName = "Stale")
+    Clerk.updateClient(clientWith(session("sess_1", stale)))
+    fetchedClient = clientWith(session("sess_1", user(firstName = "Fresh")))
+    mockkObject(Clerk)
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns false
+
+    stale.reload()
+
+    assertEquals("Stale", Clerk.user?.firstName)
+  }
+
+  @Test
   fun `reload returns the fetched user instead of the stale Clerk user`() = runTest {
     val stale = user(firstName = "Stale")
     Clerk.updateClient(clientWith(session("sess_1", stale)))

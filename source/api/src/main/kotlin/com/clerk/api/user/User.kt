@@ -6,6 +6,7 @@ import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.account.EnterpriseAccount
 import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.network.model.client.Client
@@ -412,10 +413,13 @@ suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.ge
  * and [Clerk.userFlow], and returning this user from the fetched client.
  */
 suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
-  return when (val clientResult = Client.get()) {
+  val manualClientSyncRequest = ManualClientSyncRequest()
+  return when (
+    val clientResult = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
+  ) {
     is ClerkResult.Success -> {
       val client = clientResult.value
-      Clerk.updateClient(client)
+      manualClientSyncRequest.runIfResponseCurrent { Clerk.updateClient(client) }
 
       val updated =
         client.sessions
