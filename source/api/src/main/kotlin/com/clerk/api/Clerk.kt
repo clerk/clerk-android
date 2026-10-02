@@ -1157,8 +1157,10 @@ object Clerk {
     serverFetchAtMillis: Long,
     expectedUpdateCount: Long?,
   ): Boolean {
-    // Only the field writes are locked: the side effects below call into other components that
-    // hold their own locks and may call back into updateClient.
+    // The client fields and the session/user state derived from them are published under one lock
+    // so a concurrent update cannot interleave and leave them out of sync. Shared-session sync and
+    // caching stay outside it: the coordinator holds its own lock and may call back into
+    // updateClient.
     val updatedClient =
       synchronized(clientUpdateLock) {
         if (expectedUpdateCount != null && clientUpdates != expectedUpdateCount) {
@@ -1169,14 +1171,14 @@ object Clerk {
         lastClientServerFetchAtMillis = serverFetchAtMillis
         _clientFlow.value = resolvedClient
         clientUpdates += 1
+        // Only update state if flows are initialized (not during static initialization)
+        try {
+          updateSessionAndUserState()
+        } catch (e: Exception) {
+          ClerkLog.e("${e.message}")
+        }
         resolvedClient
       }
-    // Only update state if flows are initialized (not during static initialization)
-    try {
-      updateSessionAndUserState()
-    } catch (e: Exception) {
-      ClerkLog.e("${e.message}")
-    }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
     cacheStateIfReady()
     return true
