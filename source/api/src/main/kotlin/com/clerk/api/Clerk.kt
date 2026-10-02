@@ -18,8 +18,6 @@ import com.clerk.api.billing.Billing
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
-import com.clerk.api.externalaccount.ExternalAccountService
-import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -34,6 +32,7 @@ import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.ReverificationConfig
 import com.clerk.api.session.Session
@@ -43,7 +42,6 @@ import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.sharedsession.SharedSessionSyncProvider
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.SSOService
 import com.clerk.api.state.CachedStateConfiguration
 import com.clerk.api.state.ClientStateStore
 import com.clerk.api.storage.StorageHelper
@@ -873,7 +871,7 @@ object Clerk {
    * After reset completes, call [initialize] again to configure a new publishable key or proxy URL.
    */
   fun reset() {
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
@@ -882,8 +880,6 @@ object Clerk {
     resetAuthFlowState()
     SessionTokenFetcher.shared.reset()
     SessionTokensCache.clear()
-    SSOService.cancelPendingAuthentication()
-    ExternalAccountService.cancelPendingExternalAccountConnection()
     DeviceAttestationHelper.clearCache()
     LocaleProvider.cleanup()
     ClerkApi.reset()

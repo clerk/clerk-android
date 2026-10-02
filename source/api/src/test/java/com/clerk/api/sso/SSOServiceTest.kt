@@ -1,7 +1,6 @@
 package com.clerk.api.sso
 
 import android.content.Context
-import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.externalaccount.ExternalAccount
@@ -137,32 +136,5 @@ class SSOServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertEquals(errorResponse, (result as ClerkResult.Failure).error)
-  }
-
-  @Test
-  fun `completeAuthenticateWithRedirect handles no pending authentication gracefully`() = runTest {
-    val mockUri = mockk<Uri>(relaxed = true)
-    every { mockUri.getQueryParameter("rotating_token_nonce") } returns "test_nonce"
-
-    SSOService.completeAuthenticateWithRedirect(mockUri)
-
-    assertFalse(SSOService.hasPendingAuthentication())
-  }
-
-  @Test
-  fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
-    SSOService.completeExternalConnection()
-
-    assertFalse(SSOService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `completeExternalConnection handles missing external account`() = runTest {
-    every { mockUser.externalAccounts } returns emptyList()
-    coEvery { Client.get() } returns ClerkResult.Success(mockClient, emptyMap())
-
-    SSOService.completeExternalConnection()
-
-    assertFalse(SSOService.hasPendingExternalAccountConnection())
   }
 }
