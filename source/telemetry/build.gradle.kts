@@ -1,9 +1,14 @@
 plugins {
-  alias(libs.plugins.kotlin.multiplatform)
-  alias(libs.plugins.android.kotlin.multiplatform.library)
-  alias(libs.plugins.android.lint)
+  alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.plugin.serialization)
   alias(libs.plugins.mavenPublish)
+}
+
+android {
+  namespace = "com.clerk.telemetry"
+  compileSdk = libs.versions.compileSdk.get().toInt()
+
+  defaultConfig { minSdk = libs.versions.minSdk.get().toInt() }
 }
 
 mavenPublishing {
@@ -39,48 +44,19 @@ mavenPublishing {
   }
 }
 
-kotlin {
-  androidLibrary {
-    namespace = "com.clerk.telemetry"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-    minSdk = libs.versions.minSdk.get().toInt()
+dependencies {
+  implementation(libs.kotlin.stdlib)
+  implementation(libs.kotlinx.coroutines)
+  implementation(libs.kotlinx.serialization)
+  implementation(libs.ktor.client.core)
+  implementation(libs.ktor.client.negototiation)
+  implementation(libs.ktor.client.okhttp)
+  implementation(libs.ktor.serialization.kotlinx.json)
+  implementation(libs.okhttp)
+  implementation(projects.source.api)
 
-    withHostTestBuilder {}
-
-    withDeviceTestBuilder { sourceSetTreeName = "test" }
-      .configure { instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
-  }
-
-  sourceSets {
-    commonMain {
-      dependencies {
-        implementation(libs.kotlin.stdlib)
-        implementation(libs.kotlinx.coroutines)
-        implementation(libs.kotlinx.serialization)
-      }
-    }
-
-    commonTest { dependencies { implementation(libs.kotlin.test) } }
-
-    androidMain {
-      dependencies {
-        implementation(libs.ktor.client.core)
-        implementation(libs.ktor.client.negototiation)
-        implementation(libs.ktor.client.okhttp)
-        implementation(libs.ktor.serialization.kotlinx.json)
-        implementation(libs.okhttp)
-        implementation(projects.source.api)
-      }
-    }
-
-    getByName("androidHostTest") { dependencies { implementation(libs.ktor.client.mock) } }
-
-    getByName("androidDeviceTest") {
-      dependencies {
-        implementation(libs.androidx.core)
-        implementation(libs.androidx.runner)
-        implementation(libs.junit)
-      }
-    }
-  }
+  testImplementation(libs.junit)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.ktor.client.mock)
 }
