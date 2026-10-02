@@ -4,12 +4,6 @@ internal object ApiPaths {
   internal object Client {
     internal const val BASE = "client"
 
-    internal object DeviceAttestation {
-      internal const val BASE = "${Client.BASE}/device_attestation"
-      internal const val CHALLENGES = "${BASE}/challenges"
-      internal const val VERIFY = "${Client.BASE}/verify"
-    }
-
     internal object BiometricCredential {
       internal const val VALIDATE = "${Client.BASE}/biometric_credentials/validate"
     }

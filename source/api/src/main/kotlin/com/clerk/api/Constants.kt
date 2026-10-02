@@ -59,6 +59,10 @@ object Constants {
   }
 
   /** Device attestation constants */
+  @Deprecated(
+    "The SDK no longer performs device attestation, so nothing reads these constants. " +
+      "They will be removed in a future major version."
+  )
   object Attestation {
     const val HASH_CONSTANT = 0xff
     const val PREPARATION_TIMEOUT_MS = 30_000L
