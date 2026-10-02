@@ -1,7 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
+import dev.detekt.gradle.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -25,6 +25,11 @@ val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 // Shared with config/bin/ktfmt and config/bin/detekt-cli (pre-commit hook) via the version catalog.
 val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
 val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
+
+// Type-resolved detekt tasks: detektDebug for the Android library modules, detektMainAndroid for
+// the Kotlin Multiplatform telemetry module.
+val typeResolvedDetektTasks = setOf("detektDebug", "detektMainAndroid")
+val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug", "detektBaselineMainAndroid")
 
 allprojects {
   apply(plugin = "com.diffplug.spotless")
@@ -51,10 +56,9 @@ allprojects {
     }
   }
 
-  apply(plugin = "io.gitlab.arturbosch.detekt")
+  apply(plugin = "dev.detekt")
   configure<DetektExtension> {
     toolVersion = detektVersion
-    allRules = true
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     baseline = file("$rootDir/config/detekt/detekt-baseline.xml")
@@ -62,6 +66,19 @@ allprojects {
   tasks.withType<Detekt>().configureEach {
     jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
+
+  // The plain `detekt` task has no compile classpath, so rules that need type resolution (for
+  // example InjectDispatcher) silently skip. CI also runs the type-resolved task for each SDK
+  // module's production sources. Those report a different set of findings, so each module keeps
+  // its own baseline for them (regenerate with the matching detektBaseline* task).
+  tasks
+    .withType<Detekt>()
+    .matching { it.name in typeResolvedDetektTasks }
+    .configureEach { baseline.set(file("detekt-baseline.xml")) }
+  tasks
+    .withType<DetektCreateBaselineTask>()
+    .matching { it.name in typeResolvedDetektBaselineTasks }
+    .configureEach { baseline.set(file("detekt-baseline.xml")) }
 
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
