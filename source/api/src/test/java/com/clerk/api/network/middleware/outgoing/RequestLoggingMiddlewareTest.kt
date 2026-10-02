@@ -15,9 +15,10 @@ class RequestLoggingMiddlewareTest {
   @Test
   fun `sensitive request bypasses body logging`() {
     val logs = mutableListOf<String>()
-    val loggingInterceptor =
-      HttpLoggingInterceptor { message -> logs += message }
-        .apply { level = HttpLoggingInterceptor.Level.BODY }
+    val loggingInterceptor = HttpLoggingInterceptor { message ->
+      logs += message
+    }
+      .apply { level = HttpLoggingInterceptor.Level.BODY }
     val client =
       OkHttpClient.Builder()
         .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))
@@ -46,9 +47,10 @@ class RequestLoggingMiddlewareTest {
   @Test
   fun `ordinary request uses body logging`() {
     val logs = mutableListOf<String>()
-    val loggingInterceptor =
-      HttpLoggingInterceptor { message -> logs += message }
-        .apply { level = HttpLoggingInterceptor.Level.BODY }
+    val loggingInterceptor = HttpLoggingInterceptor { message ->
+      logs += message
+    }
+      .apply { level = HttpLoggingInterceptor.Level.BODY }
     val client =
       OkHttpClient.Builder()
         .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))

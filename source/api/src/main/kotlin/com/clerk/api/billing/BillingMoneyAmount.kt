@@ -20,9 +20,7 @@ data class BillingMoneyAmount(
   val currencySymbol: String,
 )
 
-/**
- * Whether a catalog discount subtracts a percentage or a fixed amount.
- */
+/** Whether a catalog discount subtracts a percentage or a fixed amount. */
 @Serializable
 enum class BillingDiscountEffect {
   @SerialName("percentage") PERCENTAGE,
@@ -30,9 +28,7 @@ enum class BillingDiscountEffect {
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * How a discount was applied to a subscription item.
- */
+/** How a discount was applied to a subscription item. */
 @Serializable
 enum class BillingDiscountSource {
   @SerialName("promotion") PROMOTION,
@@ -41,9 +37,7 @@ enum class BillingDiscountSource {
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * The current status of a discount redemption.
- */
+/** The current status of a discount redemption. */
 @Serializable
 enum class BillingDiscountRedemptionStatus {
   @SerialName("active") ACTIVE,

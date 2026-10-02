@@ -3,9 +3,7 @@ package com.clerk.api.billing
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The type of charge a payment represents.
- */
+/** The type of charge a payment represents. */
 @Serializable
 enum class BillingPaymentChargeType {
   @SerialName("checkout") CHECKOUT,
@@ -14,9 +12,7 @@ enum class BillingPaymentChargeType {
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * The current status of a payment.
- */
+/** The current status of a payment. */
 @Serializable
 enum class BillingPaymentStatus {
   @SerialName("pending") PENDING,

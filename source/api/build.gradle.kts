@@ -66,8 +66,8 @@ mavenPublishing {
     signAllPublications()
   }
   pom {
-    name.set("Clerk Android UI")
-    description.set("UI components for Clerk Android SDK")
+    name.set("Clerk Android API")
+    description.set("Core API client for the Clerk Android SDK: authentication, sessions and users")
     inceptionYear.set("2025")
     url.set("https://github.com/clerk/clerk-android")
     licenses {

@@ -695,11 +695,10 @@ val SignUp.emailVerificationStrategy: String
     val activeStrategy = verifications[EMAIL_ADDRESS]?.strategy
     if (!activeStrategy.isNullOrBlank()) return activeStrategy
 
-    val configuredStrategies =
-      runCatching {
-          Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
-        }
-        .getOrDefault(emptyList())
+    val configuredStrategies = runCatching {
+      Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
+    }
+      .getOrDefault(emptyList())
 
     return when {
       configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
@@ -719,16 +718,16 @@ private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, St
       redirectUri
         ?: redirectUrl
         ?: runCatching {
-            val applicationId = Clerk.applicationId
-            if (applicationId.isNullOrBlank()) {
-              null
-            } else {
-              RedirectConfiguration.emailLinkRedirectUrl(
-                applicationId = applicationId,
-                proxyUrl = Clerk.proxyUrl,
-              )
-            }
+          val applicationId = Clerk.applicationId
+          if (applicationId.isNullOrBlank()) {
+            null
+          } else {
+            RedirectConfiguration.emailLinkRedirectUrl(
+              applicationId = applicationId,
+              proxyUrl = Clerk.proxyUrl,
+            )
           }
+        }
           .getOrNull()
     if (!resolvedRedirectUri.isNullOrBlank()) {
       strategyFields[ApiParams.REDIRECT_URI] = resolvedRedirectUri

@@ -9,8 +9,8 @@ internal data class CheckAuthorizationParams(
 )
 
 /**
- * How recently the user must have verified their identity. Use a preset, or [Custom] for a
- * specific level and time window.
+ * How recently the user must have verified their identity. Use a preset, or [Custom] for a specific
+ * level and time window.
  */
 sealed class ReverificationConfig {
   /**

@@ -42,8 +42,9 @@ data class Client(
 ) {
 
   /** Current active sessions. */
-  fun activeSessions(): List<Session> =
-    sessions.filter { it.status == Session.SessionStatus.ACTIVE }
+  fun activeSessions(): List<Session> = sessions.filter {
+    it.status == Session.SessionStatus.ACTIVE
+  }
 
   companion object {
     /** Fetches the current client object from the Clerk API. */

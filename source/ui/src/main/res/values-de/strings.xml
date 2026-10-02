@@ -33,6 +33,7 @@
     <string name="set_new_password">Neues Passwort festlegen</string>
     <string name="reset_password">Passwort zurücksetzen</string>
     <string name="confirm_password">Passwort bestätigen</string>
+    <string name="passwords_dont_match">Passwörter stimmen nicht überein</string>
     <string name="new_password">Neues Passwort</string>
     <string name="sign_out_of_all_other_devices">Von allen anderen Geräten abmelden</string>
     <string name="back">Zurück</string>
@@ -55,6 +56,7 @@
     <string name="email_code">E-Mail-Code</string>
     <string name="or">oder</string>
     <string name="continue_to">Weiter zu %1$s</string>
+    <string name="continue_with">Weiter mit %1$s</string>
     <string name="create_your_account">Erstellen Sie Ihr Konto</string>
     <string name="welcome_sign_in_to_continue">Willkommen! Melden Sie sich an, um fortzufahren.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">Willkommen! Bitte füllen Sie die Details aus, um zu beginnen.</string>

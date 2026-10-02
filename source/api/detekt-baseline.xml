@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>AbstractClassCanBeInterface:SessionAuthorization.kt:ReverificationConfig$ReverificationConfig</ID>
+    <ID>ImplicitDefaultLocale:BiometricCredentialLocalStore.kt:BiometricCredentialLocalRecord.Companion$"%02x".format(it)</ID>
+    <ID>ImplicitDefaultLocale:SharedSessionSyncSnapshot.kt:SharedSessionSyncSnapshot.Companion$"%02x".format(byte)</ID>
+    <ID>InjectDispatcher:BiometricCredentials.kt:BiometricCredentials$IO</ID>
+    <ID>InjectDispatcher:DeviceAttestationHelper.kt:DeviceAttestationHelper$IO</ID>
+    <ID>InjectDispatcher:HostedAuthService.kt:HostedAuthService$IO</ID>
+    <ID>InjectDispatcher:SharedSessionSyncCoordinator.kt:SharedSessionSyncCoordinator$IO</ID>
+    <ID>LargeClass:BiometricCredentials.kt:BiometricCredentials</ID>
+    <ID>LargeClass:Clerk.kt:Clerk</ID>
+    <ID>LongParameterList:ClerkTypographyDefaults.kt:ClerkTypographyBuilder</ID>
+    <ID>MagicNumber:DeviceAttestationHelper.kt:DeviceAttestationHelper$8</ID>
+    <ID>RedundantSuspendModifier:Auth.kt:Auth$suspend</ID>
+    <ID>ReturnCount:ConfigurationManager.kt:ConfigurationManager$fun reinitialize: Boolean</ID>
+    <ID>ThrowsCount:BiometricCredentialKeyManager.kt:DefaultBiometricCredentialKeyManager$override fun createKey: BiometricCredentialLocalKey</ID>
+    <ID>ThrowsCount:BiometricCredentialKeyManager.kt:DefaultBiometricCredentialKeyManager$override suspend fun sign: BiometricCredentialKeySignature</ID>
+    <ID>ThrowsCount:ClerkApiResultCallAdapterFactory.kt:ClerkApiResultCallAdapterFactory.ClerkApiResultCallAdapter.&lt;no name provided>.&lt;no name provided>$override fun onResponse</ID>
+    <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt:DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
+    <ID>TooManyFunctions:ConfigurationManager.kt:ConfigurationManager</ID>
+    <ID>TooManyFunctions:Organization.kt:com.clerk.api.organizations.Organization.kt</ID>
+    <ID>TooManyFunctions:OrganizationApi.kt:OrganizationApi</ID>
+    <ID>TooManyFunctions:User.kt:com.clerk.api.user.User.kt</ID>
+    <ID>UnnecessaryFilter:SignInExtensions.kt:filter { it.strategy == EMAIL_LINK }</ID>
+    <ID>UnsafeCallOnNullableType:Auth.kt:Auth$builder.identifier!!</ID>
+    <ID>UnsafeCallOnNullableType:Auth.kt:Auth$builder.password!!</ID>
+    <ID>UnsafeCallOnNullableType:Auth.kt:Auth$builder.phone!!</ID>
+    <ID>UnsafeCallOnNullableType:Auth.kt:Auth$builder.provider!!</ID>
+    <ID>UnsafeCallOnNullableType:Auth.kt:Auth$builder.token!!</ID>
+    <ID>UnsafeCallOnNullableType:GoogleCredentialAuthenticationService.kt:GoogleCredentialAuthenticationService$Clerk.credentialActivity()!!</ID>
+    <ID>UnsafeCallOnNullableType:OrganizationInvitation.kt:this.organizationId!!</ID>
+    <ID>UnsafeCallOnNullableType:PasskeyCreationService.kt:PasskeyCreationService$createPasskeyResult.value.verification?.nonce!!</ID>
+    <ID>UnsafeCallOnNullableType:SSOExtensions.kt:this.code!!</ID>
+    <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt:ApiException : Exception</ID>
+    <ID>UnusedPrivateProperty:DeviceAttestationHelper.kt:DeviceAttestationHelper.LRUCache$private val maxSize: Int</ID>
+    <ID>UseOrEmpty:Clerk.kt:Clerk$environment?.organizationSettings?.domains?.enrollmentModes ?: emptyList()</ID>
+    <ID>UseOrEmpty:Clerk.kt:Clerk$environment?.userSettings?.social ?: emptyMap()</ID>
+    <ID>UseOrEmpty:ClerkApiResultConverterFactory.kt:Environment::class.qualifiedName ?: ""</ID>
+    <ID>UseOrEmpty:ClerkApiResultConverterFactory.kt:TokenResource::class.qualifiedName ?: ""</ID>
+    <ID>UseOrEmpty:SignInExtensions.kt:firstFactors ?: emptyList()</ID>
+    <ID>UseOrEmpty:SignInExtensions.kt:supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId ?: ""</ID>
+    <ID>UseOrEmpty:SignInExtensions.kt:supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId ?: ""</ID>
+    <ID>UseRequireNotNull:CommonBuilders.kt:EnterpriseSsoBuilder$require(email != null) { "Email must be provided for Enterprise SSO" }</ID>
+    <ID>UseRequireNotNull:SignInBuilders.kt:SignInWithIdTokenBuilder$require(provider != null) { "Provider must be provided" }</ID>
+    <ID>UseRequireNotNull:SignInBuilders.kt:SignInWithIdTokenBuilder$require(token != null) { "Token must be provided" }</ID>
+    <ID>UseRequireNotNull:SignInBuilders.kt:SignInWithPasswordBuilder$require(identifier != null) { "Identifier must be provided" }</ID>
+    <ID>UseRequireNotNull:SignInBuilders.kt:SignInWithPasswordBuilder$require(password != null) { "Password must be provided" }</ID>
+  </CurrentIssues>
+</SmellBaseline>

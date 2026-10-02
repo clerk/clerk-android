@@ -1,7 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
+import dev.detekt.gradle.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -26,10 +26,14 @@ val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
 val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
 
+// Type-resolved detekt tasks: detektDebug for the Android library modules, detektMainAndroid for
+// the Kotlin Multiplatform telemetry module.
+val typeResolvedDetektTasks = setOf("detektDebug", "detektMainAndroid")
+val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug", "detektBaselineMainAndroid")
+
 allprojects {
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
-    ratchetFrom("origin/main")
     format("misc") {
       target("*.md", ".gitignore")
       trimTrailingWhitespace()
@@ -51,10 +55,9 @@ allprojects {
     }
   }
 
-  apply(plugin = "io.gitlab.arturbosch.detekt")
+  apply(plugin = "dev.detekt")
   configure<DetektExtension> {
     toolVersion = detektVersion
-    allRules = true
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     baseline = file("$rootDir/config/detekt/detekt-baseline.xml")
@@ -62,6 +65,19 @@ allprojects {
   tasks.withType<Detekt>().configureEach {
     jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
+
+  // The plain `detekt` task has no compile classpath, so rules that need type resolution (for
+  // example InjectDispatcher) silently skip. CI also runs the type-resolved task for each SDK
+  // module's production sources. Those report a different set of findings, so each module keeps
+  // its own baseline for them (regenerate with the matching detektBaseline* task).
+  tasks
+    .withType<Detekt>()
+    .matching { it.name in typeResolvedDetektTasks }
+    .configureEach { baseline.set(file("detekt-baseline.xml")) }
+  tasks
+    .withType<DetektCreateBaselineTask>()
+    .matching { it.name in typeResolvedDetektBaselineTasks }
+    .configureEach { baseline.set(file("detekt-baseline.xml")) }
 
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
@@ -162,6 +178,16 @@ tasks.register("verifyPublishedArtifacts") {
       ),
     )
 
+    fun assertPomName(directory: File, expectedName: String) {
+      val pom = directory.resolve("pom-default.xml").readText()
+      check("<name>$expectedName</name>" in pom) {
+        "${directory.relativeTo(rootDir)}/pom-default.xml must be named '$expectedName'."
+      }
+    }
+
+    assertPomName(apiPublication.get().asFile, "Clerk Android API")
+    assertPomName(uiPublication.get().asFile, "Clerk Android UI")
+
     listOf("com.google.devtools.ksp:symbol-processing-api").forEach {
       assertCoordinateIsNotPublished(apiPublication.get().asFile, it)
     }
@@ -177,24 +203,35 @@ tasks.register("verifyPublishedArtifacts") {
 
 tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
 
+// `jdk` in the version catalog is the JDK the build and tests run on (Robolectric and Paparazzi
+// need 21). `jvmTarget` is the bytecode level we publish, so consumers on Java 17 are unaffected.
+val buildJdk = libs.versions.jdk.map(JavaLanguageVersion::of)
+val bytecodeTarget = JavaVersion.toVersion(libs.versions.jvmTarget.get())
+
 subprojects {
   plugins.withType<JavaPlugin> {
-    the<JavaPluginExtension>().toolchain {
-      languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
-    }
+    the<JavaPluginExtension>().toolchain.languageVersion.set(buildJdk)
+  }
+
+  tasks.withType<Test>().configureEach {
+    javaLauncher.set(
+      project.extensions.getByType<JavaToolchainService>().launcherFor {
+        languageVersion.set(buildJdk)
+      }
+    )
   }
 
   plugins.withId("com.android.library") {
     the<com.android.build.api.dsl.LibraryExtension>().compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
     }
   }
 
   plugins.withId("com.android.application") {
     the<com.android.build.api.dsl.ApplicationExtension>().compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
     }
   }
 

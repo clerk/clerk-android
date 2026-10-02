@@ -645,17 +645,16 @@ private fun jwtWithClaims(
   fva: List<Int>? = null,
   issuedAtSeconds: Long? = null,
 ): String {
-  val payload =
-    buildList {
-        add("\"sid\":\"$sid\"")
-        orgId?.let { add("\"org_id\":\"$it\"") }
-        fea?.let { add("\"fea\":\"$it\"") }
-        pla?.let { add("\"pla\":\"$it\"") }
-        fva?.let { add("\"fva\":[${it.joinToString(",")}]") }
-        issuedAtSeconds?.let { add("\"iat\":$it") }
-        add("\"exp\":4000000000")
-      }
-      .joinToString(",")
+  val payload = buildList {
+    add("\"sid\":\"$sid\"")
+    orgId?.let { add("\"org_id\":\"$it\"") }
+    fea?.let { add("\"fea\":\"$it\"") }
+    pla?.let { add("\"pla\":\"$it\"") }
+    fva?.let { add("\"fva\":[${it.joinToString(",")}]") }
+    issuedAtSeconds?.let { add("\"iat\":$it") }
+    add("\"exp\":4000000000")
+  }
+    .joinToString(",")
   return "${encode("{\"alg\":\"none\",\"typ\":\"JWT\"}")}.${encode("{$payload}")}.sig"
 }
 

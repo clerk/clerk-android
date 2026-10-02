@@ -2,10 +2,7 @@ package com.clerk.api.biometriccredential
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-internal data class BiometricCredentialValidation(
-  val valid: Boolean
-)
+@Serializable internal data class BiometricCredentialValidation(val valid: Boolean)
 
 /** The outcome of validating a local biometric credential against the server. */
 sealed interface BiometricCredentialValidationResult {
