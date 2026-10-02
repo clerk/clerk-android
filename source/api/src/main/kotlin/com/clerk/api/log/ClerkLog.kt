@@ -76,7 +76,8 @@ object ClerkLog {
    */
   fun d(message: String) =
     if (Clerk.debugMode) {
-      safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
+      safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 }
+        ?: fallback("Clerk debug: ", message)
     } else {
       0
     }

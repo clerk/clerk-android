@@ -128,7 +128,8 @@ internal fun AuthStartViewImpl(
 
   val lastAuthenticationStrategy = runCatching {
     Clerk.client.lastAuthenticationStrategy
-  }.getOrNull()
+  }
+    .getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,

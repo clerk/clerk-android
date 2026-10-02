@@ -3,9 +3,7 @@ package com.clerk.api.billing
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The status of a payment method.
- */
+/** The status of a payment method. */
 @Serializable
 enum class BillingPaymentMethodStatus {
   @SerialName("active") ACTIVE,

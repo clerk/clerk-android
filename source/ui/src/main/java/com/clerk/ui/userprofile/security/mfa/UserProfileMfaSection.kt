@@ -82,28 +82,27 @@ private fun buildMfaItemList(phoneNumbers: List<PhoneNumber>): ImmutableList<Mfa
         compareByDescending<PhoneNumber> { it.defaultSecondFactor }.thenBy { it.createdAt }
       )
 
-  val items: ImmutableList<MfaItem> =
-    buildList {
-        if (Clerk.mfaPhoneCodeIsEnabled) {
-          mfaPhoneNumbers.forEach {
-            add(
-              MfaItem(
-                style = Style.Sms(it),
-                isDefault = it.defaultSecondFactor && Clerk.user?.totpEnabled == false,
-              )
-            )
-          }
-        }
-        if (Clerk.user?.totpEnabled == true) {
-          add(MfaItem(style = Style.AuthenticatorApp, isDefault = true))
-        }
-        if (Clerk.mfaBackupCodeIsEnabled) {
-          if (Clerk.user?.backupCodeEnabled == true) {
-            add(MfaItem(style = Style.BackupCodes))
-          }
-        }
+  val items: ImmutableList<MfaItem> = buildList {
+    if (Clerk.mfaPhoneCodeIsEnabled) {
+      mfaPhoneNumbers.forEach {
+        add(
+          MfaItem(
+            style = Style.Sms(it),
+            isDefault = it.defaultSecondFactor && Clerk.user?.totpEnabled == false,
+          )
+        )
       }
-      .toImmutableList()
+    }
+    if (Clerk.user?.totpEnabled == true) {
+      add(MfaItem(style = Style.AuthenticatorApp, isDefault = true))
+    }
+    if (Clerk.mfaBackupCodeIsEnabled) {
+      if (Clerk.user?.backupCodeEnabled == true) {
+        add(MfaItem(style = Style.BackupCodes))
+      }
+    }
+  }
+    .toImmutableList()
   return items
 }
 

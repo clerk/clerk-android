@@ -22,9 +22,7 @@ enum class BillingSubscriptionStatus {
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * The billing period for a Plan.
- */
+/** The billing period for a Plan. */
 @Serializable
 enum class BillingSubscriptionPlanPeriod {
   @SerialName("month") MONTH,

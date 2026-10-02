@@ -3,9 +3,7 @@ package com.clerk.api.billing
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The current status of a billing statement.
- */
+/** The current status of a billing statement. */
 @Serializable
 enum class BillingStatementStatus {
   @SerialName("open") OPEN,

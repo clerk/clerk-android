@@ -86,13 +86,12 @@ internal val defaultEnrollmentModeOptions =
 internal fun enrollmentModeOptions(
   rawModes: List<String>
 ): List<OrganizationDomain.EnrollmentMode> {
-  val options =
-    rawModes.mapNotNull { rawMode ->
-      when (val mode = OrganizationDomain.EnrollmentMode.fromValue(rawMode)) {
-        is OrganizationDomain.EnrollmentMode.Unknown -> null
-        else -> mode
-      }
+  val options = rawModes.mapNotNull { rawMode ->
+    when (val mode = OrganizationDomain.EnrollmentMode.fromValue(rawMode)) {
+      is OrganizationDomain.EnrollmentMode.Unknown -> null
+      else -> mode
     }
+  }
   return (defaultEnrollmentModeOptions + options).distinct()
 }
 
