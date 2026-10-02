@@ -37,7 +37,7 @@ import kotlinx.serialization.Serializable
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-public fun SignUpCodeView(
+internal fun SignUpCodeView(
   field: SignUpCodeField,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

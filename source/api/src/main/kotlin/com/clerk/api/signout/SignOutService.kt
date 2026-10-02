@@ -1,7 +1,7 @@
 package com.clerk.api.signout
 
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -35,7 +35,7 @@ internal object SignOutService {
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      ClerkLog.w("Server sign-out failed: ${e.message}")
+      ClerkLogger.w("Server sign-out failed: ${e.message}")
       serverError = e
     } finally {
       withContext(NonCancellable) {
@@ -52,12 +52,12 @@ internal object SignOutService {
       when (val clientResult = Client.getSkippingClientId()) {
         is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
         is ClerkResult.Failure ->
-          ClerkLog.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
+          ClerkLogger.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
       }
     }
       .onFailure {
         if (it is CancellationException) throw it
-        ClerkLog.w("Client refresh after sign-out failed: ${it.message}")
+        ClerkLogger.w("Client refresh after sign-out failed: ${it.message}")
       }
 
     return if (serverError != null) {

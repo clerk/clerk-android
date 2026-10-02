@@ -54,7 +54,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * ```
  */
 @Composable
-public fun SignInFactorCodeView(
+internal fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,

@@ -8,7 +8,7 @@ import androidx.credentials.exceptions.CreateCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyCreateCredentialFailure
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -30,13 +30,13 @@ internal object PasskeyCreationService {
   suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
     val activity = Clerk.credentialActivity()
     if (activity == null) {
-      ClerkLog.e("Passkey creation requires an active Activity")
+      ClerkLogger.e("Passkey creation requires an active Activity")
       return ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
     }
 
     return when (val createPasskeyResult = ClerkApi.user.createPasskey()) {
       is ClerkResult.Failure -> {
-        ClerkLog.e("Passkey creation failed: ${createPasskeyResult.error}")
+        ClerkLogger.e("Passkey creation failed: ${createPasskeyResult.error}")
         createPasskeyResult
       }
       is ClerkResult.Success -> {
@@ -57,18 +57,18 @@ internal object PasskeyCreationService {
               publicKeyCredential = ClerkApi.json.encodeToString(passkeyData),
             )
           verificationResult
-            .onSuccess { ClerkLog.d("Passkey created successfully: ${it}") }
-            .onFailure { ClerkLog.e("Passkey creation failed: ${it}") }
-          ClerkLog.d("Passkey creation result: ${result.data}")
+            .onSuccess { ClerkLogger.d("Passkey created successfully: ${it}") }
+            .onFailure { ClerkLogger.e("Passkey creation failed: ${it}") }
+          ClerkLogger.d("Passkey creation result: ${result.data}")
           verificationResult
         } catch (e: CreateCredentialException) {
-          ClerkLog.e("Passkey creation failed with exception: ${e.message}")
+          ClerkLogger.e("Passkey creation failed with exception: ${e.message}")
           classifyCreateCredentialFailure(e)
         } catch (e: CredentialFlowException) {
-          ClerkLog.e("Passkey creation cannot start: ${e.message}")
+          ClerkLogger.e("Passkey creation cannot start: ${e.message}")
           ClerkResult.unknownFailure(e)
         } catch (e: Exception) {
-          ClerkLog.e("Passkey creation failed with exception: ${e.message}")
+          ClerkLogger.e("Passkey creation failed with exception: ${e.message}")
           ClerkResult.unknownFailure(e)
         }
       }

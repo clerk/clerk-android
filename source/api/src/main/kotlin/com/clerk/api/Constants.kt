@@ -158,7 +158,11 @@ public object Constants {
     public const val STRATEGY: String = "strategy"
   }
 
-  /** Test constants (only available in test builds) */
+  /** Test constants used by the SDK's own tests. */
+  @Deprecated(
+    "Constants.Test holds values for the SDK's own tests and will be removed from the public API " +
+      "in the next major version."
+  )
   public object Test {
     public const val CONCURRENCY_TEST_THREAD_COUNT: Int = 10
     public const val EXPECTED_STORAGE_LOAD_CALLS: Int = 1

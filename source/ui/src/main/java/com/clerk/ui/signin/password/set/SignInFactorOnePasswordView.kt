@@ -62,7 +62,7 @@ import com.clerk.ui.theme.DefaultColors
  * @param onAuthComplete A callback invoked when the authentication process is complete.
  */
 @Composable
-public fun SignInFactorOnePasswordView(
+internal fun SignInFactorOnePasswordView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

@@ -7,7 +7,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.createSignUp
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -16,6 +16,7 @@ import com.clerk.api.signup.SignUp
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
 internal class GoogleSignInService(
+  @Suppress("DEPRECATION")
   val googleCredentialManager: GoogleCredentialManager = GoogleCredentialManagerImpl()
 ) {
 
@@ -26,10 +27,10 @@ internal class GoogleSignInService(
       val result = googleCredentialManager.getSignInWithGoogleCredential()
       handleSignInResult(result.credential, transferable)
     } catch (e: GetCredentialException) {
-      ClerkLog.e("Error retrieving Google ID token: ${e.message}")
+      ClerkLogger.e("Error retrieving Google ID token: ${e.message}")
       classifyGetCredentialFailure(e, credentialTypes = listOf(SignIn.CredentialType.GOOGLE))
     } catch (e: CredentialFlowException) {
-      ClerkLog.e("Google sign-in cannot start: ${e.message}")
+      ClerkLogger.e("Google sign-in cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
@@ -39,10 +40,10 @@ internal class GoogleSignInService(
       val result = googleCredentialManager.getSignInWithGoogleCredential()
       handleSignUpResult(result.credential)
     } catch (e: GetCredentialException) {
-      ClerkLog.e("Error retrieving Google ID token: ${e.message}")
+      ClerkLogger.e("Error retrieving Google ID token: ${e.message}")
       classifyGetCredentialFailure(e, credentialTypes = listOf(SignIn.CredentialType.GOOGLE))
     } catch (e: CredentialFlowException) {
-      ClerkLog.e("Google sign-up cannot start: ${e.message}")
+      ClerkLogger.e("Google sign-up cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }

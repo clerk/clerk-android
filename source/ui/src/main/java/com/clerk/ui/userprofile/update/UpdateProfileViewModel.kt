@@ -2,7 +2,6 @@ package com.clerk.ui.userprofile.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
@@ -13,6 +12,7 @@ import com.clerk.api.user.get
 import com.clerk.api.user.setProfileImage
 import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.core.log.ClerkLog
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

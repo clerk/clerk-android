@@ -2,7 +2,7 @@ package com.clerk.api.biometriccredential
 
 import android.system.Os
 import android.system.OsConstants
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -79,7 +79,7 @@ internal class BiometricCredentialFileStore(
   private fun ensureMigrated() {
     if (migrated) return
     runCatching { withExclusiveLock { migrateLegacyLocked() } }
-      .onFailure { ClerkLog.w("Failed to migrate biometric credential metadata: ${it.message}") }
+      .onFailure { ClerkLogger.w("Failed to migrate biometric credential metadata: ${it.message}") }
   }
 
   private fun migrateLegacyLocked() {
@@ -109,7 +109,7 @@ internal class BiometricCredentialFileStore(
   private fun readDocumentOrNull(): StoreDocument? = runCatching {
     readDocument()
   }
-    .onFailure { ClerkLog.w("Failed to read biometric credential metadata: ${it.message}") }
+    .onFailure { ClerkLogger.w("Failed to read biometric credential metadata: ${it.message}") }
     .getOrNull()
     ?.takeIf { it.writable }
 
@@ -119,7 +119,7 @@ internal class BiometricCredentialFileStore(
     val root = runCatching { JSON.parseToJsonElement(text) as? JsonObject }.getOrNull()
     val version = (root?.get(KEY_VERSION) as? JsonPrimitive)?.takeUnless { it.isString }?.intOrNull
     return if (root == null) {
-      ClerkLog.w("Biometric credential store is malformed, treating it as empty.")
+      ClerkLogger.w("Biometric credential store is malformed, treating it as empty.")
       StoreDocument.EMPTY
     } else {
       StoreDocument(root, writable = version == STORE_VERSION)

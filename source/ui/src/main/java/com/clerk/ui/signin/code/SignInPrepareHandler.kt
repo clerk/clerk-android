@@ -1,7 +1,7 @@
 package com.clerk.ui.signin.code
 
 import com.clerk.api.auth.types.Strategy
-import com.clerk.api.log.ClerkLog
+import com.clerk.ui.core.log.ClerkLog
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure

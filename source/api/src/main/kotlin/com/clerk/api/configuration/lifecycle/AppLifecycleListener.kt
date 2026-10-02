@@ -6,7 +6,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 
 internal object AppLifecycleListener {
   private var callback: () -> Unit = {}
@@ -21,7 +21,7 @@ internal object AppLifecycleListener {
       override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
         if (Clerk.debugMode) {
-          ClerkLog.d("AppLifecycleListener, onStart")
+          ClerkLogger.d("AppLifecycleListener, onStart")
         }
         val returningFromBackground = wasBackgrounded
         wasBackgrounded = false
@@ -33,7 +33,7 @@ internal object AppLifecycleListener {
       override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
         if (Clerk.debugMode) {
-          ClerkLog.d("AppLifecycleListener, onStop")
+          ClerkLogger.d("AppLifecycleListener, onStop")
         }
         wasBackgrounded = true
       }
