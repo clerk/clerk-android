@@ -14,7 +14,6 @@ import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -259,9 +258,11 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
-    val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
-    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns ClerkResult.success(unknownResult)
+  fun oauthRedirectWithEmptyResultSetsErrorState() = runTest {
+    // A real empty result: the deprecated resultType reports SIGN_UP for it, so only the
+    // outcome-based routing reaches the dedicated empty-result error.
+    val emptyResult = OAuthResult()
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns ClerkResult.success(emptyResult)
 
     viewModel.authenticateWithSocialProvider(
       provider = OAuthProvider.GITHUB,
@@ -270,7 +271,7 @@ class AuthViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     assertEquals(
-      AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider"),
+      AuthStartViewModel.AuthState.OAuthState.Error(OAUTH_EMPTY_RESULT_ERROR),
       viewModel.state.value,
     )
   }
