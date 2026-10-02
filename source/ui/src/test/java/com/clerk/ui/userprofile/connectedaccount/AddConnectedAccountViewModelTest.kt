@@ -9,7 +9,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
 import com.clerk.api.user.User
 import com.clerk.api.user.createExternalAccount
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -124,7 +123,7 @@ class AddConnectedAccountViewModelTest {
 
   @Test
   fun googleOneTapEnabled_connectsExternalAccountInsteadOfSigningIn() = runTest {
-    val result = mockk<OAuthResult> { every { resultType } returns ResultType.SIGN_IN }
+    val result = OAuthResult(signIn = mockk())
     val user = mockk<User>()
     val account = mockk<ExternalAccount>()
     every { Clerk.user } returns user
