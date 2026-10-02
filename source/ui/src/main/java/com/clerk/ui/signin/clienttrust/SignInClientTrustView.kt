@@ -12,6 +12,8 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.SignInFactorScreen
+import com.clerk.ui.auth.clientTrustScreen
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -43,9 +45,8 @@ public fun SignInClientTrustView(
   onAuthComplete: () -> Unit,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    when (factor.strategyType) {
-      Strategy.PhoneCode,
-      Strategy.EmailCode ->
+    when (clientTrustScreen(factor.strategyType)) {
+      SignInFactorScreen.Code ->
         SignInFactorCodeView(
           factor = factor,
           isSecondFactor = true,
@@ -53,13 +54,16 @@ public fun SignInClientTrustView(
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      Strategy.Passkey ->
+      SignInFactorScreen.Passkey ->
         SignInFactorTwoPasskeyView(
           factor = factor,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      else -> SignInGetHelpView(modifier = modifier)
+      SignInFactorScreen.Password,
+      SignInFactorScreen.EmailLink,
+      SignInFactorScreen.BackupCode,
+      SignInFactorScreen.GetHelp -> SignInGetHelpView(modifier = modifier)
     }
   }
 }

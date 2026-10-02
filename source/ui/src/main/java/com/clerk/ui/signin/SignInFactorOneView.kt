@@ -9,6 +9,8 @@ import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.SignInFactorScreen
+import com.clerk.ui.auth.firstFactorScreen
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.emaillink.SignInFactorOneEmailLinkView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -26,19 +28,17 @@ public fun SignInFactorOneView(
   val effectiveFactor = resolveFirstFactor(factor)
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
-      when (effectiveFactor.strategyType) {
-        Strategy.Passkey ->
+      when (firstFactorScreen(effectiveFactor.strategyType)) {
+        SignInFactorScreen.Passkey ->
           SignInFactorOnePasskeyView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        Strategy.Password ->
+        SignInFactorScreen.Password ->
           SignInFactorOnePasswordView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        Strategy.EmailLink ->
+        SignInFactorScreen.EmailLink ->
           SignInFactorOneEmailLinkView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        Strategy.EmailCode,
-        Strategy.PhoneCode,
-        Strategy.ResetPasswordPhoneCode,
-        Strategy.ResetPasswordEmailCode ->
+        SignInFactorScreen.Code ->
           SignInFactorCodeView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        else -> SignInGetHelpView()
+        SignInFactorScreen.BackupCode,
+        SignInFactorScreen.GetHelp -> SignInGetHelpView()
       }
     }
   }

@@ -16,7 +16,6 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
@@ -141,17 +140,7 @@ private fun UseAnotherMethodButton(factor: Factor, isSecondFactor: Boolean) {
   ClerkTextButton(
     modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
     text = stringResource(R.string.use_another_method),
-    onClick = {
-      if (isSecondFactor) {
-        authState.navigateTo(
-          AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
-        )
-      } else {
-        authState.navigateTo(
-          AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-        )
-      }
-    },
+    onClick = { authState.navigateToAlternativeMethods(factor, isSecondFactor) },
   )
 }
 

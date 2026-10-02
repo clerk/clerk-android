@@ -21,7 +21,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
@@ -221,21 +220,20 @@ private fun ObservePendingSessionTaskRouting(
   val pendingTaskKey = session?.pendingTaskKey
   LaunchedEffect(session?.id, pendingTaskKey, backStack.lastOrNull()) {
     val top = backStack.lastOrNull()
-    when {
+    if (
       session == null &&
-        (top.isSessionTaskDestination() ||
-          top == AuthDestination.BiometricCredentialEnrollment) -> {
-        while (backStack.size > 1) {
-          backStack.removeLastOrNull()
-        }
+        (top.isSessionTaskDestination() || top == AuthDestination.BiometricCredentialEnrollment)
+    ) {
+      while (backStack.size > 1) {
+        backStack.removeLastOrNull()
       }
-      shouldRouteToPendingSessionTask(pendingTaskKey, top) -> {
-        pendingSessionTaskDestination(pendingTaskKey)?.let {
-          backStack.add(it)
-          if (!isDismissible) {
-            Clerk.markAuthFlowPending()
-          }
-        }
+      return@LaunchedEffect
+    }
+    val command = authNavigationCommand(AuthRoutingInput.PendingSessionTask(session, top))
+    if (command is AuthNavigationCommand.Push) {
+      backStack.add(command.destination)
+      if (!isDismissible) {
+        Clerk.markAuthFlowPending()
       }
     }
   }
@@ -362,41 +360,8 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     }
   }
 
-internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
-  return requiresForcedMfa && top != AuthDestination.SessionTaskMfa
-}
-
-internal fun pendingSessionTaskDestination(taskKey: SessionTaskKey?): NavKey? {
-  return when (taskKey) {
-    SessionTaskKey.MFA_REQUIRED -> AuthDestination.SessionTaskMfa
-    SessionTaskKey.RESET_PASSWORD -> AuthDestination.SessionTaskResetPassword
-    SessionTaskKey.CHOOSE_ORGANIZATION -> AuthDestination.SessionTaskChooseOrganization
-    SessionTaskKey.UNKNOWN -> AuthDestination.SignInGetHelp
-    null -> null
-  }
-}
-
-internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavKey?): Boolean {
-  val destination = pendingSessionTaskDestination(taskKey)
-  return taskKey != null &&
-    destination != null &&
-    !top.satisfiesPendingSessionTask(taskKey = taskKey, destination = destination)
-}
-
 internal fun navigateToForgotPasswordFactor(backStack: NavBackStack<NavKey>, factor: Factor) {
   backStack.add(AuthDestination.SignInFactorOne(factor = factor))
-}
-
-private fun NavKey?.satisfiesPendingSessionTask(
-  taskKey: SessionTaskKey,
-  destination: NavKey,
-): Boolean {
-  return when (taskKey) {
-    SessionTaskKey.CHOOSE_ORGANIZATION ->
-      this == AuthDestination.SessionTaskChooseOrganization ||
-        this is AuthDestination.SessionTaskCreateOrganization
-    else -> this == destination
-  }
 }
 
 @Composable
