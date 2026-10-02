@@ -103,7 +103,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     // Don't try to decode empty bodies
                     // Unknown length bodies (i.e. -1L) are fine
                     if (responseBody.contentLength() == 0L) return@let
-                    if (!ClerkResult.isHttpFailureCode(response.code())) return@let
+                    if (!ClerkResult.hasHttpErrorBody(response.code())) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
                     val statusCode = createStatusCode(response.code())
                     val nextAnnotations = annotations + statusCode
