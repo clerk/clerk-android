@@ -2,9 +2,11 @@
 
 package com.clerk.api.signup
 
+import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -71,11 +73,9 @@ suspend fun SignUp.verifyCode(
       VerificationType.PHONE -> AuthStrategy.PHONE_CODE
     }
 
-  return ClerkApi.signUp.attemptSignUpVerification(
-    signUpId = this.id,
-    strategy = strategy,
-    code = code,
-  )
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.attemptSignUpVerification(signUpId = this.id, strategy = strategy, code = code)
+  }
 }
 
 /**
@@ -108,5 +108,5 @@ suspend fun SignUp.update(
     builder.legalAccepted?.let { put("legal_accepted", it.toString()) }
   }
 
-  return ClerkApi.signUp.updateSignUp(this.id, params)
+  return Clerk.auth.reportingFailures { ClerkApi.signUp.updateSignUp(this.id, params) }
 }

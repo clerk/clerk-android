@@ -14,6 +14,7 @@ import com.clerk.api.Constants.Strategy.TICKET
 import com.clerk.api.Constants.Strategy.TOTP as STRATEGY_TOTP
 import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -753,7 +754,12 @@ private constructor(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
+    suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> =
+      Clerk.auth.reportingFailures { createSignIn(params) }
+
+    private suspend fun createSignIn(
+      params: CreateParams.Strategy
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Passkey -> create(params)
         is CreateParams.Strategy.BiometricCredential ->
@@ -790,9 +796,11 @@ private constructor(
       params: CreateParams.Strategy.Passkey,
       preferImmediatelyAvailableCredentials: Boolean = false,
     ): ClerkResult<SignIn, ClerkErrorResponse> {
-      return PasskeyService.signInWithPasskey(
-        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
-      )
+      return Clerk.auth.reportingFailures {
+        PasskeyService.signInWithPasskey(
+          preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
+        )
+      }
     }
 
     /**
@@ -803,7 +811,7 @@ private constructor(
      *   [ClerkErrorResponse] on failure.
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
-      return ClerkApi.signIn.createSignIn(params)
+      return Clerk.auth.reportingFailures { ClerkApi.signIn.createSignIn(params) }
     }
 
     /**
@@ -817,7 +825,7 @@ private constructor(
     suspend fun authenticateWithGoogleOneTap(
       transferable: Boolean = true
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signInWithGoogle(transferable)
+      return Clerk.auth.reportingFailures { GoogleSignInService().signInWithGoogle(transferable) }
     }
 
     /**
@@ -852,23 +860,27 @@ private constructor(
           is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
           is AuthenticateWithRedirectParams.OAuth -> params.provider.strategy
         }
-      return SSOService.authenticateWithRedirect(
-        strategy = strategy,
-        redirectUrl = params.redirectUrl,
-        identifier = params.identifier,
-        emailAddress = params.emailAddress,
-        legalAccepted = params.legalAccepted,
-        transferable = transferable,
-      )
+      return Clerk.auth.reportingFailures {
+        SSOService.authenticateWithRedirect(
+          strategy = strategy,
+          redirectUrl = params.redirectUrl,
+          identifier = params.identifier,
+          emailAddress = params.emailAddress,
+          legalAccepted = params.legalAccepted,
+          transferable = transferable,
+        )
+      }
     }
 
     /** Authenticates using the Google Credential Manager. */
     suspend fun authenticateWithGoogleCredential(
       credentialTypes: List<CredentialType>
     ): ClerkResult<SignIn, ClerkErrorResponse> {
-      return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        credentialTypes = credentialTypes
-      )
+      return Clerk.auth.reportingFailures {
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+          credentialTypes = credentialTypes
+        )
+      }
     }
   }
 }
@@ -926,37 +938,38 @@ internal object SignInSerializer : KSerializer<SignIn> {
  */
 suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val isResetPasswordStrategy =
-    params.strategy == RESET_PASSWORD_EMAIL_CODE || params.strategy == RESET_PASSWORD_PHONE_CODE
-  val isRedirectStrategy = params.isRedirectStrategy
-  val canPrepareFromStatus =
-    if (isRedirectStrategy) {
-      status == SignIn.Status.NEEDS_IDENTIFIER || status == SignIn.Status.NEEDS_FIRST_FACTOR
-    } else {
-      status == SignIn.Status.NEEDS_FIRST_FACTOR
-    }
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    val isResetPasswordStrategy =
+      params.strategy == RESET_PASSWORD_EMAIL_CODE || params.strategy == RESET_PASSWORD_PHONE_CODE
+    val isRedirectStrategy = params.isRedirectStrategy
+    val canPrepareFromStatus =
+      if (isRedirectStrategy) {
+        status == SignIn.Status.NEEDS_IDENTIFIER || status == SignIn.Status.NEEDS_FIRST_FACTOR
+      } else {
+        status == SignIn.Status.NEEDS_FIRST_FACTOR
+      }
 
-  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
-  val validationError =
-    when {
-      !isResetPasswordStrategy && !canPrepareFromStatus ->
-        invalidPrepareState(
-          code = "sign_in_status_invalid",
-          longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
-        )
-      !isResetPasswordStrategy &&
-        !isRedirectStrategy &&
-        params.strategy !in supportedFirstFactorStrategies ->
-        invalidPrepareState(
-          code = "first_factor_strategy_not_supported",
-          longMessage = "${params.strategy} is not supported for this sign-in attempt",
-        )
-      else -> null
-    }
+    val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+    val validationError =
+      when {
+        !isResetPasswordStrategy && !canPrepareFromStatus ->
+          invalidPrepareState(
+            code = "sign_in_status_invalid",
+            longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
+          )
+        !isResetPasswordStrategy &&
+          !isRedirectStrategy &&
+          params.strategy !in supportedFirstFactorStrategies ->
+          invalidPrepareState(
+            code = "first_factor_strategy_not_supported",
+            longMessage = "${params.strategy} is not supported for this sign-in attempt",
+          )
+        else -> null
+      }
 
-  return validationError ?: ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
-}
+    validationError ?: ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+  }
 
 private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean
   get() =
@@ -1016,40 +1029,43 @@ suspend fun SignIn.sendEmailCode(
 suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
   emailAddressId: String? = null,
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
-    return invalidPrepareState(
-      code = "sign_in_status_invalid",
-      longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
-    )
-  }
-
-  val strategy =
-    when {
-      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
-        true ->
-        SignIn.PrepareSecondFactorStrategy.PhoneCode(
-          phoneNumberId =
-            phoneNumberId
-              ?: supportedSecondFactors
-                .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
-                ?.phoneNumberId
-        )
-      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE } ==
-        true ->
-        SignIn.PrepareSecondFactorStrategy.EmailCode(
-          emailAddressId =
-            emailAddressId
-              ?: supportedSecondFactors
-                .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
-                ?.emailAddressId
-        )
-      else -> error("No supported second factor found")
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
+      return@reportingFailures invalidPrepareState(
+        code = "sign_in_status_invalid",
+        longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
+      )
     }
 
-  val params = strategy.toParams()
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
-}
+    val strategy =
+      when {
+        supportedSecondFactors?.any {
+          it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE
+        } == true ->
+          SignIn.PrepareSecondFactorStrategy.PhoneCode(
+            phoneNumberId =
+              phoneNumberId
+                ?: supportedSecondFactors
+                  .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+                  ?.phoneNumberId
+          )
+        supportedSecondFactors?.any {
+          it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE
+        } == true ->
+          SignIn.PrepareSecondFactorStrategy.EmailCode(
+            emailAddressId =
+              emailAddressId
+                ?: supportedSecondFactors
+                  .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+                  ?.emailAddressId
+          )
+        else -> error("No supported second factor found")
+      }
+
+    val params = strategy.toParams()
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  }
 
 internal fun invalidPrepareState(
   code: String,
@@ -1088,7 +1104,9 @@ suspend fun SignIn.sendMfaPhoneCode(
       strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
       phoneNumberId = phoneId,
     )
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  }
 }
 
 /**
@@ -1117,7 +1135,9 @@ suspend fun SignIn.sendMfaEmailCode(
       strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,
       emailAddressId = emailId,
     )
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  }
 }
 
 /**
@@ -1130,7 +1150,9 @@ suspend fun SignIn.sendMfaEmailCode(
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
+  }
 }
 
 /**
@@ -1143,7 +1165,9 @@ suspend fun SignIn.attemptFirstFactor(
 suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
+  }
 }
 
 /**
@@ -1156,7 +1180,9 @@ suspend fun SignIn.attemptSecondFactor(
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  }
 }
 
 // endregion
