@@ -6,6 +6,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,21 +44,30 @@ class PasskeyHelperTest {
   }
 
   @Test
-  fun `getDomain returns empty string when host is null`() {
-    every { Clerk.baseUrl } returns "invalid-url"
+  fun `getDomain only strips a leading www`() {
+    every { Clerk.baseUrl } returns "https://clerk.awww.dev"
 
     val result = PasskeyHelper.getDomain()
 
-    assertEquals("", result)
+    assertEquals("clerk.awww.dev", result)
   }
 
   @Test
-  fun `getDomain handles malformed URL gracefully`() {
+  fun `getDomain returns null when host is empty`() {
+    every { Clerk.baseUrl } returns "https:///path"
+
+    val result = PasskeyHelper.getDomain()
+
+    assertNull(result)
+  }
+
+  @Test
+  fun `getDomain returns null for malformed URL`() {
     every { Clerk.baseUrl } returns "not-a-url"
 
     val result = PasskeyHelper.getDomain()
 
-    assertEquals("", result)
+    assertNull(result)
   }
 
   @Test

@@ -514,7 +514,10 @@ internal object GoogleCredentialAuthenticationService {
   ): GetPasskeyRequest {
     val requestJson = Json.parseToJsonElement(requireNotNull(nonce)).jsonObject
     val challenge = requestJson.getValue("challenge").jsonPrimitive.content
-    val rpId = requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()
+    val rpId =
+      checkNotNull(requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()) {
+        "Missing passkey relying party id"
+      }
     val allowCredentials =
       allowedCredentialIds.toAllowCredentials().ifEmpty { requestJson.passkeyAllowCredentials() }
     ClerkLog.d(
