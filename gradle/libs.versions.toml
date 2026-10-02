@@ -2,7 +2,9 @@
 activityKtx = "1.13.0"
 agp = "9.4.1"
 appcompat = "1.8.0"
+asm = "9.8"
 automap = "0.1.3"
+binaryCompatibilityValidator = "0.18.1"
 composeBom = "2026.06.01"
 core = "1.7.0"
 coreKtxVersion = "1.7.0"
@@ -39,6 +41,9 @@ compileSdk = "36"
 
 
 [libraries]
+abi-asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+abi-asmTree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+abi-kotlinMetadataJvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
@@ -111,6 +116,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 android-lint = { id = "com.android.lint", version.ref = "agp" }
+binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
