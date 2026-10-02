@@ -2,7 +2,7 @@ package com.clerk.api.session
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -143,7 +143,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       }
     return when {
       context.session.status == Session.SessionStatus.PENDING -> {
-        ClerkLog.w(
+        ClerkLogger.w(
           "Cannot fetch token for session ${context.session.id}: session is in pending state. " +
             "The user has tasks to complete before the session can be activated."
         )
@@ -157,7 +157,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     context: FetchContext,
     options: GetTokenOptions,
   ): TokenResource? {
-    ClerkLog.d(
+    ClerkLogger.d(
       "Fetching token for session ${context.session.id} with options: $options and cache key: " +
         context.cacheKey
     )
@@ -219,10 +219,10 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           null
         } else {
           SessionTokensCache.getToken(context.cacheKey)?.takeIf { token ->
-            ClerkLog.d("Found cached token for session ${context.session.id}")
+            ClerkLogger.d("Found cached token for session ${context.session.id}")
             isTokenValid(token, options.expirationBuffer).also { isValid ->
               val cacheStatus = if (isValid) "still valid" else "expired"
-              ClerkLog.d("Cached token is $cacheStatus for session ${context.session.id}")
+              ClerkLogger.d("Cached token is $cacheStatus for session ${context.session.id}")
             }
           }
         }
@@ -236,7 +236,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           } catch (e: CancellationException) {
             throw e
           } catch (e: Exception) {
-            ClerkLog.e("Failed to fetch token: ${e.message}")
+            ClerkLogger.e("Failed to fetch token: ${e.message}")
             null
           }
         }
@@ -294,7 +294,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
               it.code?.lowercase() in sessionInvalidationErrorCodes
             }
           if (invalidSession && Clerk.session?.id == context.session.id) {
-            ClerkLog.w(
+            ClerkLogger.w(
               "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
             )
             Clerk.clearSessionAndUserState()
@@ -316,7 +316,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         isValid
       } == true
     } catch (e: Exception) {
-      ClerkLog.w("Failed to parse JWT expiration: ${e.message}")
+      ClerkLogger.w("Failed to parse JWT expiration: ${e.message}")
       false
     }
   }

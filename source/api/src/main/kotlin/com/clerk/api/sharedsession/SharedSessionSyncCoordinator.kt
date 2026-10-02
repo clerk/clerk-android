@@ -2,7 +2,7 @@ package com.clerk.api.sharedsession
 
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.storage.StorageHelper
@@ -253,7 +253,7 @@ internal constructor(
     localSnapshot = snapshot
     runCatching { transport.saveLocalSnapshot(snapshot, notifyPeers) }
       .onFailure { error ->
-        ClerkLog.w("Failed to persist shared Clerk session state: ${error.message}")
+        ClerkLogger.w("Failed to persist shared Clerk session state: ${error.message}")
       }
   }
 

@@ -16,7 +16,7 @@ import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkError
 import com.clerk.api.magiclink.NativeMagicLinkManager
@@ -92,7 +92,7 @@ public class Auth internal constructor() {
   internal fun send(event: AuthEvent) {
     val emitted = _events.tryEmit(event)
     if (!emitted) {
-      ClerkLog.w("Dropped auth event due to backpressure: ${event::class.simpleName}")
+      ClerkLogger.w("Dropped auth event due to backpressure: ${event::class.simpleName}")
     }
   }
 
@@ -738,7 +738,7 @@ public class Auth internal constructor() {
           )
         )
       is ClerkResult.Failure ->
-        ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
+        ClerkLogger.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
     }
   }
 

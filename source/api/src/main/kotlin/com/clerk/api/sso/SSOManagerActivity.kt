@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
@@ -48,7 +48,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
     if (!authorizationStarted) {
       try {
-        ClerkLog.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
+        ClerkLogger.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
         CustomTabsIntent.Builder().build().launchUrl(this, desiredUri)
         authorizationStarted = true
       } catch (_: UninitializedPropertyAccessException) {
@@ -137,15 +137,15 @@ internal class SSOManagerActivity : AppCompatActivity() {
     lifecycleScope.launch {
       try {
         if (canHandleNativeMagicLink(uri)) {
-          ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
+          ClerkLogger.d("authorizationComplete called with native magic link redirect: $uri")
           when (NativeMagicLinkService.handleMagicLinkDeepLink(uri)) {
             is com.clerk.api.network.serialization.ClerkResult.Success -> {
-              ClerkLog.i("event=native_magic_link_activity_completion_success")
+              ClerkLogger.i("event=native_magic_link_activity_completion_success")
               pendingCallbackUri = null
               setResult(RESULT_OK, Intent())
             }
             is com.clerk.api.network.serialization.ClerkResult.Failure -> {
-              ClerkLog.w("event=native_magic_link_activity_completion_failure")
+              ClerkLogger.w("event=native_magic_link_activity_completion_failure")
               setResult(RESULT_CANCELED, Intent())
             }
           }
@@ -153,7 +153,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
         }
         val hostedAuthResult = HostedAuthService.complete(uri)
         if (completion == Completion.HOSTED_AUTH || hostedAuthResult != null) {
-          ClerkLog.d("authorizationComplete called with hosted auth redirect")
+          ClerkLogger.d("authorizationComplete called with hosted auth redirect")
           pendingCallbackUri = null
           when (hostedAuthResult) {
             is ClerkResult.Success -> setResult(RESULT_OK, Intent())
@@ -163,16 +163,16 @@ internal class SSOManagerActivity : AppCompatActivity() {
           return@launch
         }
         if (SSOService.hasPendingExternalAccountConnection()) {
-          ClerkLog.d("authorizationComplete called with external connection")
+          ClerkLogger.d("authorizationComplete called with external connection")
           SSOService.completeExternalConnection()
         } else {
-          ClerkLog.d("authorizationComplete called with redirect: $uri")
+          ClerkLogger.d("authorizationComplete called with redirect: $uri")
           SSOService.completeAuthenticateWithRedirect(uri)
         }
         pendingCallbackUri = null
         setResult(RESULT_OK, Intent())
       } catch (t: Throwable) {
-        ClerkLog.e("authorizationComplete failed: ${t.message}")
+        ClerkLogger.e("authorizationComplete failed: ${t.message}")
         setResult(RESULT_CANCELED, Intent())
       } finally {
         finish()

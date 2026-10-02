@@ -6,7 +6,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccountService.connectExternalAccount
 import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
 import com.clerk.api.hostedauth.HostedAuthService
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -37,11 +37,11 @@ internal object ExternalAccountService {
     val initialResult = ClerkApi.user.createExternalAccount(params.toMap())
     return when (initialResult) {
       is ClerkResult.Failure -> {
-        ClerkLog.e("Failed to create external account: ${initialResult.error}")
+        ClerkLogger.e("Failed to create external account: ${initialResult.error}")
         mapErrorToSpecificType(initialResult)
       }
       is ClerkResult.Success -> {
-        ClerkLog.d("External account creation initiated: $initialResult")
+        ClerkLogger.d("External account creation initiated: $initialResult")
         val externalUrl =
           requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
             "External verification redirect URL is missing"
@@ -84,13 +84,13 @@ internal object ExternalAccountService {
    */
   @Suppress("TooGenericExceptionCaught")
   suspend fun completeExternalConnection() {
-    ClerkLog.d("Completing external connection")
+    ClerkLogger.d("Completing external connection")
 
     // Capture the connection this callback belongs to so a newer connection started while this
     // completion is suspended is neither completed nor cleared by it.
     val pendingConnection = currentPendingExternalAccountConnection
     if (pendingConnection == null) {
-      ClerkLog.e("No pending external account connection found")
+      ClerkLogger.e("No pending external account connection found")
       clearExternalConnectionState()
       return
     }
@@ -104,7 +104,7 @@ internal object ExternalAccountService {
 
       val clientResult = Client.Companion.get()
       clientResult.onFailure { failure ->
-        ClerkLog.e("Failed to refresh client for external connection: ${failure.errorMessage}")
+        ClerkLogger.e("Failed to refresh client for external connection: ${failure.errorMessage}")
         pendingConnection.complete(failure)
       }
       clientResult.onSuccess { client ->
@@ -126,7 +126,7 @@ internal object ExternalAccountService {
             )
 
           else -> {
-            ClerkLog.d("External account verified successfully")
+            ClerkLogger.d("External account verified successfully")
             pendingConnection.complete(ClerkResult.Companion.success(externalAccount))
           }
         }
@@ -134,7 +134,7 @@ internal object ExternalAccountService {
     } catch (e: CancellationException) {
       // The completing coroutine was cancelled (e.g. the callback activity was recreated). The
       // user finished the provider flow, so report an interruption rather than hanging the waiter.
-      ClerkLog.w("External connection completion interrupted: ${e.message}")
+      ClerkLogger.w("External connection completion interrupted: ${e.message}")
       pendingConnection.complete(
         ClerkResult.Companion.unknownFailure(
           IllegalStateException(EXTERNAL_CONNECTION_INTERRUPTED, e)
@@ -142,7 +142,7 @@ internal object ExternalAccountService {
       )
       throw e
     } catch (e: Exception) {
-      ClerkLog.e("Failed to complete external connection: ${e.message}")
+      ClerkLogger.e("Failed to complete external connection: ${e.message}")
       pendingConnection.complete(ClerkResult.Companion.unknownFailure(e))
     } finally {
       if (currentPendingExternalAccountConnection === pendingConnection) {

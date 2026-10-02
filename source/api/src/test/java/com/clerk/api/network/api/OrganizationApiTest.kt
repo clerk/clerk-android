@@ -9,6 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+@Suppress("DEPRECATION")
 class OrganizationApiTest {
 
   @Test

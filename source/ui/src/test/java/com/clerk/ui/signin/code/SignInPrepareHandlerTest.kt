@@ -1,6 +1,5 @@
 package com.clerk.ui.signin.code
 
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkApiError
 import com.clerk.api.network.model.factor.Factor
@@ -8,6 +7,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.prepareSecondFactor
+import com.clerk.ui.core.log.ClerkLog
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

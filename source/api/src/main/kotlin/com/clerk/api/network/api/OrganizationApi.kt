@@ -33,6 +33,10 @@ import retrofit2.http.Query
  *
  * @see com.clerk.api.organizations
  */
+@Deprecated(
+  "OrganizationApi is the SDK's internal Retrofit service and will become internal in the " +
+    "next major version. Use the Organization APIs in com.clerk.api.organizations instead."
+)
 public interface OrganizationApi {
 
   /**

@@ -52,7 +52,7 @@ import kotlinx.collections.immutable.toImmutableList
  * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
  */
 @Composable
-public fun SignInFactorOneForgotPasswordView(
+internal fun SignInFactorOneForgotPasswordView(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

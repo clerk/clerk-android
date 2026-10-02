@@ -4,7 +4,7 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -276,7 +276,7 @@ public object BiometricCredentials {
         forgetLocalCredentials(deletedUserId)
         BiometricCredentialPendingCleanupStore.remove(deletedUserId)
       }
-        .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
+        .onFailure { ClerkLogger.w("Failed to retry biometric local credential cleanup.") }
     }
   }
 
@@ -555,7 +555,7 @@ public object BiometricCredentials {
       .filter { it.userId == userId && it.id != keeping.id }
       .forEach { credential ->
         runCatching { deleteLocalCredential(credential) }
-          .onFailure { ClerkLog.w("Failed to remove replaced biometric credential locally.") }
+          .onFailure { ClerkLogger.w("Failed to remove replaced biometric credential locally.") }
       }
   }
 
@@ -717,12 +717,16 @@ public object BiometricCredentials {
     propagateFailures: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
-    keyDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric-credential private key.") }
+    keyDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric-credential private key.")
+    }
     if (propagateFailures) {
       keyDeletionResult.getOrThrow()
     }
     val recordDeletionResult = runCatching { credentialStore.delete(credential.id) }
-    recordDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric credential metadata.") }
+    recordDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric credential metadata.")
+    }
     if (propagateFailures) {
       recordDeletionResult.getOrThrow()
     }

@@ -1,7 +1,7 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -29,7 +29,7 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
     if (deviceToken != null && currentDeviceToken == requestDeviceToken) {
       StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
     } else if (deviceToken != null) {
-      ClerkLog.d("Device token update skipped for a stale shared-session response")
+      ClerkLogger.d("Device token update skipped for a stale shared-session response")
     }
 
     return response

@@ -6,7 +6,7 @@ import com.clerk.api.Constants.Attestation.ATTESTATION_TIMEOUT_MS
 import com.clerk.api.Constants.Attestation.HASH_CACHE_MAX_SIZE
 import com.clerk.api.Constants.Attestation.HASH_CONSTANT
 import com.clerk.api.Constants.Attestation.PREPARATION_TIMEOUT_MS
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -56,7 +56,7 @@ internal object DeviceAttestationHelper {
 
     preparedProviders[cloudProjectNumber]?.let { cachedProvider ->
       integrityTokenProvider = cachedProvider
-      ClerkLog.d("Using cached integrity token provider for project $cloudProjectNumber")
+      ClerkLogger.d("Using cached integrity token provider for project $cloudProjectNumber")
       return
     }
 
@@ -76,7 +76,7 @@ internal object DeviceAttestationHelper {
 
           task
             .addOnSuccessListener { tokenProvider ->
-              ClerkLog.d(
+              ClerkLogger.d(
                 "Integrity token provider prepared successfully for project $cloudProjectNumber"
               )
               integrityTokenProvider = tokenProvider
@@ -84,7 +84,7 @@ internal object DeviceAttestationHelper {
               continuation.resume(Unit)
             }
             .addOnFailureListener { exception ->
-              ClerkLog.e(
+              ClerkLogger.e(
                 "Failed to prepare integrity token for project $cloudProjectNumber: $exception"
               )
               continuation.resumeWithException(
@@ -93,12 +93,14 @@ internal object DeviceAttestationHelper {
             }
 
           continuation.invokeOnCancellation {
-            ClerkLog.d("Integrity token preparation was cancelled for project $cloudProjectNumber")
+            ClerkLogger.d(
+              "Integrity token preparation was cancelled for project $cloudProjectNumber"
+            )
           }
         }
       }
     } catch (e: Exception) {
-      ClerkLog.e("Timeout or error during integrity token preparation: ${e.message}")
+      ClerkLogger.e("Timeout or error during integrity token preparation: ${e.message}")
       throw e
     }
   }
@@ -110,9 +112,9 @@ internal object DeviceAttestationHelper {
           try {
             integrityManager = IntegrityManagerFactory.createStandard(context)
             isManagerInitialized = true
-            ClerkLog.d("IntegrityManager initialized successfully")
+            ClerkLogger.d("IntegrityManager initialized successfully")
           } catch (e: Exception) {
-            ClerkLog.e("Failed to initialize IntegrityManager: ${e.message}")
+            ClerkLogger.e("Failed to initialize IntegrityManager: ${e.message}")
             throw IllegalStateException("Failed to initialize IntegrityManager", e)
           }
         }
@@ -141,7 +143,7 @@ internal object DeviceAttestationHelper {
       withTimeout(ATTESTATION_TIMEOUT_MS) {
         suspendCancellableCoroutine { continuation ->
           val hashedClientId = getHashedClientId(clientId)
-          ClerkLog.d("Requesting integrity token for client: ${clientId.take(8)}...")
+          ClerkLogger.d("Requesting integrity token for client: ${clientId.take(8)}...")
 
           val response =
             tokenProvider.request(
@@ -152,11 +154,11 @@ internal object DeviceAttestationHelper {
 
           response
             .addOnSuccessListener { tokenResponse ->
-              ClerkLog.d("Integrity token retrieved successfully")
+              ClerkLogger.d("Integrity token retrieved successfully")
               continuation.resume(ClerkResult.success(tokenResponse.token()))
             }
             .addOnFailureListener { exception ->
-              ClerkLog.e("Failed to get integrity token: $exception")
+              ClerkLogger.e("Failed to get integrity token: $exception")
               continuation.resume(
                 ClerkResult.unknownFailure(
                   IllegalStateException("Failed to get integrity token: $exception")
@@ -164,11 +166,13 @@ internal object DeviceAttestationHelper {
               )
             }
 
-          continuation.invokeOnCancellation { ClerkLog.d("Integrity token request was cancelled") }
+          continuation.invokeOnCancellation {
+            ClerkLogger.d("Integrity token request was cancelled")
+          }
         }
       }
     } catch (e: Exception) {
-      ClerkLog.e("Timeout or error during device attestation: ${e.message}")
+      ClerkLogger.e("Timeout or error during device attestation: ${e.message}")
       ClerkResult.unknownFailure(IllegalStateException("Device attestation timeout: ${e.message}"))
     }
   }
@@ -188,21 +192,21 @@ internal object DeviceAttestationHelper {
     requireNotNull(applicationId) { "Application ID is required for device attestation" }
 
     return try {
-      ClerkLog.d("Performing device assertion with token")
+      ClerkLogger.d("Performing device assertion with token")
       val result = ClerkApi.deviceAttestation.verify(packageName = applicationId, token = token)
 
       when (result) {
         is ClerkResult.Success -> {
-          ClerkLog.d("Device assertion completed successfully")
+          ClerkLogger.d("Device assertion completed successfully")
           result
         }
         is ClerkResult.Failure -> {
-          ClerkLog.w("Device assertion failed: ${result.error}")
+          ClerkLogger.w("Device assertion failed: ${result.error}")
           result
         }
       }
     } catch (e: Exception) {
-      ClerkLog.e("Exception during device assertion: ${e.message}")
+      ClerkLogger.e("Exception during device assertion: ${e.message}")
       ClerkResult.unknownFailure(IllegalStateException("Device assertion failed: ${e.message}"))
     }
   }
@@ -248,7 +252,7 @@ internal object DeviceAttestationHelper {
     integrityTokenProvider = null
     integrityManager = null
     isManagerInitialized = false
-    ClerkLog.d("DeviceAttestationHelper cache cleared")
+    ClerkLogger.d("DeviceAttestationHelper cache cleared")
   }
 
   fun getCacheStats(): CacheStats {
@@ -290,14 +294,14 @@ internal object DeviceAttestationHelper {
     return try {
       if (cloudProjectNumber != null && !preparedProviders.containsKey(cloudProjectNumber)) {
         prepareIntegrityTokenProvider(context, cloudProjectNumber)
-        ClerkLog.d("Integrity token provider warmed up successfully")
+        ClerkLogger.d("Integrity token provider warmed up successfully")
         true
       } else {
-        ClerkLog.d("Integrity token provider already prepared or invalid project number")
+        ClerkLogger.d("Integrity token provider already prepared or invalid project number")
         true
       }
     } catch (e: Exception) {
-      ClerkLog.w("Failed to warm up integrity token provider: ${e.message}")
+      ClerkLogger.w("Failed to warm up integrity token provider: ${e.message}")
       false
     }
   }

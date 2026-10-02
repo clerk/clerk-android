@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.util.Base64
 import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
-import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import io.mockk.unmockkAll
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -265,3 +264,5 @@ class StorageHelperTest {
     assertTrue("No exceptions should occur", exceptions.isEmpty())
   }
 }
+
+private const val CONCURRENCY_TEST_THREAD_COUNT = 10

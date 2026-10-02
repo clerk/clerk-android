@@ -1,6 +1,5 @@
 package com.clerk.api
 
-import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import com.clerk.api.configuration.DeviceIdGenerator
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -139,3 +138,5 @@ class DeviceIdGeneratorTest {
     verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }
 }
+
+private const val CONCURRENCY_TEST_THREAD_COUNT = 10

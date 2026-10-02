@@ -1,7 +1,7 @@
 package com.clerk.api.signout
 
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -34,7 +34,7 @@ internal object SignOutService {
           serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
       }
     } catch (e: Exception) {
-      ClerkLog.w("Server sign-out failed: ${e.message}")
+      ClerkLogger.w("Server sign-out failed: ${e.message}")
       serverError = e
     } finally {
       RestoreCredentials.clearSilently()
@@ -45,13 +45,13 @@ internal object SignOutService {
       // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
       // sign-out when the host remounts AuthView within the same process/activity lifecycle.
       runCatching {
-          when (val clientResult = Client.getSkippingClientId()) {
-            is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
-            is ClerkResult.Failure ->
-              ClerkLog.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
-          }
+        when (val clientResult = Client.getSkippingClientId()) {
+          is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
+          is ClerkResult.Failure ->
+            ClerkLogger.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
         }
-        .onFailure { ClerkLog.w("Client refresh after sign-out failed: ${it.message}") }
+      }
+        .onFailure { ClerkLogger.w("Client refresh after sign-out failed: ${it.message}") }
     }
 
     return if (serverError != null) {
