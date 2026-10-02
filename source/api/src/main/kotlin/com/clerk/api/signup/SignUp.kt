@@ -4,6 +4,8 @@ package com.clerk.api.signup
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.auth.authenticateSignUpWithRedirect
+import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.magiclink.NativeMagicLinkService
@@ -17,7 +19,6 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.api.sso.SSOService
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.automap.annotations.MapTransform
@@ -495,18 +496,7 @@ data class SignUp(
      * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
-      val baseMap =
-        when (params) {
-          is CreateParams.None -> emptyMap()
-          is CreateParams.Transfer -> mapOf("transfer" to "true")
-          is CreateParams.Ticket ->
-            mapOf("strategy" to CreateParams.Ticket.STRATEGY, "ticket" to params.ticket)
-          is CreateParams.GoogleOneTap ->
-            mapOf("strategy" to CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
-          else -> params.toMap()
-        }
-      val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
-      return Clerk.auth.reportingFailures { ClerkApi.signUp.createSignUp(paramMap) }
+      return Clerk.auth.createSignUp(params)
     }
 
     /**
@@ -540,21 +530,7 @@ data class SignUp(
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      val strategy =
-        when (params) {
-          is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
-          is AuthenticateWithRedirectParams.OAuth -> params.provider.strategy
-        }
-      return Clerk.auth.reportingFailures {
-        SSOService.authenticateSignUpWithRedirect(
-          strategy = strategy,
-          redirectUrl = params.redirectUrl,
-          identifier = params.identifier,
-          emailAddress = params.emailAddress,
-          legalAccepted = params.legalAccepted,
-          unsafeMetadata = params.unsafeMetadata,
-        )
-      }
+      return Clerk.auth.authenticateSignUpWithRedirect(params)
     }
 
     val fieldPriority: List<String> =
