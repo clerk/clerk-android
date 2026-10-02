@@ -1,36 +1,36 @@
 package com.clerk.api.biometriccredential
 
-import android.util.Base64
-import com.clerk.api.storage.StorageCipher
-import com.clerk.api.storage.StorageHelper
-import com.clerk.api.storage.StorageKey
+import java.io.File
+import java.io.IOException
+import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BiometricCredentialLocalStoreTest {
 
+  @get:Rule val temporaryFolder = TemporaryFolder()
+
   private val store = DefaultBiometricCredentialLocalStore
+  private lateinit var fileStore: BiometricCredentialFileStore
 
   @Before
   fun setup() {
-    StorageHelper.storageCipherFactoryOverride = { PassthroughStorageCipher() }
-    StorageHelper.reset(RuntimeEnvironment.getApplication())
-    store.deleteAll()
+    fileStore = BiometricCredentialFileStore(File(temporaryFolder.root, "clerk"))
+    BiometricCredentialStorage.fileStore = fileStore
   }
 
   @After
   fun tearDown() {
-    store.deleteAll()
-    StorageHelper.reset()
-    StorageHelper.storageCipherFactoryOverride = null
+    BiometricCredentialStorage.fileStore = null
   }
 
   @Test
@@ -43,35 +43,17 @@ class BiometricCredentialLocalStoreTest {
   }
 
   @Test
-  fun `legacy records without a policy remain PIN capable`() {
-    StorageHelper.saveValue(
-      StorageKey.TRUSTED_DEVICE_CREDENTIALS,
-      """[{
-        "id":"td_legacy","local_key_id":"key_legacy","user_id":"user_1",
-        "app_identifier":"com.example.app","created_at":1,"updated_at":2
-      }]""",
-    )
-
-    val legacy = checkNotNull(store.credential("td_legacy"))
-
-    assertEquals(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE, legacy.policy)
-    store.save(legacy)
-    assertEquals(legacy, store.credential("td_legacy"))
-  }
-
-  @Test
-  fun `strict policy is persisted explicitly alongside legacy credentials`() {
-    val legacy = credential(id = "td_legacy")
+  fun `every policy is persisted explicitly`() {
+    val passcode = credential(id = "td_passcode")
     val strict =
       credential(id = "td_strict").copy(policy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
-    store.save(legacy)
+    store.save(passcode)
     store.save(strict)
 
-    assertTrue(
-      checkNotNull(StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS))
-        .contains("\"policy\":\"biometry_current_set\"")
-    )
-    assertEquals(listOf(legacy, strict), store.all())
+    val json = fileStore.dataFile.readText()
+    assertTrue(json.contains("\"policy\":\"biometry_or_device_passcode\""))
+    assertTrue(json.contains("\"policy\":\"biometry_current_set\""))
+    assertEquals(listOf(passcode, strict), store.all())
   }
 
   @Test
@@ -103,22 +85,52 @@ class BiometricCredentialLocalStoreTest {
   }
 
   @Test
-  fun `malformed storage payload is cleared instead of crashing`() {
-    StorageHelper.saveValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS, "not-json")
+  fun `malformed store file is read as empty and replaced on the next write`() {
+    fileStore.dataFile.parentFile?.mkdirs()
+    fileStore.dataFile.writeText("not-json")
 
     assertTrue(store.all().isEmpty())
-    assertNull(StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS))
+
+    val credential = credential(id = "td_1")
+    store.save(credential)
+    assertEquals(listOf(credential), store.all())
   }
 
   @Test
-  fun `malformed record is dropped while valid records load`() {
-    val valid = credential(id = "td_1")
-    store.save(valid)
-    val storedJson = StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS)!!
-    val withMalformed = storedJson.removeSuffix("]") + "," + """{"id":"td_bad"}]"""
-    StorageHelper.saveValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS, withMalformed)
+  fun `a store file that cannot be read is never overwritten`() {
+    fileStore.dataFile.parentFile?.mkdirs()
+    fileStore.dataFile.writeText("unreadable")
+    check(fileStore.dataFile.setReadable(false)) { "Test file permissions are not supported here." }
+    try {
+      assertTrue(store.all().isEmpty())
+      assertFailsWith<IOException> { store.save(credential(id = "td_1")) }
+    } finally {
+      fileStore.dataFile.setReadable(true)
+    }
+    assertEquals("unreadable", fileStore.dataFile.readText())
+  }
 
-    assertEquals(listOf(valid), store.all())
+  @Test
+  fun `pending cleanup queue is sorted and de-duplicated`() {
+    BiometricCredentialPendingCleanupStore.add("user_2")
+    BiometricCredentialPendingCleanupStore.add("user_1")
+    BiometricCredentialPendingCleanupStore.add("user_2")
+
+    assertEquals(setOf("user_1", "user_2"), BiometricCredentialPendingCleanupStore.all())
+    assertTrue(fileStore.dataFile.readText().contains("[\"user_1\",\"user_2\"]"))
+
+    BiometricCredentialPendingCleanupStore.remove("user_1")
+    BiometricCredentialPendingCleanupStore.remove("user_2")
+
+    assertTrue(BiometricCredentialPendingCleanupStore.all().isEmpty())
+  }
+
+  @Test
+  fun `writes fail when storage is not initialized`() {
+    BiometricCredentialStorage.fileStore = null
+
+    assertTrue(store.all().isEmpty())
+    assertFailsWith<IllegalStateException> { store.save(credential(id = "td_1")) }
   }
 
   @Test
@@ -142,20 +154,10 @@ class BiometricCredentialLocalStoreTest {
       localKeyId = "tdlk_$id",
       userId = userId,
       appIdentifier = appIdentifier,
-      identifierHint = BiometricCredentialLocalRecord.normalizedIdentifierHint(identifierHint),
+      identifierHintSha256 = BiometricCredentialLocalRecord.identifierHintSha256(identifierHint),
       policy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
       createdAt = 1L,
       updatedAt = 2L,
     )
-  }
-
-  private class PassthroughStorageCipher : StorageCipher {
-    override fun encrypt(plaintext: String): String {
-      return Base64.encodeToString(plaintext.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-    }
-
-    override fun decrypt(encrypted: String): String {
-      return String(Base64.decode(encrypted, Base64.NO_WRAP), Charsets.UTF_8)
-    }
   }
 }

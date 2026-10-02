@@ -1,6 +1,7 @@
 package com.clerk.ui.core.composition
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -44,20 +45,25 @@ internal fun ClerkLogoProvider(logo: (@Composable () -> Unit)?, content: @Compos
 }
 
 @Composable
-private fun rememberTelemetryCollector(): TelemetryCollector {
-  val context = LocalContext.current.applicationContext
-
-  val environment = remember { ClerkTelemetryEnvironment() }
-
-  return remember { TelemetryModule.createCollector(context = context, environment = environment) }
+internal fun TelemetryProvider(content: @Composable () -> Unit) {
+  val collector = SharedTelemetryCollector.get(LocalContext.current)
+  CompositionLocalProvider(LocalTelemetryCollector provides collector, content = content)
 }
 
-@Composable
-internal fun TelemetryProvider(
-  telemetryCollector: TelemetryCollector = rememberTelemetryCollector(),
-  content: @Composable () -> Unit,
-) {
-  CompositionLocalProvider(LocalTelemetryCollector provides telemetryCollector) { content() }
+/** Process-wide because a collector's HTTP client and flush scope are never closed. */
+private object SharedTelemetryCollector {
+  @Volatile private var instance: TelemetryCollector? = null
+
+  fun get(context: Context): TelemetryCollector =
+    instance
+      ?: synchronized(this) {
+        instance
+          ?: TelemetryModule.createCollector(
+              context = context.applicationContext,
+              environment = ClerkTelemetryEnvironment(),
+            )
+            .also { instance = it }
+      }
 }
 
 @Composable

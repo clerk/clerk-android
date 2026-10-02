@@ -8,6 +8,8 @@ import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -21,18 +23,23 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -157,5 +164,119 @@ class ExternalAccountServiceTest {
 
     ExternalAccountService.cancelPendingExternalAccountConnection()
     pendingResult.await()
+  }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `completeExternalConnection completes pending connection when client refresh fails`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val clientFailure =
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(message = "client refresh failed", code = "client_error"))
+          )
+        )
+      coEvery { Client.get() } returns clientFailure
+
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+      ExternalAccountService.completeExternalConnection()
+
+      val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
+      assertSame(clientFailure, result)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `cancelling external connection completion propagates and fails pending connection`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val neverCompletes = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
+      coEvery { Client.get() } coAnswers { neverCompletes.await() }
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+      val completionJob = launch { ExternalAccountService.completeExternalConnection() }
+      runCurrent()
+      assertTrue(completionJob.isActive)
+
+      completionJob.cancel()
+      completionJob.join()
+
+      assertTrue(completionJob.isCancelled)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertFalse(failure.throwable is SSOCancellationException)
+      assertFalse(failure.throwable is CancellationException)
+      assertTrue(failure.throwable?.cause is CancellationException)
+    }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `starting a new connection completes the superseded pending connection`() = runTest {
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.success(mockExternalAccount)
+    val firstResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+    }
+    runCurrent()
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    val secondResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GITHUB)
+      )
+    }
+    runCurrent()
+
+    val failure = withTimeout(TIMEOUT_MS) { firstResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    withTimeout(TIMEOUT_MS) { secondResult.await() }
+  }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `cancelPendingExternalAccountConnection fails waiter with SSOCancellationException`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.success(mockExternalAccount)
+      val pendingResult = async {
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+      }
+      runCurrent()
+
+      ExternalAccountService.cancelPendingExternalAccountConnection()
+
+      val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertTrue(failure.throwable is SSOCancellationException)
+      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    }
+
+  private companion object {
+    const val TIMEOUT_MS = 5_000L
   }
 }

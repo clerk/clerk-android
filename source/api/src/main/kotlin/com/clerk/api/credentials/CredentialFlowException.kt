@@ -44,6 +44,12 @@ internal sealed class CredentialFlowException(
       userMessage = "Authentication requires an active screen. Try again from the app.",
     )
 
+  internal class SignUpIncomplete :
+    CredentialFlowException(
+      message = "The credential created a sign-up that still needs more information.",
+      userMessage = "Finish creating your account to continue.",
+    )
+
   internal class ProviderUnavailable :
     CredentialFlowException(
       message = "Credential Manager is not available for this flow.",

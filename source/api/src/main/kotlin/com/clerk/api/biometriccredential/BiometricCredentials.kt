@@ -11,8 +11,13 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -44,6 +49,8 @@ object BiometricCredentials {
 
   @VisibleForTesting
   internal var credentialStore: BiometricCredentialLocalStore = DefaultBiometricCredentialLocalStore
+
+  @VisibleForTesting internal var storageDispatcher: CoroutineDispatcher = Dispatchers.IO
 
   /**
    * Lists active biometric credentials for the signed-in user.
@@ -184,7 +191,9 @@ object BiometricCredentials {
           runCatching { keyManager.deleteKey(localKey.localKeyId) }
           return failure
         }
-        removeOtherLocalCredentialsForCurrentApp(userId = userId, keeping = biometricCredential)
+        onStorage {
+          removeOtherLocalCredentialsForCurrentApp(userId = userId, keeping = biometricCredential)
+        }
         enrollmentResult
       }
       is ClerkResult.Failure -> {
@@ -204,7 +213,7 @@ object BiometricCredentials {
   suspend fun revoke(id: String): ClerkResult<BiometricCredential, ClerkErrorResponse> {
     val result = ClerkApi.biometricCredential.revoke(id)
     if (result is ClerkResult.Success) {
-      credentialStore.credential(id)?.let { deleteLocalCredential(it) }
+      onStorage { credentialStore.credential(id)?.let { deleteLocalCredential(it) } }
     }
     return result
   }
@@ -238,18 +247,20 @@ object BiometricCredentials {
    * Deletes local biometric credentials and keys belonging to [deletedUserId].
    *
    * Call this after the user's account has been deleted so stale local credentials don't linger.
+   * This performs blocking disk I/O and may wait for another Clerk SDK to release the credential
+   * store lock, so call it off the main thread.
    *
    * @return The number of local credentials that were removed.
    */
   fun forgetLocalCredentials(deletedUserId: String): Int {
     val credentials = storedLocalCredentialsForCurrentApp().filter { it.userId == deletedUserId }
-    credentials.forEach { deleteLocalCredential(it, propagateKeyDeletionFailure = true) }
+    credentials.forEach { deleteLocalCredential(it, propagateFailures = true) }
     return credentials.size
   }
 
   /**
    * Deletes account-scoped local credentials, retaining failed cleanup work for the next SDK
-   * initialization.
+   * initialization. Blocks on disk I/O; call it off the main thread.
    */
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   fun forgetLocalCredentialsAfterAccountDeletion(deletedUserId: String): Int {
@@ -261,8 +272,10 @@ object BiometricCredentials {
 
   internal fun retryPendingLocalCredentialCleanup() {
     BiometricCredentialPendingCleanupStore.all().forEach { deletedUserId ->
-      runCatching { forgetLocalCredentials(deletedUserId) }
-        .onSuccess { BiometricCredentialPendingCleanupStore.remove(deletedUserId) }
+      runCatching {
+        forgetLocalCredentials(deletedUserId)
+        BiometricCredentialPendingCleanupStore.remove(deletedUserId)
+      }
         .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
     }
   }
@@ -324,7 +337,7 @@ object BiometricCredentials {
           e.code == BiometricCredentialKeyManagerException.Code.KEY_INVALIDATED ||
             e.code == BiometricCredentialKeyManagerException.Code.KEY_NOT_FOUND
         ) {
-          deleteLocalCredential(localCredential)
+          onStorage { deleteLocalCredential(localCredential) }
         }
         return ClerkResult.unknownFailure(e)
       }
@@ -347,10 +360,10 @@ object BiometricCredentials {
     }
   }
 
-  internal fun localCredentialForReverification(
+  internal suspend fun localCredentialForReverification(
     userId: String
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> =
-    when (val candidates = localCredentialCandidates(null, null, userId)) {
+    when (val candidates = onStorage { localCredentialCandidates(null, null, userId) }) {
       is LocalCredentialsResult.Available ->
         candidates.credentials
           .firstOrNull { it.policy == BiometricCredentialPolicy.BIOMETRY_CURRENT_SET }
@@ -389,7 +402,7 @@ object BiometricCredentials {
         e.code == BiometricCredentialKeyManagerException.Code.KEY_INVALIDATED ||
           e.code == BiometricCredentialKeyManagerException.Code.KEY_NOT_FOUND
       ) {
-        deleteLocalCredential(credential)
+        onStorage { deleteLocalCredential(credential) }
       }
       ClerkResult.unknownFailure(e)
     }
@@ -416,7 +429,9 @@ object BiometricCredentials {
     }
 
     val localCredential =
-      when (val result = localCredentialCandidates(id, identifierHint, userId = null)) {
+      when (
+        val result = onStorage { localCredentialCandidates(id, identifierHint, userId = null) }
+      ) {
         is LocalCredentialsResult.Available -> result.credentials.first()
         is LocalCredentialsResult.Unavailable ->
           return BiometricCredentialValidationResult.Invalid(result.reason)
@@ -429,14 +444,14 @@ object BiometricCredentials {
         if (result.value.valid) {
           BiometricCredentialValidationResult.Valid
         } else {
-          deleteLocalCredential(localCredential)
+          onStorage { deleteLocalCredential(localCredential) }
           BiometricCredentialValidationResult.Invalid(
             BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
           )
         }
       is ClerkResult.Failure -> {
         if (result.isMissingBiometricCredential) {
-          deleteLocalCredential(localCredential)
+          onStorage { deleteLocalCredential(localCredential) }
           return BiometricCredentialValidationResult.Invalid(
             BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
           )
@@ -504,19 +519,27 @@ object BiometricCredentials {
     identifierHint: String?,
   ): ClerkResult.Failure<ClerkErrorResponse>? {
     return try {
-      credentialStore.save(
+      val record =
         BiometricCredentialLocalRecord(
           id = biometricCredential.id,
           localKeyId = localKey.localKeyId,
           userId = userId,
           appIdentifier = biometricCredential.appIdentifier,
-          identifierHint = BiometricCredentialLocalRecord.normalizedIdentifierHint(identifierHint),
+          identifierHintSha256 =
+            BiometricCredentialLocalRecord.identifierHintSha256(identifierHint),
           policy = localKey.policy,
           createdAt = biometricCredential.createdAt,
           updatedAt = biometricCredential.updatedAt,
         )
-      )
+      onStorage { credentialStore.save(record) }
       null
+    } catch (e: CancellationException) {
+      withContext(NonCancellable) {
+        runCatching { ClerkApi.biometricCredential.revoke(biometricCredential.id) }
+        runCatching { onStorage { credentialStore.delete(biometricCredential.id) } }
+        runCatching { keyManager.deleteKey(localKey.localKeyId) }
+      }
+      throw e
     } catch (e: Exception) {
       ClerkApi.biometricCredential.revoke(biometricCredential.id)
       ClerkResult.unknownFailure(e)
@@ -558,7 +581,7 @@ object BiometricCredentials {
     userId: String?,
   ): LocalCredentialResult {
     val supportedCredentials =
-      when (val candidates = localCredentialCandidates(id, identifierHint, userId)) {
+      when (val candidates = onStorage { localCredentialCandidates(id, identifierHint, userId) }) {
         is LocalCredentialsResult.Available -> candidates.credentials
         is LocalCredentialsResult.Unavailable ->
           return LocalCredentialResult.Unavailable(candidates.reason)
@@ -591,7 +614,7 @@ object BiometricCredentials {
         it.id == credential.id
       }
       if (biometricCredential == null) {
-        deleteLocalCredential(credential)
+        onStorage { deleteLocalCredential(credential) }
         firstUnavailableReason =
           firstUnavailableReason
             ?: BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
@@ -599,7 +622,7 @@ object BiometricCredentials {
       }
 
       if (biometricCredential.status != BiometricCredential.Status.ACTIVE) {
-        deleteLocalCredential(credential)
+        onStorage { deleteLocalCredential(credential) }
         firstUnavailableReason =
           firstUnavailableReason
             ?: BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_REVOKED
@@ -687,16 +710,22 @@ object BiometricCredentials {
     }
   }
 
+  private suspend fun <T> onStorage(block: () -> T): T = withContext(storageDispatcher) { block() }
+
   private fun deleteLocalCredential(
     credential: BiometricCredentialLocalRecord,
-    propagateKeyDeletionFailure: Boolean = false,
+    propagateFailures: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
     keyDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric-credential private key.") }
-    if (propagateKeyDeletionFailure) {
+    if (propagateFailures) {
       keyDeletionResult.getOrThrow()
     }
-    credentialStore.delete(credential.id)
+    val recordDeletionResult = runCatching { credentialStore.delete(credential.id) }
+    recordDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric credential metadata.") }
+    if (propagateFailures) {
+      recordDeletionResult.getOrThrow()
+    }
   }
 
   private fun biometricCredentialFeatureUnavailableReason():
@@ -728,7 +757,7 @@ object BiometricCredentials {
     return clientFailure(message)
   }
 
-  internal fun <T : Any> handleBiometricCredentialError(
+  internal suspend fun <T : Any> handleBiometricCredentialError(
     failure: ClerkResult.Failure<ClerkErrorResponse>,
     localCredential: BiometricCredentialLocalRecord,
   ): ClerkResult<T, ClerkErrorResponse> {
@@ -736,7 +765,7 @@ object BiometricCredentials {
       return failure
     }
 
-    deleteLocalCredential(localCredential)
+    onStorage { deleteLocalCredential(localCredential) }
     return clientFailure(
       "Biometric sign-in is no longer set up on this device. Sign in another way to enable it again."
     )
@@ -748,14 +777,7 @@ object BiometricCredentials {
   ): ClerkResult.Failure<ClerkErrorResponse> {
     return ClerkResult.apiFailure(
       ClerkErrorResponse(
-        errors =
-          listOf(
-            Error(
-              message = message,
-              longMessage = message,
-              code = code,
-            )
-          )
+        errors = listOf(Error(message = message, longMessage = message, code = code))
       )
     )
   }

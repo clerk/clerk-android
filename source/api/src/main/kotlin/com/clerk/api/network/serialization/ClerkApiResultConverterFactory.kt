@@ -10,6 +10,7 @@ import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.session.Session
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
@@ -25,7 +26,11 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       return null
     }
 
-    val successType = (type as ParameterizedType).actualTypeArguments[0]
+    // ClerkResult<out T, ...> reaches Retrofit as `? extends T` for suspend functions.
+    val successType =
+      (type as ParameterizedType).actualTypeArguments[0].let {
+        if (it is WildcardType) it.upperBounds.single() else it
+      }
     val errorType = type.actualTypeArguments[1]
 
     val errorResultType: Annotation = createResultType(errorType)

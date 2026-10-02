@@ -98,9 +98,9 @@ class TelemetryCollector(
   ): RecordResult {
     return when {
       !environment.isTelemetryEnabled() -> RecordResult(false, "telemetry disabled")
-      environment.instanceTypeString().equals("development", ignoreCase = true) ->
-        RecordResult(false, "production instance")
-
+      prepared.instanceType != DEVELOPMENT_INSTANCE_TYPE ->
+        RecordResult(false, "non-development instance")
+      environment.isDebugModeEnabled() -> RecordResult(false, "debug mode")
       else -> shouldBeSampled(prepared, eventSamplingRate)
     }
   }
@@ -154,13 +154,12 @@ class TelemetryCollector(
   }
 
   suspend fun flush() {
-    val events =
-      mutex.withLock {
-        if (buffer.isEmpty()) return
-        val copy = buffer.toList()
-        buffer.clear()
-        copy
-      }
+    val events = mutex.withLock {
+      if (buffer.isEmpty()) return
+      val copy = buffer.toList()
+      buffer.clear()
+      copy
+    }
 
     val envelope = TelemetryEnvelope(events)
     try {
@@ -175,5 +174,6 @@ class TelemetryCollector(
 
   private companion object {
     const val PERCENTAGE_MULTIPLIER = 100
+    const val DEVELOPMENT_INSTANCE_TYPE = "development"
   }
 }

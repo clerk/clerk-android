@@ -37,6 +37,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.restorecredentials.RestoreCredentials
+import com.clerk.api.session.ReverificationConfig
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
@@ -404,16 +405,7 @@ object Clerk {
   val commerceSettings: CommerceSettings
     get() = environment?.commerceSettings ?: CommerceSettings()
 
-  /**
-   * Billing GET APIs for plans, subscriptions, statements, payments, and credits.
-   *
-   * This is an experimental public-beta API and is subject to change. Pin the SDK version to avoid
-   * breaking changes.
-   *
-   * Apps call methods such as `Clerk.billing.getPlans(...)`. Payment methods live on
-   * [com.clerk.api.user.User.getPaymentMethods] and
-   * [com.clerk.api.organizations.Organization.getPaymentMethods].
-   */
+  /** Reads Plans, Subscriptions, statements, payment attempts, and credits. */
   val billing: Billing
     get() = Billing
 
@@ -572,6 +564,27 @@ object Clerk {
    */
   val activeSession: Session?
     get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
+
+  /**
+   * Returns whether the signed-in user passes the given authorization checks against the
+   * [activeSession]. Returns `false` when no user is signed in or when the current session is not
+   * ACTIVE (e.g., PENDING while session tasks are outstanding). See [Session.checkAuthorization].
+   */
+  fun has(
+    role: String? = null,
+    permission: String? = null,
+    feature: String? = null,
+    plan: String? = null,
+    reverification: ReverificationConfig? = null,
+  ): Boolean {
+    return activeSession?.checkAuthorization(
+      role = role,
+      permission = permission,
+      feature = feature,
+      plan = plan,
+      reverification = reverification,
+    ) ?: false
+  }
 
   /**
    * The active locale for the current session.

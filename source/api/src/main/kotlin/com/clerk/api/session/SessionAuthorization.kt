@@ -1,13 +1,6 @@
 package com.clerk.api.session
 
-/**
- * Parameters for [Session.checkAuthorization] and [Session.has].
- *
- * Matches clerk-js `CheckAuthorizationParams`. The public TypeScript type treats role, permission,
- * feature, and plan as mutually exclusive. The runtime combiner still ANDs every dimension that is
- * present, including feature + plan.
- */
-data class CheckAuthorizationParams(
+internal data class CheckAuthorizationParams(
   val role: String? = null,
   val permission: String? = null,
   val feature: String? = null,
@@ -16,20 +9,35 @@ data class CheckAuthorizationParams(
 )
 
 /**
- * Reverification requirement for [Session.checkAuthorization].
- *
- * Matches clerk-js `ReverificationConfig`: presets `strict_mfa`, `strict`, `moderate`, `lax`, or a
- * custom `{ level, afterMinutes }` object.
+ * How recently the user must have verified their identity. Use a preset, or [Custom] for a
+ * specific level and time window.
  */
 sealed class ReverificationConfig {
+  /**
+   * Multi-factor verification within the last 10 minutes. Falls back to first-factor verification
+   * when the user has no second factor enrolled.
+   */
   data object StrictMfa : ReverificationConfig()
 
+  /**
+   * Second-factor verification within the last 10 minutes. Falls back to first-factor verification
+   * when the user has no second factor enrolled.
+   */
   data object Strict : ReverificationConfig()
 
+  /**
+   * Second-factor verification within the last hour. Falls back to first-factor verification when
+   * the user has no second factor enrolled.
+   */
   data object Moderate : ReverificationConfig()
 
+  /**
+   * Second-factor verification within the last day. Falls back to first-factor verification when
+   * the user has no second factor enrolled.
+   */
   data object Lax : ReverificationConfig()
 
+  /** Verification at [level] within the last [afterMinutes] minutes. */
   data class Custom(val level: SessionVerification.Level, val afterMinutes: Int) :
     ReverificationConfig()
 }

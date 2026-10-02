@@ -1,6 +1,5 @@
 package com.clerk.ui.auth
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +45,7 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
+import com.clerk.ui.core.extensions.isEmailAddress
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.navigation.rememberDismissHandler
@@ -53,6 +53,8 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AuthStartView(
@@ -124,8 +126,9 @@ internal fun AuthStartViewImpl(
       biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
   }
 
-  val lastAuthenticationStrategy =
-    runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
+  val lastAuthenticationStrategy = runCatching {
+    Clerk.client.lastAuthenticationStrategy
+  }.getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,
@@ -373,7 +376,9 @@ private fun dismissTrailingContent(
 @Suppress("ReturnCount")
 private suspend fun resolveBiometricSignInAvailability(): Boolean {
   if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
-  if (!Clerk.biometricCredentials.localAvailability().isAvailable) return false
+  val localAvailability =
+    withContext(Dispatchers.IO) { Clerk.biometricCredentials.localAvailability() }
+  if (!localAvailability.isAvailable) return false
 
   return when (Clerk.biometricCredentials.validateLocalCredentialIfPossible()) {
     is BiometricCredentialValidationResult.Invalid -> false
@@ -482,22 +487,18 @@ private fun storeIdentifierType(
   authState.storeLastUsedIdentifierType(identifierType)
 }
 
-private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-private val String.isEmailAddress: Boolean
-  get() = emailRegex.matches(this)
-
-@SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val authViewHelper = AuthStartViewHelper()
-
-  authViewHelper.setTestValues(
-    enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
-    applicationName = "Acme Co",
-    socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
-  )
+  val authViewHelper =
+    AuthStartViewHelper(
+      FixedAuthStartConfig(
+        enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
+        applicationName = "Acme Co",
+        authenticatableSocialProviders =
+          listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
+      )
+    )
 
   PreviewAuthStateProvider {
     AuthStartViewImpl(authViewHelper = authViewHelper, onAuthComplete = {})

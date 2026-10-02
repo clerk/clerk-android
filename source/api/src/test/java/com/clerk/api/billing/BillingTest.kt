@@ -83,18 +83,9 @@ class BillingTest {
   }
 
   @Test
-  fun `billingOffsetLimit converts initialPage and pageSize to offset and limit`() {
-    assertEquals(BillingOffsetLimit(offset = 0, limit = 10), billingOffsetLimit())
-    assertEquals(BillingOffsetLimit(offset = 0, limit = 10), billingOffsetLimit(1, 10))
-    assertEquals(BillingOffsetLimit(offset = 5, limit = 5), billingOffsetLimit(2, 5))
-    assertEquals(BillingOffsetLimit(offset = 20, limit = 10), billingOffsetLimit(3, 10))
-  }
-
-  @Test
   fun `forPayer organization maps to payer_type org otherwise user`() {
     assertEquals("org", ForPayerType.ORGANIZATION.toPayerTypeQueryValue())
     assertEquals("user", ForPayerType.USER.toPayerTypeQueryValue())
-    assertEquals("user", null.toPayerTypeQueryValue())
   }
 
   @Test
@@ -116,13 +107,11 @@ class BillingTest {
 
       val result =
         Billing.getPlans(
-          GetPlansParams(
-            forPayer = ForPayerType.ORGANIZATION,
-            orgId = "org_123",
-            minSeats = 4,
-            initialPage = 2,
-            pageSize = 5,
-          )
+          forPayer = ForPayerType.ORGANIZATION,
+          orgId = "org_123",
+          minSeats = 4,
+          limit = 5,
+          offset = 5,
         )
 
       assertTrue(result is ClerkResult.Success)
@@ -139,7 +128,7 @@ class BillingTest {
     }
 
   @Test
-  fun `getPlans defaults forPayer to user and pagination to first page`() = runTest {
+  fun `getPlans defaults forPayer to user and first page of 20`() = runTest {
     val billingApi = mockk<BillingApi>()
     mockkObject(ClerkApi)
     every { ClerkApi.billing } returns billingApi
@@ -162,7 +151,7 @@ class BillingTest {
         orgId = null,
         minSeats = null,
         offset = 0,
-        limit = 10,
+        limit = 20,
         sessionId = any(),
       )
     }
@@ -252,9 +241,33 @@ class BillingTest {
     Billing.getSubscription()
     coVerify { billingApi.getUserSubscription(sessionId = any()) }
 
-    Billing.getSubscription(GetSubscriptionParams(orgId = "org_123"))
+    Billing.getSubscription(orgId = "org_123")
     coVerify {
       billingApi.getOrganizationSubscription(organizationId = "org_123", sessionId = any())
+    }
+  }
+
+  @Test
+  fun `getCreditHistory sends limit and offset for user and organization`() = runTest {
+    val billingApi = mockk<BillingApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.billing } returns billingApi
+    coEvery { billingApi.getUserCreditHistory(any(), any(), any()) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery { billingApi.getOrganizationCreditHistory(any(), any(), any(), any()) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    Billing.getCreditHistory()
+    coVerify { billingApi.getUserCreditHistory(limit = 20, offset = 0, sessionId = any()) }
+
+    Billing.getCreditHistory(orgId = "org_123", limit = 5, offset = 10)
+    coVerify {
+      billingApi.getOrganizationCreditHistory(
+        organizationId = "org_123",
+        limit = 5,
+        offset = 10,
+        sessionId = any(),
+      )
     }
   }
 
@@ -266,8 +279,7 @@ class BillingTest {
     coEvery { billingApi.getUserPaymentMethods(any(), any(), any()) } returns
       ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
 
-    user(id = "user_123")
-      .userGetPaymentMethods(GetPaymentMethodsParams(initialPage = 3, pageSize = 4))
+    user(id = "user_123").userGetPaymentMethods(limit = 4, offset = 8)
 
     coVerify { billingApi.getUserPaymentMethods(offset = 8, limit = 4, sessionId = any()) }
   }
@@ -280,8 +292,7 @@ class BillingTest {
     coEvery { billingApi.getOrganizationPaymentMethods(any(), any(), any(), any()) } returns
       ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
 
-    organization(id = "org_abc")
-      .organizationGetPaymentMethods(GetPaymentMethodsParams(pageSize = 7))
+    organization(id = "org_abc").organizationGetPaymentMethods(limit = 7)
 
     coVerify {
       billingApi.getOrganizationPaymentMethods(

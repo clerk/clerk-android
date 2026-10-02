@@ -347,6 +347,49 @@ class ClientSyncingMiddlewareTest {
   }
 
   @Test
+  fun `intercept preserves response body when piggybacked client fails to decode`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val originalClient = Client(id = "client_original")
+    Clerk.updateClient(originalClient)
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/hosted_auth")
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    val rawBody =
+      """
+      {
+        "response": {
+          "object": "hosted_auth",
+          "url": "https://example.accounts.dev/sign-in"
+        },
+        "client": {
+          "id": "client_malformed",
+          "sessions": [{ "id": "sess_missing_required_fields" }]
+        }
+      }
+      """
+        .trimIndent()
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(rawBody.toResponseBody("application/json".toMediaType()))
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    val result = middleware.intercept(chain)
+
+    assertEquals(rawBody, result.body.string())
+    assertEquals(originalClient, Clerk.client)
+  }
+
+  @Test
   fun `intercept leaves manually synced client response unapplied`() {
     val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
     val originalClient = Client(id = "client_original")

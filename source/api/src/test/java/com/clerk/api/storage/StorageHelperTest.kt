@@ -33,14 +33,14 @@ class StorageHelperTest {
   fun setup() {
     context = RuntimeEnvironment.getApplication()
     StorageHelper.storageCipherFactoryOverride = { TestStorageCipher() }
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     preferences().edit { clear() }
   }
 
   @After
   fun tearDown() {
     unmockkAll()
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = null
     preferences().edit { clear() }
   }
@@ -158,7 +158,7 @@ class StorageHelperTest {
 
   @Test
   fun `loadValue deletes malformed encrypted values and returns null`() {
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = {
       object : StorageCipher {
         override fun encrypt(plaintext: String): String = plaintext
@@ -234,7 +234,7 @@ class StorageHelperTest {
 
   @Test
   fun `load save and delete never throw when racing with initialize`() {
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
     val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
     val exceptions = mutableListOf<Throwable>()
