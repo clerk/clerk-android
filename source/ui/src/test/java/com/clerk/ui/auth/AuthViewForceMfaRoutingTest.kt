@@ -3,7 +3,8 @@ package com.clerk.ui.auth
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTask
 import com.clerk.ui.core.common.StrategyKeys
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,71 +14,62 @@ import org.junit.Test
 class AuthViewForceMfaRoutingTest {
 
   @Test
-  fun `routes when session requires forced mfa and current destination is not session task`() {
-    val shouldRoute =
-      shouldRouteToSessionTaskMfa(requiresForcedMfa = true, top = AuthDestination.AuthStart)
-
-    assertTrue(shouldRoute)
+  fun `routes to mfa session task when setup mfa is pending`() {
+    assertEquals(
+      AuthNavigationCommand.Push(AuthDestination.SessionTaskMfa),
+      pendingTaskCommand(task = "setup-mfa", top = AuthDestination.AuthStart),
+    )
   }
 
   @Test
   fun `does not route when already on session task destination`() {
-    val shouldRoute =
-      shouldRouteToSessionTaskMfa(requiresForcedMfa = true, top = AuthDestination.SessionTaskMfa)
-
-    assertFalse(shouldRoute)
+    assertEquals(
+      AuthNavigationCommand.None,
+      pendingTaskCommand(task = "setup-mfa", top = AuthDestination.SessionTaskMfa),
+    )
   }
 
   @Test
-  fun `does not route when session does not require forced mfa`() {
-    val shouldRoute =
-      shouldRouteToSessionTaskMfa(requiresForcedMfa = false, top = object : NavKey {})
-
-    assertFalse(shouldRoute)
+  fun `does not route when no task is pending`() {
+    assertEquals(
+      AuthNavigationCommand.None,
+      authNavigationCommand(AuthRoutingInput.PendingSessionTask(null, object : NavKey {})),
+    )
   }
 
   @Test
   fun `routes to reset password session task when task is pending`() {
-    val shouldRoute =
-      shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        top = AuthDestination.AuthStart,
-      )
-
-    assertTrue(shouldRoute)
+    assertEquals(
+      AuthNavigationCommand.Push(AuthDestination.SessionTaskResetPassword),
+      pendingTaskCommand(task = "reset-password", top = AuthDestination.AuthStart),
+    )
   }
 
   @Test
   fun `routes to choose organization session task when task is pending`() {
-    val shouldRoute =
-      shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
-        top = AuthDestination.AuthStart,
-      )
-
-    assertTrue(shouldRoute)
+    assertEquals(
+      AuthNavigationCommand.Push(AuthDestination.SessionTaskChooseOrganization),
+      pendingTaskCommand(task = "choose-organization", top = AuthDestination.AuthStart),
+    )
   }
 
   @Test
   fun `does not reroute when already on reset password session task destination`() {
-    val shouldRoute =
-      shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        top = AuthDestination.SessionTaskResetPassword,
-      )
-
-    assertFalse(shouldRoute)
+    assertEquals(
+      AuthNavigationCommand.None,
+      pendingTaskCommand(task = "reset-password", top = AuthDestination.SessionTaskResetPassword),
+    )
   }
 
   @Test
   fun `does not reroute from create organization while choose organization task is pending`() {
-    val shouldRoute =
-      shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+    assertEquals(
+      AuthNavigationCommand.None,
+      pendingTaskCommand(
+        task = "choose-organization",
         top = AuthDestination.SessionTaskCreateOrganization(),
-      )
-
-    assertFalse(shouldRoute)
+      ),
+    )
   }
 
   @Test
@@ -108,4 +100,21 @@ class AuthViewForceMfaRoutingTest {
     assertEquals(AuthDestination.SignInFactorOne(emailCodeFactor), backStack.last())
     assertEquals(AuthDestination.SignInForgotPassword, backStack[backStack.size - 2])
   }
+
+  private fun pendingTaskCommand(task: String, top: NavKey): AuthNavigationCommand =
+    authNavigationCommand(
+      AuthRoutingInput.PendingSessionTask(
+        session =
+          Session(
+            id = "sess_123",
+            status = Session.SessionStatus.PENDING,
+            expireAt = 0L,
+            lastActiveAt = 0L,
+            createdAt = 0L,
+            updatedAt = 0L,
+            currentTask = SessionTask(task),
+          ),
+        top = top,
+      )
+    )
 }

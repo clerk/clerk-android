@@ -35,7 +35,6 @@ import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.ui.R
-import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.avatar.AvatarView

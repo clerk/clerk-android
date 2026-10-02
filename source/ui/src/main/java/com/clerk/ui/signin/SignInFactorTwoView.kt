@@ -6,6 +6,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.SignInFactorScreen
+import com.clerk.ui.auth.secondFactorScreen
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
 import com.clerk.ui.signin.code.SignInFactorCodeView
@@ -32,29 +34,29 @@ fun SignInFactorTwoView(
   onAuthComplete: () -> Unit,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    when (factor.strategy) {
-      StrategyKeys.TOTP,
-      StrategyKeys.PHONE_CODE,
-      StrategyKeys.EMAIL_CODE ->
+    when (secondFactorScreen(factor.strategy)) {
+      SignInFactorScreen.Code ->
         SignInFactorCodeView(
           factor = factor,
           isSecondFactor = true,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      StrategyKeys.BACKUP_CODE ->
+      SignInFactorScreen.BackupCode ->
         SignInFactorTwoBackupCodeView(
           modifier = modifier,
           factor = factor,
           onAuthComplete = onAuthComplete,
         )
-      StrategyKeys.PASSKEY ->
+      SignInFactorScreen.Passkey ->
         SignInFactorTwoPasskeyView(
           factor = factor,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      else -> SignInGetHelpView(modifier = modifier)
+      SignInFactorScreen.Password,
+      SignInFactorScreen.EmailLink,
+      SignInFactorScreen.GetHelp -> SignInGetHelpView(modifier = modifier)
     }
   }
 }

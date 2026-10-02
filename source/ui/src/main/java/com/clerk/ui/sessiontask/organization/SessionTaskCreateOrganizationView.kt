@@ -19,7 +19,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.ui.R
-import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
