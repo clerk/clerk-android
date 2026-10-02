@@ -11,22 +11,12 @@ internal object PasskeyHelper {
   val passkeyStrategy: String
     get() = PASSKEY_STRATEGY_VALUE
 
-  /**
-   * Extracts the domain from the Clerk base URL for use as the Relying Party ID.
-   *
-   * The domain is used to identify the relying party in WebAuthn operations. This method removes
-   * the "www." prefix if present.
-   *
-   * @return The domain string, or an empty string if extraction fails.
-   */
-  fun getDomain(): String {
+  fun getDomain(): String? {
     return try {
-      val url = URL(Clerk.baseUrl)
-      val host = url.host ?: return ""
-      host.replace("www.", "")
+      URL(Clerk.baseUrl).host?.removePrefix("www.")?.takeIf { it.isNotEmpty() }
     } catch (e: Exception) {
       ClerkLog.e("Error parsing domain from baseUrl: ${e.message}")
-      ""
+      null
     }
   }
 }
