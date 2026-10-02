@@ -24,6 +24,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
@@ -32,6 +33,7 @@ import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -273,8 +275,12 @@ class Auth internal constructor() {
    * Signs in with OAuth provider.
    *
    * @param provider The OAuth provider to use for authentication.
+   * @param transferable Whether the flow may turn into a sign-up when the provider account has no
+   *   Clerk user yet. When `false`, that case fails instead. Defaults to `true`.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+   *   Custom values require a matching intent filter in the application manifest.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
+   *   failure. The result holds a sign-up instead of a sign-in when the flow transferred.
    *
    * ### Example usage:
    * ```kotlin
@@ -282,12 +288,38 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signInWithOAuth(
-    provider: OAuthProvider
+    provider: OAuthProvider,
+    transferable: Boolean = true,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     return authenticateSignInWithRedirect(
-      SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
-      transferable = true,
+      SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider, redirectUrl = redirectUrl),
+      transferable = transferable,
     )
+  }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  suspend fun signInWithOAuth(
+    provider: OAuthProvider
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> = signInWithOAuth(provider, transferable = true)
+
+  /**
+   * Signs in with Google One Tap (Credential Manager's Sign in with Google).
+   *
+   * @param transferable Whether the flow may turn into a sign-up when the Google account has no
+   *   Clerk user yet. Defaults to `true`.
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+   *   failure.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val result = clerk.auth.signInWithGoogleOneTap()
+   * ```
+   */
+  suspend fun signInWithGoogleOneTap(
+    transferable: Boolean = true
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    return reportingFailures { GoogleSignInService().signInWithGoogle(transferable) }
   }
 
   /**
@@ -326,6 +358,9 @@ class Auth internal constructor() {
   /**
    * Signs in with passkey.
    *
+   * @param preferImmediatelyAvailableCredentials Whether the credential provider should only return
+   *   credentials available without extra provider UI. Use `true` for sign-in attempts the user did
+   *   not ask for, such as offering a passkey when a screen opens. Defaults to `false`.
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
    *   failure.
    *
@@ -334,9 +369,19 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithPasskey()
    * ```
    */
-  suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> {
-    return createSignIn(SignIn.CreateParams.Strategy.Passkey())
+  suspend fun signInWithPasskey(
+    preferImmediatelyAvailableCredentials: Boolean = false
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return reportingFailures {
+      PasskeyService.signInWithPasskey(
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
+      )
+    }
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> =
+    signInWithPasskey(preferImmediatelyAvailableCredentials = false)
 
   /**
    * Silently signs in with a Google Play restore credential transferred from another device.
@@ -495,8 +540,12 @@ class Auth internal constructor() {
    * Signs up with OAuth provider.
    *
    * @param provider The OAuth provider to use for sign-up.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+   *   Custom values require a matching intent filter in the application manifest.
+   * @param unsafeMetadata Custom metadata attached to the created user. Clerk does not validate it,
+   *   so it must not hold sensitive information.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
+   *   failure. The result holds a sign-in instead of a sign-up when the account already existed.
    *
    * ### Example usage:
    * ```kotlin
@@ -504,10 +553,24 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signUpWithOAuth(
-    provider: OAuthProvider
+    provider: OAuthProvider,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    unsafeMetadata: Map<String, Any>? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return authenticateSignUpWithRedirect(SignUp.AuthenticateWithRedirectParams.OAuth(provider))
+    return authenticateSignUpWithRedirect(
+      SignUp.AuthenticateWithRedirectParams.OAuth(
+        provider = provider,
+        redirectUrl = redirectUrl,
+        unsafeMetadata = unsafeMetadata,
+      )
+    )
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  suspend fun signUpWithOAuth(
+    provider: OAuthProvider
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    signUpWithOAuth(provider, redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL)
 
   /**
    * Signs up with Google One Tap.
@@ -524,9 +587,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return reportingFailures {
-      SignIn.authenticateWithGoogleOneTap(transferable = true)
-    }
+    return signInWithGoogleOneTap(transferable = true)
   }
 
   /**
