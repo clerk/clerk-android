@@ -2,8 +2,10 @@ package com.clerk.api.sso
 
 import android.app.Activity
 import android.app.Application
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
@@ -12,9 +14,11 @@ import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.signup.SignUp
 import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -26,7 +30,9 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -393,6 +399,43 @@ class SSOManagerActivityTest {
 
     // Release the gate so activity can finish
     gate.complete(Unit)
+  }
+
+  @Test
+  fun ssoCompletion_interruptedByRecreation_finishesRecreatedActivity() = runTest {
+    mockkObject(Clerk)
+    mockkObject(SignUp.Companion)
+    every { Clerk.applicationContext } returns WeakReference(mockk(relaxed = true))
+    val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
+    coEvery { SignUp.create(SignUp.CreateParams.Transfer) } coAnswers { neverCompletes.await() }
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect("https://accounts.example.com/oauth/authorize")
+      }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri =
+      Uri.parse(
+        "clerk://com.example.app.callback" +
+          "?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+      )
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    controller.create().resume()
+    assertFalse(controller.get().isFinishing)
+
+    val nightMode =
+      Configuration(controller.get().resources.configuration).apply {
+        uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+      }
+    controller.configurationChange(nightMode)
+    Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+    val failure = withTimeout(5_000L) { pendingResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable?.cause is CancellationException)
+    assertTrue(controller.get().isFinishing)
+    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(controller.get()).resultCode)
+    coVerify(exactly = 1) { SignUp.create(SignUp.CreateParams.Transfer) }
   }
 
   @Test

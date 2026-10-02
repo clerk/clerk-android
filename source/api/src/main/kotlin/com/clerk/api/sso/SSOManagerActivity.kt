@@ -82,7 +82,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
     // Hosted auth completion re-attaches after activity recreation because
     // HostedAuthService.complete() idempotently re-joins the pending flow; SSO completion is a
-    // one-shot network call that must never re-run.
+    // one-shot network call that must never re-run; its cancellation already failed the flow.
     val shouldAttachObserver = !completionObserverAttached && completion != Completion.SSO
     if (callbackUri != null && shouldAttachObserver) {
       if (completion == Completion.NONE) {
@@ -94,6 +94,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       completionObserverAttached = true
       authorizationComplete(callbackUri)
+    } else if (callbackUri != null && !completionObserverAttached) {
+      finish()
     }
     return callbackUri != null
   }
