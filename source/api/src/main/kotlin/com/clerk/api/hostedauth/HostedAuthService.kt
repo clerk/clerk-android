@@ -354,7 +354,11 @@ private suspend fun createHostedAuth(
   responseGuard: ResponseGuard,
 ): ClerkResult<Uri, ClerkErrorResponse> {
   var result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = false)
-  if (result is ClerkResult.Failure && result.isSignedOutFailure() && refreshSignedOutClient()) {
+  if (
+    result is ClerkResult.Failure &&
+      result.isSignedOutFailure() &&
+      refreshSignedOutClient(responseGuard)
+  ) {
     result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = true)
   }
   return when (result) {
@@ -367,14 +371,12 @@ private suspend fun createHostedAuth(
   }
 }
 
-private suspend fun refreshSignedOutClient(): Boolean =
-  when (val refresh = Client.getSkippingClientId()) {
-    is ClerkResult.Failure -> false
-    is ClerkResult.Success -> {
-      Clerk.updateClient(refresh.value)
-      true
-    }
-  }
+/**
+ * ClientSyncingMiddleware applies the refreshed client, so it gets the same stale-token and
+ * cancelled-flow guards as every other client response.
+ */
+private suspend fun refreshSignedOutClient(responseGuard: ResponseGuard): Boolean =
+  ClerkApi.client.getSkippingClientId(responseGuard = responseGuard) is ClerkResult.Success
 
 private suspend fun requestHostedAuth(
   preparation: PreparedHostedAuth,

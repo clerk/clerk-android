@@ -24,6 +24,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
@@ -41,6 +42,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -140,7 +142,8 @@ class HostedAuthServiceTest {
     val secondRequestStarted = CompletableDeferred<Unit>()
     coEvery {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
-    } returns signedOutFailure() coAndThen
+    } returns
+      signedOutFailure() coAndThen
       {
         secondRequestStarted.complete(Unit)
         ClerkResult.success(
@@ -151,12 +154,15 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     withTimeout(TIMEOUT_MS) { secondRequestStarted.await() }
 
+    val refreshGuard = slot<ResponseGuard>()
     coVerifyOrder {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
-      clientApi.getSkippingClientId(INTERNAL_HEADER_TRUE)
-      Clerk.updateClient(refreshedClient)
+      clientApi.getSkippingClientId(INTERNAL_HEADER_TRUE, capture(refreshGuard))
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
+    // The middleware applies the refreshed client under the hosted-auth guard.
+    assertNotSame(ResponseGuard.always, refreshGuard.captured)
+    verify(exactly = 0) { Clerk.updateClient(any()) }
 
     HostedAuthService.cancelPendingAuthentication()
     assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
@@ -243,7 +249,7 @@ class HostedAuthServiceTest {
     coVerify(exactly = 2) {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
-    coVerify(exactly = 1) { clientApi.getSkippingClientId(any()) }
+    coVerify(exactly = 1) { clientApi.getSkippingClientId(any(), any()) }
   }
 
   @Test
@@ -427,7 +433,7 @@ class HostedAuthServiceTest {
   }
 
   private fun stubClientRefresh(result: ClerkResult<Client, ClerkErrorResponse>) {
-    coEvery { clientApi.getSkippingClientId(any()) } returns result
+    coEvery { clientApi.getSkippingClientId(any(), any()) } returns result
   }
 
   private fun signedOutFailure(): ClerkResult.Failure<ClerkErrorResponse> =
