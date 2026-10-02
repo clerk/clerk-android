@@ -37,7 +37,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable
-public fun SignUpCollectFieldView(
+internal fun SignUpCollectFieldView(
   field: CollectField,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,

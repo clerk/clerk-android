@@ -51,7 +51,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-public fun SignInSetNewPasswordView(
+internal fun SignInSetNewPasswordView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,

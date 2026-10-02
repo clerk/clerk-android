@@ -1,12 +1,12 @@
 package com.clerk.ui.signin.code
 
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.ui.core.log.ClerkLog
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -39,28 +39,29 @@ class SignInAttemptHandlerTest {
   }
 
   @Test
-  fun attemptEmailCodeAsFirstFactorShouldCallAttemptFirstFactorAndTriggerSuccessCallback() = runTest {
-    val code = "123456"
-    val successResult = ClerkResult.success(mockSignIn)
-    var successCallbackCalled = false
-    var errorCallbackCalled = false
+  fun attemptEmailCodeAsFirstFactorShouldCallAttemptFirstFactorAndTriggerSuccessCallback() =
+    runTest {
+      val code = "123456"
+      val successResult = ClerkResult.success(mockSignIn)
+      var successCallbackCalled = false
+      var errorCallbackCalled = false
 
-    coEvery {
-      mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-    } returns successResult
+      coEvery {
+        mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
+      } returns successResult
 
-    handler.attemptEmailCode(
-      inProgressSignIn = mockSignIn,
-      code = code,
-      isSecondFactor = false,
-      onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorCallbackCalled = true },
-    )
+      handler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = false,
+        onSuccessCallback = { successCallbackCalled = true },
+        onErrorCallback = { errorCallbackCalled = true },
+      )
 
-    coVerify { mockSignIn.attemptFirstFactor(any()) }
-    assert(successCallbackCalled)
-    assert(!errorCallbackCalled)
-  }
+      coVerify { mockSignIn.attemptFirstFactor(any()) }
+      assert(successCallbackCalled)
+      assert(!errorCallbackCalled)
+    }
 
   @Test
   fun attemptEmailCodeAsFirstFactorShouldTriggerErrorCallbackOnFailure() = runTest {

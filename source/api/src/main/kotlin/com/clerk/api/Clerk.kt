@@ -22,7 +22,7 @@ import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
@@ -1075,7 +1075,7 @@ public object Clerk {
 
     runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
       .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
-      .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+      .onFailure { error -> ClerkLogger.w("Failed to cache Clerk state: ${error.message}") }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
@@ -1112,7 +1112,7 @@ public object Clerk {
     try {
       updateSessionAndUserState()
     } catch (e: Exception) {
-      ClerkLog.e("${e.message}")
+      ClerkLogger.e("${e.message}")
     }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
     cacheStateIfReady()
@@ -1185,7 +1185,7 @@ public object Clerk {
     val currentSession = currentSessions.firstOrNull { it.id == client.lastActiveSessionId }
 
     if (currentSession?.status == Session.SessionStatus.PENDING) {
-      ClerkLog.w(
+      ClerkLogger.w(
         "Session is in pending state. " +
           "The user has tasks to complete before the session can be activated. " +
           "Session tokens cannot be issued for pending sessions."

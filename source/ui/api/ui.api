@@ -11,10 +11,6 @@ public final class com/clerk/ui/auth/AuthModeKt {
 	public static final fun getTransferable (Lcom/clerk/ui/auth/AuthMode;)Z
 }
 
-public final class com/clerk/ui/auth/AuthStartViewKt {
-	public static final fun AuthStartView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;ZZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/auth/AuthViewKt {
 	public static final fun AuthView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZZLjava/util/Map;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/clerk/ui/auth/AuthMode;Landroidx/compose/runtime/Composer;III)V
 }
@@ -621,22 +617,10 @@ public final class com/clerk/ui/signin/ComposableSingletons$SignInFactorTwoViewK
 	public final fun getLambda$-1363919203$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signin/SignInFactorOneViewKt {
-	public static final fun SignInFactorOneView (Lcom/clerk/api/network/model/factor/Factor;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/SignInFactorTwoViewKt {
-	public static final fun SignInFactorTwoView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signin/alternativemethods/ComposableSingletons$SignInFactorAlternativeMethodsViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signin/alternativemethods/ComposableSingletons$SignInFactorAlternativeMethodsViewKt;
 	public fun <init> ()V
 	public final fun getLambda$1655725835$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/alternativemethods/SignInFactorAlternativeMethodsViewKt {
-	public static final fun SignInFactorAlternativeMethodsView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;ZLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/signin/backupcode/ComposableSingletons$SigninFactorTwoBackupCodeViewKt {
@@ -646,18 +630,10 @@ public final class com/clerk/ui/signin/backupcode/ComposableSingletons$SigninFac
 	public final fun getLambda$-1938687610$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signin/backupcode/SigninFactorTwoBackupCodeViewKt {
-	public static final fun SignInFactorTwoBackupCodeView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signin/clienttrust/ComposableSingletons$SignInClientTrustViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signin/clienttrust/ComposableSingletons$SignInClientTrustViewKt;
 	public fun <init> ()V
 	public final fun getLambda$-506153460$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/clienttrust/SignInClientTrustViewKt {
-	public static final fun SignInClientTrustView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/signin/code/ComposableSingletons$SignInFactorCodeViewKt {
@@ -665,10 +641,6 @@ public final class com/clerk/ui/signin/code/ComposableSingletons$SignInFactorCod
 	public fun <init> ()V
 	public final fun getLambda$-1641887206$ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$2103811609$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/code/SignInFactorCodeViewKt {
-	public static final fun SignInFactorCodeView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;ZZLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public abstract interface class com/clerk/ui/signin/code/VerificationState {
@@ -712,19 +684,11 @@ public final class com/clerk/ui/signin/emaillink/ComposableSingletons$SignInFact
 	public final fun getLambda$147748189$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signin/emaillink/SignInFactorOneEmailLinkViewKt {
-	public static final fun SignInFactorOneEmailLinkView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signin/help/ComposableSingletons$SignInGetHelpViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signin/help/ComposableSingletons$SignInGetHelpViewKt;
 	public fun <init> ()V
 	public final fun getLambda$-1910319134$ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$75541629$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/help/SignInGetHelpViewKt {
-	public static final fun SignInGetHelpView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/signin/passkey/ComposableSingletons$SignInFactorOnePasskeyViewKt {
@@ -739,23 +703,11 @@ public final class com/clerk/ui/signin/passkey/ComposableSingletons$SignInFactor
 	public final fun getLambda$20091993$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signin/passkey/SignInFactorOnePasskeyViewKt {
-	public static final fun SignInFactorOnePasskeyView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/passkey/SignInFactorTwoPasskeyViewKt {
-	public static final fun SignInFactorTwoPasskeyView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signin/password/forgot/ComposableSingletons$SignInFactorOneForgotPasswordViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signin/password/forgot/ComposableSingletons$SignInFactorOneForgotPasswordViewKt;
 	public fun <init> ()V
 	public final fun getLambda$1281050988$ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$507717805$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/password/forgot/SignInFactorOneForgotPasswordViewKt {
-	public static final fun SignInFactorOneForgotPasswordView (Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/signin/password/reset/ComposableSingletons$SignInSetNewPasswordViewKt {
@@ -765,19 +717,11 @@ public final class com/clerk/ui/signin/password/reset/ComposableSingletons$SignI
 	public final fun getLambda$1613211146$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signin/password/reset/SignInSetNewPasswordViewKt {
-	public static final fun SignInSetNewPasswordView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signin/password/set/ComposableSingletons$SignInFactorOnePasswordViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signin/password/set/ComposableSingletons$SignInFactorOnePasswordViewKt;
 	public fun <init> ()V
 	public final fun getLambda$-1174449606$ui ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$1601601621$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/password/set/SignInFactorOnePasswordViewKt {
-	public static final fun SignInFactorOnePasswordView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/signup/code/ComposableSingletons$SignUpCodeViewKt {
@@ -853,10 +797,6 @@ public final class com/clerk/ui/signup/code/SignUpCodeField$Phone$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/clerk/ui/signup/code/SignUpCodeViewKt {
-	public static final fun SignUpCodeView (Lcom/clerk/ui/signup/code/SignUpCodeField;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signup/collectfield/CollectField : java/lang/Enum {
 	public static final field Email Lcom/clerk/ui/signup/collectfield/CollectField;
 	public static final field Password Lcom/clerk/ui/signup/collectfield/CollectField;
@@ -874,10 +814,6 @@ public final class com/clerk/ui/signup/collectfield/ComposableSingletons$SignUpC
 	public final fun getLambda$834894788$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signup/collectfield/SignUpCollectFieldViewKt {
-	public static final fun SignUpCollectFieldView (Lcom/clerk/ui/signup/collectfield/CollectField;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signup/completeprofile/ComposableSingletons$LegalConsentViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signup/completeprofile/ComposableSingletons$LegalConsentViewKt;
 	public fun <init> ()V
@@ -886,18 +822,10 @@ public final class com/clerk/ui/signup/completeprofile/ComposableSingletons$Lega
 	public final fun getLambda$436849525$ui ()Lkotlin/jvm/functions/Function2;
 }
 
-public final class com/clerk/ui/signup/completeprofile/SignUpCompleteProfileViewKt {
-	public static final fun SignUpCompleteProfileView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/signup/emaillink/ComposableSingletons$SignUpEmailLinkViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/signup/emaillink/ComposableSingletons$SignUpEmailLinkViewKt;
 	public fun <init> ()V
 	public final fun getLambda$-125836023$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signup/emaillink/SignUpEmailLinkViewKt {
-	public static final fun SignUpEmailLinkView (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/clerk/ui/userbutton/UserButtonKt {
@@ -1116,10 +1044,6 @@ public final class com/clerk/ui/userprofile/detail/ComposableSingletons$UserProf
 	public final fun getLambda$957747753$ui ()Lkotlin/jvm/functions/Function3;
 }
 
-public final class com/clerk/ui/userprofile/detail/UserProfileDetailViewKt {
-	public static final fun UserProfileDetailView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/userprofile/email/ComposableSingletons$UserProfileAddEmailViewKt {
 	public static final field INSTANCE Lcom/clerk/ui/userprofile/email/ComposableSingletons$UserProfileAddEmailViewKt;
 	public fun <init> ()V
@@ -1314,9 +1238,5 @@ public final class com/clerk/ui/userprofile/verify/Mode$Totp : com/clerk/ui/user
 	public fun hashCode ()I
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/clerk/ui/userprofile/verify/UserProfileVerifyViewKt {
-	public static final fun UserProfileVerifyView (Lcom/clerk/ui/userprofile/verify/Mode;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
 

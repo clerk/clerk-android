@@ -3,7 +3,7 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
@@ -45,7 +45,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
         responseDeviceToken = response.header(AUTHORIZATION_HEADER),
       ) -> {
-        ClerkLog.d("Client sync skipped for a response using a stale shared device token")
+        ClerkLogger.d("Client sync skipped for a response using a stale shared device token")
         response
       }
       manualClientSyncRequest != null -> response
@@ -79,11 +79,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
           authEvents.forEach(Clerk.auth::send)
         } catch (e: SerializationException) {
-          ClerkLog.e("Error deserializing client: ${e.message}")
+          ClerkLogger.e("Error deserializing client: ${e.message}")
         } catch (e: IOException) {
-          ClerkLog.e("IO error while processing response: ${e.message}")
+          ClerkLogger.e("IO error while processing response: ${e.message}")
         } catch (e: IllegalArgumentException) {
-          ClerkLog.e("Error parsing JSON: ${e.message}")
+          ClerkLogger.e("Error parsing JSON: ${e.message}")
         }
 
         val newBody = it.toResponseBody(body.contentType())
@@ -107,9 +107,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
       when (clientJson) {
         is JsonNull -> {
           if (jsonElement.containsKey("response")) {
-            ClerkLog.d("Client sync skipped null piggyback client")
+            ClerkLogger.d("Client sync skipped null piggyback client")
           } else {
-            ClerkLog.d("Client sync cleared by explicit null client")
+            ClerkLogger.d("Client sync cleared by explicit null client")
             request.syncClient { Clerk.updateClient(Client(), serverFetchAtMillis) }
           }
         }
@@ -237,7 +237,7 @@ private fun syncClerkClient(
   serverFetchAtMillis: Long,
   completedAuthFlow: AuthEvent?,
 ) {
-  ClerkLog.d("Client synced: ${client.id}")
+  ClerkLogger.d("Client synced: ${client.id}")
   Clerk.updateClient(
     client = client,
     serverFetchAtMillis = serverFetchAtMillis,

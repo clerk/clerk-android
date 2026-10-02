@@ -36,7 +36,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param onAuthComplete Callback invoked when authentication is complete.
  */
 @Composable
-public fun SignInClientTrustView(
+internal fun SignInClientTrustView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

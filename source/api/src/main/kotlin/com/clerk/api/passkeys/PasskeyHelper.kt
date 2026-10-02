@@ -2,7 +2,7 @@ package com.clerk.api.passkeys
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Passkey.PASSKEY_STRATEGY_VALUE
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import java.net.URL
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -25,7 +25,7 @@ internal object PasskeyHelper {
       val host = url.host ?: return ""
       host.replace("www.", "")
     } catch (e: Exception) {
-      ClerkLog.e("Error parsing domain from baseUrl: ${e.message}")
+      ClerkLogger.e("Error parsing domain from baseUrl: ${e.message}")
       ""
     }
   }
