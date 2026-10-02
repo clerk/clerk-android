@@ -190,24 +190,35 @@ tasks.register("verifyPublishedArtifacts") {
 
 tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
 
+// `jdk` in the version catalog is the JDK the build and tests run on (Robolectric and Paparazzi
+// need 21). `jvmTarget` is the bytecode level we publish, so consumers on Java 17 are unaffected.
+val buildJdk = libs.versions.jdk.map(JavaLanguageVersion::of)
+val bytecodeTarget = JavaVersion.toVersion(libs.versions.jvmTarget.get())
+
 subprojects {
   plugins.withType<JavaPlugin> {
-    the<JavaPluginExtension>().toolchain {
-      languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
-    }
+    the<JavaPluginExtension>().toolchain.languageVersion.set(buildJdk)
+  }
+
+  tasks.withType<Test>().configureEach {
+    javaLauncher.set(
+      project.extensions.getByType<JavaToolchainService>().launcherFor {
+        languageVersion.set(buildJdk)
+      }
+    )
   }
 
   plugins.withId("com.android.library") {
     the<com.android.build.api.dsl.LibraryExtension>().compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
     }
   }
 
   plugins.withId("com.android.application") {
     the<com.android.build.api.dsl.ApplicationExtension>().compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
     }
   }
 
