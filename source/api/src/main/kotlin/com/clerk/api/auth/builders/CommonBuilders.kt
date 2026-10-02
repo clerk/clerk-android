@@ -1,5 +1,9 @@
 package com.clerk.api.auth.builders
 
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.sso.RedirectConfiguration
 
 /**
@@ -31,12 +35,8 @@ public class SendCodeBuilder {
   /** The phone number to send the verification code to. */
   public var phone: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null) { "Either email or phone must be provided" }
-    require(email == null || phone == null) {
-      "Only one of email or phone should be provided, not both"
-    }
-  }
+  /** Returns the channel to send the code to, or a failure when zero or two are set. */
+  internal fun channel(): ClerkResult<CodeChannel, ClerkErrorResponse> = codeChannel(email, phone)
 }
 
 /**
@@ -62,7 +62,34 @@ public class EnterpriseSsoBuilder {
    */
   public var redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL
 
-  internal fun validate() {
-    require(email != null) { "Email must be provided for Enterprise SSO" }
-  }
+  /** Returns the email address, or a failure when it is missing. */
+  internal fun emailAddress(): ClerkResult<String, ClerkErrorResponse> =
+    email?.let { ClerkResult.success(it) }
+      ?: invalidBuilderArguments("Email must be provided for Enterprise SSO")
 }
+
+/** The single channel a verification code goes to. */
+internal sealed interface CodeChannel {
+  val value: String
+
+  data class Email(override val value: String) : CodeChannel
+
+  data class Phone(override val value: String) : CodeChannel
+}
+
+/** Returns the one channel set, or a failure when neither or both of [email] and [phone] are. */
+internal fun codeChannel(
+  email: String?,
+  phone: String?,
+): ClerkResult<CodeChannel, ClerkErrorResponse> =
+  when {
+    email != null && phone != null ->
+      invalidBuilderArguments("Only one of email or phone should be provided, not both")
+    email != null -> ClerkResult.success(CodeChannel.Email(email))
+    phone != null -> ClerkResult.success(CodeChannel.Phone(phone))
+    else -> invalidBuilderArguments("Either email or phone must be provided")
+  }
+
+/** Failure returned when a DSL builder block leaves out or conflicts required values. */
+internal fun invalidBuilderArguments(message: String): ClerkResult.Failure<ClerkErrorResponse> =
+  localFailure(code = LocalFailureCodes.INVALID_ARGUMENTS, longMessage = message)
