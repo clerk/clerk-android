@@ -165,9 +165,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.use_another_method),
         onClick = {
-          authState.navigateTo(
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          )
+          authState.navigateToAlternativeMethods(factor)
         },
       )
       ClerkTextButton(
@@ -175,10 +173,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
         onClick = {
           Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
             authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
-            ?: authState.navigateTo(
-              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-            )
+          } ?: authState.navigateToAlternativeMethods(factor)
         },
       )
     }
@@ -191,9 +186,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.use_another_method),
         onClick = {
-          authState.navigateTo(
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          )
+          authState.navigateToAlternativeMethods(factor)
         },
       )
       ClerkTextButton(
@@ -201,10 +194,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
         onClick = {
           Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
             authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
-            ?: authState.navigateTo(
-              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-            )
+          } ?: authState.navigateToAlternativeMethods(factor)
         },
       )
     }

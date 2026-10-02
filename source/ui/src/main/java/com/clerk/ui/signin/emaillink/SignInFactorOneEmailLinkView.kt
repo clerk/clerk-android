@@ -25,7 +25,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -96,9 +95,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
     SignInEmailLinkSecondaryActions(
       onResendClick = viewModel::sendLink,
       onUseAnotherMethodClick = {
-        authState.navigateTo(
-          AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-        )
+        authState.navigateToAlternativeMethods(factor)
       },
     )
   }

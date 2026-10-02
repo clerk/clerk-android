@@ -16,7 +16,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -106,9 +105,7 @@ private fun SignInFactorTwoBackupCodeViewImpl(
     ClerkTextButton(
       text = stringResource(R.string.use_another_method),
       onClick = {
-        authState.navigateTo(
-          AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
-        )
+        authState.navigateToAlternativeMethods(factor, isSecondFactor = true)
       },
     )
   }
