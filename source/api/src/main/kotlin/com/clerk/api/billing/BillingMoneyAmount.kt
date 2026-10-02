@@ -1,5 +1,8 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,36 +23,45 @@ data class BillingMoneyAmount(
   val currencySymbol: String,
 )
 
-/**
- * Whether a catalog discount subtracts a percentage or a fixed amount.
- */
-@Serializable
+/** Whether a catalog discount subtracts a percentage or a fixed amount. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountEffect.Serializer::class)
 enum class BillingDiscountEffect {
   @SerialName("percentage") PERCENTAGE,
   @SerialName("fixed_amount") FIXED_AMOUNT,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountEffect>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * How a discount was applied to a subscription item.
- */
-@Serializable
+/** How a discount was applied to a subscription item. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountSource.Serializer::class)
 enum class BillingDiscountSource {
   @SerialName("promotion") PROMOTION,
   @SerialName("manual") MANUAL,
   @SerialName("promo_code") PROMO_CODE,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountSource>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * The current status of a discount redemption.
- */
-@Serializable
+/** The current status of a discount redemption. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountRedemptionStatus.Serializer::class)
 enum class BillingDiscountRedemptionStatus {
   @SerialName("active") ACTIVE,
   @SerialName("exhausted") EXHAUSTED,
   @SerialName("removed") REMOVED,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountRedemptionStatus>(generatedSerializer(), UNKNOWN)
 }
 
 /**

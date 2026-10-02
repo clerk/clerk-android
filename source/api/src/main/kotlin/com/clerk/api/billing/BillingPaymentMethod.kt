@@ -1,17 +1,23 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The status of a payment method.
- */
-@Serializable
+/** The status of a payment method. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingPaymentMethodStatus.Serializer::class)
 enum class BillingPaymentMethodStatus {
   @SerialName("active") ACTIVE,
   @SerialName("expired") EXPIRED,
   @SerialName("disconnected") DISCONNECTED,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingPaymentMethodStatus>(generatedSerializer(), UNKNOWN)
 }
 
 /**

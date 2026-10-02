@@ -7,8 +7,11 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.user.User
 import com.clerk.automap.annotations.AutoMap
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -58,7 +61,9 @@ data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = SessionStatus.Serializer::class)
   enum class SessionStatus {
     @SerialName("abandoned") ABANDONED,
     @SerialName("active") ACTIVE,
@@ -68,7 +73,10 @@ data class Session(
     @SerialName("replaced") REPLACED,
     @SerialName("revoked") REVOKED,
     @SerialName("unknown") UNKNOWN,
-    @SerialName("pending") PENDING,
+    @SerialName("pending") PENDING;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<SessionStatus>(generatedSerializer(), UNKNOWN)
   }
 
   /**

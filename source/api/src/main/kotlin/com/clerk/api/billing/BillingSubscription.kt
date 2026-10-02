@@ -1,6 +1,9 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.nullable
@@ -13,23 +16,31 @@ import kotlinx.serialization.encoding.Encoder
  *
  * A top-level Subscription is [ACTIVE] or [PAST_DUE].
  */
-@Serializable
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingSubscriptionStatus.Serializer::class)
 enum class BillingSubscriptionStatus {
   @SerialName("active") ACTIVE,
   @SerialName("ended") ENDED,
   @SerialName("upcoming") UPCOMING,
   @SerialName("past_due") PAST_DUE,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingSubscriptionStatus>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * The billing period for a Plan.
- */
-@Serializable
+/** The billing period for a Plan. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingSubscriptionPlanPeriod.Serializer::class)
 enum class BillingSubscriptionPlanPeriod {
   @SerialName("month") MONTH,
   @SerialName("annual") ANNUAL,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingSubscriptionPlanPeriod>(generatedSerializer(), UNKNOWN)
 }
 
 /**
