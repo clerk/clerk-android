@@ -61,7 +61,7 @@ internal object StorageHelper {
       else -> {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
           .onSuccess { encryptedValue ->
-            prefs.edit(commit = true) { putString(key.name, encryptedValue) }
+            commit(prefs, key, cachedDeviceToken = value) { putString(key.name, encryptedValue) }
             if (key == StorageKey.DEVICE_TOKEN && previousValue != value) {
               valueChangeListener?.invoke(key, previousValue, value)
             }
@@ -73,7 +73,14 @@ internal object StorageHelper {
     }
   }
 
-  internal fun loadValue(key: StorageKey): String? {
+  internal fun loadValue(key: StorageKey): String? =
+    if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.getOrLoad(load = { readValue(key) }, canCache = { secureStorage != null })
+    } else {
+      readValue(key)
+    }
+
+  private fun readValue(key: StorageKey): String? {
     val prefs = secureStorage
     val storedValue = prefs?.getString(key.name, null)
     val cipher = storageCipher
@@ -114,9 +121,26 @@ internal object StorageHelper {
       return
     }
     val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
-    prefs.edit(commit = true) { remove(key.name) }
+    commit(prefs, key, cachedDeviceToken = null) { remove(key.name) }
     if (key == StorageKey.DEVICE_TOKEN && previousValue != null) {
       valueChangeListener?.invoke(key, previousValue, null)
+    }
+  }
+
+  /**
+   * Commits [edit]; for [StorageKey.DEVICE_TOKEN] the in-memory copy becomes [cachedDeviceToken].
+   * Listeners are invoked by callers after this returns, outside the cache lock.
+   */
+  private inline fun commit(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    cachedDeviceToken: String?,
+    crossinline edit: SharedPreferences.Editor.() -> Unit,
+  ) {
+    if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.write(cachedDeviceToken) { prefs.edit(commit = true) { edit() } }
+    } else {
+      prefs.edit(commit = true) { edit() }
     }
   }
 
@@ -136,6 +160,7 @@ internal object StorageHelper {
     valueChangeListener = null
     secureStorage?.edit()?.clear()?.commit()
     storageCipher = null
+    DeviceTokenCache.invalidate()
   }
 
   private fun migrateLegacyPlaintextValue(key: StorageKey, value: String) {
@@ -151,6 +176,49 @@ internal object StorageHelper {
       .onFailure { error ->
         ClerkLog.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
       }
+  }
+}
+
+/**
+ * Plaintext copy of the device token, which several interceptors read on every request. Every write
+ * replaces it under [lock] together with the disk commit, so concurrent writers cannot leave it
+ * disagreeing with disk; [generation] lets a slow cache-miss read detect that a write overtook it
+ * and skip caching the value it decrypted.
+ */
+private object DeviceTokenCache {
+  private class Entry(val value: String?)
+
+  private val lock = Any()
+  @Volatile private var entry: Entry? = null
+  @Volatile private var generation = 0L
+
+  fun getOrLoad(load: () -> String?, canCache: () -> Boolean): String? {
+    entry?.let {
+      return it.value
+    }
+    val readGeneration = generation
+    val value = load()
+    synchronized(lock) {
+      if (readGeneration == generation && canCache()) {
+        entry = Entry(value)
+      }
+    }
+    return value
+  }
+
+  fun write(value: String?, commit: () -> Unit) {
+    synchronized(lock) {
+      commit()
+      generation += 1
+      entry = Entry(value)
+    }
+  }
+
+  fun invalidate() {
+    synchronized(lock) {
+      generation += 1
+      entry = null
+    }
   }
 }
 
