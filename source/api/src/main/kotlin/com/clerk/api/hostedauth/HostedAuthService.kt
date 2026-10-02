@@ -376,7 +376,14 @@ private suspend fun createHostedAuth(
  * cancelled-flow guards as every other client response.
  */
 private suspend fun refreshSignedOutClient(responseGuard: ResponseGuard): Boolean =
-  ClerkApi.client.getSkippingClientId(responseGuard = responseGuard) is ClerkResult.Success
+  ClerkApi.client.getSkippingClientId(responseGuard = responseGuard) is ClerkResult.Success &&
+    responseGuard.allowsSideEffects()
+
+private fun ResponseGuard.allowsSideEffects(): Boolean {
+  var allowed = false
+  runIfAllowed { allowed = true }
+  return allowed
+}
 
 private suspend fun requestHostedAuth(
   preparation: PreparedHostedAuth,

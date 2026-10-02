@@ -169,6 +169,25 @@ class HostedAuthServiceTest {
   }
 
   @Test
+  fun startDoesNotRetrySignedOutCreateAfterFlowIsCancelledDuringRefresh() = runBlocking {
+    coEvery { clientApi.getSkippingClientId(any(), any()) } coAnswers
+      {
+        HostedAuthService.cancelPendingAuthentication()
+        ClerkResult.success(Client(id = "client_new"))
+      }
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns signedOutFailure()
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 1) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
   fun startReturnsSignedOutFailureWithoutRetryWhenClientRefreshFails() = runBlocking {
     stubClientRefresh(
       ClerkResult.httpFailure(code = 500, error = ClerkErrorResponse(errors = emptyList()))
