@@ -1,6 +1,9 @@
 package com.clerk.api.biometriccredential
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -122,11 +125,16 @@ private constructor(
     )
 
   /** The platform a biometric credential belongs to. */
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Platform.Serializer::class)
   enum class Platform(internal val serializedValue: String) {
     @SerialName("ios") IOS("ios"),
     @SerialName("android") ANDROID("android"),
     UNKNOWN("unknown");
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Platform>(generatedSerializer(), UNKNOWN)
 
     internal companion object {
       private val entriesBySerializedValue: Map<String, Platform> =
@@ -137,11 +145,16 @@ private constructor(
   }
 
   /** The server-side biometric credential status. */
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
   enum class Status(internal val serializedValue: String) {
     @SerialName("active") ACTIVE("active"),
     @SerialName("revoked") REVOKED("revoked"),
     UNKNOWN("unknown");
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
 
     internal companion object {
       private val entriesBySerializedValue: Map<String, Status> =
