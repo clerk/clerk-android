@@ -19,11 +19,6 @@ internal val UserProfileCustomRowPlacement.section: UserProfileSection
       is UserProfileCustomRowPlacement.After -> row.section
     }
 
-/**
- * Returns the effective list of custom rows to render. Custom rows are only shown when a
- * [hasDestination] is `true`; otherwise an empty list is returned to prevent navigation to
- * unregistered destinations.
- */
 internal fun effectiveCustomRows(
   customRows: List<UserProfileCustomRow>,
   hasDestination: Boolean,

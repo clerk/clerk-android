@@ -17,7 +17,6 @@ internal object SessionTokensCache {
     cache[cacheKey] = token
   }
 
-  /** Reconciles a session snapshot without replacing an equally fresh canonical token. */
   internal fun hydrate(cacheKey: String, token: TokenResource) {
     cache.compute(cacheKey) { _, existing ->
       TokenFreshness.pickFreshest(
@@ -28,7 +27,6 @@ internal object SessionTokensCache {
     }
   }
 
-  /** Atomically stores [token] unless the cache already contains a fresher token. */
   internal fun storeIfFresher(
     cacheKey: String,
     token: TokenResource,

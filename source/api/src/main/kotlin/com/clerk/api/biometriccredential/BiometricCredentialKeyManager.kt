@@ -83,7 +83,6 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
 internal interface BiometricCredentialKeyManager {
   fun isSupported(policy: BiometricCredentialPolicy): Boolean
 
-  /** Creates a new biometric-gated EC P-256 key pair and returns its public key material. */
   fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey
 
   /**
@@ -107,9 +106,7 @@ internal interface BiometricCredentialKeyManager {
 /**
  * Default [BiometricCredentialKeyManager] backed by the Android Keystore.
  *
- * Keys are EC P-256 signing keys requiring per-use user authentication. Challenge signing wraps a
- * [Signature] in a [BiometricPrompt.CryptoObject], so the signature can only be produced after the
- * user passes the system biometric prompt. Requires Android 9 (API 28) for [BiometricPrompt].
+ * Requires Android 9 (API 28) for [BiometricPrompt].
  */
 @Suppress("TooManyFunctions")
 internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyManager {

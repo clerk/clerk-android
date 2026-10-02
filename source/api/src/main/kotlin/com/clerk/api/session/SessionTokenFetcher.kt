@@ -118,9 +118,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * the same token are handled efficiently. It first checks if a task for the same token is already
    * in progress and waits for that result instead of starting a new request.
    *
-   * Note: Pending sessions cannot issue tokens. If the session status is
-   * [Session.SessionStatus.PENDING], this method will log a warning and return null.
-   *
    * @param session The session to get the token for
    * @param options Options for token retrieval including template and caching behavior
    * @return The token resource, or null if the token could not be retrieved or session is pending

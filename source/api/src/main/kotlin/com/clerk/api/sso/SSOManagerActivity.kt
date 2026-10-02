@@ -20,7 +20,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.coroutines.launch
 
 internal class SSOManagerActivity : AppCompatActivity() {
-  /** Which completion, if any, has claimed the pending callback. Survives process death. */
   private enum class Completion {
     NONE,
     SSO,
@@ -60,22 +59,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       return
     }
-    // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
-    // cancelled. If we have a response, complete the flow and only finish after completion to
-    // avoid cancelling the in-flight network request.
-    intent.data?.takeIf(::isCallbackUri)?.let {
-      if (completion == Completion.NONE) {
-        completion = Completion.SSO
-        pendingCallbackUri = it
-        intent = Intent(intent).apply { data = null }
-        authorizationComplete(it)
-      }
-      // Do not call finish() here; authorizationComplete will finish when done
-    }
-      ?: run {
-        authorizationFailed()
-        finish()
-      }
+    authorizationFailed()
+    finish()
   }
 
   private fun resumeCallbackIfPresent(): Boolean {
