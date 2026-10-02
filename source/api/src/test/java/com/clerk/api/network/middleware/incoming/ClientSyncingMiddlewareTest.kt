@@ -550,7 +550,7 @@ class ClientSyncingMiddlewareTest {
 
       return Clerk.clientFlow.value?.id
     } finally {
-      StorageHelper.reset()
+      StorageHelper.resetToUninitializedForTesting()
     }
   }
 

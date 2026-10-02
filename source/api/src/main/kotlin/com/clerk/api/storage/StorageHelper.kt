@@ -7,6 +7,7 @@ import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLog
 
+@Suppress("TooManyFunctions")
 internal object StorageHelper {
   private const val ENCRYPTED_VALUE_PREFIX = "clerk:v1:"
 
