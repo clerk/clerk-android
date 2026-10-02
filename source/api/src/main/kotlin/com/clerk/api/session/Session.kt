@@ -40,11 +40,10 @@ import kotlinx.serialization.Serializable
  * object, the two objects have entirely different methods.
  */
 @Serializable
-data class Session(
+public data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
-
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -54,7 +53,6 @@ data class Session(
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
-
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
@@ -63,7 +61,7 @@ data class Session(
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
   @Serializable
-  enum class SessionStatus {
+  public enum class SessionStatus {
     @SerialName("abandoned") ABANDONED,
     @SerialName("active") ACTIVE,
     @SerialName("ended") ENDED,
@@ -86,7 +84,7 @@ data class Session(
    * payer only. A Subscription change is reflected in [feature] and [plan] checks after the session
    * token refreshes.
    */
-  fun checkAuthorization(
+  public fun checkAuthorization(
     role: String? = null,
     permission: String? = null,
     feature: String? = null,
@@ -183,16 +181,16 @@ data class Session(
   }
 }
 
-@Serializable data class SessionTask(val key: String)
+@Serializable public data class SessionTask(val key: String)
 
-enum class SessionTaskKey {
+public enum class SessionTaskKey {
   MFA_REQUIRED,
   RESET_PASSWORD,
   CHOOSE_ORGANIZATION,
   UNKNOWN;
 
-  companion object {
-    fun fromRaw(rawValue: String): SessionTaskKey =
+  public companion object {
+    public fun fromRaw(rawValue: String): SessionTaskKey =
       when (rawValue.lowercase()) {
         "setup_mfa",
         "setup-mfa",
@@ -207,18 +205,18 @@ enum class SessionTaskKey {
   }
 }
 
-val SessionTask.parsedKey: SessionTaskKey
+public val SessionTask.parsedKey: SessionTaskKey
   get() = SessionTaskKey.fromRaw(key)
 
-val Session.pendingTaskKey: SessionTaskKey?
+public val Session.pendingTaskKey: SessionTaskKey?
   get() = currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
 
-val Session.hasMfaRequiredTask: Boolean
+public val Session.hasMfaRequiredTask: Boolean
   get() =
     currentTask?.parsedKey == SessionTaskKey.MFA_REQUIRED ||
       tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
 
-val Session.requiresForcedMfa: Boolean
+public val Session.requiresForcedMfa: Boolean
   get() = pendingTaskKey == SessionTaskKey.MFA_REQUIRED
 
 /**
@@ -226,7 +224,7 @@ val Session.requiresForcedMfa: Boolean
  * browser.
  */
 @Serializable
-data class SessionActivity(
+public data class SessionActivity(
   /** A unique identifier for the session activity record. */
   val id: String,
 
@@ -255,7 +253,7 @@ data class SessionActivity(
 )
 
 /** Deletes the current session. */
-suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
+public suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
   return ClerkApi.session.removeSession(id)
 }
 
@@ -267,7 +265,7 @@ suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
  *   if failed.
  * @see GetTokenOptions
  */
-suspend fun Session.fetchToken(
+public suspend fun Session.fetchToken(
   options: GetTokenOptions = GetTokenOptions()
 ): ClerkResult<TokenResource, ClerkErrorResponse> {
   val token = SessionTokenFetcher.shared.getToken(this, options)
@@ -287,7 +285,7 @@ suspend fun Session.fetchToken(
  * @see ClerkResult
  * @see ClerkErrorResponse
  */
-suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
+public suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
   return ClerkApi.session.revokeSession(sessionIdToRevoke = this.id)
 }
 
@@ -295,5 +293,5 @@ suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
  * Convenience accessor to tell if the given session is the current device. Used mostly for
  * constructing the User profile security view.
  */
-val Session.isThisDevice: Boolean
+public val Session.isThisDevice: Boolean
   get() = this.id == Clerk.session?.id

@@ -37,7 +37,7 @@ import com.clerk.api.sso.SSOService
  * @return A [List] of alternative [Factor] objects, sorted by preference. Returns an empty list if
  *   no suitable alternatives are found or if [SignIn.supportedFirstFactors] is null.
  */
-fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
+public fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
   val firstFactors = supportedFirstFactors?.filter {
     it != factor &&
       !it.isResetFactor() &&
@@ -59,7 +59,7 @@ fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
  * @param factor The factor to exclude from the returned list.
  * @return A list of alternative second factors, sorted according to the predefined order.
  */
-fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
+public fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
   return supportedSecondFactors
     ?.filter { it != factor }
     .orEmpty()
@@ -80,14 +80,14 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
  * @return The [Factor] to be presented as the initial first factor, or `null` if no suitable factor
  *   is found.
  */
-val SignIn.startingFirstFactor: Factor?
+public val SignIn.startingFirstFactor: Factor?
   get() =
     when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
 
-val SignIn.startingSecondFactor: Factor?
+public val SignIn.startingSecondFactor: Factor?
   get() {
     supportedSecondFactors
       ?.firstOrNull { it.strategy == "passkey" }
@@ -192,7 +192,7 @@ private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.authenticateWithPreparedRedirect(
+public suspend fun SignIn.authenticateWithPreparedRedirect(
   transferable: Boolean = true
 ): ClerkResult<OAuthResult, ClerkErrorResponse> {
   val externalVerificationRedirectUrl =
@@ -221,7 +221,7 @@ suspend fun SignIn.authenticateWithPreparedRedirect(
  * signIn.sendCode { phone = "+1234567890" }
  * ```
  */
-suspend fun SignIn.sendCode(
+public suspend fun SignIn.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
@@ -253,7 +253,7 @@ suspend fun SignIn.sendCode(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendEmailLink(
+public suspend fun SignIn.sendEmailLink(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
@@ -305,7 +305,7 @@ private fun invalidEmailLinkPrepareState(
  * signIn.verifyCode("123456")
  * ```
  */
-suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
+public suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
   val strategy = firstFactorVerification?.strategy ?: EMAIL_CODE
 
   val params =
@@ -333,7 +333,9 @@ suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorRespo
  * signIn.verifyWithPassword("secretpassword")
  * ```
  */
-suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, ClerkErrorResponse> {
+public suspend fun SignIn.verifyWithPassword(
+  password: String
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Password(password = password)
   return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
 }
@@ -350,7 +352,9 @@ suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, Cle
  * signIn.verifyWithPasskey(credential)
  * ```
  */
-suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, ClerkErrorResponse> {
+public suspend fun SignIn.verifyWithPasskey(
+  credential: String
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Passkey(publicKeyCredential = credential)
   return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
 }
@@ -370,7 +374,7 @@ suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, Cl
  * signIn.verifyMfaCode("backup123", MfaType.BACKUP_CODE)
  * ```
  */
-suspend fun SignIn.verifyMfaCode(
+public suspend fun SignIn.verifyMfaCode(
   code: String,
   type: MfaType,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -399,7 +403,7 @@ suspend fun SignIn.verifyMfaCode(
  * signIn.sendResetPasswordCode { phone = "+1234567890" }
  * ```
  */
-suspend fun SignIn.sendResetPasswordCode(
+public suspend fun SignIn.sendResetPasswordCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
@@ -435,7 +439,7 @@ suspend fun SignIn.sendResetPasswordCode(
  * )
  * ```
  */
-suspend fun SignIn.resetPassword(
+public suspend fun SignIn.resetPassword(
   newPassword: String,
   signOutOfOtherSessions: Boolean = false,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -457,7 +461,7 @@ suspend fun SignIn.resetPassword(
  * signIn.reload()
  * ```
  */
-suspend fun SignIn.reload(
+public suspend fun SignIn.reload(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)

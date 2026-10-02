@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * process.
  */
 @Serializable
-data class ExternalAccount(
+public data class ExternalAccount(
   /** The unique identifier for this external account. */
   val id: String,
 
@@ -72,7 +72,7 @@ data class ExternalAccount(
  *   [ClerkErrorResponse] on failure
  * @throws IllegalArgumentException if the external verification redirect URL is null
  */
-suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+public suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErrorResponse> {
   val redirectUrl =
     requireNotNull(this.verification?.externalVerificationRedirectUrl) {
       "External verification redirect URL is null"
@@ -93,7 +93,7 @@ suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErr
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteExternalAccount(externalAccountId = this.id)
 }
 
@@ -110,11 +110,11 @@ suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorRespo
  * @return A [ClerkResult] containing the updated [User] object on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse> {
+public suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.revokeExternalAccountTokens(externalAccountId = this.id)
 }
 
-val ExternalAccount.oauthProviderType: OAuthProvider
+public val ExternalAccount.oauthProviderType: OAuthProvider
   get() {
     val strategy = provider.takeIf { it.startsWith("oauth_") } ?: "oauth_$provider"
     return OAuthProvider.fromStrategy(strategy)

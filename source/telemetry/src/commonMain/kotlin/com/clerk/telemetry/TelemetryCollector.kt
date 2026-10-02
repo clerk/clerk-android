@@ -17,7 +17,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class TelemetryCollector(
+public class TelemetryCollector(
   options: TelemetryCollectorOptions = TelemetryCollectorOptions(),
   private val client: HttpClient,
   private val environment: TelemetryEnvironment,
@@ -61,7 +61,7 @@ class TelemetryCollector(
     startPeriodicFlushing()
   }
 
-  suspend fun record(raw: TelemetryEventRaw) {
+  public suspend fun record(raw: TelemetryEventRaw) {
     val prepared = preparePayload(raw.event, raw.payload)
     val recordResult = shouldRecord(prepared, raw.eventSamplingRate)
 
@@ -153,7 +153,7 @@ class TelemetryCollector(
     }
   }
 
-  suspend fun flush() {
+  public suspend fun flush() {
     val events = mutex.withLock {
       if (buffer.isEmpty()) return
       val copy = buffer.toList()

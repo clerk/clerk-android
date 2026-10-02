@@ -102,7 +102,7 @@ internal fun UserProfileStateProvider(
 @SuppressLint("ComposeModifierMissing", "ComposeUnstableReceiver")
 @Suppress("LongMethod")
 @Composable
-fun UserProfileView(
+public fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,

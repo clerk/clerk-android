@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * process.
  */
 @Serializable
-data class Factor(
+public data class Factor(
   /** The strategy of the factor. */
   val strategy: String,
 
@@ -40,5 +40,5 @@ data class Factor(
   @SerialName("default") val default: Boolean? = null,
 )
 
-fun Factor.isResetFactor() =
+public fun Factor.isResetFactor(): Boolean =
   (strategy == "reset_password_email_code" || strategy == "reset_password_phone_code")

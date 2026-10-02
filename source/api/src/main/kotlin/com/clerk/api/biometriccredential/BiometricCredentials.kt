@@ -42,7 +42,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * ```
  */
 @Suppress("TooManyFunctions", "ReturnCount")
-object BiometricCredentials {
+public object BiometricCredentials {
 
   @VisibleForTesting
   internal var keyManager: BiometricCredentialKeyManager = DefaultBiometricCredentialKeyManager
@@ -58,7 +58,7 @@ object BiometricCredentials {
    * @return A [ClerkResult] containing the list of [BiometricCredential] credentials on success, or
    *   a [ClerkErrorResponse] on failure.
    */
-  suspend fun list(): ClerkResult<List<BiometricCredential>, ClerkErrorResponse> {
+  public suspend fun list(): ClerkResult<List<BiometricCredential>, ClerkErrorResponse> {
     return ClerkApi.biometricCredential.list()
   }
 
@@ -73,7 +73,7 @@ object BiometricCredentials {
    *   used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    */
-  suspend fun availability(
+  public suspend fun availability(
     id: String? = null,
     identifierHint: String? = null,
   ): BiometricCredentialAvailability {
@@ -88,7 +88,7 @@ object BiometricCredentials {
    * Returns biometric sign-in availability for the current signed-in user, reconciling the local
    * credential with the server.
    */
-  suspend fun currentUserAvailability(): BiometricCredentialAvailability {
+  public suspend fun currentUserAvailability(): BiometricCredentialAvailability {
     val userId =
       Clerk.user?.id
         ?: return BiometricCredentialAvailability.Unavailable(
@@ -103,7 +103,7 @@ object BiometricCredentials {
   }
 
   /** Returns local biometric sign-in availability without reconciling with the server. */
-  fun localAvailability(
+  public fun localAvailability(
     id: String? = null,
     identifierHint: String? = null,
   ): BiometricCredentialAvailability {
@@ -118,7 +118,7 @@ object BiometricCredentials {
    * Returns local biometric sign-in availability for the current signed-in user without reconciling
    * with the server.
    */
-  fun currentUserLocalAvailability(): BiometricCredentialAvailability {
+  public fun currentUserLocalAvailability(): BiometricCredentialAvailability {
     val userId =
       Clerk.user?.id
         ?: return BiometricCredentialAvailability.Unavailable(
@@ -149,7 +149,7 @@ object BiometricCredentials {
    * @return A [ClerkResult] containing the enrolled [BiometricCredential] on success, or a
    *   [ClerkErrorResponse] on failure.
    */
-  suspend fun enroll(
+  public suspend fun enroll(
     name: String? = null,
     identifierHint: String? = null,
     policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
@@ -210,7 +210,7 @@ object BiometricCredentials {
    * @return A [ClerkResult] containing the revoked [BiometricCredential] on success, or a
    *   [ClerkErrorResponse] on failure.
    */
-  suspend fun revoke(id: String): ClerkResult<BiometricCredential, ClerkErrorResponse> {
+  public suspend fun revoke(id: String): ClerkResult<BiometricCredential, ClerkErrorResponse> {
     val result = ClerkApi.biometricCredential.revoke(id)
     if (result is ClerkResult.Success) {
       onStorage { credentialStore.credential(id)?.let { deleteLocalCredential(it) } }
@@ -225,7 +225,7 @@ object BiometricCredentials {
    *
    * @return A [ClerkResult] containing [Unit] on success, or a [ClerkErrorResponse] on failure.
    */
-  suspend fun revokeCurrentBiometricCredential(): ClerkResult<Unit, ClerkErrorResponse> {
+  public suspend fun revokeCurrentBiometricCredential(): ClerkResult<Unit, ClerkErrorResponse> {
     if (Clerk.session?.status?.allowsBiometricCredentialEnrollment != true) {
       return clientFailure(
         "Unable to revoke a biometric credential without an active or pending Clerk session."
@@ -252,7 +252,7 @@ object BiometricCredentials {
    *
    * @return The number of local credentials that were removed.
    */
-  fun forgetLocalCredentials(deletedUserId: String): Int {
+  public fun forgetLocalCredentials(deletedUserId: String): Int {
     val credentials = storedLocalCredentialsForCurrentApp().filter { it.userId == deletedUserId }
     credentials.forEach { deleteLocalCredential(it, propagateFailures = true) }
     return credentials.size
@@ -263,7 +263,7 @@ object BiometricCredentials {
    * initialization. Blocks on disk I/O; call it off the main thread.
    */
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-  fun forgetLocalCredentialsAfterAccountDeletion(deletedUserId: String): Int {
+  public fun forgetLocalCredentialsAfterAccountDeletion(deletedUserId: String): Int {
     BiometricCredentialPendingCleanupStore.add(deletedUserId)
     return forgetLocalCredentials(deletedUserId).also {
       BiometricCredentialPendingCleanupStore.remove(deletedUserId)
@@ -291,7 +291,7 @@ object BiometricCredentials {
    * @return A [ClerkResult] containing the completed [SignIn] on success, or a [ClerkErrorResponse]
    *   on failure.
    */
-  suspend fun signIn(
+  public suspend fun signIn(
     id: String? = null,
     identifierHint: String? = null,
     promptTitle: String? = null,
@@ -417,7 +417,7 @@ object BiometricCredentials {
    *   is used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    */
-  suspend fun validateLocalCredentialIfPossible(
+  public suspend fun validateLocalCredentialIfPossible(
     id: String? = null,
     identifierHint: String? = null,
   ): BiometricCredentialValidationResult {
@@ -465,7 +465,7 @@ object BiometricCredentials {
   }
 
   /** Whether keys protected by the default biometric-only enrollment policy can be used. */
-  val deviceSupportsBiometricAuthentication: Boolean
+  public val deviceSupportsBiometricAuthentication: Boolean
     get() = keyManager.isSupported(BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
 
   // region Private helpers

@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * @property createdAt The date when the credit ledger entry was created, as Unix milliseconds.
  */
 @Serializable
-data class BillingCreditLedger(
+public data class BillingCreditLedger(
   val id: String,
   val amount: BillingMoneyAmount,
   val sourceType: String,

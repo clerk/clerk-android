@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
  * timing, and associated user data.
  */
 @Serializable
-data class OrganizationMembershipRequest(
+public data class OrganizationMembershipRequest(
   /** Unique identifier for this membership request */
   val id: String,
   /** Organization Id of the organization this request is for. */
@@ -39,7 +39,7 @@ data class OrganizationMembershipRequest(
  * @return A [ClerkResult] containing either the updated [OrganizationMembershipRequest] on success,
  *   or a [ClerkErrorResponse] on failure.
  */
-suspend fun OrganizationMembershipRequest.accept():
+public suspend fun OrganizationMembershipRequest.accept():
   ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse> {
   return ClerkApi.organization.acceptMembershipRequest(
     organizationId = this.organizationId,
@@ -57,7 +57,7 @@ suspend fun OrganizationMembershipRequest.accept():
  * @return A [ClerkResult] containing either the updated [OrganizationMembershipRequest] on success,
  *   or a [ClerkErrorResponse] on failure.
  */
-suspend fun OrganizationMembershipRequest.reject():
+public suspend fun OrganizationMembershipRequest.reject():
   ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse> {
   return ClerkApi.organization.rejectMembershipRequest(
     organizationId = this.organizationId,

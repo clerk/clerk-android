@@ -7,16 +7,17 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-object TelemetryModule {
+public object TelemetryModule {
 
   private val json = Json {
     encodeDefaults = true
     ignoreUnknownKeys = true
   }
 
-  fun httpClient(): HttpClient = HttpClient(OkHttp) { install(ContentNegotiation) { json(json) } }
+  public fun httpClient(): HttpClient =
+    HttpClient(OkHttp) { install(ContentNegotiation) { json(json) } }
 
-  fun createCollector(
+  public fun createCollector(
     context: Context,
     environment: TelemetryEnvironment,
     options: TelemetryCollectorOptions = TelemetryCollectorOptions(),

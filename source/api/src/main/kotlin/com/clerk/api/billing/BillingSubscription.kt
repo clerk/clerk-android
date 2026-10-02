@@ -14,7 +14,7 @@ import kotlinx.serialization.encoding.Encoder
  * A top-level Subscription is [ACTIVE] or [PAST_DUE].
  */
 @Serializable
-enum class BillingSubscriptionStatus {
+public enum class BillingSubscriptionStatus {
   @SerialName("active") ACTIVE,
   @SerialName("ended") ENDED,
   @SerialName("upcoming") UPCOMING,
@@ -22,11 +22,9 @@ enum class BillingSubscriptionStatus {
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * The billing period for a Plan.
- */
+/** The billing period for a Plan. */
 @Serializable
-enum class BillingSubscriptionPlanPeriod {
+public enum class BillingSubscriptionPlanPeriod {
   @SerialName("month") MONTH,
   @SerialName("annual") ANNUAL,
   @SerialName("unknown") UNKNOWN,
@@ -40,7 +38,7 @@ enum class BillingSubscriptionPlanPeriod {
  * @property tiers The tier-level breakdown of seats for this subscription item.
  */
 @Serializable
-data class BillingSubscriptionItemSeats(
+public data class BillingSubscriptionItemSeats(
   val quantity: Int? = null,
   val tiers: List<BillingPerUnitTotalTier>? = null,
 )
@@ -54,7 +52,7 @@ data class BillingSubscriptionItemSeats(
  * @property totals Full cost breakdown for the next payment.
  */
 @Serializable
-data class BillingSubscriptionNextPayment(
+public data class BillingSubscriptionNextPayment(
   val amount: BillingMoneyAmount,
   val date: Long,
   val perUnitTotals: List<BillingPerUnitTotal>? = null,
@@ -70,7 +68,7 @@ data class BillingSubscriptionNextPayment(
  * @property totals Full cost breakdown for the next payment.
  */
 @Serializable
-data class BillingSubscriptionItemNextPayment(
+public data class BillingSubscriptionItemNextPayment(
   val amount: BillingMoneyAmount,
   val date: Long,
   val perUnitTotals: List<BillingPerUnitTotal>? = null,
@@ -82,7 +80,7 @@ data class BillingSubscriptionItemNextPayment(
  *
  * @property amount The amount of credit being applied.
  */
-@Serializable data class BillingSubscriptionItemCredit(val amount: BillingMoneyAmount)
+@Serializable public data class BillingSubscriptionItemCredit(val amount: BillingMoneyAmount)
 
 /**
  * An item in a Billing Subscription.
@@ -113,7 +111,7 @@ data class BillingSubscriptionItemNextPayment(
  * @property isFreeTrial Whether the subscription item is for a free trial.
  */
 @Serializable
-data class BillingSubscriptionItem(
+public data class BillingSubscriptionItem(
   val id: String,
   val plan: BillingPlan,
   val planPeriod: BillingSubscriptionPlanPeriod = BillingSubscriptionPlanPeriod.UNKNOWN,
@@ -152,7 +150,7 @@ data class BillingSubscriptionItem(
  * @property eligibleForFreeTrial Whether the payer is eligible for a free trial.
  */
 @Serializable
-data class BillingSubscription(
+public data class BillingSubscription(
   val id: String,
   val activeAt: Long? = null,
   val createdAt: Long,

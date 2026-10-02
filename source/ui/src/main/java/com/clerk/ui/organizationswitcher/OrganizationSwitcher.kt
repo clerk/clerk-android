@@ -78,35 +78,37 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * avatar-sized account trigger. Use [normal] or [compact] when a custom trigger avatar size is
  * needed.
  */
-sealed class OrganizationSwitcherDisplayMode
+public sealed class OrganizationSwitcherDisplayMode
 private constructor(
   internal val isCompact: Boolean,
   /** Base visual size used by the switcher trigger. */
-  val size: Dp,
+  public val size: Dp,
 ) {
   /** Shows the account avatar, organization or account name, and disclosure chevron. */
-  data object Normal : OrganizationSwitcherDisplayMode(isCompact = false, size = dp36)
+  public data object Normal : OrganizationSwitcherDisplayMode(isCompact = false, size = dp36)
 
   /** Shows only the account avatar-sized trigger. */
-  data object Compact : OrganizationSwitcherDisplayMode(isCompact = true, size = dp36)
+  public data object Compact : OrganizationSwitcherDisplayMode(isCompact = true, size = dp36)
 
   private class Custom(isCompact: Boolean, size: Dp) :
     OrganizationSwitcherDisplayMode(isCompact = isCompact, size = size)
 
-  companion object {
+  public companion object {
     /**
      * Shows the account avatar, organization or account name, and disclosure chevron.
      *
      * @param size Base avatar size used to scale the trigger.
      */
-    fun normal(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = false, size = size)
+    public fun normal(size: Dp): OrganizationSwitcherDisplayMode =
+      Custom(isCompact = false, size = size)
 
     /**
      * Shows only the account avatar-sized trigger.
      *
      * @param size Base avatar size used for the compact trigger.
      */
-    fun compact(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = true, size = size)
+    public fun compact(size: Dp): OrganizationSwitcherDisplayMode =
+      Custom(isCompact = true, size = size)
   }
 }
 
@@ -133,7 +135,7 @@ private constructor(
  *   switcher's default [OrganizationProfileView].
  */
 @Composable
-fun OrganizationSwitcher(
+public fun OrganizationSwitcher(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onOrganizationChanged: (() -> Unit)? = null,
@@ -187,7 +189,7 @@ fun OrganizationSwitcher(
  *   switcher's default [OrganizationProfileView].
  */
 @Composable
-fun OrganizationSwitcher(
+public fun OrganizationSwitcher(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onOrganizationChanged: (() -> Unit)? = null,

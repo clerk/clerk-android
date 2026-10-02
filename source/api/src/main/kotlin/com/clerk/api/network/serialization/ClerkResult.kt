@@ -112,7 +112,8 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
  * [ClerkErrorResponse]. Returns `null` if the error is not a [ClerkErrorResponse] or if there are
  * no error messages.
  */
-fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.error?.firstMessage()
+public fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull(): String? =
+  this.error?.firstMessage()
 
 /**
  * Convenience function to extract a user-facing error message from a [ClerkResult.Failure].
@@ -120,7 +121,7 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
  * API-provided messages take precedence. I/O failures that occur while the device is offline use a
  * connectivity-specific message, while all other failures fall back to a generic message.
  */
-val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
+public val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
   get() =
     this.error?.errors?.firstOrNull()?.longMessage
       ?: this.error?.firstMessage()

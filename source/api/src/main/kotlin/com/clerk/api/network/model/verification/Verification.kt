@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 /** The state of the verification process of a sign-in or sign-up attempt. */
 @Serializable
-data class Verification(
+public data class Verification(
   /** The state of the verification. */
   val status: Status = Status.UNKNOWN,
   /** The strategy pertaining to the parent sign-up or sign-in attempt. */
@@ -28,7 +28,7 @@ data class Verification(
 ) {
   /** The state of the verification. */
   @Serializable
-  enum class Status {
+  public enum class Status {
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
     @SerialName("transferable") TRANSFERABLE,

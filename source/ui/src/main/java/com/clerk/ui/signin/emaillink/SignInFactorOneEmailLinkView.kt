@@ -42,7 +42,7 @@ import com.clerk.ui.util.EmailAppLauncher
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignInFactorOneEmailLinkView(
+public fun SignInFactorOneEmailLinkView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

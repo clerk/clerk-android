@@ -40,7 +40,7 @@ import kotlinx.serialization.json.JsonObject
  *    the active session.
  */
 @Serializable
-data class SignUp(
+public data class SignUp(
   /**
    * The unique identifier of the current sign-up. This ID is used to track the sign-up process
    * throughout its lifecycle.
@@ -187,7 +187,7 @@ data class SignUp(
    * requirement or completion level in the sign-up process.
    */
   @Serializable
-  enum class Status {
+  public enum class Status {
     /**
      * The sign-up has been inactive for over 24 hours. Once abandoned, the sign-up process cannot
      * be resumed and a new sign-up must be initiated.
@@ -226,25 +226,25 @@ data class SignUp(
    * Use these parameters when calling [attemptVerification] to complete a verification that was
    * previously initiated with [prepareVerification].
    */
-  sealed interface AttemptVerificationParams {
+  public sealed interface AttemptVerificationParams {
     /**
      * The strategy used for verification (e.g., `email_code` or `phone_code`). This must match the
      * strategy used when preparing the verification.
      */
-    val strategy: String
+    public val strategy: String
 
     /**
      * The verification code provided by the user. This code should match the one sent via email or
      * SMS during the preparation phase.
      */
-    val code: String
+    public val code: String
 
     /**
      * Attempts verification using a code sent to the user's email address.
      *
      * @param code The one-time code sent to the user's email address.
      */
-    data class EmailCode(
+    public data class EmailCode(
       override val code: String,
       override val strategy: String = AuthStrategy.EMAIL_CODE,
     ) : AttemptVerificationParams
@@ -254,7 +254,7 @@ data class SignUp(
      *
      * @param code The one-time code sent to the user's phone number via SMS.
      */
-    data class PhoneCode(
+    public data class PhoneCode(
       override val code: String,
       override val strategy: String = AuthStrategy.PHONE_CODE,
     ) : AttemptVerificationParams
@@ -264,25 +264,25 @@ data class SignUp(
    * Defines the parameters for authenticating with redirect-based flows. This sealed interface
    * supports OAuth and Enterprise SSO authentication methods.
    */
-  sealed interface AuthenticateWithRedirectParams {
+  public sealed interface AuthenticateWithRedirectParams {
 
     /** The URL to redirect to after authentication completion. */
-    val redirectUrl: String
+    public val redirectUrl: String
 
     /** An optional identifier for the user (e.g., email, username). */
-    val identifier: String?
+    public val identifier: String?
 
     /** The user's email address for pre-filling authentication forms. */
-    val emailAddress: String?
+    public val emailAddress: String?
 
     /** Whether the user has accepted the legal terms and conditions. */
-    val legalAccepted: Boolean?
+    public val legalAccepted: Boolean?
 
     /**
      * Custom metadata that will be attached to the created user. This metadata is not validated by
      * Clerk and should not contain sensitive information.
      */
-    val unsafeMetadata: Map<String, Any>?
+    public val unsafeMetadata: Map<String, Any>?
 
     /**
      * OAuth authentication parameters for redirect-based sign-up.
@@ -295,7 +295,7 @@ data class SignUp(
      */
     @AutoMap
     @Serializable
-    data class OAuth(
+    public data class OAuth(
       @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -319,7 +319,7 @@ data class SignUp(
      */
     @Serializable
     @AutoMap
-    data class EnterpriseSSO(
+    public data class EnterpriseSSO(
       val strategy: String = AuthStrategy.ENTERPRISE_SSO,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -337,27 +337,27 @@ data class SignUp(
    * Contains parameters for preparing verification during the sign-up process. Use these strategies
    * to initiate verification for email addresses or phone numbers.
    */
-  object PrepareVerificationParams {
+  public object PrepareVerificationParams {
 
     /**
      * Defines the available strategies for preparing verification. Each strategy corresponds to a
      * different verification method.
      */
-    sealed interface Strategy {
-      val strategy: String
+    public sealed interface Strategy {
+      public val strategy: String
 
       /**
        * Send a text message with a unique token to input. The verification code will be sent via
        * SMS to the provided phone number.
        */
-      data class PhoneCode(override val strategy: String = AuthStrategy.PHONE_CODE) :
+      public data class PhoneCode(override val strategy: String = AuthStrategy.PHONE_CODE) :
         PrepareVerificationParams.Strategy
 
       /**
        * Send an email with a unique token to input. The verification code will be sent to the
        * provided email address.
        */
-      data class EmailCode(override val strategy: String = AuthStrategy.EMAIL_CODE) :
+      public data class EmailCode(override val strategy: String = AuthStrategy.EMAIL_CODE) :
         PrepareVerificationParams.Strategy
 
       /**
@@ -369,7 +369,7 @@ data class SignUp(
        * @property codeChallenge PKCE code challenge for native email-link verification.
        * @property codeChallengeMethod PKCE method. Native flows require `S256`.
        */
-      data class EmailLink(
+      public data class EmailLink(
         override val strategy: String = AuthStrategy.EMAIL_LINK,
         @SerialName("redirect_url") val redirectUrl: String? = null,
         @SerialName("redirect_uri") val redirectUri: String? = null,
@@ -386,7 +386,7 @@ data class SignUp(
    *
    * If looking for OAuth or Enterprise SSO use `authenticateWithRedirect`
    */
-  sealed interface CreateParams {
+  public sealed interface CreateParams {
     /**
      * Standard sign-up strategy, allowing the user to provide common details such as email,
      * password, and personal information.
@@ -403,7 +403,7 @@ data class SignUp(
      */
     @AutoMap
     @Serializable
-    data class Standard(
+    public data class Standard(
       @SerialName("email_address") val emailAddress: String? = null,
       val password: String? = null,
       @SerialName("first_name") val firstName: String? = null,
@@ -423,7 +423,7 @@ data class SignUp(
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      * You can examine the required and optional fields before providing user data.
      */
-    object None : CreateParams
+    public object None : CreateParams
 
     /**
      * The `SignUp` will be created by transferring an existing session.
@@ -431,14 +431,14 @@ data class SignUp(
      * This is used when a user is going through the Sign In flow and we detect they need to sign up
      * instead. This shouldn't be used for any other purpose.
      */
-    object Transfer : CreateParams
+    public object Transfer : CreateParams
 
     /**
      * The `SignUp` will be created with a ticket.
      *
      * @param ticket The ticket string for sign-up.
      */
-    data class Ticket(val ticket: String) : CreateParams {
+    public data class Ticket(val ticket: String) : CreateParams {
       internal companion object {
         const val STRATEGY = "ticket"
       }
@@ -451,14 +451,14 @@ data class SignUp(
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    data class GoogleOneTap(val token: String) : CreateParams {
+    public data class GoogleOneTap(val token: String) : CreateParams {
       internal companion object {
         const val STRATEGY = "google_one_tap"
       }
     }
   }
 
-  sealed interface SignUpUpdateParams {
+  public sealed interface SignUpUpdateParams {
     /**
      * Standard sign-up update strategy, allowing the user to provide common details such as email,
      * password, and personal information. The update parameters are just a mirror of the create
@@ -474,7 +474,7 @@ data class SignUp(
      */
     @AutoMap
     @Serializable
-    data class Standard(
+    public data class Standard(
       @SerialName("email_address") val emailAddress: String? = null,
       val password: String? = null,
       @SerialName("first_name") val firstName: String? = null,
@@ -485,7 +485,7 @@ data class SignUp(
     ) : SignUpUpdateParams
   }
 
-  companion object {
+  public companion object {
 
     /**
      * Initiates a new sign-up process and returns a `SignUp` object.
@@ -493,7 +493,7 @@ data class SignUp(
      * @param params The strategy to use for creating the sign-up.
      * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
-    suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
+    public suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val baseMap =
         when (params) {
           is CreateParams.None -> emptyMap()
@@ -515,7 +515,9 @@ data class SignUp(
      * @return A [ClerkResult] containing either the created [SignUp] object or a
      *   [ClerkErrorResponse].
      */
-    suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
+    public suspend fun create(
+      params: Map<String, String>
+    ): ClerkResult<SignUp, ClerkErrorResponse> {
       return ClerkApi.signUp.createSignUp(params)
     }
 
@@ -526,7 +528,8 @@ data class SignUp(
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    public suspend fun authenticateWithGoogleOneTap():
+      ClerkResult<OAuthResult, ClerkErrorResponse> {
       return GoogleSignInService().signUpWithGoogle()
     }
 
@@ -536,7 +539,7 @@ data class SignUp(
      * @param params The authentication parameters.
      * @return A [ClerkResult] containing either an [OAuthResult] or a [ClerkErrorResponse].
      */
-    suspend fun authenticateWithRedirect(
+    public suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       val strategy =
@@ -554,7 +557,7 @@ data class SignUp(
       )
     }
 
-    val fieldPriority: List<String> =
+    public val fieldPriority: List<String> =
       listOf("email_address", "phone_number", "username", "password", "first_name", "last_name")
   }
 }
@@ -569,7 +572,7 @@ data class SignUp(
  * @return The name of the first required field to collect, or `null` if there are no required
  *   missing fields.
  */
-val SignUp.firstFieldToCollect: String?
+public val SignUp.firstFieldToCollect: String?
   get() =
     missingFields
       .filter { requiredFields.contains(it) }
@@ -584,7 +587,7 @@ val SignUp.firstFieldToCollect: String?
  *
  * @return The name of the first field to verify, or `null` if there are no unverified fields.
  */
-val SignUp.firstFieldToVerify: String?
+public val SignUp.firstFieldToVerify: String?
   get() = this.unverifiedFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
 
 // region Internal Extension Functions (for SDK internal use)
@@ -596,7 +599,7 @@ val SignUp.firstFieldToVerify: String?
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.update(
+public suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
@@ -609,7 +612,7 @@ suspend fun SignUp.update(
  * @return A [ClerkResult] containing the refreshed [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.get(
+public suspend fun SignUp.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
@@ -622,7 +625,7 @@ suspend fun SignUp.get(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.prepareVerification(
+public suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
@@ -640,7 +643,7 @@ suspend fun SignUp.prepareVerification(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+public suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
   return prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
 }
 
@@ -653,7 +656,7 @@ suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+public suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
   return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
 }
 
@@ -663,7 +666,7 @@ suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
+public suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
   return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
 }
 
@@ -674,7 +677,7 @@ suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.attemptVerification(
+public suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.attemptSignUpVerification(
@@ -690,16 +693,15 @@ internal fun SignUp.toOAuthResult() = OAuthResult(signUp = this)
 
 private const val EMAIL_ADDRESS = "email_address"
 
-val SignUp.emailVerificationStrategy: String
+public val SignUp.emailVerificationStrategy: String
   get() {
     val activeStrategy = verifications[EMAIL_ADDRESS]?.strategy
     if (!activeStrategy.isNullOrBlank()) return activeStrategy
 
-    val configuredStrategies =
-      runCatching {
-          Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
-        }
-        .getOrDefault(emptyList())
+    val configuredStrategies = runCatching {
+      Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
+    }
+      .getOrDefault(emptyList())
 
     return when {
       configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
@@ -708,7 +710,7 @@ val SignUp.emailVerificationStrategy: String
     }
   }
 
-val SignUp.isEmailLinkVerificationSupported: Boolean
+public val SignUp.isEmailLinkVerificationSupported: Boolean
   get() = emailVerificationStrategy == AuthStrategy.EMAIL_LINK
 
 private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, String> {
@@ -719,16 +721,16 @@ private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, St
       redirectUri
         ?: redirectUrl
         ?: runCatching {
-            val applicationId = Clerk.applicationId
-            if (applicationId.isNullOrBlank()) {
-              null
-            } else {
-              RedirectConfiguration.emailLinkRedirectUrl(
-                applicationId = applicationId,
-                proxyUrl = Clerk.proxyUrl,
-              )
-            }
+          val applicationId = Clerk.applicationId
+          if (applicationId.isNullOrBlank()) {
+            null
+          } else {
+            RedirectConfiguration.emailLinkRedirectUrl(
+              applicationId = applicationId,
+              proxyUrl = Clerk.proxyUrl,
+            )
           }
+        }
           .getOrNull()
     if (!resolvedRedirectUri.isNullOrBlank()) {
       strategyFields[ApiParams.REDIRECT_URI] = resolvedRedirectUri

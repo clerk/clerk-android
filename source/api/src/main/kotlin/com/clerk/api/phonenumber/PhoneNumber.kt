@@ -27,7 +27,7 @@ import kotlinx.serialization.Serializable
  * code. This code must be entered to complete the sign-in process.
  */
 @Serializable
-data class PhoneNumber(
+public data class PhoneNumber(
   /** The unique identifier for this phone number. */
   val id: String,
 
@@ -61,7 +61,7 @@ data class PhoneNumber(
   val backupCodes: List<String>? = null,
 ) {
 
-  companion object {
+  public companion object {
     /**
      * Creates a new phone number for the current user or the user with the given session ID.
      *
@@ -74,7 +74,7 @@ data class PhoneNumber(
      * @return A [ClerkResult] containing the created [PhoneNumber] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun create(phoneNumber: String): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+    public suspend fun create(phoneNumber: String): ClerkResult<PhoneNumber, ClerkErrorResponse> {
       return ClerkApi.user.createPhoneNumber(phoneNumber)
     }
   }
@@ -90,7 +90,7 @@ data class PhoneNumber(
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.attemptVerification(
+public suspend fun PhoneNumber.attemptVerification(
   code: String
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.attemptPhoneNumberVerification(phoneNumberId = this.id, code = code)
@@ -106,7 +106,7 @@ suspend fun PhoneNumber.attemptVerification(
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.prepareVerification(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+public suspend fun PhoneNumber.prepareVerification(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.preparePhoneNumberVerification(
     phoneNumberId = this.id,
     strategy = PHONE_CODE,
@@ -124,7 +124,7 @@ suspend fun PhoneNumber.prepareVerification(): ClerkResult<PhoneNumber, ClerkErr
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.update(
+public suspend fun PhoneNumber.update(
   reservedForSecondFactor: Boolean? = null,
   defaultSecondFactor: Boolean? = null,
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
@@ -144,7 +144,7 @@ suspend fun PhoneNumber.update(
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun PhoneNumber.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun PhoneNumber.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deletePhoneNumber(phoneNumberId = this.id)
 }
 
@@ -159,7 +159,7 @@ suspend fun PhoneNumber.delete(): ClerkResult<DeletedObject, ClerkErrorResponse>
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.setReservedForSecondFactor(
+public suspend fun PhoneNumber.setReservedForSecondFactor(
   reservedForSecondFactor: Boolean
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.setReservedForSecondFactor(
@@ -179,7 +179,8 @@ suspend fun PhoneNumber.setReservedForSecondFactor(
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.makeDefaultSecondFactor(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+public suspend fun PhoneNumber.makeDefaultSecondFactor():
+  ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.makeDefaultSecondFactor(phoneNumberId = this.id, defaultSecondFactor = true)
 }
 
@@ -192,7 +193,7 @@ suspend fun PhoneNumber.makeDefaultSecondFactor(): ClerkResult<PhoneNumber, Cler
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.sendCode(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+public suspend fun PhoneNumber.sendCode(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return prepareVerification()
 }
 
@@ -206,6 +207,8 @@ suspend fun PhoneNumber.sendCode(): ClerkResult<PhoneNumber, ClerkErrorResponse>
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.verifyCode(code: String): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+public suspend fun PhoneNumber.verifyCode(
+  code: String
+): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return attemptVerification(code)
 }

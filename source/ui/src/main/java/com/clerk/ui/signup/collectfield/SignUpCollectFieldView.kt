@@ -37,7 +37,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable
-fun SignUpCollectFieldView(
+public fun SignUpCollectFieldView(
   field: CollectField,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
@@ -211,7 +211,7 @@ private fun InputField(
   }
 }
 
-enum class CollectField(val rawValue: String) {
+public enum class CollectField(public val rawValue: String) {
 
   Email(rawValue = "email_address"),
   Password("password"),

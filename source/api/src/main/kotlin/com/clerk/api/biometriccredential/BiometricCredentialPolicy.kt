@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** The local authentication policy used to protect a biometric-credential private key. */
 @Serializable
-enum class BiometricCredentialPolicy {
+public enum class BiometricCredentialPolicy {
   /**
    * Require a Class 3 (strong) biometric from the currently enrolled set.
    *

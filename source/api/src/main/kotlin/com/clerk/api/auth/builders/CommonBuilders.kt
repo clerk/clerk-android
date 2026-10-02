@@ -6,7 +6,7 @@ package com.clerk.api.auth.builders
  * This annotation prevents implicit access to outer receivers in nested DSL scopes, improving type
  * safety and code clarity.
  */
-@DslMarker annotation class ClerkDsl
+@DslMarker public annotation class ClerkDsl
 
 /**
  * Builder for sending verification codes (email or phone).
@@ -22,12 +22,12 @@ package com.clerk.api.auth.builders
  * ```
  */
 @ClerkDsl
-class SendCodeBuilder {
+public class SendCodeBuilder {
   /** The email address to send the verification code to. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number to send the verification code to. */
-  var phone: String? = null
+  public var phone: String? = null
 
   internal fun validate() {
     require(email != null || phone != null) { "Either email or phone must be provided" }
@@ -46,12 +46,12 @@ class SendCodeBuilder {
  * ```
  */
 @ClerkDsl
-class EnterpriseSsoBuilder {
+public class EnterpriseSsoBuilder {
   /**
    * The email address for Enterprise SSO authentication. This is typically used to determine the
    * SSO provider based on the email domain.
    */
-  var email: String? = null
+  public var email: String? = null
 
   internal fun validate() {
     require(email != null) { "Email must be provided for Enterprise SSO" }
