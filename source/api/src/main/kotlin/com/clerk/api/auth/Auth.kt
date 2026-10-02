@@ -704,21 +704,17 @@ class Auth internal constructor() {
   }
 
   private fun removeSessionLocally(sessionId: String) {
-    if (!Clerk.clientInitialized) return
-
-    val client = Clerk.client
-    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
-    val lastActiveSessionId =
-      if (client.lastActiveSessionId == sessionId) {
-        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
-          ?: remainingSessions.firstOrNull()?.id
-      } else {
-        client.lastActiveSessionId
-      }
-
-    Clerk.updateClient(
+    Clerk.mutateClient { client ->
+      val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+      val lastActiveSessionId =
+        if (client.lastActiveSessionId == sessionId) {
+          remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+            ?: remainingSessions.firstOrNull()?.id
+        } else {
+          client.lastActiveSessionId
+        }
       client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
-    )
+    }
   }
 
   private suspend fun refreshClientAfterSessionMutation(

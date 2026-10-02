@@ -16,13 +16,11 @@ import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.billing.Billing
 import com.clerk.api.biometriccredential.BiometricCredentials
-import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
@@ -46,6 +44,8 @@ import com.clerk.api.sharedsession.SharedSessionSyncProvider
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.SSOService
+import com.clerk.api.state.CachedStateConfiguration
+import com.clerk.api.state.ClientStateStore
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.ui.ClerkTheme
@@ -69,6 +69,15 @@ object Clerk {
   // region Configuration & Initialization
 
   private val configurationManager = ConfigurationManager()
+
+  /**
+   * The only writer of client, session, user, and environment state. Clerk's state properties and
+   * flows are read-only views of it.
+   */
+  internal val stateStore: ClientStateStore =
+    ClientStateStore(cacheConfiguration = ::cachedStateConfiguration).also { store ->
+      store.listener = StateStoreListener
+    }
 
   /** Coordinates persisted Clerk state between same-signed sibling apps when enabled. */
   internal var sharedSessionSyncCoordinator: SharedSessionSyncCoordinator? = null
@@ -143,8 +152,6 @@ object Clerk {
 
   internal var applicationId: String? = null
 
-  private val _multiSessionModeIsEnabled = MutableStateFlow(false)
-
   /**
    * Reactive state indicating whether this Clerk instance allows multiple sessions on the same
    * client.
@@ -152,13 +159,19 @@ object Clerk {
    * When enabled, a client can hold sessions for multiple accounts and switch the active session by
    * updating [Client.lastActiveSessionId].
    */
-  val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
+  val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = stateStore.multiSessionModeIsEnabledFlow
 
-  internal var environment: Environment? = null
+  /**
+   * The current environment. Assigning it sets the value without side effects; use
+   * [updateEnvironment] to also refresh derived flows, shared-session sync, and the offline cache.
+   */
+  internal var environment: Environment?
+    get() = stateStore.environment
+    set(value) = stateStore.overwriteEnvironment(value)
 
   /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
-  internal var lastClientServerFetchAtMillis: Long? = null
-    private set
+  internal val lastClientServerFetchAtMillis: Long?
+    get() = stateStore.serverFetchAtMillis
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -166,10 +179,12 @@ object Clerk {
    * Contains information about active sessions, sign-in attempts, and device-specific data. This is
    * initialized after the SDK's `initialize` method has been successfully called.
    */
-  lateinit var client: Client
-    private set
-
-  private val _clientFlow = MutableStateFlow<Client?>(null)
+  val client: Client
+    get() =
+      stateStore.client
+        ?: throw UninitializedPropertyAccessException(
+          "lateinit property client has not been initialized"
+        )
 
   /**
    * Reactive state for the current client.
@@ -178,10 +193,10 @@ object Clerk {
    * receives updated client state, including initialization, sign-in, sign-up, sign-out, session
    * mutations, and piggybacked API responses.
    */
-  val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
+  val clientFlow: StateFlow<Client?> = stateStore.clientFlow
 
   internal val clientInitialized: Boolean
-    get() = ::client.isInitialized
+    get() = stateStore.client != null
 
   /**
    * Reactive state indicating whether the Clerk SDK has completed initialization.
@@ -409,14 +424,12 @@ object Clerk {
   val billing: Billing
     get() = Billing
 
-  private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
-
   /**
    * Reactive image URL for the application logo used in authentication UI components.
    *
    * Emits `null` until the SDK environment is initialized or when no logo URL is configured.
    */
-  val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrlFlow.asStateFlow()
+  val organizationLogoUrlFlow: StateFlow<String?> = stateStore.organizationLogoUrlFlow
 
   /**
    * The image URL for the application logo used in authentication UI components.
@@ -517,17 +530,13 @@ object Clerk {
 
   // region Session Management
 
-  private val _sessions = MutableStateFlow<List<Session>>(emptyList())
-
   /**
    * Reactive state for all sessions available on the current client.
    *
    * In multi-session mode this may contain sessions for multiple user accounts. The current session
    * is still determined by [Client.lastActiveSessionId] and exposed through [sessionFlow].
    */
-  val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
-
-  private val _session = MutableStateFlow<Session?>(null)
+  val sessionsFlow: StateFlow<List<Session>> = stateStore.sessionsFlow
 
   /**
    * Reactive state for the current user session.
@@ -536,7 +545,7 @@ object Clerk {
    * refresh. Emits `null` when no session exists. Note that the session may have any status
    * (active, pending, etc.) - use [Session.status] to check the current state.
    */
-  val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
+  val sessionFlow: StateFlow<Session?> = stateStore.sessionFlow
 
   /**
    * The current user session, regardless of status.
@@ -606,15 +615,13 @@ object Clerk {
 
   // region User Management
 
-  private val _userFlow = MutableStateFlow<User?>(null)
-
   /**
    * Reactive state for the currently authenticated user.
    *
    * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
    * Emits `null` when no user is signed in.
    */
-  val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
+  val userFlow: StateFlow<User?> = stateStore.userFlow
 
   /**
    * The current user, regardless of session status.
@@ -870,8 +877,8 @@ object Clerk {
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
-    StorageHelper.deleteValue(StorageKey.CACHED_CLERK_STATE)
-    clearSessionAndUserState()
+    // Clears client, session, user, and environment state and the persisted offline cache.
+    stateStore.reset()
     resetAuthFlowState()
     SessionTokenFetcher.shared.reset()
     SessionTokensCache.clear()
@@ -880,10 +887,6 @@ object Clerk {
     DeviceAttestationHelper.clearCache()
     LocaleProvider.cleanup()
     ClerkApi.reset()
-    environment = null
-    updateClient(Client())
-    _clientFlow.value = null
-    lastClientServerFetchAtMillis = null
     publishableKey = null
     baseUrl = ""
     proxyUrl = null
@@ -1030,70 +1033,44 @@ object Clerk {
   // region Internal Methods
 
   internal fun updateEnvironment(environment: Environment) {
-    val previousEnvironment = this.environment
-    this.environment = environment
-    _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
-    _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
-    sharedSessionSyncCoordinator?.handleEnvironmentChange(previousEnvironment, environment)
-    cacheStateIfReady()
+    stateStore.applyEnvironment(environment)
   }
 
-  /**
-   * Persists a complete client/environment snapshot to encrypted storage. A complete snapshot lets
-   * a future cold start restore the same readiness contract as a network initialization; caching
-   * only the environment would leave [isInitialized] false and host applications stuck behind their
-   * loading gates.
-   */
-  private fun cacheStateIfReady() {
-    val cachedEnvironment = environment
-    val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+  private fun cachedStateConfiguration(): CachedStateConfiguration? {
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
-    val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
-    val state =
-      if (
-        cachedResources != null && cachedConfiguration != null && cachedServerFetchAtMillis != null
-      ) {
-        CachedClerkState(
-          publishableKey = cachedConfiguration.first,
-          baseUrl = cachedConfiguration.second,
-          client = cachedResources.first,
-          environment = cachedResources.second,
-          clientServerFetchAtMillis = cachedServerFetchAtMillis,
-        )
-      } else {
-        null
-      }
-    if (state == null) return
-
-    runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
-      .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
-      .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+    return if (cachedPublishableKey != null && cachedBaseUrl != null) {
+      CachedStateConfiguration(publishableKey = cachedPublishableKey, baseUrl = cachedBaseUrl)
+    } else {
+      null
+    }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
+  /**
+   * Applies a client supplied by SDK code: a decoded API result re-applied by its caller, or a
+   * local mutation of the current client. A result whose response was fetched before newer state is
+   * dropped; see [ClientStateStore.applyClient].
+   */
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
-    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
-    val serverFetchAtMillis =
-      if (_clientFlow.value == resolvedClient) {
-        lastClientServerFetchAtMillis ?: System.currentTimeMillis()
-      } else {
-        System.currentTimeMillis()
-      }
-    updateClient(
-      client = client,
-      serverFetchAtMillis = serverFetchAtMillis,
-      completedAuthFlow = completedAuthFlow,
-    )
+    if (completedAuthFlow != null) {
+      holdAuthFlowCompletion(completedAuthFlow)
+    }
+    stateStore.applyClient(client)
   }
 
+  /**
+   * Atomically derives a new client from the current one; see [ClientStateStore.mutateClient]. Use
+   * this instead of reading [client] and writing a copy, which can overwrite a concurrent commit.
+   */
+  internal fun mutateClient(transform: (Client) -> Client?): Boolean =
+    stateStore.mutateClient(transform)
+
+  /**
+   * Replaces the client with an explicit server fetch time, without response ordering. Used by
+   * authoritative sources that do their own ordering (cached-state hydration, shared-session sync).
+   */
   internal fun updateClient(
     client: Client,
     serverFetchAtMillis: Long,
@@ -1102,19 +1079,52 @@ object Clerk {
     if (completedAuthFlow != null) {
       holdAuthFlowCompletion(completedAuthFlow)
     }
-    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    stateStore.replaceClient(client, serverFetchAtMillis)
+  }
 
-    this.client = updatedClient
-    lastClientServerFetchAtMillis = serverFetchAtMillis
-    _clientFlow.value = updatedClient
-    // Only update state if flows are initialized (not during static initialization)
-    try {
-      updateSessionAndUserState()
-    } catch (e: Exception) {
-      ClerkLog.e("${e.message}")
+  /**
+   * Applies a client that the network layer decoded from a response, ordered by the response's
+   * `Date` header. A response fetched before already-applied state is dropped.
+   */
+  internal fun applyClientResponse(
+    client: Client,
+    serverDateMillis: Long?,
+    completedAuthFlow: AuthEvent? = null,
+  ) {
+    if (completedAuthFlow != null) {
+      holdAuthFlowCompletion(completedAuthFlow)
     }
-    sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
-    cacheStateIfReady()
+    stateStore.applyClientResponse(client, serverDateMillis)
+  }
+
+  private object StateStoreListener : ClientStateStore.Listener {
+    override fun onSessionStateCommitted(previous: Session?, current: Session?) {
+      updateIsAuthFlowComplete()
+
+      if (previous != current) {
+        auth.send(AuthEvent.SessionChanged(current))
+
+        if (previous == null) {
+          current?.user?.let { auth.send(AuthEvent.SignedIn(current, it)) }
+        }
+
+        if (previous != null && current == null) {
+          auth.send(AuthEvent.SignedOut)
+        }
+      }
+    }
+
+    override fun onClientCommitted(commit: ClientStateStore.ClientCommit) {
+      sharedSessionSyncCoordinator?.handleClientChange(
+        client = commit.client,
+        serverFetchAtMillis = commit.serverFetchAtMillis,
+        revision = commit.revision,
+      )
+    }
+
+    override fun onEnvironmentCommitted(previous: Environment?, current: Environment) {
+      sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
+    }
   }
 
   internal fun configureSharedSessionSync(
@@ -1152,75 +1162,19 @@ object Clerk {
     return currentDeviceToken == (responseDeviceToken ?: requestDeviceToken)
   }
 
-  private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
-    val resolvedActiveSessionId =
-      currentActiveSessionId
-        ?: previousSession?.id?.takeIf { previousSessionId ->
-          sessions.any { it.id == previousSessionId }
-        }
-        ?: if (lastActiveSessionId == null) sessions.singleOrNull()?.id else null
-    return if (resolvedActiveSessionId == lastActiveSessionId || resolvedActiveSessionId == null) {
-      this
-    } else {
-      copy(lastActiveSessionId = resolvedActiveSessionId)
-    }
-  }
-
   /**
-   * Internal method to update session and user state flows.
+   * Re-derives the session, sessions, and user flows from the current client.
    *
-   * Should be called whenever the client state changes that might affect the current session or
-   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
-   * allowing users with pending sessions to maintain a "signed in" experience.
+   * The flows track [Client.lastActiveSessionId] across all sessions regardless of status, so users
+   * with pending sessions keep a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
-    val previousSession = _session.value
-
-    // Find session by ID from all sessions (not just active sessions)
-    val currentSessions = if (::client.isInitialized) client.sessions else emptyList()
-    val currentSession = currentSessions.firstOrNull { it.id == client.lastActiveSessionId }
-
-    if (currentSession?.status == Session.SessionStatus.PENDING) {
-      ClerkLog.w(
-        "Session is in pending state. " +
-          "The user has tasks to complete before the session can be activated. " +
-          "Session tokens cannot be issued for pending sessions."
-      )
-    }
-
-    _sessions.value = currentSessions
-    _session.value = currentSession
-    _userFlow.value = currentSession?.user
-    updateIsAuthFlowComplete()
-
-    if (previousSession != currentSession) {
-      auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(currentSession))
-
-      if (previousSession == null) {
-        currentSession?.user?.let {
-          auth.send(com.clerk.api.auth.AuthEvent.SignedIn(currentSession, it))
-        }
-      }
-
-      if (previousSession != null && currentSession == null) {
-        auth.send(com.clerk.api.auth.AuthEvent.SignedOut)
-      }
-    }
+    stateStore.recomputeSessionState()
   }
 
+  /** Clears the session, sessions, and user flows without changing the client. */
   internal fun clearSessionAndUserState() {
-    val previousSession = _session.value
-    _sessions.value = emptyList()
-    _session.value = null
-    _userFlow.value = null
-    updateIsAuthFlowComplete()
-
-    if (previousSession != null) {
-      auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(null))
-      auth.send(com.clerk.api.auth.AuthEvent.SignedOut)
-    }
+    stateStore.clearSessionState()
   }
 
   @Synchronized
@@ -1358,8 +1312,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

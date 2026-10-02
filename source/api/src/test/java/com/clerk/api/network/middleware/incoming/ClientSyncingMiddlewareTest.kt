@@ -42,6 +42,8 @@ class ClientSyncingMiddlewareTest {
     unmockkAll()
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    // Also drops the server-time watermark so dated responses in other tests are not stale.
+    Clerk.stateStore.reset()
   }
 
   @Test
@@ -463,6 +465,81 @@ class ClientSyncingMiddlewareTest {
 
     assertEquals("client_server", Clerk.client.id)
     assertEquals(1_783_965_600_000L, Clerk.lastClientServerFetchAtMillis)
+  }
+
+  @Test
+  fun `intercept drops a client response fetched before already applied state`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+
+    middleware.intercept(
+      chainFor(piggybackedClientResponse("client_newer", date = "Mon, 13 Jul 2026 18:00:05 GMT"))
+    )
+    // A slower request that the server answered earlier arrives last.
+    middleware.intercept(
+      chainFor(piggybackedClientResponse("client_older", date = "Mon, 13 Jul 2026 18:00:00 GMT"))
+    )
+
+    assertEquals("client_newer", Clerk.client.id)
+    assertEquals(1_783_965_605_000L, Clerk.lastClientServerFetchAtMillis)
+  }
+
+  @Test
+  fun `caller applying an older client fetch after a newer response keeps the newer client`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val clientFetch = Request.Builder().url("https://api.clerk.com/v1/client").build()
+    val fetchedClientJson = """{"object": "client", "id": "client_refreshed", "sessions": []}"""
+    // GET /client leaves the wrapped client for its caller (e.g. a foreground refresh).
+    middleware.intercept(
+      chainFor(
+        Response.Builder()
+          .request(clientFetch)
+          .protocol(Protocol.HTTP_1_1)
+          .code(200)
+          .message("OK")
+          .header("Date", "Mon, 13 Jul 2026 18:00:00 GMT")
+          .body(
+            """{"response": $fetchedClientJson, "client": null}"""
+              .toResponseBody("application/json".toMediaType())
+          )
+          .build()
+      )
+    )
+    // A sign-in response lands while the refresh result is still on its way to the caller.
+    middleware.intercept(
+      chainFor(
+        piggybackedClientResponse("client_signed_in", date = "Mon, 13 Jul 2026 18:00:01 GMT")
+      )
+    )
+
+    Clerk.updateClient(ClerkApi.json.decodeFromString<Client>(fetchedClientJson))
+
+    assertEquals("client_signed_in", Clerk.client.id)
+  }
+
+  private fun piggybackedClientResponse(clientId: String, date: String): Response {
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/sessions/sess_123/touch")
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    return Response.Builder()
+      .request(request)
+      .protocol(Protocol.HTTP_1_1)
+      .code(200)
+      .message("OK")
+      .header("Date", date)
+      .body(
+        """{"response": {"object": "session"}, "client": {"id": "$clientId", "sessions": []}}"""
+          .toResponseBody("application/json".toMediaType())
+      )
+      .build()
+  }
+
+  private fun chainFor(response: Response): Interceptor.Chain {
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns response.request
+    every { chain.proceed(response.request) } returns response
+    return chain
   }
 
   private fun testSession(id: String): Session =

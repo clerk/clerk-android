@@ -12,6 +12,8 @@ import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
+import com.clerk.api.state.ClientStateStore
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import io.mockk.coEvery
@@ -67,6 +69,8 @@ class ClerkOfflineCacheTest {
 
     Clerk.updateClient(client = client, serverFetchAtMillis = SERVER_FETCH_AT_MILLIS)
     Clerk.updateEnvironment(environment)
+    // Persistence is coalesced off the calling thread; flush to observe it deterministically.
+    Clerk.stateStore.flushPersistence()
 
     val cachedState = loadCachedState()
     assertEquals(PUBLISHABLE_KEY, cachedState?.publishableKey)
@@ -82,6 +86,47 @@ class ClerkOfflineCacheTest {
     Clerk.baseUrl = PROXY_URL
 
     Clerk.updateEnvironment(testEnvironment("Environment Only"))
+    Clerk.stateStore.flushPersistence()
+
+    assertNull(StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE))
+  }
+
+  @Test
+  fun `sign-out persists the signed-out snapshot before returning`() {
+    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.baseUrl = PROXY_URL
+    val session =
+      Session(
+        id = "sess_123",
+        status = Session.SessionStatus.ACTIVE,
+        expireAt = 10_000,
+        lastActiveAt = 1_000,
+        createdAt = 1_000,
+        updatedAt = 1_000,
+      )
+    Clerk.updateEnvironment(testEnvironment("Persisted App"))
+    Clerk.updateClient(
+      client =
+        Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id),
+      serverFetchAtMillis = SERVER_FETCH_AT_MILLIS,
+    )
+    Clerk.stateStore.flushPersistence()
+
+    Clerk.updateClient(Client(id = "client_123"))
+
+    // No flush: the sign-out write itself must have replaced the signed-in snapshot.
+    assertEquals(emptyList<Session>(), loadCachedState()?.client?.sessions)
+  }
+
+  @Test
+  fun `reset discards a pending coalesced write`() = runBlocking {
+    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.baseUrl = PROXY_URL
+    Clerk.updateEnvironment(testEnvironment("Persisted App"))
+    Clerk.updateClient(client = Client(id = "client_123"), serverFetchAtMillis = 1)
+
+    Clerk.reset()
+    delay(ClientStateStore.DEFAULT_PERSIST_DEBOUNCE_MILLIS * 3)
 
     assertNull(StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE))
   }
@@ -172,6 +217,7 @@ class ClerkOfflineCacheTest {
     clientDeferred.complete(ClerkResult.success(Client(id = "client_fresh")))
     environmentDeferred.complete(ClerkResult.success(testEnvironment("Fresh App")))
     waitUntil { Clerk.applicationName == "Fresh App" }
+    waitUntil { loadCachedState()?.environment?.displayConfig?.applicationName == "Fresh App" }
 
     assertEquals("client_fresh", Clerk.client.id)
     assertEquals("Fresh App", Clerk.applicationName)

@@ -206,8 +206,9 @@ object RestoreCredentials {
     }
 
   private fun clearSignInAttempt(signIn: SignIn) {
-    if (!Clerk.clientInitialized || Clerk.client.signIn?.id != signIn.id) return
-    Clerk.updateClient(Clerk.client.copy(signIn = null))
+    Clerk.mutateClient { client ->
+      client.copy(signIn = null).takeIf { client.signIn?.id == signIn.id }
+    }
   }
 
   private val isSupportedAndroidVersion: Boolean
