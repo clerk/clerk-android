@@ -33,6 +33,7 @@
     <string name="set_new_password">Setează parola nouă</string>
     <string name="reset_password">Resetează parola</string>
     <string name="confirm_password">Confirmă parola</string>
+    <string name="passwords_dont_match">Parolele nu se potrivesc</string>
     <string name="new_password">Parolă nouă</string>
     <string name="account_requires_new_password_before_continue">Contul tău necesită o parolă nouă înainte de a continua</string>
     <string name="sign_out_of_all_other_devices">Deconectează celelalte dispozitive</string>
@@ -108,6 +109,7 @@
     <string name="email_code">Cod email</string>
     <string name="or">sau</string>
     <string name="continue_to">Continuă la %1$s</string>
+    <string name="continue_with">Continuă cu %1$s</string>
     <string name="create_your_account">Creează contul</string>
     <string name="welcome_sign_in_to_continue">Bun venit! Autentifică-te pentru a continua.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">Bun venit! Completează detaliile pentru a începe.</string>
