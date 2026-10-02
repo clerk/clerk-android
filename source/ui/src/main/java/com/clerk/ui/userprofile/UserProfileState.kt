@@ -20,7 +20,7 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
   }
 
   override fun clearBackStack() {
-    backStack.clear()
+    backStack.pop(backStack.size - 1)
   }
 
   override fun pop(numberOfScreens: Int) {
