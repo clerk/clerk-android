@@ -14,6 +14,16 @@ object TelemetryModule {
     ignoreUnknownKeys = true
   }
 
+  /**
+   * Creates a Ktor client configured for telemetry.
+   *
+   * The SDK no longer ships Ktor, so callers must declare `ktor-client-okhttp`,
+   * `ktor-client-content-negotiation`, and `ktor-serialization-kotlinx-json` themselves.
+   */
+  @Deprecated(
+    "The SDK posts telemetry with OkHttp and no longer ships Ktor. Use createCollector, or pass " +
+      "an OkHttpClient to TelemetryCollector."
+  )
   fun httpClient(): HttpClient = HttpClient(OkHttp) { install(ContentNegotiation) { json(json) } }
 
   fun createCollector(
@@ -24,7 +34,6 @@ object TelemetryModule {
     val throttler = AndroidTelemetryEventThrottler(context, json)
     return TelemetryCollector(
       options = options,
-      client = httpClient(),
       environment = environment,
       throttler = throttler,
       json = json,
