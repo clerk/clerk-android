@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
@@ -257,25 +258,28 @@ internal object SSOService {
     try {
       val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
 
-      when (redirectFlow) {
-        RedirectFlow.SIGN_IN -> {
-          if (nonce != null) {
-            handleSignIn(pendingAuth, nonce)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && transferable) {
-            handleSignUpTransfer(pendingAuth)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
-            completeTransferBlocked(pendingAuth)
-          } else {
-            completeCancellation(pendingAuth, uri)
+      // The outcome is reported by the suspended authenticateWithRedirect call that awaits it.
+      withoutAuthErrorReporting {
+        when (redirectFlow) {
+          RedirectFlow.SIGN_IN -> {
+            if (nonce != null) {
+              handleSignIn(pendingAuth, nonce)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && transferable) {
+              handleSignUpTransfer(pendingAuth)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
+              completeTransferBlocked(pendingAuth)
+            } else {
+              completeCancellation(pendingAuth, uri)
+            }
           }
-        }
-        RedirectFlow.SIGN_UP -> {
-          if (nonce != null) {
-            handleSignUp(pendingAuth, signUp, nonce)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
-            handleSignInTransfer(pendingAuth, signUp)
-          } else {
-            completeCancellation(pendingAuth, uri)
+          RedirectFlow.SIGN_UP -> {
+            if (nonce != null) {
+              handleSignUp(pendingAuth, signUp, nonce)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
+              handleSignInTransfer(pendingAuth, signUp)
+            } else {
+              completeCancellation(pendingAuth, uri)
+            }
           }
         }
       }
