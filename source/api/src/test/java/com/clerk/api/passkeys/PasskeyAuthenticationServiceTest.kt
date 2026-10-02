@@ -34,13 +34,10 @@ import com.clerk.api.sso.OAuthResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -95,6 +92,7 @@ class PasskeyAuthenticationServiceTest {
     GoogleCredentialAuthenticationService.setCredentialManager(PasskeyCredentialManagerImpl())
     GoogleCredentialAuthenticationService.setGoogleSignInService(GoogleSignInService())
     unmockkAll()
+    Clerk.stateStore.reset()
   }
 
   @Test
@@ -405,9 +403,8 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns client
-    every { Clerk.updateClient(any()) } just runs
+    // Seed the real state store instead of stubbing Clerk's getters and writer.
+    Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
     coEvery { mockCredentialManager.getCredential(any(), any()) } throws
@@ -423,7 +420,7 @@ class PasskeyAuthenticationServiceTest {
     assertTrue(
       (result as ClerkResult.Failure).throwable is CredentialFlowException.NoSavedCredential
     )
-    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+    assertEquals(client.copy(signIn = null), Clerk.client)
   }
 
   @Test
@@ -434,9 +431,8 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns client
-    every { Clerk.updateClient(any()) } just runs
+    // Seed the real state store instead of stubbing Clerk's getters and writer.
+    Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
     coEvery { mockCredentialManager.getCredential(any(), any()) } throws
@@ -452,7 +448,7 @@ class PasskeyAuthenticationServiceTest {
     assertTrue(
       (result as ClerkResult.Failure).throwable is CredentialFlowException.ProviderUnavailable
     )
-    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+    assertEquals(client.copy(signIn = null), Clerk.client)
   }
 
   @Test
@@ -463,9 +459,8 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns client
-    every { Clerk.updateClient(any()) } just runs
+    // Seed the real state store instead of stubbing Clerk's getters and writer.
+    Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
     coEvery { mockCredentialManager.getCredential(any(), any()) } throws
@@ -479,7 +474,7 @@ class PasskeyAuthenticationServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.MissingActivity)
-    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+    assertEquals(client.copy(signIn = null), Clerk.client)
   }
 
   @Test
@@ -490,9 +485,8 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns client
-    every { Clerk.updateClient(any()) } just runs
+    // Seed the real state store instead of stubbing Clerk's getters and writer.
+    Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
     coEvery { mockCredentialManager.getCredential(any(), any()) } throws
@@ -506,7 +500,7 @@ class PasskeyAuthenticationServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertTrue((result as ClerkResult.Failure).throwable is GetCredentialUnknownException)
-    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+    assertEquals(client.copy(signIn = null), Clerk.client)
   }
 
   @Test

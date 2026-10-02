@@ -10,6 +10,7 @@ import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.state.ClientStateStore
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -55,6 +56,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   @Suppress("NestedBlockDepth")
   private fun syncResponse(request: Request, response: Response): Response {
+    // Taken on arrival, before the body is read, so responses sharing a Date second keep the order
+    // in which the server answered them.
+    val order = Clerk.stateStore.observeResponse(response.serverDateMillis())
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
@@ -74,7 +78,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             request = request,
             response = response,
             jsonElement = jsonElement,
-            serverFetchAtMillis = response.serverFetchAtMillis(),
+            order = order,
             completedAuthFlow = completedAuthFlow,
           )
 
@@ -99,7 +103,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     request: Request,
     response: Response,
     jsonElement: JsonElement,
-    serverFetchAtMillis: Long,
+    order: ClientStateStore.ResponseOrder?,
     completedAuthFlow: AuthEvent?,
   ) {
     if (jsonElement !is JsonObject) return
@@ -112,7 +116,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             ClerkLog.d("Client sync skipped null piggyback client")
           } else {
             ClerkLog.d("Client sync cleared by explicit null client")
-            request.syncClient(response) { Clerk.updateClient(Client(), serverFetchAtMillis) }
+            request.syncClient(response) { Clerk.applyClientResponse(Client(), order) }
           }
         }
         null -> Unit
@@ -120,7 +124,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           request.syncClient(response) {
             syncClerkClient(
               client = json.decodeFromJsonElement(clientJson),
-              serverFetchAtMillis = serverFetchAtMillis,
+              order = order,
               completedAuthFlow = completedAuthFlow,
             )
           }
@@ -128,11 +132,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
       return
     }
 
-    if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
+    if (request.isClientFetch()) {
       request.syncClient(response) {
         syncClerkClient(
           client = json.decodeFromJsonElement(jsonElement),
-          serverFetchAtMillis = serverFetchAtMillis,
+          order = order,
           completedAuthFlow = completedAuthFlow,
         )
       }
@@ -252,29 +256,31 @@ private fun Request.syncClient(response: Response, sync: () -> Unit) {
   tag(ResponseGuard::class.java)?.runIfAllowed(guardedSync) ?: guardedSync()
 }
 
+private fun Request.isClientFetch(): Boolean =
+  method == "GET" && url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")
+
 private fun syncClerkClient(
   client: Client,
-  serverFetchAtMillis: Long,
+  order: ClientStateStore.ResponseOrder?,
   completedAuthFlow: AuthEvent?,
 ) {
   ClerkLog.d("Client synced: ${client.id}")
-  Clerk.updateClient(
+  Clerk.applyClientResponse(
     client = client,
-    serverFetchAtMillis = serverFetchAtMillis,
+    order = order,
     completedAuthFlow = completedAuthFlow,
   )
 }
 
-private fun Response.serverFetchAtMillis(): Long {
-  val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
-  val parsed =
-    try {
-      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-        .apply { timeZone = TimeZone.getTimeZone("GMT") }
-        .parse(serverDate)
-        ?.time
-    } catch (_: Exception) {
-      null
-    }
-  return parsed ?: System.currentTimeMillis()
+/** The response's `Date` header, or `null` if it is missing or unparsable. */
+private fun Response.serverDateMillis(): Long? {
+  val serverDate = header(SERVER_DATE_HEADER) ?: return null
+  return try {
+    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+      .apply { timeZone = TimeZone.getTimeZone("GMT") }
+      .parse(serverDate)
+      ?.time
+  } catch (_: Exception) {
+    null
+  }
 }

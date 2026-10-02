@@ -155,7 +155,7 @@ class HostedAuthServiceTest {
     coVerifyOrder {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
       clientApi.getSkippingClientId(INTERNAL_HEADER_TRUE, any())
-      Clerk.updateClient(refreshedClient)
+      Clerk.updateClientIfUnchangedSince(any(), refreshedClient)
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
 
@@ -177,6 +177,7 @@ class HostedAuthServiceTest {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
     verify(exactly = 0) { Clerk.updateClient(any()) }
+    verify(exactly = 0) { Clerk.updateClientIfUnchangedSince(any(), any()) }
   }
 
   @Test

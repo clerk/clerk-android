@@ -49,6 +49,8 @@ class ClientSyncingMiddlewareTest {
     unmockkAll()
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    // Also drops the server-time watermark so dated responses in other tests are not stale.
+    Clerk.stateStore.reset()
   }
 
   @Test

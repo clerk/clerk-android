@@ -750,34 +750,33 @@ public class Auth internal constructor() {
   }
 
   private fun removeSessionLocally(sessionId: String) {
-    if (!Clerk.clientInitialized) return
-
-    val client = Clerk.client
-    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
-    val lastActiveSessionId =
-      if (client.lastActiveSessionId == sessionId) {
-        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
-          ?: remainingSessions.firstOrNull()?.id
-      } else {
-        client.lastActiveSessionId
-      }
-
-    Clerk.updateClient(
+    Clerk.mutateClient { client ->
+      val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+      val lastActiveSessionId =
+        if (client.lastActiveSessionId == sessionId) {
+          remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+            ?: remainingSessions.firstOrNull()?.id
+        } else {
+          client.lastActiveSessionId
+        }
       client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
-    )
+    }
   }
 
   private suspend fun refreshClientAfterSessionMutation(
     activeSessionFallbackId: String? = null,
     fallbackClient: Client? = null,
   ) {
+    val updateCountAtStart = Clerk.clientUpdateCount
     when (val clientResult = Client.get()) {
       is ClerkResult.Success ->
-        Clerk.updateClient(
-          clientResult.value.withActiveSessionFallback(
-            activeSessionFallbackId = activeSessionFallbackId,
-            fallbackClient = fallbackClient,
-          )
+        Clerk.updateClientIfUnchangedSince(
+          expectedUpdateCount = updateCountAtStart,
+          client =
+            clientResult.value.withActiveSessionFallback(
+              activeSessionFallbackId = activeSessionFallbackId,
+              fallbackClient = fallbackClient,
+            ),
         )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
@@ -892,11 +891,16 @@ public class Auth internal constructor() {
     sourceClient: Client? = null,
     activeOrganizationId: String? = null,
   ) {
-    val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
-    val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
-    if (sessions.none { it.id == sessionId }) return
-
-    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
+    Clerk.mutateClient { current ->
+      // Prefer the current client; fall back to the pre-request client when a response cleared the
+      // target session from it.
+      val client =
+        if (sourceClient == null || current.sessions.any { it.id == sessionId }) current
+        else sourceClient
+      val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
+      if (sessions.none { it.id == sessionId }) null
+      else client.copy(sessions = sessions, lastActiveSessionId = sessionId)
+    }
   }
 
   private fun List<Session>.withUpdatedSession(
