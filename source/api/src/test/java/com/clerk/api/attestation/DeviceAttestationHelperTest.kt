@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -92,15 +93,28 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
-  fun `performAssertion throws exception when applicationId is null`() = runTest {
-    val token = "test-token"
+  fun `performAssertion returns a failure when applicationId is null`() = runTest {
+    val result = DeviceAttestationHelper.performAssertion("test-token", null)
 
-    try {
-      DeviceAttestationHelper.performAssertion(token, null)
-      throw AssertionError("Expected IllegalArgumentException to be thrown")
-    } catch (e: IllegalArgumentException) {
-      assertEquals("Application ID is required for device attestation", e.message)
+    val failure = result as ClerkResult.Failure
+    assertTrue(failure.throwable is IllegalArgumentException)
+    assertEquals(
+      "Application ID is required for device attestation",
+      failure.throwable?.message,
+    )
+  }
+
+  @Test
+  fun `performAssertion rethrows cancellation instead of returning a failure`() = runTest {
+    coEvery { mockDeviceAttestationApi.verify(any(), any()) } throws
+      CancellationException("caller cancelled")
+
+    val thrown = runCatching {
+      DeviceAttestationHelper.performAssertion("test-token", "com.example")
     }
+      .exceptionOrNull()
+
+    assertTrue(thrown is CancellationException)
   }
 
   @Test

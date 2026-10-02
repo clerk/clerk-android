@@ -6,6 +6,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -169,6 +170,8 @@ class TelemetryCollector(
           setBody(envelope)
         }
         .body<Unit>()
+    } catch (e: CancellationException) {
+      throw e
     } catch (_: Exception) {}
   }
 

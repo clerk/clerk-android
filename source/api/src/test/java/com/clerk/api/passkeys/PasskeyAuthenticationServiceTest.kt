@@ -41,6 +41,7 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -349,6 +350,74 @@ class PasskeyAuthenticationServiceTest {
     assertTrue(result is ClerkResult.Failure)
     assertEquals(errorResponse, (result as ClerkResult.Failure).error)
     coVerify(exactly = 0) { mockCredentialManager.getCredential(any(), any()) }
+  }
+
+  @Test
+  fun `signInWithPasskey rethrows coroutine cancellation instead of returning a failure`() =
+    runTest {
+      every { mockSignIn.firstFactorVerification } returns mockVerification
+      every { mockVerification.nonce } returns """{"challenge":"test-challenge"}"""
+      coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+      coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+        CancellationException("caller cancelled")
+
+      val thrown = runCatching {
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+          listOf(SignIn.CredentialType.PASSKEY)
+        )
+      }
+        .exceptionOrNull()
+
+      assertTrue(thrown is CancellationException)
+    }
+
+  @Test
+  fun `authenticateWithPasskey second factor rethrows coroutine cancellation`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val signIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_SECOND_FACTOR,
+        supportedSecondFactors = listOf(Factor(strategy = "passkey")),
+      )
+    coEvery {
+      mockSignInApi.prepareSecondFactor("sign_in_123", mapOf("strategy" to "passkey"))
+    } returns
+      ClerkResult.success(
+        signIn.copy(secondFactorVerification = Verification(nonce = nonce, strategy = "passkey"))
+      )
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      CancellationException("caller cancelled")
+
+    val thrown = runCatching {
+      GoogleCredentialAuthenticationService.authenticateWithPasskey(signIn)
+    }
+      .exceptionOrNull()
+
+    assertTrue(thrown is CancellationException)
+  }
+
+  @Test
+  fun `verifySessionWithPasskey rethrows coroutine cancellation`() = runTest {
+    val preparedVerification =
+      SessionVerification(
+        id = "ver_123",
+        status = SessionVerification.Status.NEEDS_FIRST_FACTOR,
+        level = SessionVerification.Level.FIRST_FACTOR,
+        firstFactorVerification =
+          Verification(nonce = """{"challenge":"test-challenge"}""", strategy = "passkey"),
+      )
+    coEvery { mockSessionApi.prepareFirstFactorVerification("sess_123", any()) } returns
+      ClerkResult.success(preparedVerification)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      CancellationException("caller cancelled")
+
+    val thrown = runCatching {
+      GoogleCredentialAuthenticationService.verifySessionWithPasskey(testSession())
+    }
+      .exceptionOrNull()
+
+    assertTrue(thrown is CancellationException)
   }
 
   @Test
