@@ -105,8 +105,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     if (responseBody.contentLength() == 0L) return@let
                     if (!ClerkResult.hasHttpErrorBody(response.code())) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
-                    val statusCode = createStatusCode(response.code())
-                    val nextAnnotations = annotations + statusCode
                     // This runs inside Retrofit's callback.onResponse, which only rethrows
                     // fatal errors (throwIfFatal) and logs and swallows everything else. An
                     // uncaught non-fatal Throwable would leave the suspending caller hanging,
@@ -116,7 +114,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     errorBody =
                       try {
                         retrofit
-                          .responseBodyConverter<Any>(errorType, nextAnnotations)
+                          .responseBodyConverter<Any>(errorType, annotations)
                           .convert(responseBody)
                       } catch (e: VirtualMachineError) {
                         throw e
