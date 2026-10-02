@@ -261,7 +261,7 @@ private suspend fun SignIn.authenticateWithRedirectFactor(
   transferable: Boolean,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
-    when (val prepared = prepareFirstFactor(params)) {
+    when (val prepared = prepareFirstFactorImpl(params)) {
       is ClerkResult.Failure -> prepared
       is ClerkResult.Success -> prepared.value.authenticateWithPreparedRedirect(transferable)
     }
@@ -297,12 +297,12 @@ suspend fun SignIn.sendCode(
       val factor = firstFactorFor(listOf(EMAIL_CODE), email, ::sameEmail)
       val emailAddressId =
         factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(EMAIL_CODE)
-      prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
+      prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
     } else {
       val factor = firstFactorFor(listOf(PHONE_CODE), builder.phone!!, ::samePhone)
       val phoneNumberId =
         factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(PHONE_CODE)
-      prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
+      prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
     }
   }
 }
@@ -489,7 +489,7 @@ suspend fun SignIn.verifyMfaCode(
       MfaType.BACKUP_CODE -> SignIn.AttemptSecondFactorParams.BackupCode(code = code)
     }
 
-  return attemptSecondFactor(params)
+  return attemptSecondFactorImpl(params)
 }
 
 /**
@@ -547,7 +547,9 @@ suspend fun SignIn.sendResetPasswordEmailCode(
       emailAddressId
         ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_EMAIL_CODE }?.emailAddressId
         ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
-    prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = id))
+    prepareFirstFactorImpl(
+      SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = id)
+    )
   }
 
 /**
@@ -566,7 +568,9 @@ suspend fun SignIn.sendResetPasswordPhoneCode(
       phoneNumberId
         ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_PHONE_CODE }?.phoneNumberId
         ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)
-    prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = id))
+    prepareFirstFactorImpl(
+      SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = id)
+    )
   }
 
 /**
@@ -612,7 +616,9 @@ suspend fun SignIn.resetPassword(
 suspend fun SignIn.reload(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return get(rotatingTokenNonce)
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  }
 }
 
 // endregion

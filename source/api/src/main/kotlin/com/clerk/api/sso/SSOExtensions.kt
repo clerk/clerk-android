@@ -1,5 +1,7 @@
 package com.clerk.api.sso
 
+import com.clerk.api.Clerk
+import com.clerk.api.auth.createSignIn
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
@@ -63,7 +65,7 @@ internal suspend fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResult
 private suspend fun SignUp.toOAuthResultWithTransfer():
   ClerkResult<OAuthResult, ClerkErrorResponse> {
   return if (needsTransferToSignIn) {
-    SignIn.create(SignIn.CreateParams.Strategy.Transfer()).signInToOAuthResult()
+    Clerk.auth.createSignIn(SignIn.CreateParams.Strategy.Transfer()).signInToOAuthResult()
   } else {
     ClerkResult.success(OAuthResult(signUp = this))
   }

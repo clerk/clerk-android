@@ -13,6 +13,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Fields.STRATEGY
+import com.clerk.api.auth.createSignIn
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
@@ -28,7 +29,7 @@ import com.clerk.api.session.prepareFirstFactorVerification
 import com.clerk.api.session.prepareSecondFactorVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
-import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.signin.attemptSecondFactorImpl
 import com.clerk.api.signin.prepareSecondFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.GoogleCredentialManagerImpl
@@ -232,7 +233,7 @@ internal object GoogleCredentialAuthenticationService {
         )
 
       if (credential is PublicKeyCredential) {
-        signIn.attemptSecondFactor(
+        signIn.attemptSecondFactorImpl(
           SignIn.AttemptSecondFactorParams.Passkey(credential.authenticationResponseJson)
         )
       } else {
@@ -629,7 +630,7 @@ internal object GoogleCredentialAuthenticationService {
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     ClerkLog.d("Attempting password authentication with saved credential")
     val result =
-      SignIn.create(
+      Clerk.auth.createSignIn(
         SignIn.CreateParams.Strategy.Password(
           identifier = credential.id,
           password = credential.password,

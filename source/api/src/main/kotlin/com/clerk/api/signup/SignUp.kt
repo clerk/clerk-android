@@ -1,4 +1,6 @@
-@file:Suppress("unused")
+// TooManyFunctions: the deprecated old-layer wrappers sit next to their implementations until the
+// next major removes them.
+@file:Suppress("unused", "TooManyFunctions")
 
 package com.clerk.api.signup
 
@@ -495,6 +497,12 @@ data class SignUp(
      * @param params The strategy to use for creating the sign-up.
      * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
+    @Deprecated(
+      message =
+        "Use the Clerk.auth method for your strategy: signUp { }, signUpWithTicket() or " +
+          "signUpWithIdToken(). This overload will be removed in the next major version.",
+      level = DeprecationLevel.WARNING,
+    )
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       return Clerk.auth.createSignUp(params)
     }
@@ -575,7 +583,18 @@ val SignUp.firstFieldToVerify: String?
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use update { } with the fields to change. This overload will be removed in the next major " +
+      "version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.update(
+  updateParams: SignUp.SignUpUpdateParams
+): ClerkResult<SignUp, ClerkErrorResponse> = updateImpl(updateParams)
+
+/** Canonical implementation behind both [update] overloads. */
+internal suspend fun SignUp.updateImpl(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
@@ -605,7 +624,18 @@ suspend fun SignUp.get(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use sendEmailCode(), sendPhoneCode() or sendEmailLink(). This method will be removed in the " +
+      "next major version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.prepareVerification(
+  prepareVerification: SignUp.PrepareVerificationParams.Strategy
+): ClerkResult<SignUp, ClerkErrorResponse> = prepareVerificationImpl(prepareVerification)
+
+/** Canonical implementation behind [prepareVerification] and the sign-up `send*` methods. */
+internal suspend fun SignUp.prepareVerificationImpl(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
@@ -626,7 +656,7 @@ suspend fun SignUp.prepareVerification(
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
+  return prepareVerificationImpl(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
 }
 
 /**
@@ -639,7 +669,7 @@ suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+  return prepareVerificationImpl(SignUp.PrepareVerificationParams.Strategy.EmailCode())
 }
 
 /**
@@ -649,7 +679,7 @@ suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
+  return prepareVerificationImpl(SignUp.PrepareVerificationParams.Strategy.EmailLink())
 }
 
 /**
@@ -659,7 +689,18 @@ suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use verifyCode(code, VerificationType). This method will be removed in the next major " +
+      "version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.attemptVerification(
+  params: SignUp.AttemptVerificationParams
+): ClerkResult<SignUp, ClerkErrorResponse> = attemptVerificationImpl(params)
+
+/** Canonical implementation behind [attemptVerification] and [verifyCode]. */
+internal suspend fun SignUp.attemptVerificationImpl(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
