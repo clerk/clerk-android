@@ -354,8 +354,11 @@ private suspend fun createHostedAuth(
   responseGuard: ResponseGuard,
 ): ClerkResult<Uri, ClerkErrorResponse> {
   var result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = false)
-  if (result is ClerkResult.Failure && result.isSignedOutFailure()) {
-    // DeviceTokenSavingMiddleware has already persisted any replacement token from the 401.
+  if (
+    result is ClerkResult.Failure &&
+      result.isSignedOutFailure() &&
+      refreshSignedOutClient(responseGuard)
+  ) {
     result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = true)
   }
   return when (result) {
@@ -366,6 +369,19 @@ private suspend fun createHostedAuth(
           IllegalStateException("Hosted auth creation returned an invalid response.")
         )
   }
+}
+
+private suspend fun refreshSignedOutClient(responseGuard: ResponseGuard): Boolean {
+  val manualClientSyncRequest = ManualClientSyncRequest()
+  val result =
+    ClerkApi.client.getSkippingClientId(manualClientSyncRequest = manualClientSyncRequest)
+  if (result !is ClerkResult.Success) return false
+  var flowIsCurrent = false
+  responseGuard.runIfAllowed {
+    flowIsCurrent = true
+    manualClientSyncRequest.runIfResponseCurrent { Clerk.updateClient(result.value) }
+  }
+  return flowIsCurrent
 }
 
 private suspend fun requestHostedAuth(

@@ -19,6 +19,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -133,7 +134,92 @@ class HostedAuthServiceTest {
   }
 
   @Test
+  fun startRefreshesClientBeforeRetryingSignedOutCreate() = runBlocking {
+    val refreshedClient = Client(id = "client_new")
+    stubClientRefresh(ClerkResult.success(refreshedClient))
+    val secondRequestStarted = CompletableDeferred<Unit>()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns
+      signedOutFailure() coAndThen
+      {
+        secondRequestStarted.complete(Unit)
+        ClerkResult.success(
+          HostedAuthResource(objectType = "hosted_auth", url = "https://portal.dev/start")
+        )
+      }
+
+    val start = startInBackground()
+    withTimeout(TIMEOUT_MS) { secondRequestStarted.await() }
+
+    coVerifyOrder {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+      clientApi.getSkippingClientId(INTERNAL_HEADER_TRUE, any())
+      Clerk.updateClient(refreshedClient)
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+
+    HostedAuthService.cancelPendingAuthentication()
+    assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
+  }
+
+  @Test
+  fun startRetriesWithoutApplyingStaleRefreshedClient() = runBlocking {
+    stubClientRefresh(ClerkResult.success(Client(id = "client_new")))
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns false
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns signedOutFailure()
+
+    HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    coVerify(exactly = 2) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+    verify(exactly = 0) { Clerk.updateClient(any()) }
+  }
+
+  @Test
+  fun startDoesNotRetrySignedOutCreateAfterFlowIsCancelledDuringRefresh() = runBlocking {
+    coEvery { clientApi.getSkippingClientId(any(), any()) } coAnswers
+      {
+        HostedAuthService.cancelPendingAuthentication()
+        ClerkResult.success(Client(id = "client_new"))
+      }
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns signedOutFailure()
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 1) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
+  fun startReturnsSignedOutFailureWithoutRetryWhenClientRefreshFails() = runBlocking {
+    stubClientRefresh(
+      ClerkResult.httpFailure(code = 500, error = ClerkErrorResponse(errors = emptyList()))
+    )
+    val failure = signedOutFailure()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns failure
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertSame(failure, result)
+    coVerify(exactly = 1) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+    verify(exactly = 0) { Clerk.updateClient(any()) }
+  }
+
+  @Test
   fun startRetriesCreateOnceAfterUnauthorizedWithSameRequest() = runBlocking {
+    stubClientRefresh(ClerkResult.success(Client(id = "client_new")))
     val requests = CopyOnWriteArrayList<HostedAuthCreateRequest>()
     val secondRequestStarted = CompletableDeferred<Unit>()
     coEvery {
@@ -177,6 +263,7 @@ class HostedAuthServiceTest {
 
   @Test
   fun startRetriesCreateAtMostOnce() = runBlocking {
+    stubClientRefresh(ClerkResult.success(Client(id = "client_new")))
     val secondFailure = signedOutFailure()
     coEvery {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
@@ -192,6 +279,7 @@ class HostedAuthServiceTest {
     coVerify(exactly = 2) {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
+    coVerify(exactly = 1) { clientApi.getSkippingClientId(any(), any()) }
   }
 
   @Test
@@ -372,6 +460,14 @@ class HostedAuthServiceTest {
         )
       }
     return capturedState
+  }
+
+  private fun stubClientRefresh(result: ClerkResult<Client, ClerkErrorResponse>) {
+    coEvery { clientApi.getSkippingClientId(any(), any()) } coAnswers
+      {
+        arg<ManualClientSyncRequest?>(1)?.recordResponse(null, null)
+        result
+      }
   }
 
   private fun signedOutFailure(): ClerkResult.Failure<ClerkErrorResponse> =
