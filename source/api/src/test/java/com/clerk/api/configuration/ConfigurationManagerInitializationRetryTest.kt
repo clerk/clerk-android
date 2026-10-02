@@ -102,6 +102,37 @@ class ConfigurationManagerInitializationRetryTest {
   }
 
   @Test
+  fun `initialization discarded by a device-token change still retries when the follow-up fails`() =
+    runTest {
+      coEvery { Client.getSkippingClientId() } returns
+        ClerkResult.unknownFailure(IOException("offline"))
+      var fenced = false
+      coEvery { Environment.get() } coAnswers
+        {
+          if (!fenced) {
+            fenced = true
+            manager.fenceClientResponsesAfterSharedDeviceTokenChange()
+          }
+          ClerkResult.unknownFailure(IOException("offline"))
+        }
+      initialize()
+      runCurrent()
+
+      coVerify(exactly = 1) { Client.getSkippingClientId() }
+      assertFalse(manager.isInitialized.value)
+      assertNotNull(manager.initializationError.value)
+
+      stubSuccessfulRefresh()
+      advanceTimeBy(5_000)
+      runCurrent()
+
+      assertTrue(manager.isInitialized.value)
+      assertNull(manager.initializationError.value)
+      assertEquals("client_recovered", Clerk.client.id)
+      assertEquals("Recovered App", Clerk.applicationName)
+    }
+
+  @Test
   fun `connectivity restoration retries immediately and cancels pending backoff`() = runTest {
     initialize()
     runCurrent()

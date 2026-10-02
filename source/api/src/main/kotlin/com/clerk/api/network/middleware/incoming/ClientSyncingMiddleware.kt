@@ -67,11 +67,13 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             } else {
               emptyList()
             }
-          val completedAuthFlow = authEvents.firstOrNull { event ->
-            event is AuthEvent.SignInCompleted || event is AuthEvent.SignUpCompleted
-          }
+          val completedAuthFlow =
+            authEvents.firstOrNull { event ->
+              event is AuthEvent.SignInCompleted || event is AuthEvent.SignUpCompleted
+            }
           syncClientFromResponse(
             request = request,
+            response = response,
             jsonElement = jsonElement,
             serverFetchAtMillis = response.serverFetchAtMillis(),
             completedAuthFlow = completedAuthFlow,
@@ -96,6 +98,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   private fun syncClientFromResponse(
     request: Request,
+    response: Response,
     jsonElement: JsonElement,
     serverFetchAtMillis: Long,
     completedAuthFlow: AuthEvent?,
@@ -110,12 +113,12 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             ClerkLog.d("Client sync skipped null piggyback client")
           } else {
             ClerkLog.d("Client sync cleared by explicit null client")
-            request.syncClient { Clerk.updateClient(Client(), serverFetchAtMillis) }
+            request.syncClient(response) { Clerk.updateClient(Client(), serverFetchAtMillis) }
           }
         }
         null -> Unit
         else ->
-          request.syncClient {
+          request.syncClient(response) {
             syncClerkClient(
               client = json.decodeFromJsonElement(clientJson),
               serverFetchAtMillis = serverFetchAtMillis,
@@ -127,7 +130,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     }
 
     if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
-      request.syncClient {
+      request.syncClient(response) {
         syncClerkClient(
           client = json.decodeFromJsonElement(jsonElement),
           serverFetchAtMillis = serverFetchAtMillis,
@@ -228,8 +231,26 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   }
 }
 
-private fun Request.syncClient(sync: () -> Unit) {
-  tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
+/**
+ * Re-checks that the response's device token is still current immediately before applying its
+ * client, since the device token may change while the body is read and decoded. This narrows but
+ * does not close the window: the check and apply are not atomic because applying the client
+ * notifies shared-session sync, which takes its own lock and then storage's device-token lock.
+ */
+private fun Request.syncClient(response: Response, sync: () -> Unit) {
+  val guardedSync: () -> Unit = {
+    if (
+      Clerk.isClientResponseCurrent(
+        requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
+        responseDeviceToken = response.header(AUTHORIZATION_HEADER),
+      )
+    ) {
+      sync()
+    } else {
+      ClerkLog.d("Client sync skipped: device token changed while reading the response")
+    }
+  }
+  tag(ResponseGuard::class.java)?.runIfAllowed(guardedSync) ?: guardedSync()
 }
 
 private fun syncClerkClient(
