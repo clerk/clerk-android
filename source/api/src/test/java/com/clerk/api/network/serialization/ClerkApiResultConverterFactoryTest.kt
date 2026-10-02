@@ -4,6 +4,7 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.MediaType.Companion.toMediaType
@@ -92,6 +93,25 @@ class ClerkApiResultConverterFactoryTest {
       converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
 
     assertNotNull(converter)
+  }
+
+  @Test
+  fun `responseBodyConverter passes the caller's annotations to the delegate unchanged`() {
+    val clerkResultType =
+      createParameterizedType(
+        ClerkResult::class.java,
+        Environment::class.java,
+        Exception::class.java,
+      )
+    val annotations = arrayOf<Annotation>(Deprecated("marker"))
+    val delegateAnnotations = slot<Array<Annotation>>()
+    every {
+      mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), capture(delegateAnnotations))
+    } returns mockk(relaxed = true)
+
+    converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
+
+    assertEquals(annotations.toList(), delegateAnnotations.captured.toList())
   }
 
   @Test
