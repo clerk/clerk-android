@@ -3,6 +3,7 @@ package com.clerk.api.sdk
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.network.ClerkApi
@@ -12,6 +13,7 @@ import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.storage.StorageCipher
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import io.mockk.coEvery
@@ -19,8 +21,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
@@ -52,6 +58,7 @@ class ClerkOfflineCacheTest {
 
   @After
   fun tearDown() {
+    StorageHelper.storageCipherFactoryOverride = null
     Clerk.reset()
     unmockkAll()
     StorageHelper.reset(context)
@@ -104,11 +111,42 @@ class ClerkOfflineCacheTest {
     stubNeverCompletingRefresh()
 
     initialize()
+    withTimeout(5_000) { Clerk.isInitialized.first { it } }
 
-    assertTrue(Clerk.isInitialized.value)
     assertEquals("client_cached", Clerk.client.id)
     assertEquals("Cached App", Clerk.applicationName)
   }
+
+  @Test
+  fun `initialize defers keystore setup and cache decryption off the calling thread`() =
+    runBlocking {
+      val callingThread = Thread.currentThread()
+      val keystoreThreads = ConcurrentLinkedQueue<Thread>()
+      val decryptThreads = ConcurrentLinkedQueue<Thread>()
+      val releaseKeystore = CountDownLatch(1)
+      StorageHelper.resetToUninitializedForTesting()
+      StorageHelper.storageCipherFactoryOverride = {
+        keystoreThreads.add(Thread.currentThread())
+        releaseKeystore.await(2, TimeUnit.SECONDS)
+        PassThroughCipher(decryptThreads)
+      }
+      writeRawCachedState(cachedStateJson())
+      stubNeverCompletingRefresh()
+
+      initialize()
+
+      // Returning while the Keystore stand-in is still blocked proves initialize() did not wait
+      // on it; nothing has been restored yet.
+      assertFalse(Clerk.isInitialized.value)
+      releaseKeystore.countDown()
+      withTimeout(5_000) { Clerk.isInitialized.first { it } }
+
+      assertEquals("client_cached", Clerk.client.id)
+      assertTrue(keystoreThreads.isNotEmpty())
+      assertTrue(decryptThreads.isNotEmpty())
+      assertTrue(keystoreThreads.none { it === callingThread })
+      assertTrue(decryptThreads.none { it === callingThread })
+    }
 
   @Test
   fun `failed offline refresh keeps restored state ready`() = runBlocking {
@@ -138,6 +176,8 @@ class ClerkOfflineCacheTest {
     stubNeverCompletingRefresh()
 
     initialize()
+    // The refresh starts only after cached state restoration has run.
+    coVerify(timeout = 5_000) { Environment.get() }
 
     assertFalse(Clerk.isInitialized.value)
     assertNull(Clerk.clientFlow.value)
@@ -150,6 +190,7 @@ class ClerkOfflineCacheTest {
     stubNeverCompletingRefresh()
 
     initialize()
+    coVerify(timeout = 5_000) { Environment.get() }
 
     assertFalse(Clerk.isInitialized.value)
     assertNull(Clerk.clientFlow.value)
@@ -201,6 +242,18 @@ class ClerkOfflineCacheTest {
     publishableKey: String = PUBLISHABLE_KEY,
     baseUrl: String = PROXY_URL,
   ) {
+    StorageHelper.saveValue(
+      StorageKey.CACHED_CLERK_STATE,
+      cachedStateJson(client, environment, publishableKey, baseUrl),
+    )
+  }
+
+  private fun cachedStateJson(
+    client: Client = Client(id = "client_cached"),
+    environment: Environment = testEnvironment("Cached App"),
+    publishableKey: String = PUBLISHABLE_KEY,
+    baseUrl: String = PROXY_URL,
+  ): String {
     val state =
       CachedClerkState(
         publishableKey = publishableKey,
@@ -209,10 +262,26 @@ class ClerkOfflineCacheTest {
         environment = environment,
         clientServerFetchAtMillis = SERVER_FETCH_AT_MILLIS,
       )
-    StorageHelper.saveValue(
-      StorageKey.CACHED_CLERK_STATE,
-      ClerkApi.json.encodeToString(CachedClerkState.serializer(), state),
-    )
+    return ClerkApi.json.encodeToString(CachedClerkState.serializer(), state)
+  }
+
+  /** Writes an "encrypted" value for [PassThroughCipher] without initializing [StorageHelper]. */
+  private fun writeRawCachedState(json: String) {
+    context
+      .getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+      .edit()
+      .putString(StorageKey.CACHED_CLERK_STATE.name, "clerk:v1:$json")
+      .commit()
+  }
+
+  private class PassThroughCipher(private val decryptThreads: MutableCollection<Thread>) :
+    StorageCipher {
+    override fun encrypt(plaintext: String): String = plaintext
+
+    override fun decrypt(ciphertext: String): String {
+      decryptThreads.add(Thread.currentThread())
+      return ciphertext
+    }
   }
 
   private fun loadCachedState(): CachedClerkState? {

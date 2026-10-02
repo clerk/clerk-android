@@ -168,11 +168,13 @@ internal class ConfigurationManager(
    * 1. Stores application context safely using WeakReference
    * 2. Extracts API base URL from publishable key (synchronous - fast)
    * 3. Configures the Clerk API client (synchronous - fast)
-   * 4. Initiates background client and environment data refresh (async)
-   * 5. Sets up application lifecycle monitoring (async)
+   * 4. Initializes storage and restores cached client/environment state (async)
+   * 5. Initiates background client and environment data refresh (async)
+   * 6. Sets up application lifecycle monitoring (async)
    *
-   * Storage initialization and device ID generation are moved to background to optimize startup
-   * time and avoid blocking the main thread.
+   * Storage initialization (Keystore), cached state decryption, and device ID generation run in the
+   * background so this method does not block the calling thread. Observe [isInitialized] for
+   * readiness, including readiness restored from the cached snapshot.
    *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
@@ -223,13 +225,10 @@ internal class ConfigurationManager(
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
 
-    ensureStorageInitialized()
-    hydrateCachedStateIfNeeded(baseUrl)
-    Clerk.configureSharedSessionSync(
-      context = context.applicationContext,
-      publishableKey = publishableKey,
-      config = options?.sharedSessionSync,
-    )
+    // Keystore setup and cache decryption run in [restoreLocalState]; early storage callers
+    // initialize it lazily on their own thread.
+    StorageHelper.prepare(context.applicationContext)
+    BiometricCredentialStorage.initialize(context.applicationContext)
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -250,6 +249,7 @@ internal class ConfigurationManager(
         retryDelaySeconds = 0,
         expectedConfigurationVersion = configuredVersion,
       )
+    if (!restoreLocalState(configuredVersion, options)) return@launch
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
@@ -271,6 +271,31 @@ internal class ConfigurationManager(
       }
     }
     dataRefreshJob.await()
+  }
+
+  /**
+   * Initializes storage, restores the cached snapshot, and starts shared session sync, in the same
+   * order [configure] used to run them on the caller's thread. Hydration precedes shared session
+   * sync so the restored snapshot is not republished to other apps. Synchronized with [reset] so a
+   * reset cannot interleave with a restore from the configuration it replaced.
+   */
+  @Synchronized
+  private fun restoreLocalState(
+    configuredVersion: Int,
+    options: ClerkConfigurationOptions?,
+  ): Boolean {
+    val appContext = context?.get()
+    if (configuredVersion != configurationVersion || !hasConfigured || appContext == null) {
+      return false
+    }
+    ensureStorageInitialized()
+    hydrateCachedStateIfNeeded(Clerk.baseUrl)
+    Clerk.configureSharedSessionSync(
+      context = appContext,
+      publishableKey = publishableKey,
+      config = options?.sharedSessionSync,
+    )
+    return true
   }
 
   fun isConfigured(): Boolean = hasConfigured

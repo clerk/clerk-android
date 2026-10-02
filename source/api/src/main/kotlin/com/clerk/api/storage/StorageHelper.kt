@@ -12,6 +12,7 @@ internal object StorageHelper {
 
   @Volatile private var secureStorage: SharedPreferences? = null
   @Volatile private var storageCipher: StorageCipher? = null
+  @Volatile private var preparedContext: Context? = null
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
@@ -26,13 +27,8 @@ internal object StorageHelper {
    */
   @Synchronized
   fun initialize(context: Context) {
-    if (secureStorage == null) {
-      secureStorage =
-        context.applicationContext.getSharedPreferences(
-          CLERK_PREFERENCES_FILE_NAME,
-          Context.MODE_PRIVATE,
-        )
-    }
+    // Create the cipher before publishing [secureStorage] so unsynchronized readers never see
+    // initialized preferences paired with a cipher that is still being created.
     if (storageCipher == null) {
       storageCipher =
         runCatching { storageCipherFactoryOverride?.invoke() ?: StorageCipherFactory.create() }
@@ -41,9 +37,31 @@ internal object StorageHelper {
           }
           .getOrNull()
     }
+    if (secureStorage == null) {
+      secureStorage =
+        context.applicationContext.getSharedPreferences(
+          CLERK_PREFERENCES_FILE_NAME,
+          Context.MODE_PRIVATE,
+        )
+    }
+  }
+
+  /**
+   * Records [context] without touching the Keystore so [initialize] can run off the caller's
+   * thread. A read or write that arrives before then initializes storage on its own thread.
+   */
+  fun prepare(context: Context) {
+    preparedContext = context.applicationContext
+  }
+
+  private fun initializeIfPrepared() {
+    if (secureStorage == null) {
+      preparedContext?.let(::initialize)
+    }
   }
 
   internal fun saveValue(key: StorageKey, value: String) {
+    initializeIfPrepared()
     val prefs = secureStorage
     val cipher = storageCipher
     val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
@@ -74,6 +92,7 @@ internal object StorageHelper {
   }
 
   internal fun loadValue(key: StorageKey): String? {
+    initializeIfPrepared()
     val prefs = secureStorage
     val storedValue = prefs?.getString(key.name, null)
     val cipher = storageCipher
@@ -106,6 +125,7 @@ internal object StorageHelper {
   }
 
   internal fun deleteValue(key: StorageKey) {
+    initializeIfPrepared()
     val prefs = secureStorage
     if (prefs == null) {
       ClerkLog.w(
@@ -130,6 +150,7 @@ internal object StorageHelper {
   internal fun resetToUninitializedForTesting() {
     clearStoredState()
     secureStorage = null
+    preparedContext = null
   }
 
   private fun clearStoredState() {
