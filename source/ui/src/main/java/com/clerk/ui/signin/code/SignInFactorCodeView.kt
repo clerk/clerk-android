@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -20,7 +21,6 @@ import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -100,9 +100,9 @@ private fun SignInFactorCodeViewImpl(
   )
   val identifierEditable =
     isSecondFactor ||
-      when (factor.strategy) {
-        StrategyKeys.PHONE_CODE -> !authState.authStartPhoneNumberLocked
-        StrategyKeys.EMAIL_CODE -> !authState.authStartIdentifierLocked
+      when (factor.strategyType) {
+        Strategy.PhoneCode -> !authState.authStartPhoneNumberLocked
+        Strategy.EmailCode -> !authState.authStartIdentifierLocked
         else -> true
       }
   ClerkThemedAuthScaffold(
@@ -189,7 +189,7 @@ private fun PreviewSignInFactorCodeView() {
   ClerkMaterialTheme {
     PreviewAuthStateProvider {
       SignInFactorCodeView(
-        Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
+        Factor(Strategy.PhoneCode.value, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},
       )
     }

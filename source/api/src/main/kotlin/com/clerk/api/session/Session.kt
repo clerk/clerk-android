@@ -1,9 +1,7 @@
 package com.clerk.api.session
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.PASSKEY
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -44,7 +42,6 @@ data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
-
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -54,7 +51,6 @@ data class Session(
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
-
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
@@ -124,14 +120,16 @@ data class Session(
 
     @Serializable
     @AutoMap
-    data class Password(val password: String, override val strategy: String = PASSWORD) :
-      AttemptFirstFactorParams
+    data class Password(
+      val password: String,
+      override val strategy: String = Strategy.Password.value,
+    ) : AttemptFirstFactorParams
 
     @Serializable
     @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = Strategy.Passkey.value,
     ) : AttemptFirstFactorParams
 
     @Serializable
@@ -145,7 +143,7 @@ data class Session(
       @SerialName("client_data") val clientData: String,
       val signature: String,
       val algorithm: String,
-      override val strategy: String = TRUSTED_DEVICE,
+      override val strategy: String = Strategy.TrustedDevice.value,
     ) : AttemptFirstFactorParams
   }
 
@@ -168,7 +166,7 @@ data class Session(
     @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = Strategy.Passkey.value,
     ) : AttemptSecondFactorParams
 
     @Serializable
@@ -178,7 +176,7 @@ data class Session(
       @SerialName("client_data") val clientData: String,
       val signature: String,
       val algorithm: String,
-      override val strategy: String = TRUSTED_DEVICE,
+      override val strategy: String = Strategy.TrustedDevice.value,
     ) : AttemptSecondFactorParams
   }
 }

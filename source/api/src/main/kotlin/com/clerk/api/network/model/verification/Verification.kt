@@ -1,5 +1,6 @@
 package com.clerk.api.network.model.verification
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialChallenge
 import com.clerk.api.network.model.error.Error
 import kotlinx.serialization.SerialName
@@ -26,6 +27,10 @@ data class Verification(
   @SerialName("trusted_device_challenge")
   val biometricCredentialChallenge: BiometricCredentialChallenge? = null,
 ) {
+  /** The typed form of [strategy], or null if there is none. */
+  val strategyType: Strategy?
+    get() = strategy?.let(Strategy::from)
+
   /** The state of the verification. */
   @Serializable
   enum class Status {

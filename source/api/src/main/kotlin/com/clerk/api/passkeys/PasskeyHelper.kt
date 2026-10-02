@@ -1,16 +1,12 @@
 package com.clerk.api.passkeys
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Passkey.PASSKEY_STRATEGY_VALUE
 import com.clerk.api.log.ClerkLog
 import java.net.URL
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 internal object PasskeyHelper {
-  val passkeyStrategy: String
-    get() = PASSKEY_STRATEGY_VALUE
-
   fun getDomain(): String? {
     return try {
       URL(Clerk.baseUrl).host?.removePrefix("www.")?.takeIf { it.isNotEmpty() }

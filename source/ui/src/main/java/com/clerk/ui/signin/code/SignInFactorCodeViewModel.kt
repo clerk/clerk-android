@@ -2,13 +2,13 @@ package com.clerk.ui.signin.code
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignIn
-import com.clerk.ui.core.common.StrategyKeys
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,13 +47,13 @@ internal class SignInFactorCodeViewModel(
           return@launch
         }
 
-        when (factor.strategy) {
-          StrategyKeys.EMAIL_CODE -> {
+        when (factor.strategyType) {
+          Strategy.EmailCode -> {
             prepareHandler.prepareForEmailCode(inProgressSignIn, factor, isSecondFactor) {
               _state.value = AuthenticationViewState.Error(it)
             }
           }
-          StrategyKeys.PHONE_CODE ->
+          Strategy.PhoneCode ->
             prepareHandler.prepareForPhoneCode(
               inProgressSignIn = inProgressSignIn,
               factor = factor,
@@ -62,15 +62,18 @@ internal class SignInFactorCodeViewModel(
               _state.value = AuthenticationViewState.Error(it)
             }
 
-          StrategyKeys.RESET_PASSWORD_PHONE_CODE ->
+          Strategy.ResetPasswordPhoneCode ->
             prepareHandler.prepareForResetPasswordWithPhone(inProgressSignIn, factor) {
               _state.value = AuthenticationViewState.Error(it)
             }
 
-          StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
+          Strategy.ResetPasswordEmailCode ->
             prepareHandler.prepareForResetWithEmailCode(inProgressSignIn, factor) {
               _state.value = AuthenticationViewState.Error(it)
             }
+
+          // TOTP has nothing to prepare; other strategies never reach the code view.
+          else -> Unit
         }
       }
     }
@@ -79,7 +82,7 @@ internal class SignInFactorCodeViewModel(
   private fun SignIn.hasActiveVerification(factor: Factor, isSecondFactor: Boolean): Boolean {
     val verification = if (isSecondFactor) secondFactorVerification else firstFactorVerification
     return verification?.status == Verification.Status.UNVERIFIED &&
-      verification.strategy == factor.strategy &&
+      verification.strategyType == factor.strategyType &&
       verification.expireAt?.let { it > System.currentTimeMillis() } == true
   }
 
@@ -97,8 +100,8 @@ internal class SignInFactorCodeViewModel(
       }
 
       viewModelScope.launch(workDispatcher) {
-        when (factor.strategy) {
-          StrategyKeys.EMAIL_CODE ->
+        when (factor.strategyType) {
+          Strategy.EmailCode ->
             attemptHandler.attemptEmailCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
@@ -107,7 +110,7 @@ internal class SignInFactorCodeViewModel(
               onErrorCallback = onErrorCallback,
             )
 
-          StrategyKeys.PHONE_CODE ->
+          Strategy.PhoneCode ->
             attemptHandler.attemptFirstFactorPhoneCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
@@ -116,7 +119,7 @@ internal class SignInFactorCodeViewModel(
               onErrorCallback = onErrorCallback,
             )
 
-          StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
+          Strategy.ResetPasswordEmailCode ->
             attemptHandler.attemptResetForEmailCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
@@ -124,7 +127,7 @@ internal class SignInFactorCodeViewModel(
               onErrorCallback = onErrorCallback,
             )
 
-          StrategyKeys.RESET_PASSWORD_PHONE_CODE ->
+          Strategy.ResetPasswordPhoneCode ->
             attemptHandler.attemptResetForPhoneCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
@@ -132,7 +135,7 @@ internal class SignInFactorCodeViewModel(
               onErrorCallback = onErrorCallback,
             )
 
-          StrategyKeys.TOTP ->
+          Strategy.Totp ->
             attemptHandler.attemptForTotp(
               inProgressSignIn = inProgressSignIn,
               code = code,
@@ -167,7 +170,7 @@ internal class SignInFactorCodeViewModel(
   }
 
   private fun Factor.matches(other: Factor): Boolean {
-    if (strategy != other.strategy) return false
+    if (strategyType != other.strategyType) return false
 
     return when {
       emailAddressId != null || other.emailAddressId != null ->

@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Constants
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signup.SignUp
 import com.clerk.ui.signup.collectfield.CollectField
@@ -60,7 +61,7 @@ class AuthStateSignUpRoutingTest {
             "email_address" to
               Verification(
                 status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_LINK,
+                strategy = Strategy.EmailLink.value,
               )
           )
       )
@@ -81,7 +82,7 @@ class AuthStateSignUpRoutingTest {
             "email_address" to
               Verification(
                 status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_CODE,
+                strategy = Strategy.EmailCode.value,
               )
           )
       )
@@ -106,7 +107,7 @@ class AuthStateSignUpRoutingTest {
             "email_address" to
               Verification(
                 status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_LINK,
+                strategy = Strategy.EmailLink.value,
               )
           ),
         missingFields = listOf("password"),
