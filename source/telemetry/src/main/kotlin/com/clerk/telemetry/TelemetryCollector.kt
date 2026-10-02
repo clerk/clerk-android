@@ -5,6 +5,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.content.TextContent
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -212,6 +213,8 @@ private constructor(
     val body = json.encodeToString(TelemetryEnvelope.serializer(), TelemetryEnvelope(events))
     try {
       transport.post("$endpointBaseUrl/v1/event", body)
+    } catch (e: CancellationException) {
+      throw e
     } catch (_: Exception) {}
   }
 
