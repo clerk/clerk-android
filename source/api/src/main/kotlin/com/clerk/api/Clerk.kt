@@ -53,6 +53,7 @@ import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -159,6 +160,12 @@ object Clerk {
   /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
   internal var lastClientServerFetchAtMillis: Long? = null
     private set
+
+  private val clientUpdates = AtomicLong()
+
+  /** Incremented on every client update so in-flight refreshes can detect newer client state. */
+  internal val clientUpdateCount: Long
+    get() = clientUpdates.get()
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -1047,14 +1054,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1107,6 +1114,7 @@ object Clerk {
     this.client = updatedClient
     lastClientServerFetchAtMillis = serverFetchAtMillis
     _clientFlow.value = updatedClient
+    clientUpdates.incrementAndGet()
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()
@@ -1153,8 +1161,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1358,8 +1367,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
