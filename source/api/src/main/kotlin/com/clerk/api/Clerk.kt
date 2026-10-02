@@ -53,7 +53,6 @@ import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -161,11 +160,14 @@ object Clerk {
   internal var lastClientServerFetchAtMillis: Long? = null
     private set
 
-  private val clientUpdates = AtomicLong()
+  /** Guards the client fields together with [clientUpdates] so conditional updates are atomic. */
+  private val clientUpdateLock = Any()
+
+  private var clientUpdates = 0L
 
   /** Incremented on every client update so in-flight refreshes can detect newer client state. */
   internal val clientUpdateCount: Long
-    get() = clientUpdates.get()
+    get() = synchronized(clientUpdateLock) { clientUpdates }
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -1110,16 +1112,9 @@ object Clerk {
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
-    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
-    val serverFetchAtMillis =
-      if (_clientFlow.value == resolvedClient) {
-        lastClientServerFetchAtMillis ?: System.currentTimeMillis()
-      } else {
-        System.currentTimeMillis()
-      }
     updateClient(
       client = client,
-      serverFetchAtMillis = serverFetchAtMillis,
+      serverFetchAtMillis = serverFetchAtMillisFor(client),
       completedAuthFlow = completedAuthFlow,
     )
   }
@@ -1132,12 +1127,50 @@ object Clerk {
     if (completedAuthFlow != null) {
       holdAuthFlowCompletion(completedAuthFlow)
     }
-    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    applyClientUpdate(client, serverFetchAtMillis, expectedUpdateCount = null)
+  }
 
-    this.client = updatedClient
-    lastClientServerFetchAtMillis = serverFetchAtMillis
-    _clientFlow.value = updatedClient
-    clientUpdates.incrementAndGet()
+  /**
+   * Applies [client] only if no other client update happened since [clientUpdateCount] returned
+   * [expectedUpdateCount]. The check and the write happen atomically.
+   *
+   * @return true if the client was applied.
+   */
+  internal fun updateClientIfUnchangedSince(expectedUpdateCount: Long, client: Client): Boolean =
+    applyClientUpdate(
+      client = client,
+      serverFetchAtMillis = serverFetchAtMillisFor(client),
+      expectedUpdateCount = expectedUpdateCount,
+    )
+
+  private fun serverFetchAtMillisFor(client: Client): Long {
+    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    return if (_clientFlow.value == resolvedClient) {
+      lastClientServerFetchAtMillis ?: System.currentTimeMillis()
+    } else {
+      System.currentTimeMillis()
+    }
+  }
+
+  private fun applyClientUpdate(
+    client: Client,
+    serverFetchAtMillis: Long,
+    expectedUpdateCount: Long?,
+  ): Boolean {
+    // Only the field writes are locked: the side effects below call into other components that
+    // hold their own locks and may call back into updateClient.
+    val updatedClient =
+      synchronized(clientUpdateLock) {
+        if (expectedUpdateCount != null && clientUpdates != expectedUpdateCount) {
+          return false
+        }
+        val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+        this.client = resolvedClient
+        lastClientServerFetchAtMillis = serverFetchAtMillis
+        _clientFlow.value = resolvedClient
+        clientUpdates += 1
+        resolvedClient
+      }
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()
@@ -1146,6 +1179,7 @@ object Clerk {
     }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
     cacheStateIfReady()
+    return true
   }
 
   internal fun configureSharedSessionSync(

@@ -581,11 +581,8 @@ internal class ConfigurationManager(
       when {
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
-            // The client response is normally applied by ClientSyncingMiddleware when it arrives.
-            // Any later update (e.g. an auth flow completing while Environment was in flight) is
-            // newer than this snapshot, so only apply it when nothing has touched the client.
-            client =
-              clientResult.value.takeIf { Clerk.clientUpdateCount == clientUpdateCountAtStart },
+            client = clientResult.value,
+            clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
         else ->
@@ -617,12 +614,13 @@ internal class ConfigurationManager(
     }
 
   private fun handleSuccessfulRefresh(
-    client: Client?,
+    client: Client,
+    clientUpdateCountAtStart: Long,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     initializationRetryJob?.cancel()
     initializationRetryJob = null
-    updateClerkState(client, environment)
+    updateClerkState(client, clientUpdateCountAtStart, environment)
     _isInitialized.value = true
     _initializationError.value = null
 
@@ -808,8 +806,15 @@ internal class ConfigurationManager(
    *
    * This method is called only when both client and environment data have been loaded successfully.
    */
-  private fun updateClerkState(client: Client?, environment: Environment) {
-    client?.let(Clerk::updateClient)
+  private fun updateClerkState(
+    client: Client,
+    clientUpdateCountAtStart: Long,
+    environment: Environment,
+  ) {
+    // The client response is normally applied by ClientSyncingMiddleware when it arrives. Any
+    // later update (e.g. an auth flow completing while Environment was in flight) is newer than
+    // this snapshot, so only apply it when nothing has touched the client since the refresh began.
+    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {
