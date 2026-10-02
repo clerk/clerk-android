@@ -3,7 +3,10 @@ package com.clerk.api.organizations
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.user.currentSessionId
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -36,12 +39,22 @@ data class OrganizationInvitation(
   val updatedAt: Long,
   val publicOrganizationData: PublicOrganizationData? = null,
 ) {
+  /** The status of an organization invitation. */
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
   enum class Status {
     @SerialName("pending") Pending,
     @SerialName("accepted") Accepted,
     @SerialName("revoked") Revoked,
     @SerialName("invalid") Invalid,
     @SerialName("completed") Completed,
+
+    /** A status this SDK version does not recognize. */
+    @SerialName("unknown") Unknown;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), Unknown)
   }
 }
 

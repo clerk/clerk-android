@@ -3,6 +3,9 @@ package com.clerk.api.network.model.verification
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialChallenge
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,13 +35,18 @@ data class Verification(
     get() = strategy?.let(Strategy::from)
 
   /** The state of the verification. */
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
   enum class Status {
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
     @SerialName("transferable") TRANSFERABLE,
     @SerialName("failed") FAILED,
     @SerialName("expired") EXPIRED,
-    @SerialName("state_unknown") UNKNOWN,
+    @SerialName("state_unknown") UNKNOWN;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
   }
 }

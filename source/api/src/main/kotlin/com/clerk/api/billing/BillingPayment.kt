@@ -1,28 +1,37 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The type of charge a payment represents.
- */
-@Serializable
+/** The type of charge a payment represents. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingPaymentChargeType.Serializer::class)
 enum class BillingPaymentChargeType {
   @SerialName("checkout") CHECKOUT,
   @SerialName("recurring") RECURRING,
   @SerialName("price_transition") PRICE_TRANSITION,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingPaymentChargeType>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * The current status of a payment.
- */
-@Serializable
+/** The current status of a payment. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingPaymentStatus.Serializer::class)
 enum class BillingPaymentStatus {
   @SerialName("pending") PENDING,
   @SerialName("paid") PAID,
   @SerialName("failed") FAILED,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingPaymentStatus>(generatedSerializer(), UNKNOWN)
 }
 
 /**

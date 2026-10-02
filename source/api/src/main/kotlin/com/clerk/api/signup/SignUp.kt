@@ -12,6 +12,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -20,6 +21,8 @@ import com.clerk.api.sso.SSOService
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.automap.annotations.MapTransform
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -186,7 +189,9 @@ data class SignUp(
    * The Status enum defines the possible states of a sign-up flow. Each state indicates a specific
    * requirement or completion level in the sign-up process.
    */
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
   enum class Status {
     /**
      * The sign-up has been inactive for over 24 hours. Once abandoned, the sign-up process cannot
@@ -215,7 +220,10 @@ data class SignUp(
      * The status is unknown or not recognized. This typically indicates an unexpected state that
      * should be handled gracefully.
      */
-    @SerialName("unknown") UNKNOWN,
+    @SerialName("unknown") UNKNOWN;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
   }
 
   /**

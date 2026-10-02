@@ -9,6 +9,7 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.GoogleSignInService
@@ -18,7 +19,9 @@ import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -223,7 +226,9 @@ private constructor(
    *
    * Each status indicates the current state of the sign-in flow and what action is required next.
    */
-  @Serializable
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
   enum class Status(internal val serializedValue: String) {
     /** The sign-in process is complete. */
     @SerialName("complete") COMPLETE("complete"),
@@ -245,6 +250,9 @@ private constructor(
 
     /** The sign-in process is in an unknown state. */
     UNKNOWN("unknown");
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
 
     internal companion object {
       private val entriesBySerializedValue: Map<String, Status> =
