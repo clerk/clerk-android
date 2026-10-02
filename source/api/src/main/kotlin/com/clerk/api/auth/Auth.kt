@@ -2,9 +2,6 @@ package com.clerk.api.auth
 
 import android.net.Uri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignInWithIdTokenBuilder
@@ -13,6 +10,7 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
@@ -243,7 +241,7 @@ class Auth internal constructor() {
       mapOf(
         "identifier" to builder.identifier!!,
         "password" to builder.password!!,
-        "strategy" to PASSWORD,
+        "strategy" to Strategy.Password.value,
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
@@ -275,7 +273,7 @@ class Auth internal constructor() {
     builder.validate()
 
     val identifier = builder.email ?: builder.phone!!
-    val strategy = if (builder.email != null) EMAIL_CODE else PHONE_CODE
+    val strategy = if (builder.email != null) Strategy.EmailCode.value else Strategy.PhoneCode.value
 
     val params =
       mapOf(
@@ -432,7 +430,7 @@ class Auth internal constructor() {
 
     val result =
       SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
+        strategy = Strategy.EnterpriseSso.value,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
         emailAddress = builder.email,
       )
@@ -455,7 +453,7 @@ class Auth internal constructor() {
   suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
     val params =
       mapOf(
-        "strategy" to com.clerk.api.Constants.Strategy.TICKET,
+        "strategy" to Strategy.Ticket.value,
         "ticket" to ticket,
         "locale" to Clerk.locale.value.orEmpty(),
       )
@@ -602,7 +600,7 @@ class Auth internal constructor() {
 
     val strategy =
       when (provider) {
-        IdTokenProvider.GOOGLE -> "google_one_tap"
+        IdTokenProvider.GOOGLE -> Strategy.GoogleOneTap.value
       }
 
     val params = buildMap {
@@ -638,7 +636,7 @@ class Auth internal constructor() {
 
     val result =
       SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
+        strategy = Strategy.EnterpriseSso.value,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
         emailAddress = builder.email,
       )

@@ -12,7 +12,7 @@ import androidx.credentials.exceptions.CreateCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.PASSKEY
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyCreateCredentialFailure
 import com.clerk.api.credentials.classifyGetCredentialFailure
@@ -82,7 +82,7 @@ object RestoreCredentials {
           val verificationResult =
             ClerkApi.user.attemptPasskeyVerification(
               passkeyId = prepareResult.value.id,
-              strategy = PASSKEY,
+              strategy = Strategy.Passkey.value,
               publicKeyCredential = response.responseJson,
             )
         ) {
@@ -116,7 +116,7 @@ object RestoreCredentials {
       when (
         val createResult =
           ClerkApi.signIn.createSignIn(
-            mapOf("strategy" to PASSKEY, "locale" to Clerk.locale.value.orEmpty())
+            mapOf("strategy" to Strategy.Passkey.value, "locale" to Clerk.locale.value.orEmpty())
           )
       ) {
         is ClerkResult.Success -> createResult.value

@@ -5,20 +5,77 @@ import com.clerk.sdk.BuildConfig
 /** Consolidated constants used throughout the Clerk SDK */
 object Constants {
 
-  /** Authentication and verification strategies */
+  /**
+   * Authentication and verification strategy strings.
+   *
+   * Superseded by the typed [com.clerk.api.auth.types.Strategy]; use `Strategy.X.value` where a raw
+   * string is required.
+   */
   object Strategy {
+    @Deprecated(
+      "Use the typed Strategy.PhoneCode instead.",
+      ReplaceWith("Strategy.PhoneCode.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val PHONE_CODE = "phone_code"
+    @Deprecated(
+      "Use the typed Strategy.EmailCode instead.",
+      ReplaceWith("Strategy.EmailCode.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val EMAIL_CODE = "email_code"
+    @Deprecated(
+      "Use the typed Strategy.EmailLink instead.",
+      ReplaceWith("Strategy.EmailLink.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val EMAIL_LINK = "email_link"
+    @Deprecated(
+      "Use the typed Strategy.Totp instead.",
+      ReplaceWith("Strategy.Totp.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val TOTP = "totp"
+    @Deprecated(
+      "Use the typed Strategy.BackupCode instead.",
+      ReplaceWith("Strategy.BackupCode.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val BACKUP_CODE = "backup_code"
+    @Deprecated(
+      "Use the typed Strategy.Password instead.",
+      ReplaceWith("Strategy.Password.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val PASSWORD = "password"
+    @Deprecated(
+      "Use the typed Strategy.Passkey instead.",
+      ReplaceWith("Strategy.Passkey.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val PASSKEY = "passkey"
+    @Deprecated(
+      "Use the typed Strategy.ResetPasswordEmailCode instead.",
+      ReplaceWith("Strategy.ResetPasswordEmailCode.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
+    @Deprecated(
+      "Use the typed Strategy.ResetPasswordPhoneCode instead.",
+      ReplaceWith("Strategy.ResetPasswordPhoneCode.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
+    @Deprecated(
+      "Use the typed Strategy.Ticket instead.",
+      ReplaceWith("Strategy.Ticket.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val TICKET = "ticket"
+    @Deprecated(
+      "Use the typed Strategy.Transfer instead.",
+      ReplaceWith("Strategy.Transfer.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val TRANSFER = "transfer"
+    @Deprecated(
+      "Use the typed Strategy.EnterpriseSso instead.",
+      ReplaceWith("Strategy.EnterpriseSso.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val ENTERPRISE_SSO = "enterprise_sso"
+    @Deprecated(
+      "Use the typed Strategy.TrustedDevice instead.",
+      ReplaceWith("Strategy.TrustedDevice.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val TRUSTED_DEVICE = "trusted_device"
   }
 
@@ -69,6 +126,10 @@ object Constants {
 
   /** Passkey related constants */
   object Passkey {
+    @Deprecated(
+      "Use the typed Strategy.Passkey instead.",
+      ReplaceWith("Strategy.Passkey.value", "com.clerk.api.auth.types.Strategy"),
+    )
     const val PASSKEY_STRATEGY_VALUE = "passkey"
   }
 

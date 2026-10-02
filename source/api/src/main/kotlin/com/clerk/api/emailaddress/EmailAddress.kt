@@ -1,7 +1,6 @@
 package com.clerk.api.emailaddress
 
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -48,12 +47,13 @@ data class EmailAddress(
 
     @AutoMap
     @Serializable
-    data class EmailCode(override val strategy: String = EMAIL_CODE) : PrepareVerificationParams
+    data class EmailCode(override val strategy: String = Strategy.EmailCode.value) :
+      PrepareVerificationParams
 
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
-      override val strategy: String = ENTERPRISE_SSO,
+      override val strategy: String = Strategy.EnterpriseSso.value,
       val redirectUrl: String? = null,
       @SerialName("action_complete_redirect_url") val actionCompleteRedirectUrl: String? = null,
     ) : PrepareVerificationParams

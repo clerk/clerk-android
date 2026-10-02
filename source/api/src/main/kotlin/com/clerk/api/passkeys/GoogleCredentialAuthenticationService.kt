@@ -13,6 +13,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Fields.STRATEGY
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
@@ -177,7 +178,7 @@ internal object GoogleCredentialAuthenticationService {
       signIn.status == SignIn.Status.NEEDS_SECOND_FACTOR ||
         signIn.status == SignIn.Status.NEEDS_CLIENT_TRUST
     val hasPasskeySecondFactor =
-      signIn.supportedSecondFactors?.any { it.strategy == PasskeyHelper.passkeyStrategy } == true
+      signIn.supportedSecondFactors?.any { it.strategyType == Strategy.Passkey } == true
 
     return when {
       !isSecondFactorStatus || !hasPasskeySecondFactor ->
@@ -304,9 +305,9 @@ internal object GoogleCredentialAuthenticationService {
 
     val prepareResult =
       if (level == SessionVerification.Level.SECOND_FACTOR) {
-        session.prepareSecondFactorVerification(PasskeyHelper.passkeyStrategy)
+        session.prepareSecondFactorVerification(Strategy.Passkey.value)
       } else {
-        session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
+        session.prepareFirstFactorVerification(Strategy.Passkey.value)
       }
     return when (prepareResult) {
       is ClerkResult.Failure -> {
@@ -365,7 +366,7 @@ internal object GoogleCredentialAuthenticationService {
         val result =
           if (level == SessionVerification.Level.SECOND_FACTOR) {
             session.attemptSecondFactorVerification(
-              strategy = PasskeyHelper.passkeyStrategy,
+              strategy = Strategy.Passkey.value,
               publicKeyCredential = credential.authenticationResponseJson,
             )
           } else {
@@ -396,7 +397,7 @@ internal object GoogleCredentialAuthenticationService {
 
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
     return ClerkApi.signIn.createSignIn(
-      mapOf(STRATEGY to PasskeyHelper.passkeyStrategy, "locale" to Clerk.locale.value.orEmpty())
+      mapOf(STRATEGY to Strategy.Passkey.value, "locale" to Clerk.locale.value.orEmpty())
     )
   }
 

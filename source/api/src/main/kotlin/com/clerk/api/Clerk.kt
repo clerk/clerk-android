@@ -14,6 +14,7 @@ import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.billing.Billing
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.configuration.CachedClerkState
@@ -1047,14 +1048,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1153,8 +1154,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1359,10 +1361,16 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
 fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+  identifyingFirstFactor(Strategy.from(strategy))
+
+/** Returns the supported first factor for [strategy] that matches this sign-in's identifier. */
+fun SignIn.identifyingFirstFactor(strategy: Strategy): Factor? =
+  supportedFirstFactors?.firstOrNull {
+    it.strategyType == strategy && it.safeIdentifier == identifier
+  }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
-    identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
-      ?: identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_PHONE_CODE)
+    identifyingFirstFactor(Strategy.ResetPasswordEmailCode)
+      ?: identifyingFirstFactor(Strategy.ResetPasswordPhoneCode)
       ?: supportedFirstFactors?.firstOrNull { it.isResetFactor() }

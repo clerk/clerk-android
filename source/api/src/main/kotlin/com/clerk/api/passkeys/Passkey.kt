@@ -1,6 +1,6 @@
 package com.clerk.api.passkeys
 
-import com.clerk.api.Constants.Strategy.PASSKEY as PASSKEY_STRATEGY
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -97,7 +97,7 @@ suspend fun Passkey.attemptVerification(
 ): ClerkResult<Passkey, ClerkErrorResponse> {
   return ClerkApi.user.attemptPasskeyVerification(
     passkeyId = this.id,
-    strategy = PASSKEY_STRATEGY,
+    strategy = Strategy.Passkey.value,
     publicKeyCredential = publicKeyCredential,
   )
 }

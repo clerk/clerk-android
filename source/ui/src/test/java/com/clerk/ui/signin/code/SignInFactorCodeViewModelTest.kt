@@ -5,11 +5,11 @@ package com.clerk.ui.signin.code
 import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.core.common.StrategyKeys
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -47,14 +47,14 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.identifier } returns "user@example.com"
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
-        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-        Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456"),
+        Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.PhoneCode.value, phoneNumberId = "phone_456"),
       )
     every { mockSignIn.supportedSecondFactors } returns
       listOf(
-        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-        Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456"),
-        Factor(strategy = StrategyKeys.TOTP),
+        Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.PhoneCode.value, phoneNumberId = "phone_456"),
+        Factor(strategy = Strategy.Totp.value),
       )
 
     viewModel =
@@ -79,7 +79,7 @@ class SignInFactorCodeViewModelTest {
   @Test
   fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
     every { mockAuth.currentSignIn } returns null
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.EmailCode.value)
 
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -89,7 +89,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.EmailCode.value)
     val code = "123456"
 
     coEvery {
@@ -126,7 +126,7 @@ class SignInFactorCodeViewModelTest {
   @Test
   fun attemptWithPhoneCodeStrategyShouldCallAttemptFirstFactorPhoneCodeAndSetSuccessState() =
     runTest {
-      val factor = Factor(strategy = StrategyKeys.PHONE_CODE)
+      val factor = Factor(strategy = Strategy.PhoneCode.value)
       val code = "654321"
       val isSecondFactor = true
 
@@ -163,7 +163,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptWithResetPasswordEmailCodeStrategyShouldCallAttemptResetForEmailCode() = runTest {
-    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.ResetPasswordEmailCode.value)
     val code = "789012"
 
     coEvery {
@@ -201,7 +201,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptWithResetPasswordPhoneCodeStrategyShouldCallAttemptResetForPhoneCode() = runTest {
-    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE)
+    val factor = Factor(strategy = Strategy.ResetPasswordPhoneCode.value)
     val code = "345678"
 
     coEvery {
@@ -239,7 +239,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptWithTotpStrategyShouldCallAttemptForTotp() = runTest {
-    val factor = Factor(strategy = StrategyKeys.TOTP)
+    val factor = Factor(strategy = Strategy.Totp.value)
     val code = "901234"
 
     coEvery {
@@ -277,7 +277,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptShouldSetErrorStateWhenHandlerCallsOnErrorCallback() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.EmailCode.value)
     val code = "123456"
 
     coEvery {
@@ -307,7 +307,7 @@ class SignInFactorCodeViewModelTest {
   @Test
   fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
     every { mockAuth.currentSignIn } returns null
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.EmailCode.value)
     val code = "123456"
 
     viewModel.attempt(factor, isSecondFactor = false, code)
@@ -318,7 +318,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun stateShouldTransitionFromIdleToVerifyingDuringPrepare() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_id")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
@@ -331,7 +331,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun stateShouldTransitionFromIdleToVerifyingDuringAttempt() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = Factor(strategy = Strategy.EmailCode.value)
     val code = "123456"
 
     viewModel.state.test {
@@ -348,10 +348,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.identifier } returns "sam@clerk.dev"
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
-        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailLink.value, emailAddressId = "email_123"),
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
@@ -371,10 +371,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.identifier } returns null
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
-        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailLink.value, emailAddressId = "email_123"),
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
@@ -393,13 +393,13 @@ class SignInFactorCodeViewModelTest {
   fun prepareShouldNotRerouteWhenEmailCodeIsAlreadyPrepared() = runTest {
     every { mockSignIn.identifier } returns "sam@clerk.dev"
     every { mockSignIn.firstFactorVerification } returns
-      Verification(status = Verification.Status.UNVERIFIED, strategy = StrategyKeys.EMAIL_CODE)
+      Verification(status = Verification.Status.UNVERIFIED, strategy = Strategy.EmailCode.value)
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
-        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123"),
+        Factor(strategy = Strategy.EmailLink.value, emailAddressId = "email_123"),
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -414,10 +414,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.firstFactorVerification } returns
       Verification(
         status = Verification.Status.UNVERIFIED,
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         expireAt = Long.MAX_VALUE,
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -431,10 +431,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.secondFactorVerification } returns
       Verification(
         status = Verification.Status.UNVERIFIED,
-        strategy = StrategyKeys.PHONE_CODE,
+        strategy = Strategy.PhoneCode.value,
         expireAt = Long.MAX_VALUE,
       )
-    val factor = Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456")
+    val factor = Factor(strategy = Strategy.PhoneCode.value, phoneNumberId = "phone_456")
 
     viewModel.prepare(factor, isSecondFactor = true)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -447,10 +447,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.firstFactorVerification } returns
       Verification(
         status = Verification.Status.UNVERIFIED,
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         expireAt = 0L,
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -465,10 +465,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.firstFactorVerification } returns
       Verification(
         status = Verification.Status.UNVERIFIED,
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         expireAt = Long.MAX_VALUE,
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.prepare(factor, isSecondFactor = false, forcePrepare = true)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -482,7 +482,7 @@ class SignInFactorCodeViewModelTest {
   fun prepareShouldRerouteWhenRequestedFactorIsNoLongerSupported() = runTest {
     every { mockSignIn.identifier } returns null
     every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
@@ -504,10 +504,10 @@ class SignInFactorCodeViewModelTest {
     every { mockSignIn.firstFactorVerification } returns
       Verification(
         status = Verification.Status.UNVERIFIED,
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         expireAt = Long.MAX_VALUE,
       )
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
@@ -526,8 +526,8 @@ class SignInFactorCodeViewModelTest {
   fun prepareShouldRerouteWhenMatchingStrategyHasDifferentIdentifier() = runTest {
     every { mockSignIn.identifier } returns null
     every { mockSignIn.supportedFirstFactors } returns
-      listOf(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_456"))
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+      listOf(Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_456"))
+    val factor = Factor(strategy = Strategy.EmailCode.value, emailAddressId = "email_123")
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())

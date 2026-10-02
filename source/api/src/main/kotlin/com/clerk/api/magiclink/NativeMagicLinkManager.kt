@@ -4,7 +4,7 @@ package com.clerk.api.magiclink
 
 import android.net.Uri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.ApiParams
@@ -191,7 +191,7 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     val pkcePair = PkceUtil.generatePair()
     val fields =
       mapOf(
-        ApiParams.STRATEGY to EMAIL_LINK,
+        ApiParams.STRATEGY to Strategy.EmailLink.value,
         ApiParams.REDIRECT_URI to redirectUri,
         ApiParams.CODE_CHALLENGE to pkcePair.challenge,
         ApiParams.CODE_CHALLENGE_METHOD to NativeMagicLinkPrepareRequest.PKCE_METHOD_S256,
@@ -478,7 +478,7 @@ internal fun queryOrFragmentParam(uri: Uri, key: String): String? {
 
 private fun SignIn.emailLinkAddressId(): String? {
   return supportedFirstFactors
-    ?.firstOrNull { it.strategy == EMAIL_LINK && it.emailAddressId != null }
+    ?.firstOrNull { it.strategyType == Strategy.EmailLink && it.emailAddressId != null }
     ?.emailAddressId
 }
 

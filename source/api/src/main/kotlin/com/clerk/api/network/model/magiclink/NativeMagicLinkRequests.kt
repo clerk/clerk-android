@@ -1,6 +1,6 @@
 package com.clerk.api.network.model.magiclink
 
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.signup.SignUp
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -16,7 +16,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 
 @Serializable
 internal data class NativeMagicLinkPrepareRequest(
-  val strategy: String = EMAIL_LINK,
+  val strategy: String = Strategy.EmailLink.value,
   @SerialName("email_address_id") val emailAddressId: String,
   @SerialName("redirect_uri") val redirectUri: String,
   @SerialName("code_challenge") val codeChallenge: String,

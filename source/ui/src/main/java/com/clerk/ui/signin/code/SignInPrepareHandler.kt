@@ -1,5 +1,6 @@
 package com.clerk.ui.signin.code
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.serialization.errorMessage
@@ -8,7 +9,6 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.prepareSecondFactor
-import com.clerk.ui.core.common.StrategyKeys
 
 internal class SignInPrepareHandler {
 
@@ -100,7 +100,7 @@ internal class SignInPrepareHandler {
     val isSupported =
       isFactorStrategySupported(
         factors = inProgressSignIn.supportedSecondFactors,
-        strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
+        strategy = Strategy.PhoneCode,
       )
     if (!isSupported) {
       ClerkLog.e("Error preparing for phone code: strategy no longer supported for second factor")
@@ -124,7 +124,7 @@ internal class SignInPrepareHandler {
     val isSupported =
       isFactorStrategySupported(
         factors = inProgressSignIn.supportedFirstFactors,
-        strategy = StrategyKeys.PHONE_CODE,
+        strategy = Strategy.PhoneCode,
       )
     if (!isSupported) {
       ClerkLog.e("Error preparing for phone code: strategy no longer supported for first factor")
@@ -149,7 +149,7 @@ internal class SignInPrepareHandler {
     val isSupported =
       isFactorStrategySupported(
         factors = inProgressSignIn.supportedSecondFactors,
-        strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,
+        strategy = Strategy.EmailCode,
       )
     if (!isSupported) {
       ClerkLog.e("Error preparing for email code: strategy no longer supported for second factor")
@@ -173,7 +173,7 @@ internal class SignInPrepareHandler {
     val isSupported =
       isFactorStrategySupported(
         factors = inProgressSignIn.supportedFirstFactors,
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode,
       )
     if (!isSupported) {
       ClerkLog.e("Error preparing for email code: strategy no longer supported for first factor")
@@ -191,7 +191,7 @@ internal class SignInPrepareHandler {
     }
   }
 
-  private fun isFactorStrategySupported(factors: List<Factor>?, strategy: String): Boolean {
-    return factors.isNullOrEmpty() || factors.any { it.strategy == strategy }
+  private fun isFactorStrategySupported(factors: List<Factor>?, strategy: Strategy): Boolean {
+    return factors.isNullOrEmpty() || factors.any { it.strategyType == strategy }
   }
 }

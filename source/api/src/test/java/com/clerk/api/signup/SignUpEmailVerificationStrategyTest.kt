@@ -1,7 +1,7 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignUpApi
@@ -67,12 +67,12 @@ class SignUpEmailVerificationStrategyTest {
             "email_address" to
               Verification(
                 status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_LINK,
+                strategy = Strategy.EmailLink.value,
               )
           )
       )
 
-    assertEquals(Constants.Strategy.EMAIL_LINK, signUp.emailVerificationStrategy)
+    assertEquals(Strategy.EmailLink.value, signUp.emailVerificationStrategy)
   }
 
   @Test
@@ -84,16 +84,16 @@ class SignUpEmailVerificationStrategyTest {
             enabled = true,
             required = true,
             usedForFirstFactor = true,
-            firstFactors = listOf(Constants.Strategy.EMAIL_CODE, Constants.Strategy.EMAIL_LINK),
+            firstFactors = listOf(Strategy.EmailCode.value, Strategy.EmailLink.value),
             usedForSecondFactor = false,
             secondFactors = emptyList(),
-            verifications = listOf(Constants.Strategy.EMAIL_LINK),
+            verifications = listOf(Strategy.EmailLink.value),
             verifyAtSignUp = true,
           )
       )
     val signUp = signUp()
 
-    assertEquals(Constants.Strategy.EMAIL_LINK, signUp.emailVerificationStrategy)
+    assertEquals(Strategy.EmailLink.value, signUp.emailVerificationStrategy)
     assertTrue(signUp.isEmailLinkVerificationSupported)
   }
 
@@ -112,7 +112,7 @@ class SignUpEmailVerificationStrategyTest {
     }
 
     coVerify(exactly = 1) { mockSignUpApi.prepareSignUpVerification(signUp.id, any()) }
-    assertEquals(Constants.Strategy.EMAIL_LINK, fieldsSlot.captured["strategy"])
+    assertEquals(Strategy.EmailLink.value, fieldsSlot.captured["strategy"])
     assertEquals("app://clerk-callback", fieldsSlot.captured["redirect_uri"])
     assertEquals("S256", fieldsSlot.captured["code_challenge_method"])
     assertTrue(fieldsSlot.captured["code_challenge"]?.isNotBlank() == true)
@@ -121,7 +121,7 @@ class SignUpEmailVerificationStrategyTest {
   @Test
   fun sendCodeUsesEmailLinkWhenEmailLinkVerificationIsSupported() {
     every { userSettings.attributes } returns
-      mapOf("email_address" to emailAttributeConfig(listOf(Constants.Strategy.EMAIL_LINK)))
+      mapOf("email_address" to emailAttributeConfig(listOf(Strategy.EmailLink.value)))
     Clerk.applicationId = "com.clerk.test"
     val fieldsSlot = slot<Map<String, String>>()
     val signUp = signUp()
@@ -132,7 +132,7 @@ class SignUpEmailVerificationStrategyTest {
     runBlocking { signUp.sendCode { email = "sam@clerk.dev" } }
 
     coVerify(exactly = 1) { mockSignUpApi.prepareSignUpVerification(signUp.id, any()) }
-    assertEquals(Constants.Strategy.EMAIL_LINK, fieldsSlot.captured["strategy"])
+    assertEquals(Strategy.EmailLink.value, fieldsSlot.captured["strategy"])
     assertTrue(fieldsSlot.captured["redirect_uri"]?.isNotBlank() == true)
     assertEquals("S256", fieldsSlot.captured["code_challenge_method"])
     assertTrue(fieldsSlot.captured["code_challenge"]?.isNotBlank() == true)
@@ -141,7 +141,7 @@ class SignUpEmailVerificationStrategyTest {
   @Test
   fun sendCodeFallsBackToEmailCodeWhenEmailLinkVerificationIsNotSupported() {
     every { userSettings.attributes } returns
-      mapOf("email_address" to emailAttributeConfig(listOf(Constants.Strategy.EMAIL_CODE)))
+      mapOf("email_address" to emailAttributeConfig(listOf(Strategy.EmailCode.value)))
     val fieldsSlot = slot<Map<String, String>>()
     val signUp = signUp()
 
@@ -151,7 +151,7 @@ class SignUpEmailVerificationStrategyTest {
     runBlocking { signUp.sendCode { email = "sam@clerk.dev" } }
 
     coVerify(exactly = 1) { mockSignUpApi.prepareSignUpVerification(signUp.id, any()) }
-    assertEquals(Constants.Strategy.EMAIL_CODE, fieldsSlot.captured["strategy"])
+    assertEquals(Strategy.EmailCode.value, fieldsSlot.captured["strategy"])
   }
 
   @Test
@@ -166,7 +166,7 @@ class SignUpEmailVerificationStrategyTest {
     runBlocking { signUp.sendCode { phone = "+15555550123" } }
 
     coVerify(exactly = 1) { mockSignUpApi.prepareSignUpVerification(signUp.id, any()) }
-    assertEquals(Constants.Strategy.PHONE_CODE, fieldsSlot.captured["strategy"])
+    assertEquals(Strategy.PhoneCode.value, fieldsSlot.captured["strategy"])
   }
 
   private fun emailAttributeConfig(verifications: List<String>): UserSettings.AttributesConfig {

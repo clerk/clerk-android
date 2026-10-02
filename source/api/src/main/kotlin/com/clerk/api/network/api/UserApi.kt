@@ -3,6 +3,7 @@
 package com.clerk.api.network.api
 
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ApiParams
@@ -228,7 +229,7 @@ internal interface UserApi {
   @POST(ApiPaths.User.Passkey.ATTEMPT_VERIFICATION)
   suspend fun attemptPasskeyVerification(
     @Path(ApiParams.PASSKEY_ID) passkeyId: String,
-    @Field(ApiParams.STRATEGY) strategy: String = "passkey",
+    @Field(ApiParams.STRATEGY) strategy: String = Strategy.Passkey.value,
     @Field("public_key_credential") publicKeyCredential: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<Passkey, ClerkErrorResponse>

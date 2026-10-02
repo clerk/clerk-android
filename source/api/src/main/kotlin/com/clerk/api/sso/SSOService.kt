@@ -4,7 +4,7 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
@@ -128,7 +128,7 @@ internal object SSOService {
     strategy: String,
     redirectUrl: String,
   ): SignIn.PrepareFirstFactorParams {
-    return if (strategy == ENTERPRISE_SSO) {
+    return if (Strategy.from(strategy) == Strategy.EnterpriseSso) {
       SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl)
     } else {
       SignIn.PrepareFirstFactorParams.OAuth(strategy = strategy, redirectUrl = redirectUrl)

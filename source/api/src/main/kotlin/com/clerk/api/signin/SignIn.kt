@@ -1,19 +1,7 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.BACKUP_CODE
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
-import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
-import com.clerk.api.Constants.Strategy.PASSKEY
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.PHONE_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
-import com.clerk.api.Constants.Strategy.TICKET
-import com.clerk.api.Constants.Strategy.TOTP as STRATEGY_TOTP
-import com.clerk.api.Constants.Strategy.TRANSFER
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.types.Strategy as AuthStrategy
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -291,8 +279,10 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
-      AttemptFirstFactorParams
+    data class EmailCode(
+      val code: String,
+      override val strategy: String = AuthStrategy.EmailCode.value,
+    ) : AttemptFirstFactorParams
 
     /**
      * Parameters for phone code verification strategy.
@@ -301,8 +291,10 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
-      AttemptFirstFactorParams
+    data class PhoneCode(
+      val code: String,
+      override val strategy: String = AuthStrategy.PhoneCode.value,
+    ) : AttemptFirstFactorParams
 
     /**
      * Parameters for password verification strategy.
@@ -313,7 +305,7 @@ private constructor(
     @Serializable
     data class Password(
       @SerialName("password") val password: String,
-      override val strategy: String = PASSWORD,
+      override val strategy: String = AuthStrategy.Password.value,
     ) : AttemptFirstFactorParams
 
     /**
@@ -326,7 +318,7 @@ private constructor(
     @Serializable
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = AuthStrategy.Passkey.value,
     ) : AttemptFirstFactorParams
 
     /**
@@ -338,7 +330,7 @@ private constructor(
     @Serializable
     data class ResetPasswordEmailCode(
       val code: String,
-      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      override val strategy: String = AuthStrategy.ResetPasswordEmailCode.value,
     ) : AttemptFirstFactorParams
 
     /**
@@ -350,7 +342,7 @@ private constructor(
     @Serializable
     data class ResetPasswordPhoneCode(
       val code: String,
-      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      override val strategy: String = AuthStrategy.ResetPasswordPhoneCode.value,
     ) : AttemptFirstFactorParams
   }
 
@@ -365,29 +357,35 @@ private constructor(
 
     @AutoMap
     @Serializable
-    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
+    data class PhoneCode(
+      val code: String,
+      override val strategy: String = AuthStrategy.PhoneCode.value,
+    ) : AttemptSecondFactorParams
+
+    @AutoMap
+    @Serializable
+    data class TOTP(val code: String, override val strategy: String = AuthStrategy.Totp.value) :
       AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class TOTP(val code: String, override val strategy: String = STRATEGY_TOTP) :
-      AttemptSecondFactorParams
+    data class BackupCode(
+      val code: String,
+      override val strategy: String = AuthStrategy.BackupCode.value,
+    ) : AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
-      AttemptSecondFactorParams
-
-    @AutoMap
-    @Serializable
-    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
-      AttemptSecondFactorParams
+    data class EmailCode(
+      val code: String,
+      override val strategy: String = AuthStrategy.EmailCode.value,
+    ) : AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = AuthStrategy.Passkey.value,
     ) : AttemptSecondFactorParams
   }
 
@@ -445,7 +443,7 @@ private constructor(
     @Serializable
     @AutoMap
     data class EnterpriseSSO(
-      val strategy: String = ENTERPRISE_SSO,
+      val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url") override val redirectUrl: String,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
@@ -474,14 +472,14 @@ private constructor(
     @Serializable
     data class EmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
-      override val strategy: String = EMAIL_CODE,
+      override val strategy: String = AuthStrategy.EmailCode.value,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class PhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
-      override val strategy: String = PHONE_CODE,
+      override val strategy: String = AuthStrategy.PhoneCode.value,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -491,21 +489,21 @@ private constructor(
       @SerialName("redirect_uri") val redirectUri: String,
       @SerialName("code_challenge") val codeChallenge: String,
       @SerialName("code_challenge_method") val codeChallengeMethod: String = "S256",
-      override val strategy: String = EMAIL_LINK,
+      override val strategy: String = AuthStrategy.EmailLink.value,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
-      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      override val strategy: String = AuthStrategy.ResetPasswordEmailCode.value,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
-      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      override val strategy: String = AuthStrategy.ResetPasswordPhoneCode.value,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -518,14 +516,15 @@ private constructor(
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
-      override val strategy: String = ENTERPRISE_SSO,
+      override val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
+    data class Passkey(override val strategy: String = AuthStrategy.Passkey.value) :
+      PrepareFirstFactorParams
   }
 
   /**
@@ -547,13 +546,25 @@ private constructor(
   @AutoMap
   data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
-    val strategy: String = PHONE_CODE,
+    val strategy: String = AuthStrategy.PhoneCode.value,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
     @SerialName("email_address_id") val emailAddressId: String? = null,
   ) {
     companion object {
+      @Deprecated(
+        "Use the typed Strategy.PhoneCode instead.",
+        ReplaceWith("Strategy.PhoneCode.value", "com.clerk.api.auth.types.Strategy"),
+      )
       const val PHONE_CODE = "phone_code"
+      @Deprecated(
+        "Use the typed Strategy.EmailCode instead.",
+        ReplaceWith("Strategy.EmailCode.value", "com.clerk.api.auth.types.Strategy"),
+      )
       const val EMAIL_CODE = "email_code"
+      @Deprecated(
+        "Use the typed Strategy.Passkey instead.",
+        ReplaceWith("Strategy.Passkey.value", "com.clerk.api.auth.types.Strategy"),
+      )
       const val PASSKEY = "passkey"
     }
   }
@@ -570,15 +581,15 @@ private constructor(
       when (this) {
         is PhoneCode ->
           PrepareSecondFactorParams(
-            strategy = PrepareSecondFactorParams.PHONE_CODE,
+            strategy = AuthStrategy.PhoneCode.value,
             phoneNumberId = phoneNumberId,
           )
         is EmailCode ->
           PrepareSecondFactorParams(
-            strategy = PrepareSecondFactorParams.EMAIL_CODE,
+            strategy = AuthStrategy.EmailCode.value,
             emailAddressId = emailAddressId,
           )
-        Passkey -> PrepareSecondFactorParams(strategy = PrepareSecondFactorParams.PASSKEY)
+        Passkey -> PrepareSecondFactorParams(strategy = AuthStrategy.Passkey.value)
       }
   }
 
@@ -622,8 +633,10 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class EmailCode(val identifier: String, override val strategy: String = EMAIL_CODE) :
-        Strategy
+      data class EmailCode(
+        val identifier: String,
+        override val strategy: String = AuthStrategy.EmailCode.value,
+      ) : Strategy
 
       /**
        * Phone code sign-in strategy.
@@ -632,8 +645,10 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class PhoneCode(val identifier: String, override val strategy: String = PHONE_CODE) :
-        Strategy
+      data class PhoneCode(
+        val identifier: String,
+        override val strategy: String = AuthStrategy.PhoneCode.value,
+      ) : Strategy
 
       /**
        * Password sign-in strategy.
@@ -645,21 +660,21 @@ private constructor(
       data class Password(
         val identifier: String,
         val password: String,
-        override val strategy: String = PASSWORD,
+        override val strategy: String = AuthStrategy.Password.value,
       ) : Strategy
 
       @AutoMap
       @Serializable
       data class ResetPasswordEmailCode(
         val identifier: String,
-        override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+        override val strategy: String = AuthStrategy.ResetPasswordEmailCode.value,
       ) : Strategy
 
       @AutoMap
       @Serializable
       data class ResetPasswordPhoneCode(
         val identifier: String,
-        override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+        override val strategy: String = AuthStrategy.ResetPasswordPhoneCode.value,
       ) : Strategy
 
       /**
@@ -667,7 +682,7 @@ private constructor(
        *
        * This strategy is used when transferring an existing session or account state.
        */
-      data class Transfer(override val strategy: String = TRANSFER) : Strategy
+      data class Transfer(override val strategy: String = AuthStrategy.Transfer.value) : Strategy
 
       /**
        * Ticket strategy for authentication using a ticket.
@@ -678,10 +693,13 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class Ticket(val ticket: String, override val strategy: String = TICKET) : Strategy
+      data class Ticket(
+        val ticket: String,
+        override val strategy: String = AuthStrategy.Ticket.value,
+      ) : Strategy
 
       /** Passkey strategy for authentication using a passkey. */
-      data class Passkey(override val strategy: String = PASSKEY) : Strategy
+      data class Passkey(override val strategy: String = AuthStrategy.Passkey.value) : Strategy
 
       /**
        * Biometric-credential strategy for authentication using a locally enrolled biometric
@@ -699,7 +717,7 @@ private constructor(
         val identifierHint: String? = null,
         val promptTitle: String? = null,
         val promptSubtitle: String? = null,
-        override val strategy: String = TRUSTED_DEVICE,
+        override val strategy: String = AuthStrategy.TrustedDevice.value,
       ) : Strategy
 
       @AutoMap
@@ -766,7 +784,7 @@ private constructor(
         else -> {
           val baseMap =
             if (params is CreateParams.Strategy.Transfer) {
-              mapOf(TRANSFER to "true")
+              mapOf(AuthStrategy.Transfer.value to "true")
             } else {
               params.toMap()
             }
@@ -927,8 +945,10 @@ internal object SignInSerializer : KSerializer<SignIn> {
 suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
+  val paramsStrategy = AuthStrategy.from(params.strategy)
   val isResetPasswordStrategy =
-    params.strategy == RESET_PASSWORD_EMAIL_CODE || params.strategy == RESET_PASSWORD_PHONE_CODE
+    paramsStrategy == AuthStrategy.ResetPasswordEmailCode ||
+      paramsStrategy == AuthStrategy.ResetPasswordPhoneCode
   val isRedirectStrategy = params.isRedirectStrategy
   val canPrepareFromStatus =
     if (isRedirectStrategy) {
@@ -937,7 +957,7 @@ suspend fun SignIn.prepareFirstFactor(
       status == SignIn.Status.NEEDS_FIRST_FACTOR
     }
 
-  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategyType }.orEmpty()
   val validationError =
     when {
       !isResetPasswordStrategy && !canPrepareFromStatus ->
@@ -947,7 +967,7 @@ suspend fun SignIn.prepareFirstFactor(
         )
       !isResetPasswordStrategy &&
         !isRedirectStrategy &&
-        params.strategy !in supportedFirstFactorStrategies ->
+        paramsStrategy !in supportedFirstFactorStrategies ->
         invalidPrepareState(
           code = "first_factor_strategy_not_supported",
           longMessage = "${params.strategy} is not supported for this sign-in attempt",
@@ -979,7 +999,7 @@ suspend fun SignIn.sendPhoneCode(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val phoneId =
     phoneNumberId
-      ?: supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
+      ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.PhoneCode }?.phoneNumberId
       ?: error("No phone number found for phone_code strategy")
   return prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
 }
@@ -1000,7 +1020,7 @@ suspend fun SignIn.sendEmailCode(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
     emailAddressId
-      ?: supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
+      ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.EmailCode }?.emailAddressId
       ?: error("No email address found for email_code strategy")
   return prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
 }
@@ -1026,22 +1046,20 @@ suspend fun SignIn.prepareSecondFactor(
 
   val strategy =
     when {
-      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
-        true ->
+      supportedSecondFactors?.any { it.strategyType == AuthStrategy.PhoneCode } == true ->
         SignIn.PrepareSecondFactorStrategy.PhoneCode(
           phoneNumberId =
             phoneNumberId
               ?: supportedSecondFactors
-                .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+                .find { it.strategyType == AuthStrategy.PhoneCode }
                 ?.phoneNumberId
         )
-      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE } ==
-        true ->
+      supportedSecondFactors?.any { it.strategyType == AuthStrategy.EmailCode } == true ->
         SignIn.PrepareSecondFactorStrategy.EmailCode(
           emailAddressId =
             emailAddressId
               ?: supportedSecondFactors
-                .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+                .find { it.strategyType == AuthStrategy.EmailCode }
                 ?.emailAddressId
         )
       else -> error("No supported second factor found")
@@ -1079,13 +1097,11 @@ suspend fun SignIn.sendMfaPhoneCode(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val phoneId =
     phoneNumberId
-      ?: supportedSecondFactors
-        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
-        ?.phoneNumberId
+      ?: supportedSecondFactors?.find { it.strategyType == AuthStrategy.PhoneCode }?.phoneNumberId
       ?: error("No phone number found for phone_code MFA strategy")
   val params =
     SignIn.PrepareSecondFactorParams(
-      strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
+      strategy = AuthStrategy.PhoneCode.value,
       phoneNumberId = phoneId,
     )
   return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
@@ -1108,13 +1124,11 @@ suspend fun SignIn.sendMfaEmailCode(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
     emailAddressId
-      ?: supportedSecondFactors
-        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
-        ?.emailAddressId
+      ?: supportedSecondFactors?.find { it.strategyType == AuthStrategy.EmailCode }?.emailAddressId
       ?: error("No email address found for email_code MFA strategy")
   val params =
     SignIn.PrepareSecondFactorParams(
-      strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,
+      strategy = AuthStrategy.EmailCode.value,
       emailAddressId = emailId,
     )
   return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())

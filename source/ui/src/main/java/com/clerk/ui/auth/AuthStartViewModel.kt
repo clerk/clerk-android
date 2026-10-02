@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialKeyManagerException
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
@@ -448,7 +449,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 }
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
-  startingFirstFactor?.strategy == "enterprise_sso"
+  startingFirstFactor?.strategyType == Strategy.EnterpriseSso
 
 internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =

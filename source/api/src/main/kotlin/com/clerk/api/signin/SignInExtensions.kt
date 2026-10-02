@@ -3,13 +3,9 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
-import com.clerk.api.Constants.Strategy.PHONE_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.types.MfaType
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.PreferredSignInStrategy
@@ -41,9 +37,10 @@ fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
   val firstFactors = supportedFirstFactors?.filter {
     it != factor &&
       !it.isResetFactor() &&
-      !it.strategy.contains("oauth") &&
-      it.strategy != "enterprise_sso" &&
-      it.strategy != "saml"
+      it.strategyType !is Strategy.OAuth &&
+      it.strategyType !is Strategy.OAuthToken &&
+      it.strategyType != Strategy.EnterpriseSso &&
+      it.strategyType != Strategy.Saml
   }
   return (firstFactors ?: emptyList()).sortedWith(FactorComparators.allStrategiesButtonsComparator)
 }
@@ -90,17 +87,17 @@ val SignIn.startingFirstFactor: Factor?
 val SignIn.startingSecondFactor: Factor?
   get() {
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "passkey" }
+      ?.firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "totp" }
+      ?.firstOrNull { it.strategyType == Strategy.Totp }
       ?.let {
         return it
       }
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "phone_code" }
+      ?.firstOrNull { it.strategyType == Strategy.PhoneCode }
       ?.let {
         return it
       }
@@ -112,13 +109,13 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
     val availableFirstFactors = supportedFirstFactors ?: return null
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "passkey" }
+      .firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "password" }
+      .firstOrNull { it.strategyType == Strategy.Password }
       ?.let {
         return it
       }
@@ -137,7 +134,7 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
     val availableFirstFactors = supportedFirstFactors ?: return null
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "passkey" }
+      .firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
@@ -161,15 +158,16 @@ private fun List<Factor>.emailLinkFactorForIdentifier(identifier: String?): Fact
 
   return when {
     !isEmailIdentifier -> null
-    matchingEmailFactor == null -> filter { it.strategy == EMAIL_LINK }.singleOrNull()
+    matchingEmailFactor == null -> filter { it.strategyType == Strategy.EmailLink }.singleOrNull()
     else ->
-      firstOrNull { it.strategy == EMAIL_LINK && it.hasSameIdentityAs(matchingEmailFactor) }
-        ?: matchingEmailFactor.takeIf { it.strategy == EMAIL_LINK }
+      firstOrNull {
+        it.strategyType == Strategy.EmailLink && it.hasSameIdentityAs(matchingEmailFactor)
+      } ?: matchingEmailFactor.takeIf { it.strategyType == Strategy.EmailLink }
   }
 }
 
 private val Factor.isEmailFactor: Boolean
-  get() = strategy == EMAIL_LINK || strategy == EMAIL_CODE
+  get() = strategyType == Strategy.EmailLink || strategyType == Strategy.EmailCode
 
 private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
   return (!emailAddressId.isNullOrBlank() && emailAddressId == other.emailAddressId) ||
@@ -230,11 +228,11 @@ suspend fun SignIn.sendCode(
   val params =
     if (builder.email != null) {
       val emailAddressId =
-        supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId ?: ""
+        supportedFirstFactors?.find { it.strategyType == Strategy.EmailCode }?.emailAddressId ?: ""
       SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
     } else {
       val phoneNumberId =
-        supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId ?: ""
+        supportedFirstFactors?.find { it.strategyType == Strategy.PhoneCode }?.phoneNumberId ?: ""
       SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId)
     }
 
@@ -258,9 +256,9 @@ suspend fun SignIn.sendEmailLink(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
     emailAddressId
-      ?: supportedFirstFactors?.find { it.strategy == EMAIL_LINK }?.emailAddressId
+      ?: supportedFirstFactors?.find { it.strategyType == Strategy.EmailLink }?.emailAddressId
       ?: error("No email address found for email_link strategy")
-  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategyType }.orEmpty()
   val validationError =
     when {
       status != SignIn.Status.NEEDS_FIRST_FACTOR ->
@@ -268,10 +266,10 @@ suspend fun SignIn.sendEmailLink(
           code = "sign_in_status_invalid",
           longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
         )
-      EMAIL_LINK !in supportedFirstFactorStrategies ->
+      Strategy.EmailLink !in supportedFirstFactorStrategies ->
         invalidEmailLinkPrepareState(
           code = "first_factor_strategy_not_supported",
-          longMessage = "$EMAIL_LINK is not supported for this sign-in attempt",
+          longMessage = "${Strategy.EmailLink} is not supported for this sign-in attempt",
         )
       else -> null
     }
@@ -306,14 +304,14 @@ private fun invalidEmailLinkPrepareState(
  * ```
  */
 suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
-  val strategy = firstFactorVerification?.strategy ?: EMAIL_CODE
+  val strategy = firstFactorVerification?.strategyType ?: Strategy.EmailCode
 
   val params =
     when (strategy) {
-      PHONE_CODE -> SignIn.AttemptFirstFactorParams.PhoneCode(code = code)
-      RESET_PASSWORD_EMAIL_CODE ->
+      Strategy.PhoneCode -> SignIn.AttemptFirstFactorParams.PhoneCode(code = code)
+      Strategy.ResetPasswordEmailCode ->
         SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code)
-      RESET_PASSWORD_PHONE_CODE ->
+      Strategy.ResetPasswordPhoneCode ->
         SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code)
       else -> SignIn.AttemptFirstFactorParams.EmailCode(code = code)
     }
@@ -408,11 +406,11 @@ suspend fun SignIn.sendResetPasswordCode(
   val params =
     if (builder.email != null) {
       val emailAddressId =
-        supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId ?: ""
+        supportedFirstFactors?.find { it.strategyType == Strategy.EmailCode }?.emailAddressId ?: ""
       SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = emailAddressId)
     } else {
       val phoneNumberId =
-        supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId ?: ""
+        supportedFirstFactors?.find { it.strategyType == Strategy.PhoneCode }?.phoneNumberId ?: ""
       SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = phoneNumberId)
     }
 

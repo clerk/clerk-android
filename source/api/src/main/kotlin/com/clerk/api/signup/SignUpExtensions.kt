@@ -2,9 +2,9 @@
 
 package com.clerk.api.signup
 
-import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.auth.types.Strategy as AuthStrategy
 import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -67,8 +67,8 @@ suspend fun SignUp.verifyCode(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val strategy =
     when (type) {
-      VerificationType.EMAIL -> AuthStrategy.EMAIL_CODE
-      VerificationType.PHONE -> AuthStrategy.PHONE_CODE
+      VerificationType.EMAIL -> AuthStrategy.EmailCode.value
+      VerificationType.PHONE -> AuthStrategy.PhoneCode.value
     }
 
   return ClerkApi.signUp.attemptSignUpVerification(
