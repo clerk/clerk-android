@@ -26,6 +26,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
 import java.util.Base64
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -562,7 +563,7 @@ class ClerkDeviceTokenUpdateTest {
     val field =
       ConfigurationManager::class.java.getDeclaredField("sharedDeviceTokenFenceGeneration")
     field.isAccessible = true
-    return field.getInt(configurationManager())
+    return (field.get(configurationManager()) as AtomicInteger).get()
   }
 
   private fun configurationManager(): ConfigurationManager {

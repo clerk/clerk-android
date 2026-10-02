@@ -28,6 +28,7 @@ import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -98,7 +99,7 @@ internal class ConfigurationManager(
   @Volatile private var configurationVersion = 0
 
   /** Monotonic fence used to discard responses started with an older shared device token. */
-  @Volatile private var sharedDeviceTokenFenceGeneration = 0
+  private val sharedDeviceTokenFenceGeneration = AtomicInteger()
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -244,43 +245,42 @@ internal class ConfigurationManager(
   private fun launchInitialization(
     options: ClerkConfigurationOptions?,
     configuredVersion: Int,
-  ): Job =
-    scope.launch {
-      val attempt =
-        RefreshAttempt(
-          options = options,
-          retryDelaySeconds = 0,
-          expectedConfigurationVersion = configuredVersion,
-        )
-      Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
-      Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-      val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
-      val dataRefreshJob = async {
-        refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-      }
+  ): Job = scope.launch {
+    val attempt =
+      RefreshAttempt(
+        options = options,
+        retryDelaySeconds = 0,
+        expectedConfigurationVersion = configuredVersion,
+      )
+    Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
+    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+    val dataRefreshJob = async {
+      refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+    }
 
-      deviceIdInitJob.await()
-      AppLifecycleListener.configure {
-        if (hasConfigured) {
-          scope.launch {
-            Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-            if (shouldRefreshOnForeground(attempt.options)) {
-              deferForegroundRefreshDuringPendingAuth()
-              refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-            }
-            startTokenRefresh()
+    deviceIdInitJob.await()
+    AppLifecycleListener.configure {
+      if (hasConfigured) {
+        scope.launch {
+          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+          if (shouldRefreshOnForeground(attempt.options)) {
+            deferForegroundRefreshDuringPendingAuth()
+            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
           }
+          startTokenRefresh()
         }
       }
-      dataRefreshJob.await()
     }
+    dataRefreshJob.await()
+  }
 
   fun isConfigured(): Boolean = hasConfigured
 
   @Synchronized
   fun reset() {
     configurationVersion += 1
-    sharedDeviceTokenFenceGeneration += 1
+    sharedDeviceTokenFenceGeneration.incrementAndGet()
     Clerk.stopSharedSessionSync()
     scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
@@ -300,7 +300,7 @@ internal class ConfigurationManager(
   }
 
   fun fenceClientResponsesAfterSharedDeviceTokenChange() {
-    sharedDeviceTokenFenceGeneration += 1
+    sharedDeviceTokenFenceGeneration.incrementAndGet()
   }
 
   private fun startTokenRefresh() {
@@ -314,29 +314,28 @@ internal class ConfigurationManager(
     }
 
     refreshJob?.cancel()
-    refreshJob =
-      scope.launch {
-        while (isActive) {
-          try {
-            val session = Clerk.session
-            if (session != null) {
-              if (Clerk.debugMode) {
-                ClerkLog.d("Refreshing token for session: ${session.id}")
-              }
-              // Use async to avoid blocking the refresh loop
-              async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-            } else {
-              if (Clerk.debugMode) {
-                ClerkLog.d("No session available for token refresh")
-              }
+    refreshJob = scope.launch {
+      while (isActive) {
+        try {
+          val session = Clerk.session
+          if (session != null) {
+            if (Clerk.debugMode) {
+              ClerkLog.d("Refreshing token for session: ${session.id}")
             }
-          } catch (e: Exception) {
-            ClerkLog.w("Token refresh failed: ${e.message}")
+            // Use async to avoid blocking the refresh loop
+            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+          } else {
+            if (Clerk.debugMode) {
+              ClerkLog.d("No session available for token refresh")
+            }
           }
-
-          delay(REFRESH_TOKEN_INTERVAL.seconds)
+        } catch (e: Exception) {
+          ClerkLog.w("Token refresh failed: ${e.message}")
         }
+
+        delay(REFRESH_TOKEN_INTERVAL.seconds)
       }
+    }
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -556,14 +555,14 @@ internal class ConfigurationManager(
     skipClientId: Boolean,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
-      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration
+      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration.get()
       val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
 
       if (attempt.expectedConfigurationVersion != configurationVersion || !hasConfigured) {
         return@withTimeout staleConfigurationFailure()
       }
 
-      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration) {
+      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration.get()) {
         ClerkLog.d("Discarding refresh started before a shared device-token change")
         // A discarded initialization must stay an initialization, or a failed follow-up would
         // leave the SDK uninitialized with no retry and no reported error.
