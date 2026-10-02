@@ -37,9 +37,9 @@ internal class SignUpCodeViewModel : ViewModel() {
           is SignUpCodeField.Email -> signUp.sendEmailCode()
           is SignUpCodeField.Phone -> signUp.sendPhoneCode()
         }
-      signUp
-        .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
+      // A successful prepare only sends the code; the sign-up still needs this screen. Emitting it
+      // as a success state would route it and push a second copy of this screen.
+      signUp.onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
     }
   }
 
