@@ -354,8 +354,7 @@ private suspend fun createHostedAuth(
   responseGuard: ResponseGuard,
 ): ClerkResult<Uri, ClerkErrorResponse> {
   var result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = false)
-  if (result is ClerkResult.Failure && result.isSignedOutFailure()) {
-    // DeviceTokenSavingMiddleware has already persisted any replacement token from the 401.
+  if (result is ClerkResult.Failure && result.isSignedOutFailure() && refreshSignedOutClient()) {
     result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = true)
   }
   return when (result) {
@@ -367,6 +366,15 @@ private suspend fun createHostedAuth(
         )
   }
 }
+
+private suspend fun refreshSignedOutClient(): Boolean =
+  when (val refresh = Client.getSkippingClientId()) {
+    is ClerkResult.Failure -> false
+    is ClerkResult.Success -> {
+      Clerk.updateClient(refresh.value)
+      true
+    }
+  }
 
 private suspend fun requestHostedAuth(
   preparation: PreparedHostedAuth,
