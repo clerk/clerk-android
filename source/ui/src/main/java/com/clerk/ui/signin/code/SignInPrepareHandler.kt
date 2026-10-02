@@ -6,8 +6,12 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.prepareFirstFactor
-import com.clerk.api.signin.prepareSecondFactor
+import com.clerk.api.signin.sendEmailCode
+import com.clerk.api.signin.sendMfaEmailCode
+import com.clerk.api.signin.sendMfaPhoneCode
+import com.clerk.api.signin.sendPhoneCode
+import com.clerk.api.signin.sendResetPasswordEmailCode
+import com.clerk.api.signin.sendResetPasswordPhoneCode
 import com.clerk.ui.core.common.StrategyKeys
 
 internal class SignInPrepareHandler {
@@ -23,14 +27,10 @@ internal class SignInPrepareHandler {
       return
     }
 
-    inProgressSignIn
-      .prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = emailAddressId)
-      )
-      .onFailure {
-        ClerkLog.e("Error preparing for reset password with email code: $it")
-        onError(it.errorMessage)
-      }
+    inProgressSignIn.sendResetPasswordEmailCode(emailAddressId = emailAddressId).onFailure {
+      ClerkLog.e("Error preparing for reset password with email code: $it")
+      onError(it.errorMessage)
+    }
   }
 
   internal suspend fun prepareForResetPasswordWithPhone(
@@ -44,14 +44,10 @@ internal class SignInPrepareHandler {
       return
     }
 
-    inProgressSignIn
-      .prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = phoneNumberId)
-      )
-      .onFailure {
-        onError(it.errorMessage)
-        ClerkLog.e("Error preparing for reset password with phone code: $it")
-      }
+    inProgressSignIn.sendResetPasswordPhoneCode(phoneNumberId = phoneNumberId).onFailure {
+      onError(it.errorMessage)
+      ClerkLog.e("Error preparing for reset password with phone code: $it")
+    }
   }
 
   internal suspend fun prepareForPhoneCode(
@@ -107,7 +103,7 @@ internal class SignInPrepareHandler {
       onError("Selected sign-in method is no longer available.")
     } else {
       inProgressSignIn
-        .prepareSecondFactor(phoneNumberId)
+        .sendMfaPhoneCode(phoneNumberId = phoneNumberId)
         .onSuccess { ClerkLog.v("Successfully prepared second factor for phone code") }
         .onFailure {
           onError(it.errorMessage)
@@ -130,14 +126,10 @@ internal class SignInPrepareHandler {
       ClerkLog.e("Error preparing for phone code: strategy no longer supported for first factor")
       onError("Selected sign-in method is no longer available.")
     } else {
-      inProgressSignIn
-        .prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId)
-        )
-        .onFailure {
-          onError(it.errorMessage)
-          ClerkLog.e("Error preparing for phone code: $it")
-        }
+      inProgressSignIn.sendPhoneCode(phoneNumberId = phoneNumberId).onFailure {
+        onError(it.errorMessage)
+        ClerkLog.e("Error preparing for phone code: $it")
+      }
     }
   }
 
@@ -156,7 +148,7 @@ internal class SignInPrepareHandler {
       onError("Selected sign-in method is no longer available.")
     } else {
       inProgressSignIn
-        .prepareSecondFactor(emailAddressId = emailAddressId)
+        .sendMfaEmailCode(emailAddressId = emailAddressId)
         .onSuccess { ClerkLog.v("Successfully prepared second factor for email code") }
         .onFailure {
           onError(it.errorMessage)
@@ -180,9 +172,7 @@ internal class SignInPrepareHandler {
       onError("Selected sign-in method is no longer available.")
     } else {
       inProgressSignIn
-        .prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
-        )
+        .sendEmailCode(emailAddressId = emailAddressId)
         .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
         .onFailure {
           onError(it.errorMessage)

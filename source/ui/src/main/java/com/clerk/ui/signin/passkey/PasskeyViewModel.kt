@@ -2,6 +2,7 @@ package com.clerk.ui.signin.passkey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
@@ -22,9 +23,7 @@ internal class PasskeyViewModel : ViewModel() {
   fun authenticate(signIn: SignIn? = null) {
     _state.value = AuthenticationViewState.Loading
     viewModelScope.launch {
-      val result =
-        signIn?.authenticateWithPasskey()
-          ?: SignIn.authenticateWithGoogleCredential(listOf(SignIn.CredentialType.PASSKEY))
+      val result = signIn?.authenticateWithPasskey() ?: Clerk.auth.signInWithPasskey()
       result
         .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
         .onFailure {
