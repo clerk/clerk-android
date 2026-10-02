@@ -3,6 +3,8 @@ package com.clerk.api.sso
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialException
+import com.clerk.api.Clerk
+import com.clerk.api.auth.createSignUp
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.log.ClerkLog
@@ -65,7 +67,8 @@ internal class GoogleSignInService(
             authResult.error?.errors?.firstOrNull()?.code == "external_account_not_found" &&
               transferable
           ) {
-            SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken))
+            Clerk.auth
+              .createSignUp(SignUp.CreateParams.GoogleOneTap(token = idToken))
               .signUpToOAuthResultWithTransfer()
           } else {
             authResult.signInToOAuthResult()
@@ -87,7 +90,8 @@ internal class GoogleSignInService(
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     ) {
       val idToken = googleCredentialManager.getIdTokenFromCredential(credential.data)
-      SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken))
+      Clerk.auth
+        .createSignUp(SignUp.CreateParams.GoogleOneTap(token = idToken))
         .signUpToOAuthResultWithTransfer()
     } else {
       ClerkResult.unknownFailure(

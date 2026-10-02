@@ -39,7 +39,7 @@ suspend fun SignUp.sendCode(
       SignUp.PrepareVerificationParams.Strategy.PhoneCode()
     }
 
-  return prepareVerification(strategy)
+  return prepareVerificationImpl(strategy)
 }
 
 /**
@@ -69,7 +69,7 @@ suspend fun SignUp.verifyCode(
       VerificationType.PHONE -> SignUp.AttemptVerificationParams.PhoneCode(code = code)
     }
 
-  return attemptVerification(params)
+  return attemptVerificationImpl(params)
 }
 
 /**
@@ -92,7 +92,7 @@ suspend fun SignUp.update(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
 
-  return update(
+  return updateImpl(
     SignUp.SignUpUpdateParams.Standard(
       emailAddress = builder.email,
       phoneNumber = builder.phone,
