@@ -28,7 +28,9 @@ suspend fun SignUp.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
-  builder.validate()
+  builder.validationFailure()?.let {
+    return it
+  }
 
   val strategy =
     if (builder.email != null) {

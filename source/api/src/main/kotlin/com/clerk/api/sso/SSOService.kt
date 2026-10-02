@@ -110,18 +110,19 @@ internal object SSOService {
             prepareResult.signInToOAuthResult()
           }
           is ClerkResult.Success -> {
-            val externalUrl =
-              requireNotNull(
-                prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl
-              ) {
-                "External URL cannot be null"
-              }
-
-            authenticateWithPreparedRedirect(externalUrl, transferable)
+            prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl?.let {
+              externalUrl ->
+              authenticateWithPreparedRedirect(externalUrl, transferable)
+            } ?: missingExternalUrlFailure()
           }
         }
       }
     }
+  }
+
+  private fun missingExternalUrlFailure(): ClerkResult.Failure<Nothing> {
+    ClerkLog.e("Redirect authentication response is missing the external verification URL")
+    return ClerkResult.unknownFailure(IllegalStateException("External URL cannot be null"))
   }
 
   private fun firstFactorParams(
@@ -167,11 +168,8 @@ internal object SSOService {
       is ClerkResult.Success -> {
         val signUp = initialResult.value
         val externalUrl =
-          requireNotNull(
-            signUp.verifications["external_account"]?.externalVerificationRedirectUrl
-          ) {
-            "External URL cannot be null"
-          }
+          signUp.verifications["external_account"]?.externalVerificationRedirectUrl
+            ?: return missingExternalUrlFailure()
 
         authenticateWithPreparedRedirect(
           externalVerificationRedirectUrl = externalUrl,

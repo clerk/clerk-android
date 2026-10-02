@@ -42,29 +42,40 @@ internal object ExternalAccountService {
       }
       is ClerkResult.Success -> {
         ClerkLog.d("External account creation initiated: $initialResult")
-        val externalUrl =
-          requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
-            "External verification redirect URL is missing"
-          }
-        val context =
-          Clerk.applicationContext?.get()
-            ?: return ClerkResult.unknownFailure(
+        val externalUrl = initialResult.value.verification?.externalVerificationRedirectUrl
+        val context = Clerk.applicationContext?.get()
+        when {
+          externalUrl == null ->
+            ClerkResult.unknownFailure(
+              IllegalStateException("External verification redirect URL is missing")
+            )
+          context == null ->
+            ClerkResult.unknownFailure(
               IllegalStateException(
                 "Clerk must be initialized before connecting an external account"
               )
             )
-        val completableDeferred =
-          CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
-        currentPendingExternalAccountConnection = completableDeferred
-        currentPendingExternalAccountConnectionId = initialResult.value.id
-        val intent =
-          SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
-            addFlags(FLAG_ACTIVITY_NEW_TASK)
-          }
-        context.startActivity(intent)
-        completableDeferred.await()
+          else -> awaitExternalConnection(context, initialResult.value.id, externalUrl)
+        }
       }
     }
+  }
+
+  private suspend fun awaitExternalConnection(
+    context: android.content.Context,
+    externalAccountId: String,
+    externalUrl: String,
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+    val completableDeferred =
+      CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
+    currentPendingExternalAccountConnection = completableDeferred
+    currentPendingExternalAccountConnectionId = externalAccountId
+    val intent =
+      SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
+        addFlags(FLAG_ACTIVITY_NEW_TASK)
+      }
+    context.startActivity(intent)
+    return completableDeferred.await()
   }
 
   /**

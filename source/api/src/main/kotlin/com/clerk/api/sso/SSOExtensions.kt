@@ -3,6 +3,7 @@ package com.clerk.api.sso
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.map
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 
@@ -13,40 +14,10 @@ import com.clerk.api.signup.SignUp
  * the case where calling [SignIn.create] returns a SignUp instead.
  */
 internal fun ClerkResult<SignIn, ClerkErrorResponse>.signInToOAuthResult():
-  ClerkResult<OAuthResult, ClerkErrorResponse> {
-  return when (this) {
-    is ClerkResult.Success -> {
-      ClerkResult.success(OAuthResult(signIn = this.value))
-    }
-    is ClerkResult.Failure -> {
-      when (this.errorType) {
-        ClerkResult.Failure.ErrorType.API -> ClerkResult.apiFailure(this.error)
-        ClerkResult.Failure.ErrorType.HTTP ->
-          ClerkResult.httpFailure(error = this.error, code = this.code!!)
-        ClerkResult.Failure.ErrorType.UNKNOWN -> this
-      }
-    }
-  }
-}
+  ClerkResult<OAuthResult, ClerkErrorResponse> = map { OAuthResult(signIn = it) }
 
 internal fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResult():
-  ClerkResult<OAuthResult, ClerkErrorResponse> {
-  return when (this) {
-    is ClerkResult.Success -> {
-      ClerkResult.success(OAuthResult(signUp = this.value))
-    }
-
-    is ClerkResult.Failure -> {
-      when (this.errorType) {
-        ClerkResult.Failure.ErrorType.API -> ClerkResult.apiFailure(this.error)
-        ClerkResult.Failure.ErrorType.HTTP ->
-          ClerkResult.httpFailure(error = this.error, code = this.code!!)
-
-        ClerkResult.Failure.ErrorType.UNKNOWN -> this
-      }
-    }
-  }
-}
+  ClerkResult<OAuthResult, ClerkErrorResponse> = map { OAuthResult(signUp = it) }
 
 /**
  * Converts a [SignUp] to OAuth output, following the reverse transfer flow used by native ID-token

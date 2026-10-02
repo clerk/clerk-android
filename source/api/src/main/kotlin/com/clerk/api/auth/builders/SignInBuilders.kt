@@ -1,6 +1,8 @@
 package com.clerk.api.auth.builders
 
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 
 /**
  * Builder for sign-in with identifier.
@@ -28,14 +30,16 @@ class SignInIdentifierBuilder {
   /** The username to sign in with. */
   var username: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null || username != null) {
-      "At least one of email, phone, or username must be provided"
-    }
-  }
-
-  internal fun getIdentifier(): String {
-    return email ?: phone ?: username ?: error("No identifier provided")
+  /** Returns the identifier to sign in with, or a failure when none was provided. */
+  internal fun identifier(): ClerkResult<String, ClerkErrorResponse> {
+    val identifier =
+      email
+        ?: phone
+        ?: username
+        ?: return invalidBuilderArguments(
+          "At least one of email, phone, or username must be provided"
+        )
+    return ClerkResult.success(identifier)
   }
 }
 
@@ -58,10 +62,18 @@ class SignInWithPasswordBuilder {
   /** The password for authentication. */
   var password: String? = null
 
-  internal fun validate() {
-    require(identifier != null) { "Identifier must be provided" }
-    require(password != null) { "Password must be provided" }
+  /** Returns the identifier and password, or a failure when either is missing. */
+  internal fun credentials(): ClerkResult<PasswordCredentials, ClerkErrorResponse> {
+    val identifier = identifier
+    val password = password
+    return when {
+      identifier == null -> invalidBuilderArguments("Identifier must be provided")
+      password == null -> invalidBuilderArguments("Password must be provided")
+      else -> ClerkResult.success(PasswordCredentials(identifier = identifier, password = password))
+    }
   }
+
+  internal data class PasswordCredentials(val identifier: String, val password: String)
 }
 
 /**
@@ -85,12 +97,20 @@ class SignInWithOtpBuilder {
   /** The phone number to send the OTP to. */
   var phone: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null) { "Either email or phone must be provided" }
-    require(email == null || phone == null) {
-      "Only one of email or phone should be provided, not both"
+  /** Returns the single channel to send the OTP to, or a failure when zero or two are set. */
+  internal fun channel(): ClerkResult<OtpChannel, ClerkErrorResponse> {
+    val email = email
+    val phone = phone
+    return when {
+      email != null && phone != null ->
+        invalidBuilderArguments("Only one of email or phone should be provided, not both")
+      email != null -> ClerkResult.success(OtpChannel(identifier = email, isEmail = true))
+      phone != null -> ClerkResult.success(OtpChannel(identifier = phone, isEmail = false))
+      else -> invalidBuilderArguments("Either email or phone must be provided")
     }
   }
+
+  internal data class OtpChannel(val identifier: String, val isEmail: Boolean)
 }
 
 /**
@@ -114,8 +134,16 @@ class SignInWithIdTokenBuilder {
   /** The identity provider that issued the token. */
   var provider: IdTokenProvider? = null
 
-  internal fun validate() {
-    require(token != null) { "Token must be provided" }
-    require(provider != null) { "Provider must be provided" }
+  /** Returns the token and its provider, or a failure when either is missing. */
+  internal fun idToken(): ClerkResult<IdToken, ClerkErrorResponse> {
+    val token = token
+    val provider = provider
+    return when {
+      token == null -> invalidBuilderArguments("Token must be provided")
+      provider == null -> invalidBuilderArguments("Provider must be provided")
+      else -> ClerkResult.success(IdToken(token = token, provider = provider))
+    }
   }
+
+  internal data class IdToken(val token: String, val provider: IdTokenProvider)
 }
