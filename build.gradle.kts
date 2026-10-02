@@ -175,6 +175,16 @@ tasks.register("verifyPublishedArtifacts") {
       ),
     )
 
+    fun assertPomName(directory: File, expectedName: String) {
+      val pom = directory.resolve("pom-default.xml").readText()
+      check("<name>$expectedName</name>" in pom) {
+        "${directory.relativeTo(rootDir)}/pom-default.xml must be named '$expectedName'."
+      }
+    }
+
+    assertPomName(apiPublication.get().asFile, "Clerk Android API")
+    assertPomName(uiPublication.get().asFile, "Clerk Android UI")
+
     listOf("com.google.devtools.ksp:symbol-processing-api").forEach {
       assertCoordinateIsNotPublished(apiPublication.get().asFile, it)
     }
