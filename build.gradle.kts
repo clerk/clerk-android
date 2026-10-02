@@ -62,6 +62,12 @@ allprojects {
   tasks.withType<Detekt>().configureEach {
     jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
+  if (path != ":detekt-rules") {
+    dependencies {
+      // detekt brings its own Kotlin runtime; keep the rules jar from adding a newer stdlib.
+      add("detektPlugins", project(":detekt-rules")) { exclude(group = "org.jetbrains.kotlin") }
+    }
+  }
 
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
