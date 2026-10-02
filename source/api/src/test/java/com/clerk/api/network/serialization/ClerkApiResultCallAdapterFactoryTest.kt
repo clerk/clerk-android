@@ -88,6 +88,30 @@ class ClerkApiResultCallAdapterFactoryTest {
     assertEquals(error, failure.throwable)
   }
 
+  @Test
+  fun `suspend call resumes with an http failure for an unfollowed redirect`() {
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          okhttp3.Response.Builder()
+            .request(chain.request())
+            .protocol(Protocol.HTTP_1_1)
+            .code(300)
+            .message("Multiple Choices")
+            .body("{}".toResponseBody(JSON))
+            .build()
+        }
+        .build()
+    val service = retrofit(Json.asConverterFactory(JSON), client).create(ErrorService::class.java)
+
+    val result = runBlocking { withTimeout(SUSPEND_TIMEOUT_MS) { service.fetch() } }
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(300, failure.code)
+  }
+
   private interface ErrorService {
     @GET("error") suspend fun fetch(): ClerkResult<Unit, ClerkErrorResponse>
   }

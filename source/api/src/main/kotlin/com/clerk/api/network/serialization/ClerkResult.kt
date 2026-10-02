@@ -98,6 +98,8 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     public fun unknownFailure(throwable: Throwable): Failure<Nothing> =
       Failure(null, throwable, null, Failure.ErrorType.UNKNOWN)
 
+    internal fun isHttpFailureCode(code: Int): Boolean = code in HTTP_FAILURE_RANGE
+
     internal fun checkHttpFailureCode(code: Int) {
       require(code !in HTTP_SUCCESS_RANGE) { "Status code '$code' is a successful HTTP response." }
       require(code in HTTP_FAILURE_RANGE) {
