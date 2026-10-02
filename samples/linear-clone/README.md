@@ -15,12 +15,12 @@ This sample app is a native Android recreation of Linear's authentication flow, 
    - For Sign in options select **Email**, and **Google** and click Create Application
 
 2. **Configure Authentication Methods**
-   
+
    **Email Code Authentication:**
    - Under the **Configure** tab, go to **User & Authentication** → **Email, Phone, Username**
    - Enable **Email** authentication
    - Disable **Require email during sign-up**
-   - Enable **Verify at sign-up** 
+   - Enable **Verify at sign-up**
    - Enable **Email verification code**
 
    **Google OAuth (Optional):**
@@ -43,12 +43,12 @@ This sample app is a native Android recreation of Linear's authentication flow, 
    ```
 
 2. **Add your Clerk Publishable Key**:
-   
+
    Open the `gradle.properties` file in the project root and add your publishable key:
    ```properties
    LINEAR_CLONE_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
    ```
-   
+
    > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
 
 ## How to Run

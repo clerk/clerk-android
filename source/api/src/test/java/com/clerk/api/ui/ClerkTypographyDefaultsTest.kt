@@ -24,10 +24,9 @@ class ClerkTypographyDefaultsTest {
 
   @Test
   fun `builder allows overriding individual slots`() {
-    val typography =
-      ClerkTypographyDefaults.typography {
-        titleMedium = titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-      }
+    val typography = ClerkTypographyDefaults.typography {
+      titleMedium = titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    }
 
     assertEquals(18.sp, typography.titleMedium?.fontSize)
     assertEquals(FontWeight.Bold, typography.titleMedium?.fontWeight)
