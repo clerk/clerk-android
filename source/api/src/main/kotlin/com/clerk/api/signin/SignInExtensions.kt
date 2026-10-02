@@ -367,9 +367,7 @@ suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorRespo
       else -> SignIn.AttemptFirstFactorParams.EmailCode(code = code)
     }
 
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
-  }
+  return attemptFirstFactor(params)
 }
 
 /**
@@ -386,9 +384,7 @@ suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorRespo
  */
 suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Password(password = password)
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
-  }
+  return attemptFirstFactor(params)
 }
 
 /**
@@ -405,9 +401,7 @@ suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, Cle
  */
 suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Passkey(publicKeyCredential = credential)
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
-  }
+  return attemptFirstFactor(params)
 }
 
 /**
@@ -437,9 +431,7 @@ suspend fun SignIn.verifyMfaCode(
       MfaType.BACKUP_CODE -> SignIn.AttemptSecondFactorParams.BackupCode(code = code)
     }
 
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
-  }
+  return attemptSecondFactor(params)
 }
 
 /**
@@ -524,9 +516,7 @@ suspend fun SignIn.resetPassword(
 suspend fun SignIn.reload(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
-  }
+  return get(rotatingTokenNonce)
 }
 
 // endregion
