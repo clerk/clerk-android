@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.HostedAuthMode
-import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
@@ -15,8 +14,8 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.hostedauth.HostedAuthResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.Session
-import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -60,32 +59,29 @@ class HostedAuthServiceTest {
     justRun { Clerk.updateClient(any()) }
     mockkObject(ClerkApi)
     every { ClerkApi.client } returns clientApi
-    mockkObject(SSOService)
-    justRun { SSOService.cancelPendingAuthentication() }
-    mockkObject(ExternalAccountService)
-    justRun { ExternalAccountService.cancelPendingExternalAccountConnection() }
   }
 
   @After
   fun tearDown() {
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.resetForTests()
     unmockkAll()
   }
 
   @Test
-  fun startRejectsSecondConcurrentFlow() = runBlocking {
+  fun secondFlowSupersedesTheFirst() = runBlocking {
     val capturedState = stubCreateHostedAuth()
     val first = startInBackground()
     withTimeout(TIMEOUT_MS) { capturedState.await() }
 
-    val second = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+    val second = startInBackground()
 
-    assertTrue(second is ClerkResult.Failure)
-    val message = (second as ClerkResult.Failure).throwable?.message.orEmpty()
-    assertTrue(message.contains("already in progress"))
+    val firstResult = withTimeout(TIMEOUT_MS) { first.await() } as ClerkResult.Failure
+    assertTrue(firstResult.throwable is HostedAuthCancellationException)
+    assertEquals(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW, firstResult.throwable?.message)
+    assertTrue(HostedAuthService.hasPendingAuthentication())
 
     HostedAuthService.cancelPendingAuthentication()
-    assertTrue(withTimeout(TIMEOUT_MS) { first.await() } is ClerkResult.Failure)
+    assertTrue(withTimeout(TIMEOUT_MS) { second.await() } is ClerkResult.Failure)
   }
 
   @Test

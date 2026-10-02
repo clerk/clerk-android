@@ -1,62 +1,63 @@
 package com.clerk.api.configuration
 
-import com.clerk.api.hostedauth.HostedAuthService
-import com.clerk.api.sso.SSOService
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.RedirectCoordinator
+import com.clerk.api.sso.OAuthResult
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 class ConfigurationManagerAuthRaceTest {
-  @Before
-  fun setUp() {
-    mockkObject(SSOService)
-    mockkObject(HostedAuthService)
-    every { SSOService.hasPendingAuthentication() } returns false
-    every { SSOService.hasPendingExternalAccountConnection() } returns false
-    every { HostedAuthService.hasPendingAuthentication() } returns false
-  }
-
   @After
   fun tearDown() {
-    unmockkAll()
+    RedirectCoordinator.resetForTests()
   }
 
   @Test
   fun `hasPendingAuthFlow returns true when SSO authentication is pending`() {
-    every { SSOService.hasPendingAuthentication() } returns true
+    RedirectCoordinator.begin(sso())
 
-    val configurationManager = ConfigurationManager()
-
-    assertTrue(configurationManager.hasPendingAuthFlow())
+    assertTrue(ConfigurationManager().hasPendingAuthFlow())
   }
 
   @Test
   fun `hasPendingAuthFlow returns true when external account connection is pending`() {
-    every { SSOService.hasPendingExternalAccountConnection() } returns true
+    RedirectCoordinator.begin(
+      PendingRedirect.ExternalAccountConnection(expectedState = "s", externalAccountId = "eac")
+    )
 
-    val configurationManager = ConfigurationManager()
-
-    assertTrue(configurationManager.hasPendingAuthFlow())
+    assertTrue(ConfigurationManager().hasPendingAuthFlow())
   }
 
   @Test
   fun `hasPendingAuthFlow returns true when hosted auth is pending`() {
-    every { HostedAuthService.hasPendingAuthentication() } returns true
+    RedirectCoordinator.begin(PendingRedirect.HostedAuth("myapp://cb", "s", "v"))
 
-    val configurationManager = ConfigurationManager()
+    assertTrue(ConfigurationManager().hasPendingAuthFlow())
+  }
 
-    assertTrue(configurationManager.hasPendingAuthFlow())
+  @Test
+  fun `hasPendingAuthFlow returns false once the pending flow finishes`() {
+    val pending = sso()
+    RedirectCoordinator.begin(pending)
+
+    RedirectCoordinator.finish(pending, ClerkResult.success(OAuthResult()))
+
+    assertFalse(ConfigurationManager().hasPendingAuthFlow())
   }
 
   @Test
   fun `hasPendingAuthFlow returns false when no auth flow is pending`() {
-    val configurationManager = ConfigurationManager()
-
-    assertFalse(configurationManager.hasPendingAuthFlow())
+    assertFalse(ConfigurationManager().hasPendingAuthFlow())
   }
+
+  private fun sso() =
+    PendingRedirect.Sso(
+      expectedState = "s",
+      transferable = true,
+      redirectFlow = PendingRedirect.RedirectFlow.SIGN_IN,
+      signUp = null,
+    )
 }
