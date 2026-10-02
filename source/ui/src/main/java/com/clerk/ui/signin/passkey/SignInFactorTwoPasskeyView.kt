@@ -11,7 +11,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /** Displays passkey authentication for the second factor of an in-progress sign-in. */
 @Composable
-fun SignInFactorTwoPasskeyView(
+public fun SignInFactorTwoPasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

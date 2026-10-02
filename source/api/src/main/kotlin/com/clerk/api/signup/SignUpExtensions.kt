@@ -24,7 +24,7 @@ import com.clerk.api.network.serialization.ClerkResult
  * signUp.sendCode { phone = "+1234567890" }
  * ```
  */
-suspend fun SignUp.sendCode(
+public suspend fun SignUp.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
@@ -61,7 +61,7 @@ suspend fun SignUp.sendCode(
  * signUp.verifyCode("654321", VerificationType.PHONE)
  * ```
  */
-suspend fun SignUp.verifyCode(
+public suspend fun SignUp.verifyCode(
   code: String,
   type: VerificationType,
 ): ClerkResult<SignUp, ClerkErrorResponse> {
@@ -93,7 +93,7 @@ suspend fun SignUp.verifyCode(
  * }
  * ```
  */
-suspend fun SignUp.update(
+public suspend fun SignUp.update(
   block: SignUpBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)

@@ -6,7 +6,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.PasskeyService
 
 /** Prepares an explicit second-factor strategy, including passkeys. */
-suspend fun SignIn.prepareSecondFactor(
+public suspend fun SignIn.prepareSecondFactor(
   strategy: SignIn.PrepareSecondFactorStrategy
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
@@ -26,7 +26,7 @@ suspend fun SignIn.prepareSecondFactor(
  * prepared and attempted as a second factor. Otherwise, this starts the existing first-factor
  * passkey flow.
  */
-suspend fun SignIn.authenticateWithPasskey(
+public suspend fun SignIn.authenticateWithPasskey(
   allowedCredentialIds: List<String> = emptyList()
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return PasskeyService.authenticateWithPasskey(this, allowedCredentialIds)

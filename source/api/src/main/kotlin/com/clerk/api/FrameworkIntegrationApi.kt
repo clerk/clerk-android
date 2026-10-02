@@ -14,4 +14,4 @@ package com.clerk.api
 )
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION)
-annotation class FrameworkIntegrationApi
+public annotation class FrameworkIntegrationApi

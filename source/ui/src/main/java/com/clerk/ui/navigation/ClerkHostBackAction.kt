@@ -28,7 +28,7 @@ import com.clerk.api.FrameworkIntegrationApi
  */
 @FrameworkIntegrationApi
 @Composable
-fun ClerkHostBackActionProvider(onHostBack: () -> Unit, content: @Composable () -> Unit) {
+public fun ClerkHostBackActionProvider(onHostBack: () -> Unit, content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalClerkHostBackAction provides onHostBack, content = content)
 }
 

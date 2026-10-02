@@ -70,7 +70,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  *   text = "Continue",
  */
 @Composable
-fun ClerkButton(
+public fun ClerkButton(
   text: String?,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
@@ -190,7 +190,7 @@ private fun ClerkButtonImpl(
   }
 }
 
-data class ClerkButtonState(
+public data class ClerkButtonState(
   val isLoading: Boolean,
   val isEnabled: Boolean,
   val isPressedCombined: Boolean,

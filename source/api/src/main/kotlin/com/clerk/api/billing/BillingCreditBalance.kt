@@ -7,4 +7,4 @@ import kotlinx.serialization.Serializable
  *
  * @property balance The balance of the credit, or `null` when no balance is available.
  */
-@Serializable data class BillingCreditBalance(val balance: BillingMoneyAmount? = null)
+@Serializable public data class BillingCreditBalance(val balance: BillingMoneyAmount? = null)

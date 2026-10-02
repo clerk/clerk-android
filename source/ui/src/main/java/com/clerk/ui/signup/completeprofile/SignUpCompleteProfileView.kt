@@ -42,7 +42,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 /** Public wrapper that pulls field enablement from Clerk and owns its own state. */
 @Composable
-fun SignUpCompleteProfileView(
+public fun SignUpCompleteProfileView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,

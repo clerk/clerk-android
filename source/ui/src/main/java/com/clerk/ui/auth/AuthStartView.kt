@@ -57,7 +57,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AuthStartView(
+public fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   logo: (@Composable () -> Unit)? = null,
@@ -128,7 +128,8 @@ internal fun AuthStartViewImpl(
 
   val lastAuthenticationStrategy = runCatching {
     Clerk.client.lastAuthenticationStrategy
-  }.getOrNull()
+  }
+    .getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,

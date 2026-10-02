@@ -45,6 +45,8 @@ kotlin {
   // Public ABI is checked against api/android/telemetry.api by checkKotlinAbi (part of check).
   @OptIn(ExperimentalAbiValidation::class) abiValidation()
 
+  explicitApi()
+
   androidLibrary {
     namespace = "com.clerk.telemetry"
     compileSdk = libs.versions.compileSdk.get().toInt()

@@ -62,7 +62,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  */
 @Composable
 @Suppress("LongParameterList", "UNUSED_PARAMETER")
-fun OrganizationListView(
+public fun OrganizationListView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   hidePersonalAccount: Boolean = false,

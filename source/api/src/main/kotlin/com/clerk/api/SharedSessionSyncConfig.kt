@@ -17,9 +17,9 @@ package com.clerk.api
  * )
  * ```
  */
-class SharedSessionSyncConfig private constructor() {
-  companion object {
+public class SharedSessionSyncConfig private constructor() {
+  public companion object {
     /** Enables shared-session synchronization for this Clerk instance. */
-    val enabled = SharedSessionSyncConfig()
+    public val enabled: SharedSessionSyncConfig = SharedSessionSyncConfig()
   }
 }

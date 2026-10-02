@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-data class TelemetryCollectorOptions(
+public data class TelemetryCollectorOptions(
   val samplingRate: Double = 1.0,
   val maxBufferSize: Int = 5,
   val flushIntervalSeconds: Long = 30L,
@@ -20,7 +20,7 @@ data class TelemetryCollectorOptions(
 
 /** A telemetry event as sent to the backend. */
 @Serializable
-data class TelemetryEvent(
+public data class TelemetryEvent(
   @SerialName("event") val event: String,
   @SerialName("it") val instanceType: String,
   @SerialName("sdk") val sdkName: String,
@@ -30,7 +30,7 @@ data class TelemetryEvent(
 )
 
 /** Raw input describing an event before environment enrichment. */
-data class TelemetryEventRaw(
+public data class TelemetryEventRaw(
   val event: String,
   val payload: Map<String, JsonElement>,
   /** Optional per-event sampling override in [0, 1]. */

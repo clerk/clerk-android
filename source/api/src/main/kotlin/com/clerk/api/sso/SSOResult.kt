@@ -16,19 +16,19 @@ import kotlinx.serialization.Serializable
  * non-null.
  */
 @Serializable
-data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
+public data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
 
   /**
    * Convenience property to determine the type of result.
    *
    * @return The type of result, either [ResultType.SIGN_IN] or [ResultType.SIGN_UP].
    */
-  val resultType
+  val resultType: ResultType
     get() = if (signIn != null) ResultType.SIGN_IN else ResultType.SIGN_UP
 }
 
 @kotlinx.serialization.Serializable
-enum class ResultType {
+public enum class ResultType {
   SIGN_IN,
   SIGN_UP,
   UNKNOWN,

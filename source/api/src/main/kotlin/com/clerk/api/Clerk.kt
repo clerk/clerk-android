@@ -64,7 +64,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * user sessions and sign-in flows.
  */
 @Suppress("TooManyFunctions")
-object Clerk {
+public object Clerk {
 
   // region Configuration & Initialization
 
@@ -82,7 +82,7 @@ object Clerk {
    * Set this via [ClerkConfigurationOptions] in the [initialize] method. When enabled, provides
    * verbose logging for SDK operations and API calls. Defaults to `false`.
    */
-  var debugMode: Boolean = false
+  public var debugMode: Boolean = false
     private set
 
   /**
@@ -92,7 +92,7 @@ object Clerk {
    * a full URL (for example, https://proxy.example.com/__clerk. Set this via
    * [ClerkConfigurationOptions] in the [initialize] method.
    */
-  var proxyUrl: String? = null
+  public var proxyUrl: String? = null
     private set
 
   /**
@@ -152,7 +152,8 @@ object Clerk {
    * When enabled, a client can hold sessions for multiple accounts and switch the active session by
    * updating [Client.lastActiveSessionId].
    */
-  val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
+  public val multiSessionModeIsEnabledFlow: StateFlow<Boolean> =
+    _multiSessionModeIsEnabled.asStateFlow()
 
   internal var environment: Environment? = null
 
@@ -166,7 +167,7 @@ object Clerk {
    * Contains information about active sessions, sign-in attempts, and device-specific data. This is
    * initialized after the SDK's `initialize` method has been successfully called.
    */
-  lateinit var client: Client
+  public lateinit var client: Client
     private set
 
   private val _clientFlow = MutableStateFlow<Client?>(null)
@@ -178,7 +179,7 @@ object Clerk {
    * receives updated client state, including initialization, sign-in, sign-up, sign-out, session
    * mutations, and piggybacked API responses.
    */
-  val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
+  public val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
 
   internal val clientInitialized: Boolean
     get() = ::client.isInitialized
@@ -190,14 +191,14 @@ object Clerk {
    * must be initialized by calling [initialize] before most other methods can be used. Emits `true`
    * once initialization is complete, `false` otherwise.
    */
-  val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
+  public val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
 
   /**
    * The publishable key from Clerk Dashboard used for API authentication.
    *
    * This key determines the API base URL and connects the app to the correct Clerk instance.
    */
-  var publishableKey: String? = null
+  public var publishableKey: String? = null
 
   /**
    * Whether to enable telemetry for the SDK.
@@ -207,7 +208,7 @@ object Clerk {
    *
    * Set this via [ClerkConfigurationOptions] in the [initialize] method. Defaults to `true`.
    */
-  var telemetryEnabled: Boolean = true
+  public var telemetryEnabled: Boolean = true
 
   /**
    * Reactive state for initialization errors.
@@ -229,9 +230,9 @@ object Clerk {
    * }
    * ```
    */
-  val initializationError: StateFlow<Throwable?> = configurationManager.initializationError
+  public val initializationError: StateFlow<Throwable?> = configurationManager.initializationError
 
-  val applicationName: String?
+  public val applicationName: String?
     get() = environment?.displayConfig?.applicationName
 
   /**
@@ -240,7 +241,7 @@ object Clerk {
    * Prebuilt UI components use this address when directing users to contact support. Returns `null`
    * if the SDK is not initialized or no support email is configured.
    */
-  val supportEmail: String?
+  public val supportEmail: String?
     get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
 
   /**
@@ -248,10 +249,10 @@ object Clerk {
    *
    * @return A string representing the semantic version of the SDK (e.g., "1.0.0").
    */
-  val version: String
+  public val version: String
     get() = BuildConfig.SDK_VERSION
 
-  val instanceEnvironmentType: InstanceEnvironmentType
+  public val instanceEnvironmentType: InstanceEnvironmentType
     get() =
       if (PublishableKeyHelper().isLive(publishableKey = publishableKey))
         InstanceEnvironmentType.PRODUCTION
@@ -263,7 +264,7 @@ object Clerk {
    * The warning is shown only when the current environment asks for it and the instance is not a
    * production instance.
    */
-  val shouldShowDevelopmentModeWarning: Boolean
+  public val shouldShowDevelopmentModeWarning: Boolean
     get() {
       val displayConfig = environment?.displayConfig ?: return false
       return displayConfig.showDevModeWarning &&
@@ -280,10 +281,10 @@ object Clerk {
    * @return A list of strings, each representing an enabled first factor attribute. Returns an
    *   empty list if the SDK is not initialized or if no first factor attributes are enabled.
    */
-  val enabledFirstFactorAttributes: List<String>
+  public val enabledFirstFactorAttributes: List<String>
     get() = environment?.enabledFirstFactorAttributes().orEmpty()
 
-  val isUserNameEnabled: Boolean
+  public val isUserNameEnabled: Boolean
     get() = environment?.usernameIsEnabled ?: false
 
   /**
@@ -294,7 +295,7 @@ object Clerk {
    * @return `true` if the 'First Name' attribute is enabled, `false` otherwise. Returns `false` if
    *   the SDK is not yet initialized.
    */
-  val isFirstNameEnabled: Boolean
+  public val isFirstNameEnabled: Boolean
     get() = environment?.firstNameIsEnabled ?: false
 
   /**
@@ -306,22 +307,22 @@ object Clerk {
    * @return `true` if the last name attribute is enabled, `false` otherwise. Returns `false` if the
    *   SDK is not yet initialized.
    */
-  val isLastNameEnabled: Boolean
+  public val isLastNameEnabled: Boolean
     get() = environment?.lastNameIsEnabled ?: false
 
-  val passwordIsEnabled: Boolean
+  public val passwordIsEnabled: Boolean
     get() = environment?.passwordIsEnabled ?: false
 
-  val mfaIsEnabled: Boolean
+  public val mfaIsEnabled: Boolean
     get() = environment?.mfaIsEnabled ?: false
 
-  val passkeyIsEnabled: Boolean
+  public val passkeyIsEnabled: Boolean
     get() = environment?.passkeyIsEnabled ?: false
 
-  val passkeyFirstFactorIsEnabled: Boolean
+  public val passkeyFirstFactorIsEnabled: Boolean
     get() = environment?.passkeyFirstFactorIsEnabled ?: false
 
-  val passkeyAutofillIsEnabled: Boolean
+  public val passkeyAutofillIsEnabled: Boolean
     get() = environment?.userSettings?.passkeySettings?.allowAutofill ?: false
 
   /**
@@ -333,7 +334,7 @@ object Clerk {
    * @return `true` if biometric sign-in is enabled, `false` otherwise. Returns `false` if the SDK
    *   is not yet initialized.
    */
-  val biometricSignInIsEnabled: Boolean
+  public val biometricSignInIsEnabled: Boolean
     get() = environment?.biometricSignInIsEnabled ?: false
 
   /**
@@ -342,7 +343,7 @@ object Clerk {
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
    */
-  val biometricCredentialPromptAfterSignInIsEnabled: Boolean
+  public val biometricCredentialPromptAfterSignInIsEnabled: Boolean
     get() = environment?.biometricCredentialPromptAfterSignInIsEnabled ?: false
 
   /**
@@ -351,49 +352,49 @@ object Clerk {
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
    */
-  val biometricCredentialPromptAfterSignUpIsEnabled: Boolean
+  public val biometricCredentialPromptAfterSignUpIsEnabled: Boolean
     get() = environment?.biometricCredentialPromptAfterSignUpIsEnabled ?: false
 
-  val isEmailEnabled: Boolean
+  public val isEmailEnabled: Boolean
     get() = environment?.emailIsEnabled ?: false
 
-  val isPhoneNumberEnabled: Boolean
+  public val isPhoneNumberEnabled: Boolean
     get() = environment?.phoneNumberIsEnabled ?: false
 
-  val isEmailImmutable: Boolean
+  public val isEmailImmutable: Boolean
     get() = environment?.emailIsImmutable ?: false
 
-  val isPhoneNumberImmutable: Boolean
+  public val isPhoneNumberImmutable: Boolean
     get() = environment?.phoneNumberIsImmutable ?: false
 
-  val isUsernameImmutable: Boolean
+  public val isUsernameImmutable: Boolean
     get() = environment?.usernameIsImmutable ?: false
 
-  val deleteSelfIsEnabled: Boolean
+  public val deleteSelfIsEnabled: Boolean
     get() = environment?.userSettings?.actions?.deleteSelf ?: false
 
-  val organizationCreationDefaultsIsEnabled: Boolean
+  public val organizationCreationDefaultsIsEnabled: Boolean
     get() = environment?.organizationSettings?.organizationCreationDefaults?.enabled ?: false
 
-  val organizationIsEnabled: Boolean
+  public val organizationIsEnabled: Boolean
     get() = environment?.organizationSettings?.enabled ?: false
 
-  val organizationDomainsIsEnabled: Boolean
+  public val organizationDomainsIsEnabled: Boolean
     get() = environment?.organizationSettings?.domains?.enabled ?: false
 
-  val organizationDomainEnrollmentModes: List<String>
+  public val organizationDomainEnrollmentModes: List<String>
     get() = environment?.organizationSettings?.domains?.enrollmentModes ?: emptyList()
 
-  val organizationAdminDeleteIsEnabled: Boolean
+  public val organizationAdminDeleteIsEnabled: Boolean
     get() = environment?.organizationSettings?.actions?.adminDelete ?: false
 
-  val organizationSelectionIsForced: Boolean
+  public val organizationSelectionIsForced: Boolean
     get() = environment?.organizationSettings?.forceOrganizationSelection ?: false
 
-  val organizationSlugIsEnabled: Boolean
+  public val organizationSlugIsEnabled: Boolean
     get() = environment?.organizationSettings?.slug?.disabled?.not() ?: true
 
-  val organizationDefaultRoleKey: String?
+  public val organizationDefaultRoleKey: String?
     get() = environment?.organizationSettings?.domains?.defaultRole
 
   /**
@@ -402,11 +403,11 @@ object Clerk {
    * Defaults to disabled billing when the SDK has not fetched environment yet, or when the payload
    * omits `commerce_settings`.
    */
-  val commerceSettings: CommerceSettings
+  public val commerceSettings: CommerceSettings
     get() = environment?.commerceSettings ?: CommerceSettings()
 
   /** Reads Plans, Subscriptions, statements, payment attempts, and credits. */
-  val billing: Billing
+  public val billing: Billing
     get() = Billing
 
   private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
@@ -416,7 +417,7 @@ object Clerk {
    *
    * Emits `null` until the SDK environment is initialized or when no logo URL is configured.
    */
-  val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrlFlow.asStateFlow()
+  public val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrlFlow.asStateFlow()
 
   /**
    * The image URL for the application logo used in authentication UI components.
@@ -425,7 +426,7 @@ object Clerk {
    * URL is configured in your Clerk Dashboard under branding settings. Returns `null` if the SDK is
    * not yet initialized or no logo URL is configured.
    */
-  val organizationLogoUrl: String?
+  public val organizationLogoUrl: String?
     get() = environment?.displayConfig?.logoImageUrl
 
   /**
@@ -438,7 +439,7 @@ object Clerk {
    * @return `true` if Google One Tap is enabled, `false` otherwise. Returns `false` if the SDK is
    *   not yet initialized.
    */
-  val isGoogleOneTapEnabled: Boolean
+  public val isGoogleOneTapEnabled: Boolean
     get() = environment?.displayConfig?.googleOneTapClientId != null
 
   /**
@@ -450,7 +451,7 @@ object Clerk {
    * @return `true` if branding is enabled, `false` otherwise. Returns `true` if the SDK is not yet
    *   initialized.
    */
-  val isBranded: Boolean
+  public val isBranded: Boolean
     get() = environment?.displayConfig?.branded ?: true
 
   /**
@@ -462,7 +463,7 @@ object Clerk {
    * @return The terms URL if configured, `null` otherwise. Returns `null` if the SDK is not yet
    *   initialized.
    */
-  val termsUrl: String?
+  public val termsUrl: String?
     get() = environment?.displayConfig?.termsUrl
 
   /**
@@ -474,7 +475,7 @@ object Clerk {
    * @return The privacy policy URL if configured, `null` otherwise. Returns `null` if the SDK is
    *   not yet initialized.
    */
-  val privacyPolicyUrl: String?
+  public val privacyPolicyUrl: String?
     get() = environment?.displayConfig?.privacyPolicyUrl
 
   /**
@@ -486,7 +487,7 @@ object Clerk {
    * @return `true` if MFA with phone code is enabled, `false` otherwise. Returns `false` if the SDK
    *   is not yet initialized.
    */
-  val mfaPhoneCodeIsEnabled: Boolean
+  public val mfaPhoneCodeIsEnabled: Boolean
     get() = environment?.mfaPhoneCodeIsEnabled ?: false
 
   /**
@@ -498,10 +499,10 @@ object Clerk {
    * @return `true` if MFA with backup codes is enabled, `false` otherwise. Returns `false` if the
    *   SDK is not yet initialized.
    */
-  val mfaBackupCodeIsEnabled: Boolean
+  public val mfaBackupCodeIsEnabled: Boolean
     get() = environment?.mfaBackupCodeIsEnabled ?: false
 
-  val mfaAuthenticatorAppIsEnabled: Boolean
+  public val mfaAuthenticatorAppIsEnabled: Boolean
     get() = environment?.mfaAuthenticatorAppIsEnabled ?: false
 
   /**
@@ -510,7 +511,7 @@ object Clerk {
    * When enabled, a client can hold sessions for multiple accounts and switch the active session by
    * updating [Client.lastActiveSessionId].
    */
-  val multiSessionModeIsEnabled: Boolean
+  public val multiSessionModeIsEnabled: Boolean
     get() = environment?.authConfig?.singleSessionMode?.not() ?: false
 
   // endregion
@@ -525,7 +526,7 @@ object Clerk {
    * In multi-session mode this may contain sessions for multiple user accounts. The current session
    * is still determined by [Client.lastActiveSessionId] and exposed through [sessionFlow].
    */
-  val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
+  public val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
 
   private val _session = MutableStateFlow<Session?>(null)
 
@@ -536,7 +537,7 @@ object Clerk {
    * refresh. Emits `null` when no session exists. Note that the session may have any status
    * (active, pending, etc.) - use [Session.status] to check the current state.
    */
-  val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
+  public val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
   /**
    * The current user session, regardless of status.
@@ -551,7 +552,7 @@ object Clerk {
    *
    * @see activeSession for a session only when status is ACTIVE.
    */
-  val session: Session?
+  public val session: Session?
     get() = sessionFlow.value
 
   /**
@@ -562,7 +563,7 @@ object Clerk {
    *
    * @see session for the session regardless of status.
    */
-  val activeSession: Session?
+  public val activeSession: Session?
     get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
 
   /**
@@ -570,7 +571,7 @@ object Clerk {
    * [activeSession]. Returns `false` when no user is signed in or when the current session is not
    * ACTIVE (e.g., PENDING while session tasks are outstanding). See [Session.checkAuthorization].
    */
-  fun has(
+  public fun has(
     role: String? = null,
     permission: String? = null,
     feature: String? = null,
@@ -592,14 +593,14 @@ object Clerk {
    * This is used to determine the language of the UI components and the emails sent to the user.
    * The value is a IETF BCP 47 language tag, e.g., "en-US".
    */
-  val locale: StateFlow<String?> = LocaleProvider.locale
+  public val locale: StateFlow<String?> = LocaleProvider.locale
 
   /**
    * Indicates whether a user is currently signed in.
    *
    * @return `true` if there is an active session with a user, `false` otherwise.
    */
-  val isSignedIn: Boolean
+  public val isSignedIn: Boolean
     get() = sessionFlow.value != null
 
   // endregion
@@ -614,7 +615,7 @@ object Clerk {
    * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
    * Emits `null` when no user is signed in.
    */
-  val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
+  public val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
   /**
    * The current user, regardless of session status.
@@ -624,7 +625,7 @@ object Clerk {
    *
    * @see activeUser for the user only when session status is ACTIVE.
    */
-  val user: User?
+  public val user: User?
     get() = userFlow.value
 
   /**
@@ -635,7 +636,7 @@ object Clerk {
    *
    * @see user for the user regardless of session status.
    */
-  val activeUser: User?
+  public val activeUser: User?
     get() = activeSession?.user
 
   private var authFlowRegistrationId: UUID? = null
@@ -652,14 +653,14 @@ object Clerk {
    * `true` when there is a current user, the current session is active, and a non-dismissible auth
    * view is no longer completing session tasks or biometric-credential enrollment.
    */
-  val isAuthFlowCompleteFlow: StateFlow<Boolean> = _isAuthFlowCompleteFlow.asStateFlow()
+  public val isAuthFlowCompleteFlow: StateFlow<Boolean> = _isAuthFlowCompleteFlow.asStateFlow()
 
   /**
    * Whether authentication and Clerk-owned post-authentication steps are currently complete.
    *
    * For reactive UI, observe [isAuthFlowCompleteFlow].
    */
-  val isAuthFlowComplete: Boolean
+  public val isAuthFlowComplete: Boolean
     get() = isAuthFlowCompleteFlow.value
 
   internal var pendingAuthFlowCompletion: AuthEvent? = null
@@ -672,7 +673,7 @@ object Clerk {
    * active session. Returns `null` when there is no active session, no active organization
    * selection, or the user has no matching hydrated organization membership.
    */
-  val organizationMembership: OrganizationMembership?
+  public val organizationMembership: OrganizationMembership?
     get() {
       val activeSession = activeSession ?: return null
       val activeOrganizationId = activeSession.lastActiveOrganizationId ?: return null
@@ -687,7 +688,7 @@ object Clerk {
    * Returns `null` when there is no current session, no active organization selection, or the
    * current user does not have a matching hydrated organization membership.
    */
-  val organization: Organization?
+  public val organization: Organization?
     get() = organizationMembership?.organization
 
   // endregion
@@ -706,7 +707,7 @@ object Clerk {
    *   providers are configured.
    * @see [SignIn.create] for usage with OAuth authentication.
    */
-  val socialProviders: Map<String, UserSettings.SocialConfig>
+  public val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = environment?.userSettings?.social ?: emptyMap()
 
   // endregion
@@ -719,7 +720,7 @@ object Clerk {
    * [ClerkTheme] for details on available customizations. If `null`, default theming will be
    * applied.
    */
-  var customTheme: ClerkTheme? = null
+  public var customTheme: ClerkTheme? = null
 
   // endregion
 
@@ -748,7 +749,7 @@ object Clerk {
    *
    * @see Auth for all available authentication methods.
    */
-  val auth: Auth = Auth()
+  public val auth: Auth = Auth()
 
   /**
    * The main entry point for biometric credential operations.
@@ -764,7 +765,7 @@ object Clerk {
    *
    * @see BiometricCredentials for all available biometric-credential methods.
    */
-  val biometricCredentials: BiometricCredentials = BiometricCredentials
+  public val biometricCredentials: BiometricCredentials = BiometricCredentials
 
   /**
    * The main entry point for Google Play Restore Credentials operations.
@@ -772,7 +773,7 @@ object Clerk {
    * Use this to create a restore key for the signed-in user, redeem a restored key on a new device,
    * or explicitly clear the restore key.
    */
-  val restoreCredentials: RestoreCredentials = RestoreCredentials
+  public val restoreCredentials: RestoreCredentials = RestoreCredentials
 
   // endregion
 
@@ -790,7 +791,7 @@ object Clerk {
    *   Clerk.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
-  fun initialize(context: Context, publishableKey: String) {
+  public fun initialize(context: Context, publishableKey: String) {
     initialize(context, publishableKey, null)
   }
 
@@ -811,7 +812,7 @@ object Clerk {
    *   [ClerkTheme] for details.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
-  fun initialize(
+  public fun initialize(
     context: Context,
     publishableKey: String,
     options: ClerkConfigurationOptions? = null,
@@ -865,7 +866,7 @@ object Clerk {
    *
    * After reset completes, call [initialize] again to configure a new publishable key or proxy URL.
    */
-  fun reset() {
+  public fun reset() {
     HostedAuthService.cancelPendingAuthentication()
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
@@ -904,7 +905,7 @@ object Clerk {
    * [initialize], the client/environment refresh happens asynchronously; observe [isInitialized] to
    * know when the new configuration is ready.
    */
-  fun switchConfiguration(
+  public fun switchConfiguration(
     context: Context,
     publishableKey: String,
     options: ClerkConfigurationOptions? = null,
@@ -915,7 +916,7 @@ object Clerk {
   }
 
   /** Refreshes the current client and updates Clerk's reactive auth state. */
-  suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
     return when (val result = Client.get()) {
       is ClerkResult.Success -> {
         updateClient(result.value)
@@ -932,7 +933,7 @@ object Clerk {
    * method returns `true` when the in-memory client, environment, or device-token generation
    * changed.
    */
-  suspend fun reloadFromSharedStorage(): Boolean =
+  public suspend fun reloadFromSharedStorage(): Boolean =
     sharedSessionSyncCoordinator?.reloadFromSharedStorage() ?: false
 
   /**
@@ -952,7 +953,7 @@ object Clerk {
    * @param activity The current foreground Activity. Held as a [WeakReference] so it can still be
    *   garbage-collected when destroyed.
    */
-  fun attachActivity(activity: Activity) {
+  public fun attachActivity(activity: Activity) {
     currentActivity = WeakReference(activity)
   }
 
@@ -988,7 +989,7 @@ object Clerk {
    * @return true if reinitialization was started, false if the SDK is not configured or is already
    *   initialized.
    */
-  fun reinitialize(): Boolean = configurationManager.reinitialize()
+  public fun reinitialize(): Boolean = configurationManager.reinitialize()
 
   /**
    * Updates the stored device token and refreshes the native Clerk state.
@@ -1001,7 +1002,7 @@ object Clerk {
    * @param deviceToken The non-blank Clerk device token to persist and use for the refresh.
    * @return A [ClerkResult] indicating whether the token sync and refresh succeeded.
    */
-  suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> =
+  public suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> =
     configurationManager.updateDeviceToken(deviceToken)
 
   /**
@@ -1014,7 +1015,7 @@ object Clerk {
    *
    * @return A [ClerkResult] indicating whether the token clear and refresh succeeded.
    */
-  suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> =
+  public suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> =
     configurationManager.clearDeviceToken()
 
   /**
@@ -1022,7 +1023,7 @@ object Clerk {
    *
    * This is used by the Expo bridge to sync the native client token with the JS SDK.
    */
-  fun getDeviceToken(): String? =
+  public fun getDeviceToken(): String? =
     com.clerk.api.storage.StorageHelper.loadValue(com.clerk.api.storage.StorageKey.DEVICE_TOKEN)
 
   // endregion
@@ -1047,14 +1048,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1153,8 +1154,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1225,7 +1227,7 @@ object Clerk {
 
   @Synchronized
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-  fun registerAuthFlow(): AuthFlowRegistration? {
+  public fun registerAuthFlow(): AuthFlowRegistration? {
     if (hasActiveUserSession()) return null
 
     val registrationId = UUID.randomUUID()
@@ -1236,14 +1238,14 @@ object Clerk {
 
   @Synchronized
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-  fun markAuthFlowPending() {
+  public fun markAuthFlowPending() {
     if (authFlowRegistrationId == null) return
     setAuthFlowPending(true)
   }
 
   @Synchronized
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-  fun markAuthFlowComplete() {
+  public fun markAuthFlowComplete() {
     if (authFlowRegistrationId == null) return
     pendingAuthFlowCompletion = null
     setAuthFlowPending(false)
@@ -1301,7 +1303,7 @@ object Clerk {
  * @property sharedSessionSync Optional configuration for synchronizing Clerk state between
  *   same-signed sibling apps that use the same publishable key.
  */
-data class ClerkConfigurationOptions(
+public data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val proxyUrl: String? = null,
   val telemetryEnabled: Boolean = true,
@@ -1323,7 +1325,7 @@ data class ClerkConfigurationOptions(
     get() = _autoRefreshOnForeground
 
   /** Returns a copy of these options with additional outgoing request headers configured. */
-  fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
+  public fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._customHeaders = customHeaders.toMap() }
 
   /**
@@ -1333,7 +1335,7 @@ data class ClerkConfigurationOptions(
    * token refresh are unaffected.
    */
   @FrameworkIntegrationApi
-  fun withForegroundRefreshDisabled(): ClerkConfigurationOptions =
+  public fun withForegroundRefreshDisabled(): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._autoRefreshOnForeground = false }
 
   private fun copyWithNonConstructorState(): ClerkConfigurationOptions =
@@ -1353,15 +1355,17 @@ data class ClerkConfigurationOptions(
  * @receiver A map where keys are strategy identifiers (e.g., `oauth_google`) and values are
  *   [UserSettings.SocialConfig].
  */
-fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
+public fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
   this.values
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+public fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull {
+    it.strategy == strategy && it.safeIdentifier == identifier
+  }
 
-val SignIn.resetPasswordFactor: Factor?
+public val SignIn.resetPasswordFactor: Factor?
   get() =
     identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
       ?: identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_PHONE_CODE)

@@ -18,15 +18,15 @@ import com.clerk.api.auth.types.IdTokenProvider
  * ```
  */
 @ClerkDsl
-class SignInIdentifierBuilder {
+public class SignInIdentifierBuilder {
   /** The email address to sign in with. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number to sign in with. */
-  var phone: String? = null
+  public var phone: String? = null
 
   /** The username to sign in with. */
-  var username: String? = null
+  public var username: String? = null
 
   internal fun validate() {
     require(email != null || phone != null || username != null) {
@@ -51,12 +51,12 @@ class SignInIdentifierBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithPasswordBuilder {
+public class SignInWithPasswordBuilder {
   /** The identifier (email, phone, or username) to sign in with. */
-  var identifier: String? = null
+  public var identifier: String? = null
 
   /** The password for authentication. */
-  var password: String? = null
+  public var password: String? = null
 
   internal fun validate() {
     require(identifier != null) { "Identifier must be provided" }
@@ -78,12 +78,12 @@ class SignInWithPasswordBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithOtpBuilder {
+public class SignInWithOtpBuilder {
   /** The email address to send the OTP to. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number to send the OTP to. */
-  var phone: String? = null
+  public var phone: String? = null
 
   internal fun validate() {
     require(email != null || phone != null) { "Either email or phone must be provided" }
@@ -107,12 +107,12 @@ class SignInWithOtpBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithIdTokenBuilder {
+public class SignInWithIdTokenBuilder {
   /** The ID token from the identity provider. */
-  var token: String? = null
+  public var token: String? = null
 
   /** The identity provider that issued the token. */
-  var provider: IdTokenProvider? = null
+  public var provider: IdTokenProvider? = null
 
   internal fun validate() {
     require(token != null) { "Token must be provided" }

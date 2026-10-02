@@ -3,22 +3,18 @@ package com.clerk.api.billing
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The type of charge a payment represents.
- */
+/** The type of charge a payment represents. */
 @Serializable
-enum class BillingPaymentChargeType {
+public enum class BillingPaymentChargeType {
   @SerialName("checkout") CHECKOUT,
   @SerialName("recurring") RECURRING,
   @SerialName("price_transition") PRICE_TRANSITION,
   @SerialName("unknown") UNKNOWN,
 }
 
-/**
- * The current status of a payment.
- */
+/** The current status of a payment. */
 @Serializable
-enum class BillingPaymentStatus {
+public enum class BillingPaymentStatus {
   @SerialName("pending") PENDING,
   @SerialName("paid") PAID,
   @SerialName("failed") FAILED,
@@ -38,7 +34,7 @@ enum class BillingPaymentStatus {
  *   `null` when no discounts apply.
  */
 @Serializable
-data class BillingPaymentTotals(
+public data class BillingPaymentTotals(
   val subtotal: BillingMoneyAmount,
   val grandTotal: BillingMoneyAmount,
   val taxTotal: BillingMoneyAmount,
@@ -64,7 +60,7 @@ data class BillingPaymentTotals(
  *   older responses.
  */
 @Serializable
-data class BillingPayment(
+public data class BillingPayment(
   val id: String,
   val amount: BillingMoneyAmount,
   val paidAt: Long? = null,

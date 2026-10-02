@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * The `TokenResource` structure encapsulates a token, such as a JWT.
  */
 @Serializable
-data class TokenResource(
+public data class TokenResource(
   /** The jwt represented as a `String`. */
   val jwt: String
 )

@@ -70,7 +70,7 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeUnstableReceiver")
 @Composable
-fun OrganizationProfileView(
+public fun OrganizationProfileView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   isDismissible: Boolean = true,

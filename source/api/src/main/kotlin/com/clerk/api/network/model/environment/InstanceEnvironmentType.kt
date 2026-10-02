@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * environment-specific configurations and behaviors.
  */
 @Serializable
-enum class InstanceEnvironmentType {
+public enum class InstanceEnvironmentType {
 
   /** Represents a production environment. */
   @SerialName("production") PRODUCTION,

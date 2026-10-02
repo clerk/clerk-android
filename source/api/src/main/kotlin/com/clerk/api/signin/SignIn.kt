@@ -86,7 +86,7 @@ import kotlinx.serialization.encoding.Encoder
  */
 @Serializable(with = SignInSerializer::class)
 @ConsistentCopyVisibility
-data class SignIn
+public data class SignIn
 private constructor(
   /** Unique identifier for this sign in. */
   val id: String,
@@ -151,7 +151,7 @@ private constructor(
   val statusRawValue: String,
 ) {
 
-  constructor(
+  public constructor(
     id: String,
     status: Status = Status.UNKNOWN,
     supportedIdentifiers: List<String>? = null,
@@ -176,7 +176,7 @@ private constructor(
     statusRawValue = status.serializedValue,
   )
 
-  fun copy(
+  public fun copy(
     id: String = this.id,
     status: Status = this.status,
     supportedIdentifiers: List<String>? = this.supportedIdentifiers,
@@ -213,7 +213,7 @@ private constructor(
    *   copied from OAuth. Returns `false` if Clerk is displaying an avatar for the user.
    */
   @Serializable
-  data class UserData(
+  public data class UserData(
     /** The user's first name. */
     val firstName: String? = null,
 
@@ -236,7 +236,7 @@ private constructor(
    * Each status indicates the current state of the sign-in flow and what action is required next.
    */
   @Serializable
-  enum class Status(internal val serializedValue: String) {
+  public enum class Status(internal val serializedValue: String) {
     /** The sign-in process is complete. */
     @SerialName("complete") COMPLETE("complete"),
 
@@ -276,13 +276,13 @@ private constructor(
    * The [strategy] value depends on the object's identifier value. Each authentication identifier
    * supports different verification strategies.
    */
-  sealed interface AttemptFirstFactorParams {
+  public sealed interface AttemptFirstFactorParams {
 
     /**
      * The [strategy] value depends on the object's identifier value. Each authentication identifier
      * supports different verification strategies.
      */
-    val strategy: String
+    public val strategy: String
 
     /**
      * Parameters for email code verification strategy.
@@ -291,7 +291,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
+    public data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
       AttemptFirstFactorParams
 
     /**
@@ -301,7 +301,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
+    public data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
       AttemptFirstFactorParams
 
     /**
@@ -311,7 +311,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class Password(
+    public data class Password(
       @SerialName("password") val password: String,
       override val strategy: String = PASSWORD,
     ) : AttemptFirstFactorParams
@@ -324,7 +324,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class Passkey(
+    public data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
       override val strategy: String = PASSKEY,
     ) : AttemptFirstFactorParams
@@ -336,7 +336,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class ResetPasswordEmailCode(
+    public data class ResetPasswordEmailCode(
       val code: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : AttemptFirstFactorParams
@@ -348,7 +348,7 @@ private constructor(
      */
     @AutoMap
     @Serializable
-    data class ResetPasswordPhoneCode(
+    public data class ResetPasswordPhoneCode(
       val code: String,
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : AttemptFirstFactorParams
@@ -360,32 +360,32 @@ private constructor(
    * Each implementation represents a different second factor verification method that can be used
    * to complete multi-factor authentication (MFA) during the sign-in process.
    */
-  sealed interface AttemptSecondFactorParams {
-    val strategy: String
+  public sealed interface AttemptSecondFactorParams {
+    public val strategy: String
 
     @AutoMap
     @Serializable
-    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
+    public data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
       AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class TOTP(val code: String, override val strategy: String = STRATEGY_TOTP) :
+    public data class TOTP(val code: String, override val strategy: String = STRATEGY_TOTP) :
       AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
+    public data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
       AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
+    public data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
       AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class Passkey(
+    public data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
       override val strategy: String = PASSKEY,
     ) : AttemptSecondFactorParams
@@ -402,11 +402,11 @@ private constructor(
    * @property emailAddress The user's email address for pre-filling authentication forms.
    * @property identifier The user's identifier for authentication.
    */
-  sealed interface AuthenticateWithRedirectParams {
-    val redirectUrl: String
-    val legalAccepted: Boolean?
-    val emailAddress: String?
-    val identifier: String?
+  public sealed interface AuthenticateWithRedirectParams {
+    public val redirectUrl: String
+    public val legalAccepted: Boolean?
+    public val emailAddress: String?
+    public val identifier: String?
 
     /**
      * Parameters for authenticating with an OAuth provider using a redirect flow.
@@ -424,7 +424,7 @@ private constructor(
      */
     @Serializable
     @AutoMap
-    data class OAuth(
+    public data class OAuth(
       @MapProperty("strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -444,7 +444,7 @@ private constructor(
      */
     @Serializable
     @AutoMap
-    data class EnterpriseSSO(
+    public data class EnterpriseSSO(
       val strategy: String = ENTERPRISE_SSO,
       @SerialName("redirect_url") override val redirectUrl: String,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
@@ -461,32 +461,32 @@ private constructor(
    *
    * @property strategy The verification strategy to use for the first factor authentication.
    */
-  sealed interface PrepareFirstFactorParams {
+  public sealed interface PrepareFirstFactorParams {
     /**
      * Enumeration of available first factor verification strategies.
      *
      * Each strategy represents a different method of verifying the user's identity during the first
      * factor authentication step.
      */
-    val strategy: String
+    public val strategy: String
 
     @AutoMap
     @Serializable
-    data class EmailCode(
+    public data class EmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class PhoneCode(
+    public data class PhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class EmailLink(
+    public data class EmailLink(
       @SerialName("email_address_id") val emailAddressId: String,
       @SerialName("redirect_uri") val redirectUri: String,
       @SerialName("code_challenge") val codeChallenge: String,
@@ -496,28 +496,28 @@ private constructor(
 
     @AutoMap
     @Serializable
-    data class ResetPasswordEmailCode(
+    public data class ResetPasswordEmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class ResetPasswordPhoneCode(
+    public data class ResetPasswordPhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class OAuth(
+    public data class OAuth(
       override val strategy: String,
       @SerialName("redirect_url") val redirectUrl: String,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class EnterpriseSSO(
+    public data class EnterpriseSSO(
       override val strategy: String = ENTERPRISE_SSO,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -525,7 +525,7 @@ private constructor(
 
     @AutoMap
     @Serializable
-    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
+    public data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
   }
 
   /**
@@ -545,28 +545,28 @@ private constructor(
    */
   @Serializable
   @AutoMap
-  data class PrepareSecondFactorParams(
+  public data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
     val strategy: String = PHONE_CODE,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
     @SerialName("email_address_id") val emailAddressId: String? = null,
   ) {
-    companion object {
-      const val PHONE_CODE = "phone_code"
-      const val EMAIL_CODE = "email_code"
-      const val PASSKEY = "passkey"
+    public companion object {
+      public const val PHONE_CODE: String = "phone_code"
+      public const val EMAIL_CODE: String = "email_code"
+      public const val PASSKEY: String = "passkey"
     }
   }
 
-  sealed class PrepareSecondFactorStrategy {
+  public sealed class PrepareSecondFactorStrategy {
 
-    data class PhoneCode(val phoneNumberId: String? = null) : PrepareSecondFactorStrategy()
+    public data class PhoneCode(val phoneNumberId: String? = null) : PrepareSecondFactorStrategy()
 
-    data class EmailCode(val emailAddressId: String? = null) : PrepareSecondFactorStrategy()
+    public data class EmailCode(val emailAddressId: String? = null) : PrepareSecondFactorStrategy()
 
-    data object Passkey : PrepareSecondFactorStrategy()
+    public data object Passkey : PrepareSecondFactorStrategy()
 
-    fun toParams(): PrepareSecondFactorParams =
+    public fun toParams(): PrepareSecondFactorParams =
       when (this) {
         is PhoneCode ->
           PrepareSecondFactorParams(
@@ -590,7 +590,7 @@ private constructor(
    *   reset.
    */
   @Serializable
-  data class ResetPasswordParams(
+  public data class ResetPasswordParams(
     val password: String,
     @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean = false,
   )
@@ -604,16 +604,16 @@ private constructor(
    * The `SignIn.authenticateWithRedirect()` method will handle the creation of the SignIn object
    * internally.
    */
-  object CreateParams {
+  public object CreateParams {
 
     /**
      * A sealed interface defining different strategies for creating a sign-in.
      *
      * Each implementation represents a different method of initiating the sign-in process.
      */
-    sealed interface Strategy {
+    public sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String?
+      public val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -622,8 +622,10 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class EmailCode(val identifier: String, override val strategy: String = EMAIL_CODE) :
-        Strategy
+      public data class EmailCode(
+        val identifier: String,
+        override val strategy: String = EMAIL_CODE,
+      ) : Strategy
 
       /**
        * Phone code sign-in strategy.
@@ -632,8 +634,10 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class PhoneCode(val identifier: String, override val strategy: String = PHONE_CODE) :
-        Strategy
+      public data class PhoneCode(
+        val identifier: String,
+        override val strategy: String = PHONE_CODE,
+      ) : Strategy
 
       /**
        * Password sign-in strategy.
@@ -642,7 +646,7 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class Password(
+      public data class Password(
         val identifier: String,
         val password: String,
         override val strategy: String = PASSWORD,
@@ -650,14 +654,14 @@ private constructor(
 
       @AutoMap
       @Serializable
-      data class ResetPasswordEmailCode(
+      public data class ResetPasswordEmailCode(
         val identifier: String,
         override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
       ) : Strategy
 
       @AutoMap
       @Serializable
-      data class ResetPasswordPhoneCode(
+      public data class ResetPasswordPhoneCode(
         val identifier: String,
         override val strategy: String = RESET_PASSWORD_PHONE_CODE,
       ) : Strategy
@@ -667,7 +671,7 @@ private constructor(
        *
        * This strategy is used when transferring an existing session or account state.
        */
-      data class Transfer(override val strategy: String = TRANSFER) : Strategy
+      public data class Transfer(override val strategy: String = TRANSFER) : Strategy
 
       /**
        * Ticket strategy for authentication using a ticket.
@@ -678,10 +682,11 @@ private constructor(
        */
       @AutoMap
       @Serializable
-      data class Ticket(val ticket: String, override val strategy: String = TICKET) : Strategy
+      public data class Ticket(val ticket: String, override val strategy: String = TICKET) :
+        Strategy
 
       /** Passkey strategy for authentication using a passkey. */
-      data class Passkey(override val strategy: String = PASSKEY) : Strategy
+      public data class Passkey(override val strategy: String = PASSKEY) : Strategy
 
       /**
        * Biometric-credential strategy for authentication using a locally enrolled biometric
@@ -694,7 +699,7 @@ private constructor(
        * @property promptTitle The title shown in the system authentication prompt.
        * @property promptSubtitle The subtitle shown in the system authentication prompt.
        */
-      data class BiometricCredential(
+      public data class BiometricCredential(
         val id: String? = null,
         val identifierHint: String? = null,
         val promptTitle: String? = null,
@@ -704,7 +709,7 @@ private constructor(
 
       @AutoMap
       @Serializable
-      data class Identifier(
+      public data class Identifier(
         override val strategy: String? = null,
         val identifier: String,
         val password: String? = null,
@@ -714,7 +719,7 @@ private constructor(
 
   /** Enumerates the types of credential requests supported by the service. */
   @Serializable
-  enum class CredentialType {
+  public enum class CredentialType {
     /** Request for a public key credential (passkey). */
     PASSKEY,
 
@@ -728,7 +733,7 @@ private constructor(
     UNKNOWN,
   }
 
-  companion object {
+  public companion object {
     internal fun fromPayload(payload: SignInPayload): SignIn =
       SignIn(
         id = payload.id,
@@ -753,7 +758,9 @@ private constructor(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
+    public suspend fun create(
+      params: CreateParams.Strategy
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Passkey -> create(params)
         is CreateParams.Strategy.BiometricCredential ->
@@ -786,7 +793,7 @@ private constructor(
      *   [ClerkErrorResponse] on failure.
      */
     @Suppress("UnusedParameter")
-    suspend fun create(
+    public suspend fun create(
       params: CreateParams.Strategy.Passkey,
       preferImmediatelyAvailableCredentials: Boolean = false,
     ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -802,7 +809,9 @@ private constructor(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
+    public suspend fun create(
+      params: Map<String, String>
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
       return ClerkApi.signIn.createSignIn(params)
     }
 
@@ -814,7 +823,7 @@ private constructor(
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogleOneTap(
+    public suspend fun authenticateWithGoogleOneTap(
       transferable: Boolean = true
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return GoogleSignInService().signInWithGoogle(transferable)
@@ -843,7 +852,7 @@ private constructor(
      * }
      * ```
      */
-    suspend fun authenticateWithRedirect(
+    public suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams,
       transferable: Boolean = true,
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
@@ -863,7 +872,7 @@ private constructor(
     }
 
     /** Authenticates using the Google Credential Manager. */
-    suspend fun authenticateWithGoogleCredential(
+    public suspend fun authenticateWithGoogleCredential(
       credentialTypes: List<CredentialType>
     ): ClerkResult<SignIn, ClerkErrorResponse> {
       return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
@@ -924,7 +933,7 @@ internal object SignInSerializer : KSerializer<SignIn> {
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.prepareFirstFactor(
+public suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val isResetPasswordStrategy =
@@ -974,7 +983,7 @@ private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendPhoneCode(
+public suspend fun SignIn.sendPhoneCode(
   phoneNumberId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val phoneId =
@@ -995,7 +1004,7 @@ suspend fun SignIn.sendPhoneCode(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendEmailCode(
+public suspend fun SignIn.sendEmailCode(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
@@ -1013,7 +1022,7 @@ suspend fun SignIn.sendEmailCode(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.prepareSecondFactor(
+public suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
   emailAddressId: String? = null,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -1074,7 +1083,7 @@ internal fun invalidPrepareState(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendMfaPhoneCode(
+public suspend fun SignIn.sendMfaPhoneCode(
   phoneNumberId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val phoneId =
@@ -1103,7 +1112,7 @@ suspend fun SignIn.sendMfaPhoneCode(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendMfaEmailCode(
+public suspend fun SignIn.sendMfaEmailCode(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
@@ -1127,7 +1136,7 @@ suspend fun SignIn.sendMfaEmailCode(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.attemptFirstFactor(
+public suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
@@ -1140,7 +1149,7 @@ suspend fun SignIn.attemptFirstFactor(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.attemptSecondFactor(
+public suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
@@ -1153,7 +1162,7 @@ suspend fun SignIn.attemptSecondFactor(
  * @return A [ClerkResult] containing the refreshed [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.get(
+public suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
