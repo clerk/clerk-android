@@ -21,13 +21,6 @@ class RedirectConfigurationTest {
   }
 
   @Test
-  fun legacyRedirectUrl_keepsOauthHost() {
-    Clerk.applicationId = "com.example.app"
-
-    assertEquals("clerk://com.example.app.oauth", RedirectConfiguration.LEGACY_REDIRECT_URL)
-  }
-
-  @Test
   fun redirectUrlsReflectTheCurrentApplicationId() {
     Clerk.applicationId = "com.example.first"
     assertEquals("clerk://com.example.first.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)

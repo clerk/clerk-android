@@ -98,7 +98,6 @@ internal class ConfigurationManager(
   /** Monotonic token used to ignore stale refreshes from an older configuration. */
   @Volatile private var configurationVersion = 0
 
-  /** Monotonic fence used to discard responses started with an older shared device token. */
   private val sharedDeviceTokenFenceGeneration = AtomicInteger()
 
   private enum class RefreshMode {
@@ -132,7 +131,6 @@ internal class ConfigurationManager(
     }
   }
 
-  /** Restores a complete, matching client/environment snapshot before the network refresh runs. */
   private fun hydrateCachedStateIfNeeded(baseUrl: String) {
     if (Clerk.clientFlow.value == null && Clerk.environment == null) {
       val cachedState = loadCachedState()
@@ -700,7 +698,6 @@ internal class ConfigurationManager(
     initializationRetryJob = scope.launch { retryInitialization(attempt.nextRetry()) }
   }
 
-  /** Retries initialization with exponential backoff, capped at one minute between attempts. */
   private suspend fun retryInitialization(attempt: RefreshAttempt) {
     ClerkLog.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
 

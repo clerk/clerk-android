@@ -23,7 +23,6 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
     val deviceToken = response.header(AUTHORIZATION_HEADER)
     val requestDeviceToken = response.request.header(AUTHORIZATION_HEADER)
 
-    // Do not let a response that started with an older shared token overwrite the newer token.
     if (
       deviceToken != null &&
         !StorageHelper.compareAndSetDeviceToken(expected = requestDeviceToken, value = deviceToken)

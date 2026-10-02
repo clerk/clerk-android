@@ -158,7 +158,7 @@ internal class AuthState(
 
     val toPop = (backStack.size - 1) - targetIndex
     if (toPop > 0) {
-      backStack.pop(toPop) // non-inclusive: leaves `destination` on top
+      backStack.pop(toPop)
     }
     clearSignInCredentialsIfAtRoot()
   }
@@ -222,10 +222,6 @@ internal class AuthState(
     }
   }
 
-  /**
-   * Routes to the biometric credential enrollment prompt when it should be offered after a
-   * completed auth flow. Returns `true` when the prompt was routed to.
-   */
   @Suppress("ReturnCount")
   private fun offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp: Boolean): Boolean {
     if (biometricCredentialEnrollmentWasOffered) return false

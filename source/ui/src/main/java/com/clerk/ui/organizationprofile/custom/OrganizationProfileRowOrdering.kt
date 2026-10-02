@@ -18,10 +18,6 @@ internal val OrganizationProfileCustomRowPlacement.section: OrganizationProfileS
       is OrganizationProfileCustomRowPlacement.After -> row.section
     }
 
-/**
- * Returns the effective list of custom rows to render. Custom rows are only shown when a
- * destination exists so rows cannot navigate to unregistered screens.
- */
 internal fun effectiveOrganizationProfileCustomRows(
   customRows: List<OrganizationProfileCustomRow>,
   hasDestination: Boolean,

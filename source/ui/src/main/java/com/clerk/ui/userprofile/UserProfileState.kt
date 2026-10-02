@@ -33,7 +33,7 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
 
     val toPop = (backStack.size - 1) - targetIndex
     if (toPop > 0) {
-      backStack.pop(toPop) // non-inclusive: leaves `destination` on top
+      backStack.pop(toPop)
     }
   }
 }
