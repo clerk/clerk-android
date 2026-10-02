@@ -698,7 +698,7 @@ object Clerk {
    * @return Map where keys are strategy identifiers (e.g., `oauth_google`) and values contain
    *   provider configuration. Returns an empty map if the SDK is not initialized or no social
    *   providers are configured.
-   * @see [SignIn.create] for usage with OAuth authentication.
+   * @see [com.clerk.api.auth.Auth.signInWithOAuth] for usage with OAuth authentication.
    */
   val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = environment?.userSettings?.social ?: emptyMap()
@@ -1064,14 +1064,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1165,8 +1165,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1370,8 +1371,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

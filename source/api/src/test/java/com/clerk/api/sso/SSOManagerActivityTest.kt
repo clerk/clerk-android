@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
+import com.clerk.api.auth.createSignUp
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
@@ -27,6 +29,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
@@ -50,6 +53,9 @@ import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class SSOManagerActivityTest {
+
+  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
+  private val auth: Auth = Clerk.auth
 
   @After
   fun tearDown() {
@@ -404,10 +410,13 @@ class SSOManagerActivityTest {
   @Test
   fun ssoCompletion_interruptedByRecreation_finishesRecreatedActivity() = runTest {
     mockkObject(Clerk)
-    mockkObject(SignUp.Companion)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
     every { Clerk.applicationContext } returns WeakReference(mockk(relaxed = true))
     val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-    coEvery { SignUp.create(SignUp.CreateParams.Transfer) } coAnswers { neverCompletes.await() }
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
+      {
+        neverCompletes.await()
+      }
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect("https://accounts.example.com/oauth/authorize")
@@ -435,7 +444,7 @@ class SSOManagerActivityTest {
     assertTrue(failure.throwable?.cause is CancellationException)
     assertTrue(controller.get().isFinishing)
     assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(controller.get()).resultCode)
-    coVerify(exactly = 1) { SignUp.create(SignUp.CreateParams.Transfer) }
+    coVerify(exactly = 1) { auth.createSignUp(SignUp.CreateParams.Transfer) }
   }
 
   @Test

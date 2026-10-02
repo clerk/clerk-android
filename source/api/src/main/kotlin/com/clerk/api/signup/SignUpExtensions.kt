@@ -39,15 +39,15 @@ suspend fun SignUp.sendCode(
     val target =
       when {
         email != null && !email.trim().equals(emailAddress?.trim(), ignoreCase = true) ->
-          update(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
+          updateImpl(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
         email == null && phone != null && phone.digits() != phoneNumber?.digits() ->
-          update(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
+          updateImpl(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
         else -> ClerkResult.success(this)
       }
     when (target) {
       is ClerkResult.Failure -> target
       is ClerkResult.Success ->
-        target.value.prepareVerification(target.value.sendCodeStrategy(email))
+        target.value.prepareVerificationImpl(target.value.sendCodeStrategy(email))
     }
   }
 }
@@ -88,7 +88,7 @@ suspend fun SignUp.verifyCode(
       VerificationType.PHONE -> SignUp.AttemptVerificationParams.PhoneCode(code = code)
     }
 
-  return attemptVerification(params)
+  return attemptVerificationImpl(params)
 }
 
 /**
@@ -111,7 +111,7 @@ suspend fun SignUp.update(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
 
-  return update(
+  return updateImpl(
     SignUp.SignUpUpdateParams.Standard(
       emailAddress = builder.email,
       phoneNumber = builder.phone,
