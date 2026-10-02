@@ -10,27 +10,19 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
-import com.clerk.api.externalaccount.ExternalAccountService
-import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
-import com.clerk.api.magiclink.NativeMagicLinkService
-import com.clerk.api.magiclink.canHandleNativeMagicLink
-import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.RedirectCoordinator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 internal class SSOManagerActivity : AppCompatActivity() {
-  /** Which completion, if any, has claimed the pending callback. Survives process death. */
-  private enum class Completion {
-    NONE,
-    SSO,
-    HOSTED_AUTH,
-  }
-
   private var authorizationStarted = false
-  private var completion = Completion.NONE
-  private var completionObserverAttached = false
+  private var completionAttached = false
   private lateinit var desiredUri: Uri
+
+  /** The callback being completed. Saved so a recreated activity re-attaches to the completion. */
   private var pendingCallbackUri: Uri? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +36,19 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
-    if (resumeCallbackIfPresent()) return
+    val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
+    if (callbackUri != null) {
+      // The completion runs in RedirectCoordinator's process-wide scope and is idempotent, so a
+      // recreated activity simply attaches to it again.
+      if (!completionAttached) {
+        authorizationStarted = true
+        completionAttached = true
+        pendingCallbackUri = callbackUri
+        intent = Intent(intent).apply { data = null }
+        authorizationComplete(callbackUri)
+      }
+      return
+    }
 
     if (!authorizationStarted) {
       try {
@@ -60,52 +64,16 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       return
     }
-    // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
-    // cancelled. If we have a response, complete the flow and only finish after completion to
-    // avoid cancelling the in-flight network request.
-    intent.data?.takeIf(::isCallbackUri)?.let {
-      if (completion == Completion.NONE) {
-        completion = Completion.SSO
-        pendingCallbackUri = it
-        intent = Intent(intent).apply { data = null }
-        authorizationComplete(it)
-      }
-      // Do not call finish() here; authorizationComplete will finish when done
-    }
-      ?: run {
-        authorizationFailed()
-        finish()
-      }
-  }
-
-  private fun resumeCallbackIfPresent(): Boolean {
-    val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
-    // Hosted auth completion re-attaches after activity recreation because
-    // HostedAuthService.complete() idempotently re-joins the pending flow; SSO completion is a
-    // one-shot network call that must never re-run; its cancellation already failed the flow.
-    val shouldAttachObserver = !completionObserverAttached && completion != Completion.SSO
-    if (callbackUri != null && shouldAttachObserver) {
-      if (completion == Completion.NONE) {
-        authorizationStarted = true
-        completion =
-          if (HostedAuthService.canHandle(callbackUri)) Completion.HOSTED_AUTH else Completion.SSO
-        pendingCallbackUri = callbackUri
-        intent = Intent(intent).apply { data = null }
-      }
-      completionObserverAttached = true
-      authorizationComplete(callbackUri)
-    } else if (callbackUri != null && !completionObserverAttached) {
-      finish()
-    }
-    return callbackUri != null
+    // The browser came back without a callback: the user dismissed it.
+    authorizationFailed()
+    finish()
   }
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     if (intent.data?.let(::isCallbackUri) != true) {
       authorizationStarted = false
-      completion = Completion.NONE
-      completionObserverAttached = false
+      completionAttached = false
       pendingCallbackUri = null
       hydrateState(intent.extras)
     }
@@ -115,7 +83,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putBoolean(KEY_AUTHORIZATION_STARTED, authorizationStarted)
-    outState.putString(KEY_COMPLETION_KIND, completion.name)
     outState.putString(KEY_PENDING_CALLBACK_URI, pendingCallbackUri?.toString())
     if (::desiredUri.isInitialized) {
       outState.putString(URI_KEY, desiredUri.toString())
@@ -125,10 +92,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun hydrateState(state: Bundle?) {
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
-    completion =
-      state.getString(KEY_COMPLETION_KIND)?.let { name ->
-        Completion.entries.firstOrNull { it.name == name }
-      } ?: Completion.NONE
     state.getString(URI_KEY)?.let { desiredUri = it.toUri() }
     pendingCallbackUri = state.getString(KEY_PENDING_CALLBACK_URI)?.toUri()
   }
@@ -136,41 +99,14 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
       try {
-        if (canHandleNativeMagicLink(uri)) {
-          ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
-          when (NativeMagicLinkService.handleMagicLinkDeepLink(uri)) {
-            is com.clerk.api.network.serialization.ClerkResult.Success -> {
-              ClerkLog.i("event=native_magic_link_activity_completion_success")
-              pendingCallbackUri = null
-              setResult(RESULT_OK, Intent())
-            }
-            is com.clerk.api.network.serialization.ClerkResult.Failure -> {
-              ClerkLog.w("event=native_magic_link_activity_completion_failure")
-              setResult(RESULT_CANCELED, Intent())
-            }
-          }
-          return@launch
-        }
-        val hostedAuthResult = HostedAuthService.complete(uri)
-        if (completion == Completion.HOSTED_AUTH || hostedAuthResult != null) {
-          ClerkLog.d("authorizationComplete called with hosted auth redirect")
-          pendingCallbackUri = null
-          when (hostedAuthResult) {
-            is ClerkResult.Success -> setResult(RESULT_OK, Intent())
-            is ClerkResult.Failure,
-            null -> setResult(RESULT_CANCELED, Intent())
-          }
-          return@launch
-        }
-        if (SSOService.hasPendingExternalAccountConnection()) {
-          ClerkLog.d("authorizationComplete called with external connection")
-          SSOService.completeExternalConnection()
-        } else {
-          ClerkLog.d("authorizationComplete called with redirect: $uri")
-          SSOService.completeAuthenticateWithRedirect(uri)
-        }
+        val outcome = RedirectCoordinator.dispatch(uri)
         pendingCallbackUri = null
-        setResult(RESULT_OK, Intent())
+        val succeeded = outcome is CallbackOutcome.Completed && outcome.success
+        setResult(if (succeeded) RESULT_OK else RESULT_CANCELED, Intent())
+      } catch (cancellation: CancellationException) {
+        // This activity is going away; the completion keeps running and a recreated activity
+        // attaches to it again.
+        throw cancellation
       } catch (t: Throwable) {
         ClerkLog.e("authorizationComplete failed: ${t.message}")
         setResult(RESULT_CANCELED, Intent())
@@ -181,24 +117,12 @@ internal class SSOManagerActivity : AppCompatActivity() {
   }
 
   private fun authorizationFailed() {
-    HostedAuthService.cancelPendingAuthentication()
-    SSOService.cancelPendingAuthentication()
-    ExternalAccountService.cancelPendingExternalAccountConnection()
-    val response = Intent()
-    setResult(RESULT_CANCELED, response)
+    RedirectCoordinator.cancelPendingUnlessCompleting()
+    setResult(RESULT_CANCELED, Intent())
   }
 
   internal companion object {
-    internal fun isCallbackUri(uri: Uri): Boolean {
-      return HostedAuthService.canHandle(uri) ||
-        uri.scheme?.startsWith("clerk") == true ||
-        canHandleNativeMagicLink(uri) ||
-        uri.getQueryParameter("rotating_token_nonce") != null ||
-        uri.getQueryParameter("__clerk_status") != null ||
-        uri.getQueryParameter("__clerk_error_code") != null ||
-        uri.getQueryParameter("error") != null ||
-        uri.getQueryParameter("error_description") != null
-    }
+    internal fun isCallbackUri(uri: Uri): Boolean = RedirectCoordinator.looksLikeCallback(uri)
 
     internal fun createResponseHandlingIntent(context: Context, responseUri: Uri?): Intent {
       val intent = createBaseIntent(context)
@@ -215,7 +139,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
       Intent(context, SSOManagerActivity::class.java)
 
     internal const val URI_KEY = "uri"
-    internal const val KEY_COMPLETION_KIND = "completion_kind"
     internal const val KEY_PENDING_CALLBACK_URI = "pending_callback_uri"
   }
 }

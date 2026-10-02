@@ -2,6 +2,7 @@ package com.clerk.api.sso
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -12,6 +13,9 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.RedirectCoordinator
+import com.clerk.api.redirect.RedirectState
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import io.mockk.coEvery
@@ -23,12 +27,13 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -93,12 +98,39 @@ class ExternalAccountServiceTest {
     every { mockSession.id } returns "session_123"
     every { mockSession.user } returns mockUser
     every { mockUser.externalAccounts } returns listOf(mockExternalAccount)
+    coEvery { mockUserApi.createExternalAccount(capture(createFields), any()) } returns
+      ClerkResult.success(mockExternalAccount)
+  }
+
+  private val createFields = slot<Map<String, String>>()
+
+  private suspend fun connect() =
+    ExternalAccountService.connectExternalAccount(
+      User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+    )
+
+  /** Waits for the connection to hold the slot and returns the state sent in its redirect URL. */
+  private suspend fun awaitPendingState(): String {
+    waitUntil { ExternalAccountService.hasPendingExternalAccountConnection() }
+    return requireNotNull(
+      Uri.parse(createFields.captured.getValue("redirect_url"))
+        .getQueryParameter(RedirectState.QUERY_PARAMETER)
+    )
+  }
+
+  private fun callback(state: String): Uri =
+    Uri.parse("clerk://com.example.app.callback?${RedirectState.QUERY_PARAMETER}=$state")
+
+  private suspend fun waitUntil(condition: () -> Boolean) {
+    withTimeout(TIMEOUT_MS) {
+      while (!condition()) delay(POLL_MS)
+    }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+    RedirectCoordinator.resetForTests()
     Dispatchers.resetMain()
     unmockkAll()
   }
@@ -116,19 +148,10 @@ class ExternalAccountServiceTest {
   }
 
   @Test
-  fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
-    ExternalAccountService.completeExternalConnection()
+  fun `callback with nothing pending is ignored`() = runTest {
+    val outcome = RedirectCoordinator.dispatch(callback("anything"))
 
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `completeExternalConnection handles missing external account`() = runTest {
-    every { mockUser.externalAccounts } returns emptyList()
-    coEvery { Client.get() } returns ClerkResult.Success(mockClient, emptyMap())
-
-    ExternalAccountService.completeExternalConnection()
-
+    assertEquals(CallbackOutcome.Ignored, outcome)
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
@@ -167,65 +190,90 @@ class ExternalAccountServiceTest {
   }
 
   @Test
-  @OptIn(ExperimentalCoroutinesApi::class)
-  fun `completeExternalConnection completes pending connection when client refresh fails`() =
-    runTest {
-      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
-        ClerkResult.success(mockExternalAccount)
-      val clientFailure =
-        ClerkResult.apiFailure(
-          ClerkErrorResponse(
-            errors = listOf(Error(message = "client refresh failed", code = "client_error"))
-          )
+  fun `callback completes pending connection when client refresh fails`() = runBlocking {
+    val clientFailure =
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(
+          errors = listOf(Error(message = "client refresh failed", code = "client_error"))
         )
-      coEvery { Client.get() } returns clientFailure
+      )
+    coEvery { Client.get() } returns clientFailure
 
-      val pendingResult = async {
-        ExternalAccountService.connectExternalAccount(
-          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-        )
-      }
-      runCurrent()
-      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
 
-      ExternalAccountService.completeExternalConnection()
+    RedirectCoordinator.dispatch(callback(state))
 
-      val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
-      assertSame(clientFailure, result)
-      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-    }
+    val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
+    assertSame(clientFailure, result)
+    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+  }
 
   @Test
-  @OptIn(ExperimentalCoroutinesApi::class)
-  fun `cancelling external connection completion propagates and fails pending connection`() =
-    runTest {
-      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
-        ClerkResult.success(mockExternalAccount)
-      val neverCompletes = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
-      coEvery { Client.get() } coAnswers { neverCompletes.await() }
-      val pendingResult = async {
-        ExternalAccountService.connectExternalAccount(
-          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-        )
+  fun `callback completes pending connection with the verified account`() = runBlocking {
+    coEvery { Client.get() } returns ClerkResult.success(mockClient)
+
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
+
+    RedirectCoordinator.dispatch(callback(state))
+
+    val result = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Success
+    assertSame(mockExternalAccount, result.value)
+  }
+
+  @Test
+  fun `callback without the connection state does not end it`() = runBlocking {
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
+
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(callback("forged")))
+    assertEquals(
+      CallbackOutcome.Ignored,
+      RedirectCoordinator.dispatch(Uri.parse("clerk://com.example.app.callback?error=x")),
+    )
+    assertFalse(pendingResult.isCompleted)
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    assertTrue(withTimeout(TIMEOUT_MS) { pendingResult.await() } is ClerkResult.Failure)
+    assertTrue(state.isNotBlank())
+  }
+
+  @Test
+  fun `completion keeps running when the dispatching caller is cancelled`() = runBlocking {
+    val clientGate = CompletableDeferred<Unit>()
+    coEvery { Client.get() } coAnswers
+      {
+        clientGate.await()
+        ClerkResult.success(mockClient)
       }
-      runCurrent()
-      assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
 
-      val completionJob = launch { ExternalAccountService.completeExternalConnection() }
-      runCurrent()
-      assertTrue(completionJob.isActive)
+    val dispatcher = launch(Dispatchers.Default) { RedirectCoordinator.dispatch(callback(state)) }
+    waitUntil { RedirectCoordinator.current()?.completionStarted?.get() == true }
+    dispatcher.cancel()
+    dispatcher.join()
+    assertFalse(pendingResult.isCompleted)
 
-      completionJob.cancel()
-      completionJob.join()
+    clientGate.complete(Unit)
 
-      assertTrue(completionJob.isCancelled)
-      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-      val failure = pendingResult.await() as ClerkResult.Failure
-      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
-      assertFalse(failure.throwable is SSOCancellationException)
-      assertFalse(failure.throwable is CancellationException)
-      assertTrue(failure.throwable?.cause is CancellationException)
-    }
+    val result = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Success
+    assertSame(mockExternalAccount, result.value)
+    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+  }
+
+  @Test
+  fun `starting SSO cancels a pending connection`() = runBlocking {
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    awaitPendingState()
+
+    RedirectCoordinator.supersedePending()
+
+    val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+  }
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -278,5 +326,6 @@ class ExternalAccountServiceTest {
 
   private companion object {
     const val TIMEOUT_MS = 5_000L
+    const val POLL_MS = 5L
   }
 }

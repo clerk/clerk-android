@@ -21,7 +21,6 @@ import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkError
 import com.clerk.api.magiclink.NativeMagicLinkManager
 import com.clerk.api.magiclink.NativeMagicLinkService
-import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.model.client.Client
@@ -30,6 +29,8 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.passkeys.PasskeyService
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
@@ -955,18 +956,9 @@ class Auth internal constructor() {
    */
   suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
-    val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
-    if (handledByMagicLink) {
-      NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
-    }
-
-    val handledByHostedAuth = !handledByMagicLink && HostedAuthService.complete(callbackUri) != null
-    val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
-    if (!handledByMagicLink && !handledByHostedAuth && isClerkCallback) {
-      SSOService.completeAuthenticateWithRedirect(callbackUri)
-    }
-
-    return handledByMagicLink || handledByHostedAuth || isClerkCallback
+    // Same routing as the SDK's own callback activity, including the pending flow's state check.
+    // A Clerk callback that fails the check is still reported as handled so it is not routed on.
+    return RedirectCoordinator.dispatch(callbackUri) != CallbackOutcome.NotHandled
   }
 
   // endregion

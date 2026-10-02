@@ -79,7 +79,8 @@ class SSOServiceAuthenticateWithRedirectTest {
     assertEquals(redirectUrl, createParams.captured["redirect_url"])
     assertTrue(createParams.captured.containsKey("locale"))
     assertEquals("oauth_google", prepareParams.captured["strategy"])
-    assertEquals(redirectUrl, prepareParams.captured["redirect_url"])
+    val preparedRedirectUrl = prepareParams.captured.getValue("redirect_url")
+    assertTrue(preparedRedirectUrl.startsWith("$redirectUrl?clerk_redirect_state="))
     coVerify(exactly = 1) { signInApi.createSignIn(any()) }
     coVerify(exactly = 1) { signInApi.prepareSignInFirstFactor(createdSignIn.id, any()) }
     coVerify(exactly = 1) {

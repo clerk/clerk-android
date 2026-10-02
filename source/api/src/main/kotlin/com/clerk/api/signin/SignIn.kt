@@ -955,7 +955,12 @@ suspend fun SignIn.prepareFirstFactor(
       else -> null
     }
 
-  return validationError ?: ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+  return validationError
+    ?: if (isRedirectStrategy) {
+      prepareRedirectFirstFactor(params.toMap())
+    } else {
+      ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+    }
 }
 
 private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean

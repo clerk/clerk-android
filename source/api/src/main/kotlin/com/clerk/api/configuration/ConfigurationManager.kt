@@ -10,7 +10,6 @@ import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
-import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
@@ -19,11 +18,11 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
-import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
@@ -43,18 +42,19 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 internal class ConfigurationManager(
   private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
   private companion object {
     const val MAX_INITIALIZATION_RETRY_DELAY_SECONDS = 60L
-    const val LIFECYCLE_REFRESH_DEFER_STEP_MS = 100L
     const val LIFECYCLE_REFRESH_MAX_DEFER_MS = 5_000L
   }
 
@@ -416,21 +416,14 @@ internal class ConfigurationManager(
    * flight, failing its response-freshness check.
    */
   private suspend fun deferForegroundRefreshDuringPendingAuth() {
-    var waitedMs = 0L
-    while (hasPendingAuthFlow() && waitedMs < LIFECYCLE_REFRESH_MAX_DEFER_MS) {
-      if (waitedMs == 0L) {
-        ClerkLog.d("Deferring lifecycle refresh while auth completion is in progress")
-      }
-      delay(LIFECYCLE_REFRESH_DEFER_STEP_MS)
-      waitedMs += LIFECYCLE_REFRESH_DEFER_STEP_MS
+    if (!hasPendingAuthFlow()) return
+    ClerkLog.d("Deferring lifecycle refresh while auth completion is in progress")
+    withTimeoutOrNull(LIFECYCLE_REFRESH_MAX_DEFER_MS) {
+      RedirectCoordinator.hasPendingRedirect.first { pending -> !pending }
     }
   }
 
-  internal fun hasPendingAuthFlow(): Boolean {
-    return SSOService.hasPendingAuthentication() ||
-      SSOService.hasPendingExternalAccountConnection() ||
-      HostedAuthService.hasPendingAuthentication()
-  }
+  internal fun hasPendingAuthFlow(): Boolean = RedirectCoordinator.hasPendingRedirect.value
 
   internal fun shouldRefreshOnForeground(options: ClerkConfigurationOptions?): Boolean =
     options?.autoRefreshOnForeground != false

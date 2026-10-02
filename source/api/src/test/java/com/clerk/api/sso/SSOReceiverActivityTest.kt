@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.hostedauth.HostedAuthService
+import com.clerk.api.redirect.RedirectCoordinator
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -29,21 +29,21 @@ class SSOReceiverActivityTest {
   @Test
   fun invalidHostedAuthCallbackIsNotForwarded() {
     val callbackUri = Uri.parse("clerk://example.callback?state=forged")
-    mockkObject(HostedAuthService)
-    every { HostedAuthService.isForgedCallback(callbackUri) } returns true
+    mockkObject(RedirectCoordinator)
+    every { RedirectCoordinator.isRejected(callbackUri) } returns true
 
     val activity = createReceiver(callbackUri)
 
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
-    verify(exactly = 1) { HostedAuthService.isForgedCallback(callbackUri) }
+    verify(exactly = 1) { RedirectCoordinator.isRejected(callbackUri) }
   }
 
   @Test
   fun validHostedAuthCallbackIsForwardedToManager() {
     val callbackUri = Uri.parse("clerk://example.callback?state=expected")
-    mockkObject(HostedAuthService)
-    every { HostedAuthService.isForgedCallback(callbackUri) } returns false
+    mockkObject(RedirectCoordinator)
+    every { RedirectCoordinator.isRejected(callbackUri) } returns false
 
     val activity = createReceiver(callbackUri)
 
@@ -55,14 +55,13 @@ class SSOReceiverActivityTest {
   @Test
   fun unrecognizedExplicitIntentIsNotForwardedToManager() {
     val callbackUri = Uri.parse("https://attacker.example/fake-sign-in")
-    mockkObject(HostedAuthService)
-    every { HostedAuthService.canHandle(callbackUri) } returns false
+    mockkObject(RedirectCoordinator)
 
     val activity = createReceiver(callbackUri)
 
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
-    verify(exactly = 0) { HostedAuthService.isForgedCallback(any()) }
+    verify(exactly = 0) { RedirectCoordinator.isRejected(any()) }
   }
 
   private fun createReceiver(callbackUri: Uri): SSOReceiverActivity {
