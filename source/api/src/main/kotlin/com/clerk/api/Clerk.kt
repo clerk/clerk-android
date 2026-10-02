@@ -1071,36 +1071,42 @@ object Clerk {
    * loading gates.
    */
   private fun cacheStateIfReady() {
-    val cachedEnvironment = environment
-    val cachedClient = _clientFlow.value
-    val cachedResources = cachedClient?.let { client ->
-      cachedEnvironment?.let { environment -> client to environment }
-    }
-    val cachedPublishableKey = publishableKey
-    val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration = cachedPublishableKey?.let { key ->
-      cachedBaseUrl?.let { url -> key to url }
-    }
-    val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
-    val state =
-      if (
-        cachedResources != null && cachedConfiguration != null && cachedServerFetchAtMillis != null
-      ) {
-        CachedClerkState(
-          publishableKey = cachedConfiguration.first,
-          baseUrl = cachedConfiguration.second,
-          client = cachedResources.first,
-          environment = cachedResources.second,
-          clientServerFetchAtMillis = cachedServerFetchAtMillis,
-        )
-      } else {
-        null
+    // Snapshot and save under the client lock so an older snapshot cannot be written after a
+    // newer one.
+    synchronized(clientUpdateLock) {
+      val cachedEnvironment = environment
+      val cachedClient = _clientFlow.value
+      val cachedResources = cachedClient?.let { client ->
+        cachedEnvironment?.let { environment -> client to environment }
       }
-    if (state == null) return
+      val cachedPublishableKey = publishableKey
+      val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
+      val cachedConfiguration = cachedPublishableKey?.let { key ->
+        cachedBaseUrl?.let { url -> key to url }
+      }
+      val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
+      val state =
+        if (
+          cachedResources != null &&
+            cachedConfiguration != null &&
+            cachedServerFetchAtMillis != null
+        ) {
+          CachedClerkState(
+            publishableKey = cachedConfiguration.first,
+            baseUrl = cachedConfiguration.second,
+            client = cachedResources.first,
+            environment = cachedResources.second,
+            clientServerFetchAtMillis = cachedServerFetchAtMillis,
+          )
+        } else {
+          null
+        }
+      if (state == null) return
 
-    runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
-      .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
-      .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+      runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
+        .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
+        .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+    }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
@@ -1152,9 +1158,9 @@ object Clerk {
     expectedUpdateCount: Long?,
   ): Boolean {
     // The client fields and the session/user state derived from them are published under one lock
-    // so a concurrent update cannot interleave and leave them out of sync. Shared-session sync and
-    // caching stay outside it: the coordinator holds its own lock and may call back into
-    // updateClient.
+    // so a concurrent update cannot interleave and leave them out of sync. Shared-session sync
+    // stays
+    // outside it: the coordinator holds its own lock and may call back into updateClient.
     val updatedClient =
       synchronized(clientUpdateLock) {
         if (expectedUpdateCount != null && clientUpdates != expectedUpdateCount) {
