@@ -8,7 +8,7 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.ResultType
+import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.isSSOCancellation
 import com.clerk.ui.signin.authenticateWithRedirect
@@ -35,10 +35,12 @@ internal class AlternativeMethodsViewModel : ViewModel() {
       authenticateWithRedirect(signIn = signIn, provider = provider, transferable = transferable)
         .onSuccess {
           _state.value =
-            when (it.resultType) {
-              ResultType.SIGN_IN -> AuthenticationViewState.Success.SignIn(it.signIn!!)
-              ResultType.SIGN_UP -> AuthenticationViewState.Success.SignUp(it.signUp!!)
-              ResultType.UNKNOWN -> AuthenticationViewState.Error("Unknown result type")
+            when (val outcome = it.outcome) {
+              is OAuthResult.Outcome.SignIn ->
+                AuthenticationViewState.Success.SignIn(outcome.signIn)
+              is OAuthResult.Outcome.SignUp ->
+                AuthenticationViewState.Success.SignUp(outcome.signUp)
+              OAuthResult.Outcome.Empty -> AuthenticationViewState.Error("Unknown result type")
             }
         }
         .onFailure {

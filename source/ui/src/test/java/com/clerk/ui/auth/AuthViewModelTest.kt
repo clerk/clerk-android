@@ -13,7 +13,6 @@ import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -274,7 +273,7 @@ class AuthViewModelTest {
 
   @Test
   fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
-    val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
+    val unknownResult = OAuthResult()
     mockkObject(SignIn.Companion)
     coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
       ClerkResult.success(unknownResult)

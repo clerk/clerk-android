@@ -100,7 +100,7 @@ class GoogleSignInServiceTest {
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(mockSignIn, oauthResult.signIn)
     assertEquals(null, oauthResult.signUp)
-    assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
+    assertTrue(oauthResult.outcome is OAuthResult.Outcome.SignIn)
   }
 
   @Test
@@ -134,7 +134,7 @@ class GoogleSignInServiceTest {
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(null, oauthResult.signIn)
     assertEquals(mockSignUp, oauthResult.signUp)
-    assertEquals(ResultType.SIGN_UP, oauthResult.resultType)
+    assertTrue(oauthResult.outcome is OAuthResult.Outcome.SignUp)
   }
 
   @Test
@@ -176,7 +176,7 @@ class GoogleSignInServiceTest {
       val oauthResult = (result as ClerkResult.Success).value
       assertEquals(mockSignIn, oauthResult.signIn)
       assertEquals(null, oauthResult.signUp)
-      assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
+      assertTrue(oauthResult.outcome is OAuthResult.Outcome.SignIn)
       coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
     }
 
@@ -323,7 +323,7 @@ class GoogleSignInServiceTest {
     val oauthResult = (result as ClerkResult.Success).value
     assertEquals(mockSignIn, oauthResult.signIn)
     assertEquals(null, oauthResult.signUp)
-    assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
+    assertTrue(oauthResult.outcome is OAuthResult.Outcome.SignIn)
     coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
   }
 

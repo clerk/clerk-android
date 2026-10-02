@@ -3,6 +3,7 @@ package com.clerk.ui.signin.password.forgot
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.signin.authenticateWithRedirect
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
@@ -47,6 +48,20 @@ class ForgotPasswordViewModelTest {
       advanceUntilIdle()
 
       assertEquals(ResetPasswordViewState.Idle, viewModel.state.value)
+    }
+
+  @Test
+  fun `OAuth result without sign in or sign up reports an error instead of crashing`() =
+    runTest(testDispatcher) {
+      val signIn = SignIn(id = "sign_in_existing", status = SignIn.Status.NEEDS_FIRST_FACTOR)
+      coEvery { authenticateWithRedirect(signIn, OAuthProvider.GITHUB, true) } returns
+        ClerkResult.success(OAuthResult())
+      val viewModel = ForgotPasswordViewModel(ioDispatcher = testDispatcher)
+
+      viewModel.signInWithProvider(OAuthProvider.GITHUB, signIn = signIn)
+      advanceUntilIdle()
+
+      assertEquals(ResetPasswordViewState.Error("Unknown result type"), viewModel.state.value)
     }
 
   @Test
