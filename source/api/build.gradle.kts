@@ -106,7 +106,6 @@ dependencies {
   implementation(libs.androidx.playServicesAuth)
   implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)
-  implementation(libs.google.playIntegrity)
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
