@@ -79,7 +79,6 @@ kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.re
 kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlinTest" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0"
-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat"
 kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
 ktor-client-core = "io.ktor:ktor-client-core:3.5.2"
