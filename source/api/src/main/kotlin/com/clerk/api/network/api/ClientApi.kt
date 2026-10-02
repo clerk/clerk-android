@@ -49,7 +49,7 @@ internal interface ClientApi {
   @GET(ApiPaths.Client.BASE)
   suspend fun getSkippingClientId(
     @Header(INTERNAL_HEADER_SKIP_CLIENT_ID) skipClientId: String = INTERNAL_HEADER_TRUE,
-    @Tag responseGuard: ResponseGuard = ResponseGuard.always,
+    @Tag manualClientSyncRequest: ManualClientSyncRequest? = null,
   ): ClerkResult<Client, ClerkErrorResponse>
 
   @FormUrlEncoded
