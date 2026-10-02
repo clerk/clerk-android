@@ -264,4 +264,134 @@ class StorageHelperTest {
 
     assertTrue("No exceptions should occur", exceptions.isEmpty())
   }
+
+  @Test
+  fun `compareAndSetDeviceToken lets exactly one concurrent writer replace the expected token`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-initial")
+    val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
+    val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
+    val winners = mutableListOf<String>()
+
+    // When
+    repeat(CONCURRENCY_TEST_THREAD_COUNT) { index ->
+      executor.submit {
+        try {
+          val token = "token-$index"
+          if (StorageHelper.compareAndSetDeviceToken(expected = "token-initial", value = token)) {
+            synchronized(winners) { winners.add(token) }
+          }
+        } finally {
+          latch.countDown()
+        }
+      }
+    }
+
+    latch.await()
+    executor.shutdown()
+
+    // Then
+    assertEquals(1, winners.size)
+    assertEquals(winners.single(), StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken notifies the change listener only when the token changes`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+
+    // When
+    StorageHelper.compareAndSetDeviceToken(expected = "token-stale", value = "token-x")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-a")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-b")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-b", value = null)
+
+    // Then
+    assertEquals(listOf("token-a" to "token-b", "token-b" to null), changes)
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken reports failure without side effects when the commit fails`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    // When
+    val replaced =
+      try {
+        StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-b") {
+          onChangedCalls += 1
+        }
+      } finally {
+        restoreCommits()
+      }
+
+    // Then
+    assertFalse(replaced)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertEquals("token-a", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken reports failure without side effects when a delete commit fails`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    // When
+    val cleared =
+      try {
+        StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = null) {
+          onChangedCalls += 1
+        }
+      } finally {
+        restoreCommits()
+      }
+
+    // Then
+    assertFalse(cleared)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertEquals("token-a", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken treats a swap to the current token as a successful no-op`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+
+    // When
+    val sameToken =
+      StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-a") {
+        onChangedCalls += 1
+      }
+    StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    changes.clear()
+    val bothAbsent =
+      StorageHelper.compareAndSetDeviceToken(expected = null, value = null) { onChangedCalls += 1 }
+
+    // Then
+    assertTrue(sameToken)
+    assertTrue(bothAbsent)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
 }
