@@ -34,7 +34,6 @@ val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug", "detektBaseli
 allprojects {
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
-    ratchetFrom("origin/main")
     format("misc") {
       target("*.md", ".gitignore")
       trimTrailingWhitespace()
