@@ -88,6 +88,26 @@ and includes Sign in with Google, Passkey authentication, Sign out, and Email Co
 - [Clerk Docs](https://clerk.com/docs)
 - [Android Integration Guide](https://clerk.com/docs/quickstarts/android)
 
+## Developing this SDK
+
+The build runs on **JDK 21** (Robolectric, Paparazzi and the Paparazzi Gradle plugin require it).
+`gradle/gradle-daemon-jvm.properties` makes Gradle and Android Studio pick a local JDK 21 even when
+`JAVA_HOME` points elsewhere. Published bytecode still targets Java 17 (`jvmTarget` in
+`gradle/libs.versions.toml`).
+
+Run `./bootstrap.sh` once (it also works from a git worktree) to install the pre-commit hook that
+formats and checks staged files. Re-run it when `config/git/hooks/pre-commit` changes.
+
+CI runs these on every pull request, and the release workflow runs them before publishing:
+
+```bash
+./gradlew :source:api:testDebugUnitTest :source:ui:testDebugUnitTest :source:telemetry:testAndroidHostTest
+./gradlew spotlessCheck   # ./gradlew spotlessApply to fix
+./gradlew detekt :source:api:detektDebug :source:ui:detektDebug :source:telemetry:detektMainAndroid
+./gradlew :source:api:lint :source:ui:lint :source:telemetry:lint
+./gradlew verifyPublishedArtifacts
+```
+
 ## License
 
 This project is licensed under the **MIT license**.
