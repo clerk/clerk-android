@@ -69,6 +69,7 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
@@ -103,15 +104,17 @@ public fun UserButton(
   customDestination: (@Composable (String) -> Unit)? = null,
   onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    TelemetryProvider {
-      UserButtonPresenter(
-        treatPendingAsSignedOut = treatPendingAsSignedOut,
-        routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-        customRows = customRows,
-        customDestination = customDestination,
-        onRequiresForcedMfaClick = onRequiresForcedMfaClick,
-      )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      TelemetryProvider {
+        UserButtonPresenter(
+          treatPendingAsSignedOut = treatPendingAsSignedOut,
+          routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+          customRows = customRows,
+          customDestination = customDestination,
+          onRequiresForcedMfaClick = onRequiresForcedMfaClick,
+        )
+      }
     }
   }
 }

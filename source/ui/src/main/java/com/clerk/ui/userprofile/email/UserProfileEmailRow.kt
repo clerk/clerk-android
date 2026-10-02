@@ -45,7 +45,8 @@ internal fun UserProfileEmailRow(
   onVerify: (EmailAddress) -> Unit,
   modifier: Modifier = Modifier,
   isInteractive: Boolean = true,
-  viewModel: EmailViewModel? = if (isInteractive) viewModel() else null,
+  viewModel: EmailViewModel? =
+    if (isInteractive) viewModel(key = "user-profile-email-row-${emailAddress.id}") else null,
 ) {
 
   if (isInteractive && viewModel != null) {

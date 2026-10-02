@@ -50,7 +50,7 @@ internal fun UserProfileMfaRow(
   modifier: Modifier = Modifier,
   isDefault: Boolean = false,
   title: String? = null,
-  viewModel: UserProfileMfaViewModel = viewModel(),
+  viewModel: UserProfileMfaViewModel = viewModel(key = style.viewModelKey()),
 ) {
   val hasHeader = isDefault || title != null
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -174,6 +174,14 @@ internal sealed interface Style {
 
   data object BackupCodes : Style
 }
+
+/** Each MFA row owns its ViewModel, so one row's result is not handled by every row. */
+internal fun Style.viewModelKey(): String =
+  when (this) {
+    Style.AuthenticatorApp -> "user-profile-mfa-row-totp"
+    is Style.Sms -> "user-profile-mfa-row-sms-${phoneNumber.id}"
+    Style.BackupCodes -> "user-profile-mfa-row-backup-codes"
+  }
 
 @Composable
 private fun MfaMoreMenu(

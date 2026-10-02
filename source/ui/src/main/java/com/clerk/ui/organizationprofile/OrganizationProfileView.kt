@@ -31,8 +31,10 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
+import com.clerk.ui.navigation.rememberClerkNavEntryDecorators
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -80,43 +82,45 @@ public fun OrganizationProfileView(
   onDismiss: (() -> Unit)? = null,
   onComplete: (() -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    TelemetryProvider {
-      val backStack = rememberNavBackStack(OrganizationProfileDestination.Root)
-      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
-      val membership = Clerk.organizationMembership
-      val organization = membership?.organization ?: Clerk.organization
-      val dismissHandler = rememberDismissHandler(onDismiss)
-      val completeHandler = onComplete ?: dismissHandler
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      TelemetryProvider {
+        val backStack = rememberNavBackStack(OrganizationProfileDestination.Root)
+        val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+        val user by Clerk.userFlow.collectAsStateWithLifecycle()
+        val membership = Clerk.organizationMembership
+        val organization = membership?.organization ?: Clerk.organization
+        val dismissHandler = rememberDismissHandler(onDismiss)
+        val completeHandler = onComplete ?: dismissHandler
 
-      LaunchedEffect(Unit) { Clerk.refreshClient() }
-      OrganizationProfileEffects(
-        organizationId = organization?.id,
-        onComplete = completeHandler,
-        hasOrganization = organization != null,
-      )
+        LaunchedEffect(Unit) { Clerk.refreshClient() }
+        OrganizationProfileEffects(
+          organizationId = organization?.id,
+          onComplete = completeHandler,
+          hasOrganization = organization != null,
+        )
 
-      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
-        if (organization != null) {
-          OrganizationProfileNavDisplay(
-            modifier = Modifier.fillMaxSize(),
-            backStack = backStack,
-            organization = organization,
-            membership = membership,
-            isDismissible = isDismissible,
-            customRows = customRows,
-            customDestination = customDestination,
-            onDismiss = dismissHandler,
-            onComplete = completeHandler,
-          )
-        } else {
-          Box(modifier = Modifier.fillMaxSize())
+        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
+          if (organization != null) {
+            OrganizationProfileNavDisplay(
+              modifier = Modifier.fillMaxSize(),
+              backStack = backStack,
+              organization = organization,
+              membership = membership,
+              isDismissible = isDismissible,
+              customRows = customRows,
+              customDestination = customDestination,
+              onDismiss = dismissHandler,
+              onComplete = completeHandler,
+            )
+          } else {
+            Box(modifier = Modifier.fillMaxSize())
+          }
         }
-      }
 
-      LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
+        LaunchedEffect(session?.id, user?.id) {
+          if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
+        }
       }
     }
   }
@@ -140,6 +144,7 @@ private fun OrganizationProfileNavDisplay(
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
+    entryDecorators = rememberClerkNavEntryDecorators(),
     onBack = {
       handleOrganizationProfileBack(
         isAtRoot = backStack.size == 1,

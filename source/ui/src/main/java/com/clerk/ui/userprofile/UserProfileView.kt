@@ -35,6 +35,7 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.navigation.LocalClerkHostBackAction
 import com.clerk.ui.navigation.clerkNavigationForwardAlphaSpec
 import com.clerk.ui.navigation.clerkNavigationForwardEnterTransform
@@ -43,6 +44,7 @@ import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopAlphaSpec
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.navigation.clerkNavigationSlideProgressSpec
+import com.clerk.ui.navigation.rememberClerkNavEntryDecorators
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
@@ -111,114 +113,119 @@ public fun UserProfileView(
   onDismiss: (() -> Unit)? = null,
   isDismissible: Boolean = true,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-    var showDetail by rememberSaveable { mutableStateOf(false) }
-    val user by Clerk.userFlow.collectAsStateWithLifecycle()
-    var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
-    var showAuth by rememberSaveable { mutableStateOf(false) }
-    val dismissHandler = rememberDismissHandler(onDismiss)
-    UserProfileStateProvider(backStack) {
-      val telemetry = LocalTelemetryCollector.current
-      val showAddAccountAuth = {
-        showAccountSwitcher = false
-        onAddAccount?.invoke() ?: run { showAuth = true }
-      }
-
-      LaunchedEffect(Unit) {
-        telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView"))
-        Clerk.refreshClient()
-      }
-      LaunchedEffect(user?.id, showAuth, dismissHandler) {
-        if (user == null && !showAuth) {
-          dismissHandler()
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+      var showDetail by rememberSaveable { mutableStateOf(false) }
+      val user by Clerk.userFlow.collectAsStateWithLifecycle()
+      var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
+      var showAuth by rememberSaveable { mutableStateOf(false) }
+      val dismissHandler = rememberDismissHandler(onDismiss)
+      UserProfileStateProvider(backStack) {
+        val telemetry = LocalTelemetryCollector.current
+        val showAddAccountAuth = {
+          showAccountSwitcher = false
+          onAddAccount?.invoke() ?: run { showAuth = true }
         }
-      }
 
-      if (showAuth) {
-        // The add-account flow replaces the profile entirely, so it dismisses itself rather
-        // than showing the host's back button, which would pop the host's own navigation.
-        // Hosts that want to own this flow can pass onAddAccount instead.
-        CompositionLocalProvider(LocalClerkHostBackAction provides null) {
-          AuthView(
-            modifier = Modifier.fillMaxSize(),
-            preferGoogleOneTap = false,
-            onDismiss = { showAuth = false },
-            onAuthComplete = { showAuth = false },
-          )
+        LaunchedEffect(Unit) {
+          telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView"))
+          Clerk.refreshClient()
         }
-      } else {
-        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
-          val detailProgress by
-            animateFloatAsState(
-              targetValue = if (showDetail) 1f else 0f,
-              animationSpec = clerkNavigationSlideProgressSpec(),
-              label = "user profile detail transition",
+        LaunchedEffect(user?.id, showAuth, dismissHandler) {
+          if (user == null && !showAuth) {
+            dismissHandler()
+          }
+        }
+
+        if (showAuth) {
+          // The add-account flow replaces the profile entirely, so it dismisses itself rather
+          // than showing the host's back button, which would pop the host's own navigation.
+          // Hosts that want to own this flow can pass onAddAccount instead.
+          CompositionLocalProvider(LocalClerkHostBackAction provides null) {
+            AuthView(
+              modifier = Modifier.fillMaxSize(),
+              preferGoogleOneTap = false,
+              onDismiss = { showAuth = false },
+              onAuthComplete = { showAuth = false },
             )
-          val detailAlpha by
-            animateFloatAsState(
-              targetValue = if (showDetail) 1f else 0f,
-              animationSpec =
-                if (showDetail) {
-                  clerkNavigationForwardAlphaSpec()
-                } else {
-                  clerkNavigationPopAlphaSpec()
-                },
-              label = "user profile detail alpha",
-            )
-          Box(modifier = Modifier.fillMaxSize().clipToBounds()) {
-            NavDisplay(
-              modifier =
-                Modifier.fillMaxSize()
-                  .zIndex(if (detailProgress == 0f) 1f else 0f)
-                  .clerkNavigationForwardExitTransform(detailProgress),
-              backStack = backStack,
-              onBack = {
-                handleUserProfileBack(
-                  isAtRoot = backStack.size == 1,
-                  isDismissible = isDismissible,
-                  onDismiss = dismissHandler,
-                  onNavigateBack = { backStack.removeLastOrNull() },
-                )
-              },
-              transitionSpec = { clerkNavigationForwardTransition() },
-              popTransitionSpec = { clerkNavigationPopTransition() },
-              predictivePopTransitionSpec = { clerkNavigationPopTransition() },
-              entryProvider =
-                entryProvider {
-                  userProfileEntries(
-                    backStack = backStack,
-                    isDismissible = isDismissible,
-                    onDismiss = dismissHandler,
-                    customRows = customRows,
-                    customDestination = customDestination,
-                    onSwitchAccount = { showAccountSwitcher = true },
-                    onAddAccount = showAddAccountAuth,
-                    onShowDetail = { showDetail = true },
-                  )
-                },
-            )
-            if (showDetail || detailProgress > 0f) {
-              Box(
+          }
+        } else {
+          DevelopmentModeWarningBox(
+            modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds()
+          ) {
+            val detailProgress by
+              animateFloatAsState(
+                targetValue = if (showDetail) 1f else 0f,
+                animationSpec = clerkNavigationSlideProgressSpec(),
+                label = "user profile detail transition",
+              )
+            val detailAlpha by
+              animateFloatAsState(
+                targetValue = if (showDetail) 1f else 0f,
+                animationSpec =
+                  if (showDetail) {
+                    clerkNavigationForwardAlphaSpec()
+                  } else {
+                    clerkNavigationPopAlphaSpec()
+                  },
+                label = "user profile detail alpha",
+              )
+            Box(modifier = Modifier.fillMaxSize().clipToBounds()) {
+              NavDisplay(
                 modifier =
                   Modifier.fillMaxSize()
-                    .zIndex(1f)
-                    .clerkNavigationForwardEnterTransform(
-                      detailProgress,
-                      if (showDetail) 1f else detailAlpha,
+                    .zIndex(if (detailProgress == 0f) 1f else 0f)
+                    .clerkNavigationForwardExitTransform(detailProgress),
+                backStack = backStack,
+                entryDecorators = rememberClerkNavEntryDecorators(),
+                onBack = {
+                  handleUserProfileBack(
+                    isAtRoot = backStack.size == 1,
+                    isDismissible = isDismissible,
+                    onDismiss = dismissHandler,
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                  )
+                },
+                transitionSpec = { clerkNavigationForwardTransition() },
+                popTransitionSpec = { clerkNavigationPopTransition() },
+                predictivePopTransitionSpec = { clerkNavigationPopTransition() },
+                entryProvider =
+                  entryProvider {
+                    userProfileEntries(
+                      backStack = backStack,
+                      isDismissible = isDismissible,
+                      onDismiss = dismissHandler,
+                      customRows = customRows,
+                      customDestination = customDestination,
+                      onSwitchAccount = { showAccountSwitcher = true },
+                      onAddAccount = showAddAccountAuth,
+                      onShowDetail = { showDetail = true },
                     )
-              ) {
-                UserProfileDetailViewWithBackHandler(onBackPressed = { showDetail = false })
+                  },
+              )
+              if (showDetail || detailProgress > 0f) {
+                Box(
+                  modifier =
+                    Modifier.fillMaxSize()
+                      .zIndex(1f)
+                      .clerkNavigationForwardEnterTransform(
+                        detailProgress,
+                        if (showDetail) 1f else detailAlpha,
+                      )
+                ) {
+                  UserProfileDetailViewWithBackHandler(onBackPressed = { showDetail = false })
+                }
               }
             }
-          }
-          BackHandler(enabled = showDetail) { showDetail = false }
+            BackHandler(enabled = showDetail) { showDetail = false }
 
-          if (showAccountSwitcher) {
-            UserProfileAccountSwitcherSheet(
-              onDismissRequest = { showAccountSwitcher = false },
-              onAddAccount = showAddAccountAuth,
-            )
+            if (showAccountSwitcher) {
+              UserProfileAccountSwitcherSheet(
+                onDismissRequest = { showAccountSwitcher = false },
+                onAddAccount = showAddAccountAuth,
+              )
+            }
           }
         }
       }
