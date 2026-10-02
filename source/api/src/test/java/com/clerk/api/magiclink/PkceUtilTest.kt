@@ -19,6 +19,7 @@ class PkceUtilTest {
 
     assertFalse(pair.challenge.contains("="))
     assertTrue(BASE64_URL_REGEX.matches(pair.challenge))
+    assertEquals(PkceUtil.createS256CodeChallenge(pair.verifier), pair.challenge)
   }
 
   @Test

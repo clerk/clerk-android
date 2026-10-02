@@ -275,20 +275,33 @@ class BiometricCredentialStorageContractTest {
 
   @Test
   fun `writers wait for the lock file to be released`() {
-    val fileStore = BiometricCredentialFileStore(directory)
+    // A long store timeout keeps the writer from giving up on a slow machine while the lock is
+    // held.
+    val fileStore = BiometricCredentialFileStore(directory, lockTimeoutMillis = 60_000)
     directory.mkdirs()
+    var writerFailure: Throwable? = null
     RandomAccessFile(File(directory, LOCK_FILE_NAME), "rw").channel.use { channel ->
       val held = channel.lock()
-      val writer = thread { fileStore.saveCredential(fixtureRecords().first()) }
+      val writer = thread {
+        runCatching { fileStore.saveCredential(fixtureRecords().first()) }
+          .onFailure { writerFailure = it }
+      }
 
-      writer.join(300)
+      // Wait until the writer is backing off on the held lock rather than guessing with a sleep.
+      val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+      while (writer.state != Thread.State.TIMED_WAITING && writer.isAlive) {
+        check(System.nanoTime() < deadline) { "Writer never started waiting for the lock" }
+        Thread.yield()
+      }
       assertTrue(writer.isAlive)
       assertFalse(dataFile().exists())
 
       held.release()
-      writer.join(5_000)
+      writer.join(10_000)
+      assertFalse(writer.isAlive)
     }
 
+    assertEquals(null, writerFailure)
     assertEquals(listOf(fixtureRecords().first()), fileStore.credentials())
   }
 

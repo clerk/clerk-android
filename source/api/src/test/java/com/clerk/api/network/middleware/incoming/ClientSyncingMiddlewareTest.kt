@@ -28,7 +28,6 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -128,9 +127,11 @@ class ClientSyncingMiddlewareTest {
 
       middleware.intercept(chain)
 
+      val completion = Clerk.pendingAuthFlowCompletion
       assertEquals(Session.SessionStatus.ACTIVE, Clerk.session?.status)
       assertFalse(Clerk.isAuthFlowComplete)
-      assertNotNull(Clerk.pendingAuthFlowCompletion)
+      assertTrue(completion is AuthEvent.SignInCompleted)
+      assertEquals("si_123", (completion as AuthEvent.SignInCompleted).signIn.id)
     } finally {
       registration.close()
     }

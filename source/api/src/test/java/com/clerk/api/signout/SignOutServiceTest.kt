@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -241,13 +242,26 @@ class SignOutServiceTest {
   @Test
   fun `signOut refreshes client after local sign-out cleanup`() = runTest {
     setupActiveSession()
-    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+    // Server responds with the still-signed-in client so only local cleanup can clear it.
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(mockClient)
+    var deviceTokenAtRefresh: String? = "not-refreshed"
+    var sessionAtRefresh: Session? = mockSession
+    val refreshedClient = Client(id = "refreshed_client_id")
+    coEvery { mockClientApi.getSkippingClientId(any()) } answers
+      {
+        deviceTokenAtRefresh = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
+        sessionAtRefresh = Clerk.session
+        ClerkResult.success(refreshedClient)
+      }
 
     val result = SignOutService.signOut()
 
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
+    assertNull("Device token should be cleared before the refresh", deviceTokenAtRefresh)
+    assertNull("Session should be cleared before the refresh", sessionAtRefresh)
+    assertEquals("refreshed_client_id", Clerk.client.id)
   }
 
   @Test

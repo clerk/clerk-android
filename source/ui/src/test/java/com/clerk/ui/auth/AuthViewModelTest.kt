@@ -30,7 +30,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -58,10 +57,16 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
+  fun startAuthWithSignInOrUpModeSurfacesNonFallbackSignInErrorsWithoutSignUp() = runTest {
     mockkObject(SignIn.Companion)
+    mockkObject(SignUp.Companion)
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.apiFailure(null)
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(
+          errors =
+            listOf(ClerkError(code = "form_param_format_invalid", longMessage = "Invalid email"))
+        )
+      )
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -74,9 +79,13 @@ class AuthViewModelTest {
       )
 
       assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
-      cancelAndIgnoreRemainingEvents()
+      assertEquals(AuthStartViewModel.AuthState.Error("Invalid email"), awaitItem())
     }
+
+    coVerify(exactly = 1) {
+      SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = "test@example.com"))
+    }
+    coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
   }
 
   @Test
@@ -235,7 +244,7 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthRedirectWithSignInResultSetsSignInSuccessState() = runTest {
+  fun socialOAuthSignInResultSetsOAuthSignInSuccessState() = runTest {
     val signIn = SignIn(id = "sign_in_oauth")
     mockkObject(SignIn.Companion)
     coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
@@ -254,7 +263,7 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthRedirectWithSignUpResultSetsSignUpSuccessState() = runTest {
+  fun socialOAuthSignUpResultSetsOAuthSignUpSuccessState() = runTest {
     val signUp = mockk<SignUp>(relaxed = true)
     mockkObject(SignIn.Companion)
     coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
@@ -273,8 +282,13 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
-    val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
+  fun socialOAuthUnknownResultTypeSetsOAuthErrorState() = runTest {
+    val unknownResult =
+      mockk<OAuthResult> {
+        every { resultType } returns ResultType.UNKNOWN
+        every { signIn } returns null
+        every { signUp } returns null
+      }
     mockkObject(SignIn.Companion)
     coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
       ClerkResult.success(unknownResult)
@@ -288,6 +302,35 @@ class AuthViewModelTest {
     assertEquals(
       AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider"),
       viewModel.state.value,
+    )
+  }
+
+  @Test
+  fun startAuthWithSignUpChoosesEmailOrUsernameParamsFromIdentifierFormat() = runTest {
+    val capturedParams = mutableListOf<SignUp.CreateParams>()
+    mockkObject(SignUp.Companion)
+    coEvery { SignUp.create(capture(capturedParams)) } returns
+      ClerkResult.success(mockk<SignUp>(relaxed = true))
+    val emailIdentifiers =
+      listOf("test@example.com", "user.name@domain.co.uk", "test123+tag@example.org")
+    val usernameIdentifiers = listOf("testuser", "test@domain", "@example.com", "test@@domain.com")
+
+    (emailIdentifiers + usernameIdentifiers).forEach { identifier ->
+      AuthStartViewModel(ioDispatcher = testDispatcher)
+        .startAuth(
+          authMode = AuthMode.SignUp,
+          isPhoneNumberFieldActive = false,
+          phoneNumber = "",
+          identifier = identifier,
+        )
+    }
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    val params = capturedParams.map { it as SignUp.CreateParams.Standard }
+    assertEquals(
+      emailIdentifiers.map { SignUp.CreateParams.Standard(emailAddress = it) } +
+        usernameIdentifiers.map { SignUp.CreateParams.Standard(username = it) },
+      params,
     )
   }
 
@@ -356,7 +399,7 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun startAuthWithoutEnterpriseSSOFactorSkipsSSOPreparation() = runTest {
+  fun signInWithoutEnterpriseSsoFactorSucceedsWithoutPreparingEnterpriseSso() = runTest {
     val signIn =
       SignIn(
         id = "sign_in_password",
@@ -387,45 +430,30 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun startAuthUsesPhoneNumberAsIdentifierOnlyWhenPhoneFieldIsActive() = runTest {
-    val createdParams = mutableListOf<SignIn.CreateParams.Strategy>()
+  fun startAuthSignsInWithPhoneNumberOnlyWhenPhoneFieldIsActive() = runTest {
+    val capturedParams = mutableListOf<SignIn.CreateParams.Strategy>()
     mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(capture(createdParams)) } returns
-      ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "x"))))
+    coEvery { SignIn.create(capture(capturedParams)) } returns
+      ClerkResult.success(SignIn(id = "sign_in_123"))
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignIn,
-      isPhoneNumberFieldActive = true,
-      phoneNumber = "+1234567890",
-      identifier = "test@example.com",
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
-    viewModel.startAuth(
-      authMode = AuthMode.SignIn,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "+1234567890",
-      identifier = "test@example.com",
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
+    listOf(true, false).forEach { phoneActive ->
+      AuthStartViewModel(ioDispatcher = testDispatcher)
+        .startAuth(
+          authMode = AuthMode.SignIn,
+          isPhoneNumberFieldActive = phoneActive,
+          phoneNumber = "+15555550100",
+          identifier = "test@example.com",
+        )
+      testDispatcher.scheduler.advanceUntilIdle()
+    }
 
     assertEquals(
       listOf(
-        SignIn.CreateParams.Strategy.Identifier(identifier = "+1234567890"),
+        SignIn.CreateParams.Strategy.Identifier(identifier = "+15555550100"),
         SignIn.CreateParams.Strategy.Identifier(identifier = "test@example.com"),
       ),
-      createdParams,
+      capturedParams,
     )
-  }
-
-  @Test
-  fun authModeEnumShouldHaveCorrectValues() {
-    val signIn = AuthMode.SignIn
-    val signUp = AuthMode.SignUp
-    val signInOrUp = AuthMode.SignInOrUp
-
-    assertEquals("SignIn", signIn.name)
-    assertEquals("SignUp", signUp.name)
-    assertEquals("SignInOrUp", signInOrUp.name)
   }
 
   @Test
@@ -433,19 +461,6 @@ class AuthViewModelTest {
     assertEquals(false, AuthMode.SignIn.transferable)
     assertEquals(true, AuthMode.SignUp.transferable)
     assertEquals(true, AuthMode.SignInOrUp.transferable)
-  }
-
-  @Test
-  fun oauthProviderShouldHaveExpectedValues() {
-    val google = OAuthProvider.GOOGLE
-    val facebook = OAuthProvider.FACEBOOK
-
-    assertEquals("GOOGLE", google.name)
-    assertEquals("FACEBOOK", facebook.name)
-
-    val testProviders = listOf(google, facebook)
-    assertTrue("Should contain Google", testProviders.contains(OAuthProvider.GOOGLE))
-    assertTrue("Should contain Facebook", testProviders.contains(OAuthProvider.FACEBOOK))
   }
 
   @Test
@@ -575,6 +590,10 @@ class AuthViewModelTest {
 
     coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
     coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+    assertEquals(
+      AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(mockSignUp),
+      viewModel.state.value,
+    )
   }
 
   @Test

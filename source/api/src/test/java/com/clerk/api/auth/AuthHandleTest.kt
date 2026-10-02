@@ -53,6 +53,7 @@ class AuthHandleTest {
 
     assertTrue(handled)
     coVerify(exactly = 1) { NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri) }
+    coVerify(exactly = 0) { HostedAuthService.complete(any()) }
     coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
   }
 
@@ -73,7 +74,7 @@ class AuthHandleTest {
   }
 
   @Test
-  fun `handle completes hosted auth callback before SSO fallback`() = runTest {
+  fun `handle treats custom scheme hosted auth callback as handled`() = runTest {
     val callbackUri = mockk<Uri>(relaxed = true)
     val session = mockk<Session>(relaxed = true)
 
@@ -87,6 +88,24 @@ class AuthHandleTest {
     coVerify(exactly = 1) { HostedAuthService.complete(callbackUri) }
     coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
   }
+
+  @Test
+  fun `handle does not fall back to SSO when hosted auth completes a Clerk scheme callback`() =
+    runTest {
+      val callbackUri = mockk<Uri>(relaxed = true)
+      val session = mockk<Session>(relaxed = true)
+
+      every { canHandleNativeMagicLink(callbackUri) } returns false
+      every { callbackUri.scheme } returns "clerk"
+      coEvery { HostedAuthService.complete(callbackUri) } returns ClerkResult.success(session)
+      coJustRun { SSOService.completeAuthenticateWithRedirect(callbackUri) }
+
+      val handled = auth.handle(callbackUri)
+
+      assertTrue(handled)
+      coVerify(exactly = 1) { HostedAuthService.complete(callbackUri) }
+      coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
+    }
 
   @Test
   fun `handle returns false for non Clerk URIs`() = runTest {
