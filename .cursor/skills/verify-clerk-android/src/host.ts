@@ -33,6 +33,7 @@ export const host: HostAdapter<NativeHostScreen> = {
   screens: ['home', 'auth', 'userProfile', 'orgSwitcher', 'orgList', 'orgProfile'],
   keysFile: '.keys.json',
   githubRepo: 'clerk/clerk-android',
+  cli: '.cursor/skills/verify-clerk-android/bin/control-clerk-android',
   appId: () => APP_ID,
   buildInputs: () => ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew'],
   buildSources: () => ['local'],
@@ -42,7 +43,7 @@ export const host: HostAdapter<NativeHostScreen> = {
     const worktree = fileURLToPath(new URL('../../../../', import.meta.url));
     const result = await gradle([':e2e:assembleDebug', '--console=plain', '--quiet'], worktree, java.home);
     if (result.code !== 0) {
-      throw new VerifyFailure('BUILD_FAILED', `./gradlew :e2e:assembleDebug exited ${result.code}:\n${result.tail}`, 'fix the build error above, then rerun bin/verify up');
+      throw new VerifyFailure('BUILD_FAILED', `./gradlew :e2e:assembleDebug exited ${result.code}:\n${result.tail}`, 'fix the build error above, then rerun {cli} up');
     }
     mkdirSync(into, { recursive: true });
     const path = join(into, 'e2e-debug.apk') as ScratchPath;
