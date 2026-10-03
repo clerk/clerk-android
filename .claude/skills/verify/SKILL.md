@@ -16,13 +16,13 @@ $ npm ci                       # once per worktree, before anything else
 $ bin/verify doctor            # exits 3 until the first up, because build is the one failing check
 $ bin/verify up                # build the :e2e APK for this tree, then lease verify-android-<n> and install
 build   android-b17728aef656  local  building...
+build   android-b17728aef656  local  built in 9s
 device  verify-android-1  booting Clerk_Verify_Pixel -read-only on port 5560
 install android-b17728aef656  on verify-android-1
-build   android-b17728aef656  local  41s
 device  verify-android-1  local  leased by this worktree  installed android-b17728aef656
 ```
 
-The lane is ready when `up` prints its last line, `device <name> local leased by this worktree installed <build key>`. The `device ... booting` and `install` lines are progress. A reused build prints `build <key> local reused` and no `building...` line.
+The lane is ready when `up` prints its last line, `device <name> local leased by this worktree installed <build key>`. The `build`, `device ... booting`, and `install` lines are progress. A reused build prints `build <key> local reused` instead of the two build lines, and a held lease skips the boot and install lines. A fresh worktree takes about 40 seconds from no build and no emulator to a passing `run auth-start` when the Gradle cache in `~/.gradle` is warm; a held lease runs it in about 15.
 
 `up` is idempotent. It reuses a build whose key matches the current tree (a hash of `source/`, `e2e/`, `gradle/`, and the root Gradle files, minus docs and specs) and a lease this worktree already holds. It builds before it claims a lane, because a build needs no device. `run` calls `up` itself, so `up` exists to start the slow part early. `bin/verify up &` followed by `bin/verify run ...` is fine: `run` waits for the `up` to finish and uses its lease.
 
