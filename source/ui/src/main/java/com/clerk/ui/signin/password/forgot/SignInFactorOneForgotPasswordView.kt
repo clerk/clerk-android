@@ -78,8 +78,7 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
-  viewModel: ForgotPasswordViewModel =
-    viewModel(key = "forgot-password-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}"),
+  viewModel: ForgotPasswordViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
