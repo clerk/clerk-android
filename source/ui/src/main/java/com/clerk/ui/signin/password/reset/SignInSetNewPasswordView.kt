@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,6 +31,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
@@ -139,7 +141,8 @@ private fun SignInSetNewPasswordViewImpl(
       onClick = onResetPassword,
       isLoading = state is AuthenticationViewState.Loading,
       text = stringResource(R.string.reset_password),
-      modifier = Modifier.fillMaxWidth(),
+      modifier =
+        Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.submitButton),
       isEnabled = isButtonEnabled,
     )
   }
@@ -159,6 +162,7 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
   val showPasswordMismatchError = authState.signInConfirmNewPassword.isNotBlank() && !passwordsMatch
   val confirmFocusRequester = remember { FocusRequester() }
   ClerkTextField(
+    modifier = Modifier.testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.newPassword),
     value = authState.signInNewPassword,
     onValueChange = { authState.signInNewPassword = it },
     visualTransformation = PasswordVisualTransformation(),
@@ -174,7 +178,9 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
   )
   Spacers.Vertical.Spacer24()
   ClerkTextField(
-    modifier = Modifier.focusRequester(confirmFocusRequester),
+    modifier =
+      Modifier.focusRequester(confirmFocusRequester)
+        .testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.confirmPassword),
     value = authState.signInConfirmNewPassword,
     onValueChange = { authState.signInConfirmNewPassword = it },
     label = stringResource(R.string.confirm_password),
