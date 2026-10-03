@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.Lifecycle
@@ -24,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
@@ -157,6 +159,7 @@ private fun SignInEmailLinkSecondaryActions(
   ) {
     ClerkTextButton(text = stringResource(R.string.resend), onClick = onResendClick)
     ClerkTextButton(
+      modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
       text = stringResource(R.string.use_another_method),
       onClick = onUseAnotherMethodClick,
     )

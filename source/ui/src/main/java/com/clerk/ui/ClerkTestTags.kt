@@ -56,6 +56,7 @@ internal object ClerkTestTags {
     object SignUp {
       const val code = "clerk.auth.signUp.code"
       const val emailAddress = "clerk.auth.signUp.emailAddress"
+      const val phoneNumber = "clerk.auth.signUp.phoneNumber"
       const val username = "clerk.auth.signUp.username"
       const val password = "clerk.auth.signUp.password"
       const val continueButton = "clerk.auth.signUp.continue"

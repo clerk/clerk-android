@@ -35,6 +35,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -71,7 +72,7 @@ fun AuthStartView(
 ) {
   ClerkLogoProvider(logo) {
     AuthStartViewImpl(
-      modifier = modifier,
+      modifier = modifier.clerkTestTagsAsResourceIds(),
       preferGoogleOneTap = preferGoogleOneTap,
       startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
       isDismissible = isDismissible,

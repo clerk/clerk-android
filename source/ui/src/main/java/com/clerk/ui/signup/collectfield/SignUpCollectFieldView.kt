@@ -33,7 +33,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.input.ClerkPhoneNumberField
+import com.clerk.ui.core.input.ClerkPhoneNumberFieldImpl
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
@@ -193,7 +193,8 @@ private fun InputField(
       }
 
       CollectField.Phone -> {
-        ClerkPhoneNumberField(
+        ClerkPhoneNumberFieldImpl(
+          inputModifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.phoneNumber),
           value = phone,
           onValueChange = onPhoneChange,
           imeAction = ImeAction.Go,
