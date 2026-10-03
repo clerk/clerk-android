@@ -8,6 +8,7 @@ import io.mockk.unmockkObject
 import java.io.IOException
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 
@@ -51,5 +52,20 @@ class ClerkResultTest {
       ClerkResult.unknownFailure(IllegalStateException("Unexpected failure"))
 
     assertEquals("Error occurred with unknown message.", result.errorMessage)
+  }
+
+  @Test
+  fun `httpFailure accepts redirect status codes`() {
+    val failure = ClerkResult.httpFailure<ClerkErrorResponse>(code = 300)
+
+    assertEquals(300, failure.code)
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+  }
+
+  @Test
+  fun `httpFailure rejects successful status codes`() {
+    assertThrows(IllegalArgumentException::class.java) {
+      ClerkResult.httpFailure<ClerkErrorResponse>(code = 200)
+    }
   }
 }

@@ -79,7 +79,8 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
   public companion object {
     private const val OK = 200
     private val HTTP_SUCCESS_RANGE = OK..299
-    private val HTTP_FAILURE_RANGE = 400..599
+    private val HTTP_FAILURE_RANGE = 300..599
+    private val HTTP_ERROR_BODY_RANGE = 400..599
 
     /** Returns a new [Success] with given [value]. */
     public fun <T : Any> success(value: T): Success<T> = Success(value, emptyMap())
@@ -98,10 +99,12 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     public fun unknownFailure(throwable: Throwable): Failure<Nothing> =
       Failure(null, throwable, null, Failure.ErrorType.UNKNOWN)
 
+    internal fun hasHttpErrorBody(code: Int): Boolean = code in HTTP_ERROR_BODY_RANGE
+
     internal fun checkHttpFailureCode(code: Int) {
       require(code !in HTTP_SUCCESS_RANGE) { "Status code '$code' is a successful HTTP response." }
       require(code in HTTP_FAILURE_RANGE) {
-        "Status code '$code' is not a HTTP failure response. Must be a 4xx or 5xx code."
+        "Status code '$code' is not a HTTP failure response. Must be a 3xx, 4xx, or 5xx code."
       }
     }
   }
