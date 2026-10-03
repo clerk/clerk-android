@@ -9,7 +9,10 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentialManager
+import com.clerk.api.restorecredentials.RestoreCredentialManagerImpl
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
@@ -23,12 +26,18 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -91,6 +100,8 @@ class SignOutServiceTest {
   fun tearDown() {
     Dispatchers.resetMain()
     unmockkAll()
+    Clerk.applicationContext = null
+    RestoreCredentials.credentialManager = RestoreCredentialManagerImpl()
     StorageHelper.reset(context)
   }
 
@@ -262,5 +273,50 @@ class SignOutServiceTest {
     coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
     assertNull("Session should still be cleared", Clerk.session)
     assertNull("User should still be cleared", Clerk.user)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `cancelling signOut propagates cancellation and still clears local state`() = runTest {
+    setupActiveSession()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+    Clerk.applicationContext = WeakReference(context)
+    var restoreCredentialCleared = false
+    val credentialManager = mockk<RestoreCredentialManager>()
+    coEvery { credentialManager.clearCredentialState(any(), any()) } coAnswers
+      {
+        yield()
+        restoreCredentialCleared = true
+      }
+    RestoreCredentials.credentialManager = credentialManager
+    coEvery { mockSessionApi.deleteSessions() } coAnswers { awaitCancellation() }
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    var result: ClerkResult<Unit, ClerkErrorResponse>? = null
+    val job = launch { result = SignOutService.signOut() }
+    runCurrent()
+    job.cancelAndJoin()
+
+    assertNull("Cancelled sign-out should not return a result", result)
+    assertTrue("Restore credential should be cleared", restoreCredentialCleared)
+    assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertNull("Session should be cleared", Clerk.session)
+    assertFalse("isSignedIn should be false", Clerk.isSignedIn)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `cancelling signOut during client refresh propagates cancellation`() = runTest {
+    setupActiveSession()
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } coAnswers { awaitCancellation() }
+
+    var result: ClerkResult<Unit, ClerkErrorResponse>? = null
+    val job = launch { result = SignOutService.signOut() }
+    runCurrent()
+    job.cancelAndJoin()
+
+    assertNull("Cancelled sign-out should not return a result", result)
+    assertNull("Session should be cleared", Clerk.session)
   }
 }
