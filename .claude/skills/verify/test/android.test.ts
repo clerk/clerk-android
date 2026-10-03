@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import { run } from '../src/core/exec.ts';
 import { encodeLaunchArguments } from '../src/core/state.ts';
 import type { EvidencePath, LaunchId, PublishableKey, RunId, StorageScope } from '../src/core/types.ts';
-import { LOG_FILTER, RECORD_SIZE, lanePort, laneSerial, logcatSince, parseAdbDevices, startScreenrecord } from '../src/platform/android/local.ts';
+import { LOG_FILTER, RECORD_SIZE, lanePort, logFilter, laneSerial, logcatSince, parseAdbDevices, startScreenrecord } from '../src/platform/android/local.ts';
 import { jdkCheck, resolveJavaHome } from '../src/platform/android/sdk.ts';
 
 function fakeJdk(root: string, version: string): string {
@@ -34,6 +34,11 @@ describe('android lanes', () => {
   it('keeps the host, SDK, network, and React Native console tags and silences the rest', () => {
     assert.deepEqual(LOG_FILTER.slice(-1), ['*:S']);
     for (const tag of ['ClerkVerify:V', 'ClerkLog:V', 'OkHttp:V', 'ReactNativeJS:V']) assert.ok(LOG_FILTER.includes(tag), tag);
+  });
+
+  it('adds a host log predicate before the final silence spec', () => {
+    assert.deepEqual(logFilter('Expo:V  ReactNative:W').slice(-3), ['Expo:V', 'ReactNative:W', '*:S']);
+    assert.deepEqual(logFilter(), LOG_FILTER);
   });
 
   it('encodes launch inputs as am start string extras', () => {
