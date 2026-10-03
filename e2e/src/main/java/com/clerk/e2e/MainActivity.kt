@@ -79,13 +79,14 @@ private fun E2EHost(host: VerifyHost, viewModel: E2EViewModel) {
                 isDismissible = false,
                 mode = host.config.authMode,
               )
-            VerifyScreen.UserProfile -> UserProfileView(isDismissible = false)
+            VerifyScreen.UserProfile -> UserProfileView(isDismissible = false, onDismiss = {})
             VerifyScreen.OrgSwitcher ->
               Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 OrganizationSwitcher()
               }
             VerifyScreen.OrgList -> OrganizationListView(isDismissible = false)
-            VerifyScreen.OrgProfile -> OrganizationProfileView(isDismissible = false)
+            VerifyScreen.OrgProfile ->
+              OrganizationProfileView(isDismissible = false, onDismiss = {})
           }
         }
         VerifyStateFooter(state)
