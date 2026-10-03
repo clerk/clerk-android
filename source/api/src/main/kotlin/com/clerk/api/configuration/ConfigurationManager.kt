@@ -554,6 +554,7 @@ internal class ConfigurationManager(
   ): ClerkResult<Unit, ClerkErrorResponse> {
     return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
       val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration.get()
+      val clientUpdateCountAtStart = Clerk.clientUpdateCount
       val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
 
       if (attempt.expectedConfigurationVersion != configurationVersion || !hasConfigured) {
@@ -579,6 +580,7 @@ internal class ConfigurationManager(
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
             client = clientResult.value,
+            clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
         else ->
@@ -611,11 +613,12 @@ internal class ConfigurationManager(
 
   private fun handleSuccessfulRefresh(
     client: Client,
+    clientUpdateCountAtStart: Long,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     initializationRetryJob?.cancel()
     initializationRetryJob = null
-    updateClerkState(client, environment)
+    updateClerkState(client, clientUpdateCountAtStart, environment)
     _isInitialized.value = true
     _initializationError.value = null
 
@@ -800,12 +803,22 @@ internal class ConfigurationManager(
    *
    * This method is called only when both client and environment data have been loaded successfully.
    */
-  private fun updateClerkState(client: Client, environment: Environment) {
-    Clerk.updateClient(client)
+  private fun updateClerkState(
+    client: Client,
+    clientUpdateCountAtStart: Long,
+    environment: Environment,
+  ) {
+    // The client response is normally applied by ClientSyncingMiddleware when it arrives. Any
+    // later update (e.g. an auth flow completing while Environment was in flight) is newer than
+    // this snapshot, so only apply it when nothing has touched the client since the refresh began.
+    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {
-      ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
+      val current = Clerk.clientFlow.value
+      ClerkLog.d(
+        "Clerk state updated - Client ID: ${current?.id}, Sessions: ${current?.sessions?.size}"
+      )
     }
   }
 }

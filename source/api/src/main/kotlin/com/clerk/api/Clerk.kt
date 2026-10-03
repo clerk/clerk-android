@@ -154,6 +154,15 @@ object Clerk {
   internal var lastClientServerFetchAtMillis: Long? = null
     private set
 
+  /** Guards the client fields together with [clientUpdates] so conditional updates are atomic. */
+  private val clientUpdateLock = Any()
+
+  private var clientUpdates = 0L
+
+  /** Incremented on every client update so in-flight refreshes can detect newer client state. */
+  internal val clientUpdateCount: Long
+    get() = synchronized(clientUpdateLock) { clientUpdates }
+
   /**
    * The Client object representing the current device and its authentication state.
    *
@@ -1062,51 +1071,50 @@ object Clerk {
    * loading gates.
    */
   private fun cacheStateIfReady() {
-    val cachedEnvironment = environment
-    val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
+    // Snapshot and save under the client lock so an older snapshot cannot be written after a
+    // newer one.
+    synchronized(clientUpdateLock) {
+      val cachedEnvironment = environment
+      val cachedClient = _clientFlow.value
+      val cachedResources = cachedClient?.let { client ->
         cachedEnvironment?.let { environment -> client to environment }
       }
-    val cachedPublishableKey = publishableKey
-    val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
-    val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
-    val state =
-      if (
-        cachedResources != null && cachedConfiguration != null && cachedServerFetchAtMillis != null
-      ) {
-        CachedClerkState(
-          publishableKey = cachedConfiguration.first,
-          baseUrl = cachedConfiguration.second,
-          client = cachedResources.first,
-          environment = cachedResources.second,
-          clientServerFetchAtMillis = cachedServerFetchAtMillis,
-        )
-      } else {
-        null
+      val cachedPublishableKey = publishableKey
+      val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
+      val cachedConfiguration = cachedPublishableKey?.let { key ->
+        cachedBaseUrl?.let { url -> key to url }
       }
-    if (state == null) return
+      val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
+      val state =
+        if (
+          cachedResources != null &&
+            cachedConfiguration != null &&
+            cachedServerFetchAtMillis != null
+        ) {
+          CachedClerkState(
+            publishableKey = cachedConfiguration.first,
+            baseUrl = cachedConfiguration.second,
+            client = cachedResources.first,
+            environment = cachedResources.second,
+            clientServerFetchAtMillis = cachedServerFetchAtMillis,
+          )
+        } else {
+          null
+        }
+      if (state == null) return
 
-    runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
-      .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
-      .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+      runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
+        .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
+        .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+    }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
-    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
-    val serverFetchAtMillis =
-      if (_clientFlow.value == resolvedClient) {
-        lastClientServerFetchAtMillis ?: System.currentTimeMillis()
-      } else {
-        System.currentTimeMillis()
-      }
     updateClient(
       client = client,
-      serverFetchAtMillis = serverFetchAtMillis,
+      serverFetchAtMillis = serverFetchAtMillisFor(client),
       completedAuthFlow = completedAuthFlow,
     )
   }
@@ -1119,14 +1127,56 @@ object Clerk {
     if (completedAuthFlow != null) {
       holdAuthFlowCompletion(completedAuthFlow)
     }
-    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    applyClientUpdate(client, serverFetchAtMillis, expectedUpdateCount = null)
+  }
 
-    this.client = updatedClient
-    lastClientServerFetchAtMillis = serverFetchAtMillis
-    _clientFlow.value = updatedClient
-    updateSessionAndUserState()
+  /**
+   * Applies [client] only if no other client update happened since [clientUpdateCount] returned
+   * [expectedUpdateCount]. The check and the write happen atomically.
+   *
+   * @return true if the client was applied.
+   */
+  internal fun updateClientIfUnchangedSince(expectedUpdateCount: Long, client: Client): Boolean =
+    applyClientUpdate(
+      client = client,
+      serverFetchAtMillis = serverFetchAtMillisFor(client),
+      expectedUpdateCount = expectedUpdateCount,
+    )
+
+  private fun serverFetchAtMillisFor(client: Client): Long {
+    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    return if (_clientFlow.value == resolvedClient) {
+      lastClientServerFetchAtMillis ?: System.currentTimeMillis()
+    } else {
+      System.currentTimeMillis()
+    }
+  }
+
+  private fun applyClientUpdate(
+    client: Client,
+    serverFetchAtMillis: Long,
+    expectedUpdateCount: Long?,
+  ): Boolean {
+    // The client fields and the session/user state derived from them are published under one lock
+    // so a concurrent update cannot interleave and leave them out of sync. Shared-session sync
+    // stays
+    // outside it: the coordinator holds its own lock and may call back into updateClient.
+    val updatedClient =
+      synchronized(clientUpdateLock) {
+        if (expectedUpdateCount != null && clientUpdates != expectedUpdateCount) {
+          return false
+        }
+        val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+        this.client = resolvedClient
+        lastClientServerFetchAtMillis = serverFetchAtMillis
+        _clientFlow.value = resolvedClient
+        clientUpdates += 1
+        updateSessionAndUserState()
+        resolvedClient
+      }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
     cacheStateIfReady()
+    return true
   }
 
   internal fun configureSharedSessionSync(
@@ -1165,8 +1215,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1370,8 +1421,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
