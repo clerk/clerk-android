@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -40,6 +42,9 @@ mavenPublishing {
 }
 
 kotlin {
+  // Public ABI is checked against api/android/telemetry.api by checkKotlinAbi (part of check).
+  @OptIn(ExperimentalAbiValidation::class) abiValidation()
+
   androidLibrary {
     namespace = "com.clerk.telemetry"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -84,3 +89,8 @@ kotlin {
     }
   }
 }
+
+// Same entry points as :source:api and :source:ui (see the root build file).
+tasks.register("apiCheck") { dependsOn("checkKotlinAbi") }
+
+tasks.register("apiDump") { dependsOn("updateKotlinAbi") }
