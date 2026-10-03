@@ -28,7 +28,6 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
@@ -96,7 +95,7 @@ class Auth internal constructor() {
     }
   }
 
-  private fun emitAuthError(failure: ClerkResult.Failure<ClerkErrorResponse>) {
+  internal fun emitAuthError(failure: ClerkResult.Failure<ClerkErrorResponse>) {
     send(AuthEvent.Error(message = failure.errorMessage, throwable = failure.throwable))
   }
 
@@ -181,9 +180,9 @@ class Auth internal constructor() {
     val params =
       mapOf("identifier" to builder.getIdentifier(), "locale" to Clerk.locale.value.orEmpty())
 
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signIn.createSignIn(params)
+    }
   }
 
   /**
@@ -247,9 +246,9 @@ class Auth internal constructor() {
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signIn.createSignIn(params)
+    }
   }
 
   /**
@@ -284,9 +283,9 @@ class Auth internal constructor() {
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signIn.createSignIn(params)
+    }
   }
 
   /**
@@ -304,13 +303,12 @@ class Auth internal constructor() {
   suspend fun signInWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result =
+    return reportingFailures {
       SSOService.authenticateWithRedirect(
         strategy = provider.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -334,7 +332,7 @@ class Auth internal constructor() {
     val builder = SignInWithIdTokenBuilder().apply(block)
     builder.validate()
 
-    val result =
+    return reportingFailures {
       when (builder.provider!!) {
         IdTokenProvider.GOOGLE -> {
           when (val result = ClerkApi.signIn.authenticateWithGoogle(token = builder.token!!)) {
@@ -343,8 +341,7 @@ class Auth internal constructor() {
           }
         }
       }
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -359,9 +356,9 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result = PasskeyService.signInWithPasskey()
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      PasskeyService.signInWithPasskey()
+    }
   }
 
   /**
@@ -371,9 +368,9 @@ class Auth internal constructor() {
    * continue with its normal sign-in experience.
    */
   suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result = RestoreCredentials.signIn()
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      RestoreCredentials.signIn()
+    }
   }
 
   /**
@@ -401,15 +398,14 @@ class Auth internal constructor() {
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result =
+    return reportingFailures {
       BiometricCredentials.signIn(
         id = id,
         identifierHint = identifierHint,
         promptTitle = promptTitle,
         promptSubtitle = promptSubtitle,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -430,14 +426,13 @@ class Auth internal constructor() {
     val builder = EnterpriseSsoBuilder().apply(block)
     builder.validate()
 
-    val result =
+    return reportingFailures {
       SSOService.authenticateWithRedirect(
         strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
         emailAddress = builder.email,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -460,9 +455,9 @@ class Auth internal constructor() {
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signIn.createSignIn(params)
+    }
   }
 
   /**
@@ -527,9 +522,9 @@ class Auth internal constructor() {
         )
         .toMap() + ("locale" to Clerk.locale.value.orEmpty())
 
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signUp.createSignUp(params)
+    }
   }
 
   /**
@@ -547,13 +542,12 @@ class Auth internal constructor() {
   suspend fun signUpWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result =
+    return reportingFailures {
       SSOService.authenticateSignUpWithRedirect(
         strategy = provider.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -571,9 +565,9 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result = SignIn.authenticateWithGoogleOneTap(transferable = true)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      SignIn.authenticateWithGoogleOneTap(transferable = true)
+    }
   }
 
   /**
@@ -613,9 +607,9 @@ class Auth internal constructor() {
       put("locale", Clerk.locale.value.orEmpty())
     }
 
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signUp.createSignUp(params)
+    }
   }
 
   /**
@@ -636,14 +630,13 @@ class Auth internal constructor() {
     val builder = EnterpriseSsoBuilder().apply(block)
     builder.validate()
 
-    val result =
-      SSOService.authenticateWithRedirect(
+    return reportingFailures {
+      SSOService.authenticateSignUpWithRedirect(
         strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
         emailAddress = builder.email,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
@@ -662,9 +655,9 @@ class Auth internal constructor() {
     val params =
       mapOf("strategy" to "ticket", "ticket" to ticket, "locale" to Clerk.locale.value.orEmpty())
 
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      ClerkApi.signUp.createSignUp(params)
+    }
   }
 
   // endregion
@@ -685,7 +678,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
-    val result =
+    return reportingFailures {
       if (sessionId != null) {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
           is ClerkResult.Success -> {
@@ -699,8 +692,7 @@ class Auth internal constructor() {
       } else {
         SignOutService.signOut()
       }
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   private fun removeSessionLocally(sessionId: String) {

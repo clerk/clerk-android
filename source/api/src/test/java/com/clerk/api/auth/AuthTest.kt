@@ -120,6 +120,41 @@ class AuthTest {
   }
 
   @Test
+  fun `signUpWithEnterpriseSso starts a sign-up redirect instead of a sign-in`() = runTest {
+    mockkObject(SSOService)
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result = Auth().signUpWithEnterpriseSso { email = "user@company.com" }
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    }
+    coVerify(exactly = 0) {
+      SSOService.authenticateWithRedirect(any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
   fun `signUp forwards unsafe metadata`() = runTest {
     val signUpApi = mockk<SignUpApi>()
     val createdSignUp = mockk<SignUp>(relaxed = true)
