@@ -11,7 +11,6 @@ import com.clerk.api.Clerk.initialize
 import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
-import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.billing.Billing
@@ -871,7 +870,6 @@ object Clerk {
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
     ExternalAccountService.cancelPendingExternalAccountConnection()
-    DeviceAttestationHelper.clearCache()
     LocaleProvider.cleanup()
     ClerkApi.reset()
     environment = null
@@ -1064,14 +1062,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1165,8 +1163,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1370,8 +1369,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

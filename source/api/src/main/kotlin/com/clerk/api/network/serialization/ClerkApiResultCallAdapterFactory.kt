@@ -104,8 +104,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     // Unknown length bodies (i.e. -1L) are fine
                     if (responseBody.contentLength() == 0L) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
-                    val statusCode = createStatusCode(response.code())
-                    val nextAnnotations = annotations + statusCode
                     // This runs inside Retrofit's callback.onResponse, which only rethrows
                     // fatal errors (throwIfFatal) and logs and swallows everything else. An
                     // uncaught non-fatal Throwable would leave the suspending caller hanging,
@@ -115,7 +113,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     errorBody =
                       try {
                         retrofit
-                          .responseBodyConverter<Any>(errorType, nextAnnotations)
+                          .responseBodyConverter<Any>(errorType, annotations)
                           .convert(responseBody)
                       } catch (e: VirtualMachineError) {
                         throw e
