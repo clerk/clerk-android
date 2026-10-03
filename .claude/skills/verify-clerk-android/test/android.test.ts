@@ -204,7 +204,7 @@ describe('android lane ownership', () => {
     const { backend, lease, dir } = setup('Pixel_9_Pro', () => '');
     await backend.release(lease);
     takeSlot(join(dir, 'claims'), 'android', 2, 0, join(dir, 'other'));
-    await assert.rejects(backend.acquire({ platform: 'android', worktree: join(dir, 'worktree'), waitSeconds: 0, retryWith: '.cursor/skills/verify-clerk-android/bin/control-clerk-android up --wait <seconds>', progress: () => undefined }), {
+    await assert.rejects(backend.acquire({ platform: 'android', worktree: join(dir, 'worktree'), waitSeconds: 0, retryWith: '.claude/skills/verify-clerk-android/bin/control-clerk-android up --wait <seconds>', progress: () => undefined }), {
       code: 'POOL_FULL',
       message: /emulator-5560 \(Pixel_9_Pro, not a verify lane\), verify-android-2 \(held by .*other\)/,
       fix: /`adb -s emulator-5560 emu kill` frees a lane, but only if that emulator is yours/,

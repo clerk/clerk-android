@@ -33,7 +33,7 @@ export const host: HostAdapter<NativeHostScreen> = {
   screens: ['home', 'auth', 'userProfile', 'orgSwitcher', 'orgList', 'orgProfile'],
   keysFile: '.keys.json',
   githubRepo: 'clerk/clerk-android',
-  cli: '.cursor/skills/verify-clerk-android/bin/control-clerk-android',
+  cli: '.claude/skills/verify-clerk-android/bin/control-clerk-android',
   appId: () => APP_ID,
   buildInputs: () => ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew'],
   buildSources: () => ['local'],

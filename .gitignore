@@ -33,6 +33,6 @@ local.properties
 .keys.json
 
 # verify skill
-.cursor/skills/verify-clerk-android/node_modules/
-.cursor/skills/verify-clerk-android/specs/explored/
+.claude/skills/verify-clerk-android/node_modules/
+.claude/skills/verify-clerk-android/specs/explored/
 .verify/
