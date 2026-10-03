@@ -22,7 +22,7 @@ Preconditions:
 
 - Each test seeds a `+clerk_test` user on `with-email-codes` and signs in with a ticket (`host.launch({ signedInAs })`).
 
-- **Profile.** Run `bin/verify run user-button-and-profile`. The first test launches `screen: 'userProfile'`, checks `userId` and `sessionStatus` `active`, expects `Edit profile`, taps `clerk.userProfile.row.manageAccount`, and expects the user's email. Screenshot `profile`.
+- **Profile.** Run `.cursor/skills/verify-clerk-android/bin/control-clerk-android run user-button-and-profile`. The first test launches `screen: 'userProfile'`, checks `userId` and `sessionStatus` `active`, expects `Edit profile`, taps `clerk.userProfile.row.manageAccount`, and expects the user's email. Screenshot `profile`.
 - **Add account.** The second test taps `clerk.userProfile.row.addAccount` and expects `clerk.auth.start.continue`. Screenshot `add-account`.
 - **User button.** The third test launches `screen: 'home'`, taps `clerk.userButton.profile`, and expects `clerk.userProfile.row.manageAccount`. Screenshot `user-button-profile`.
 - **Sign out.** The fourth test taps `verify.signOut` and waits up to 10 seconds for `signedIn` false, then expects `Prebuilt UI Sign In`.
