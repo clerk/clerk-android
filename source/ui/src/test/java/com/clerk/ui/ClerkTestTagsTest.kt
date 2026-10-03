@@ -23,6 +23,8 @@ import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListContent
 import com.clerk.ui.organizationlist.OrganizationAccountListState
+import com.clerk.ui.organizationprofile.form.OrganizationProfileFormView
+import com.clerk.ui.organizationswitcher.OrganizationSwitcherOverviewSheetContent
 import com.clerk.ui.organizationswitcher.previewOrganizationMembership
 import com.clerk.ui.signin.password.forgot.AlternativeFactorList
 import com.clerk.ui.signup.completeprofile.LegalConsentView
@@ -143,6 +145,48 @@ class ClerkTestTagsTest {
       .assertHasClickAction()
     composeTestRule
       .onNodeWithTag(ClerkTestTags.Organization.AccountList.createOrganizationButton)
+      .assertHasClickAction()
+  }
+
+  @Test
+  fun `organization switcher overview tags its actions`() {
+    setThemedContent {
+      OrganizationSwitcherOverviewSheetContent(
+        membership = previewOrganizationMembership(),
+        onManageOrganization = {},
+        onSwitchAccount = {},
+      )
+    }
+
+    composeTestRule
+      .onNodeWithTag(ClerkTestTags.OrganizationSwitcher.manageOrganizationButton)
+      .assertHasClickAction()
+    composeTestRule
+      .onNodeWithTag(ClerkTestTags.OrganizationSwitcher.switchAccountButton)
+      .assertHasClickAction()
+  }
+
+  @Test
+  fun `organization profile form tags its fields and submit`() {
+    setThemedContent {
+      OrganizationProfileFormView(
+        initialName = "Acme",
+        initialSlug = "acme",
+        slugEnabled = true,
+        submitText = "Continue",
+        isLoading = false,
+        onSubmit = {},
+      )
+    }
+
+    composeTestRule
+      .onNodeWithTag(ClerkTestTags.Organization.ProfileForm.name)
+      .assert(hasSetTextAction())
+    composeTestRule
+      .onNodeWithTag(ClerkTestTags.Organization.ProfileForm.slug)
+      .assert(hasSetTextAction())
+    composeTestRule
+      .onNodeWithTag(ClerkTestTags.Organization.ProfileForm.submitButton)
       .assertHasClickAction()
   }
 
