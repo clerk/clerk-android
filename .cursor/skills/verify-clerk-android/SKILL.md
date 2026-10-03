@@ -1,11 +1,11 @@
 ---
-name: verify
+name: verify-clerk-android
 description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on a lane Android emulator against a real Clerk dev instance, and capture video, screenshots, and host state as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
 ---
 
-# verify
+# verify-clerk-android
 
-`bin/verify` is a control CLI over [e2e](https://github.com/tester-army/e2e) 0.15.2 and `@e2e-dev/mobile` 0.9.0. It builds the `:e2e` debug APK, leases a lane emulator, seeds `+clerk_test` users, runs specs, and keeps the evidence. Run every command from `.claude/skills/verify/`. Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes are 0 for ok, 1 for spec failures, 2 for usage errors, and 3 for a failed precondition. Every error carries a `fix`.
+`bin/verify` is a control CLI over [e2e](https://github.com/tester-army/e2e) 0.15.2 and `@e2e-dev/mobile` 0.9.0. It builds the `:e2e` debug APK, leases a lane emulator, seeds `+clerk_test` users, runs specs, and keeps the evidence. Run every command from `.cursor/skills/verify-clerk-android/`. Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes are 0 for ok, 1 for spec failures, 2 for usage errors, and 3 for a failed precondition. Every error carries a `fix`.
 
 The rule: no change to clerk-android UI or auth behavior is done until a `bin/verify run` on the real host shows the changed behavior.
 
@@ -143,7 +143,7 @@ Every spec keeps at least one exact assertion on `verify.state` or an SDK test t
 
 e2e's `agent.assert` can judge visual claims that selectors cannot check. It is off. Golden specs never use it. To trial it in an explored spec, install `ai` (`npm i -D ai`), log in with `npx e2e login openai` (a ChatGPT Plus or Pro plan), and set `VERIFY_JUDGE_MODEL=chatgpt:<model-id>` (ids from `npx e2e models`). Only then does the composed config set `agents.default.model`. Without the variable the config has no model and any agent step fails.
 
-## Test users and sign-in
+### Test users and sign-in
 
 Clerk's test mode makes all of this safe to type into the real app.
 
@@ -238,7 +238,7 @@ $ bin/verify down             # kill the lane emulator, delete run users and the
 $ bin/verify down --stale     # also finish cleanup left by a crashed run in this worktree
 ```
 
-`down` deletes only what this worktree created: its lane emulator (with `adb emu kill`), the users in its ledger, and the organizations those users own. It finds the organizations through each user at cleanup time, not from ledger entries, so an organization a spec created in the UI is deleted too. Ledgers live at `~/.verify/ledgers/<id>.jsonl`, where `<id>` is a hash of the worktree path, and `<id>.owner` beside it holds the path. Find yours with `grep -l "$(git rev-parse --show-toplevel)" ~/.verify/ledgers/*.owner`. It never deletes `.verify/runs/`. Evidence survives teardown at `.claude/skills/verify/.verify/runs/<run-id>/`, and `down` lists the kept runs. Run `down` after a failed iteration too, so no emulator is stranded. Emulator console output goes to `~/.verify/emulators/android-<slot>.log`.
+`down` deletes only what this worktree created: its lane emulator (with `adb emu kill`), the users in its ledger, and the organizations those users own. It finds the organizations through each user at cleanup time, not from ledger entries, so an organization a spec created in the UI is deleted too. Ledgers live at `~/.verify/ledgers/<id>.jsonl`, where `<id>` is a hash of the worktree path, and `<id>.owner` beside it holds the path. Find yours with `grep -l "$(git rev-parse --show-toplevel)" ~/.verify/ledgers/*.owner`. It never deletes `.verify/runs/`. Evidence survives teardown at `.cursor/skills/verify-clerk-android/.verify/runs/<run-id>/`, and `down` lists the kept runs. Run `down` after a failed iteration too, so no emulator is stranded. Emulator console output goes to `~/.verify/emulators/android-<slot>.log`.
 
 Evidence lives inside the worktree, so `git worktree remove` deletes `.verify/runs/` with it. Copy the runs you need out first.
 
@@ -249,8 +249,8 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 - `bin/verify` is the only helper. It is executable. Every invocation is shown above.
 - `e2e.config.ts` composes the e2e config from the CLI's run context. `npx e2e list` works from this directory while a lease is held.
 - `specs/fixtures.ts` is the `host` fixture. It takes its screen names from `src/host.ts`, so it is the same file in every repo.
-- `src/core/` is byte-identical to clerk-ios `.claude/skills/verify/src/core/`, and `MANIFEST` pins it. Change it there first, then copy it here. `src/platform/android/` and `src/host.ts` are this repo's own.
+- `src/core/` is byte-identical to clerk-ios `.cursor/skills/verify-clerk-ios/src/core/`, and `MANIFEST` pins it. Change it there first, then copy it here. `src/platform/android/` and `src/host.ts` are this repo's own.
 - `npm test` runs the CLI's unit tests (`node --test test/*.test.ts`), with no network, keys, or emulator. `testing/` holds helper processes those tests spawn; they are not tests themselves. `npm run typecheck` runs `tsc`.
 - `features/` is the Feature Map. Start with `features/README.md`.
 
-Keep the map honest with `/maintain-verification-skill`.
+Keep the map honest with pstack's `maintain-verification-skill`, which finds this skill at `.cursor/skills/verify-*/`.

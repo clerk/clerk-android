@@ -4,7 +4,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 ## Baseline preconditions
 
-- Run every command from `.claude/skills/verify/` in a worktree of clerk-android. Run `npm ci` there once, before `bin/verify doctor`.
+- Run every command from `.cursor/skills/verify-clerk-android/` in a worktree of clerk-android. Run `npm ci` there once, before `bin/verify doctor`.
 - Run `bin/verify doctor` first. Every check is `ok` except `build` before the first `bin/verify up`, so `doctor` exits 3 until then. `lane-ports` also fails while an emulator that is not a verify lane sits on 5560 or 5562; its fix names the kill command for that emulator's owner.
 - The build needs Java 21. With `JAVA_HOME` unset the CLI uses Android Studio's JBR at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`. With `JAVA_HOME` on Java 21 or newer it uses `JAVA_HOME`. With `JAVA_HOME` on anything older, a `bin/verify up` that has to build refuses, and `doctor`'s `jdk` check fails with the same fix.
 - `.keys.json` at the root of the main clerk-android checkout (not a linked worktree) holds `pk` and `sk` for `with-email-codes`, `with-session-tasks`, and `with-session-tasks-setup-mfa`. Only the CLI reads it. Never print a key.
