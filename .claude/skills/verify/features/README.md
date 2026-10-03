@@ -62,7 +62,8 @@ Rules:
 - A proof is a passing `bin/verify run` whose run directory holds `video.mp4`, `screenshots/`, `states.jsonl`, `state.json`, `app.log`, and `e2e/report.json`.
 - Name the run id and the specs in the PR. Attach with `bin/verify attach <run-id> --pr <n>`.
 - Report a skipped `form-entry` spec as skipped with the reason. The CLI prints `skipped by --skip form-entry`. Never report it as verified through a ticket launch.
-- A runtime that skips form entry proves each auth flow as far as it goes without typing a code or password: `sign-in-email-code/request-code` and `sign-up/password-step`. It reports the rest as skipped.
+- A runtime that skips form entry proves each auth flow as far as it goes without typing a code or password: `sign-up/password-step`, and `sign-in-email-code/request-code --include known-bug` once the email-code bounce is fixed. It reports the rest as skipped.
+- Report a `known-bug` spec as skipped with the bug it reproduces, never as verified.
 - Report an unreachable path with the attempted command and the unmet precondition.
 
 ## Feature entry contract
@@ -72,7 +73,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 ## Features
 
 - [Auth start](./auth-start.md) covers opening AuthView from the home button and from a direct launch.
-- [Sign in with an email code](./sign-in-email-code.md) covers requesting and entering the email code. The request spec fails today on a known SDK bug; see its Gotchas.
+- [Sign in with an email code](./sign-in-email-code.md) covers requesting and entering the email code. Both specs are tagged `known-bug` and skipped by default until the SDK's email-code bounce is fixed; see its Gotchas.
 - [Sign up](./sign-up.md) covers the password step, requesting the sign-up code, and completing sign-up.
 - [User button and profile](./user-button-and-profile.md) covers UserButton, UserProfileView, and sign-out.
 - [Session tasks](./session-tasks.md) covers the setup-MFA and choose-organization tasks after sign-in.

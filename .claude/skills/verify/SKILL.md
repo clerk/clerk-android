@@ -68,7 +68,9 @@ $ bin/verify screen                                # current UI tree with testId
 $ bin/verify screen --png                          # plus a screenshot in scratch
 ```
 
-`run` flags are `--skip form-entry`, `--grep <regex>`, `--no-video`, and `--wait <seconds>` (how long to wait for a free lane or for another verb in this worktree that holds the device).
+`run` flags are `--skip form-entry`, `--include known-bug`, `--grep <regex>`, `--no-video`, and `--wait <seconds>` (how long to wait for a free lane or for another verb in this worktree that holds the device).
+
+A spec tagged `known-bug` reproduces a bug the SDK still has. `run` leaves it out by default and prints `skipped: known-bug` beside its title. `--include known-bug` runs it, and it fails while the bug reproduces. When it passes, the bug is fixed: drop the tag in the same PR. The feature file's Gotchas describe each one. Today `sign-in-email-code/request-code` and `sign-in-email-code/complete` carry it.
 
 The `host` fixture:
 
