@@ -197,6 +197,7 @@ internal fun ClerkPhoneNumberFieldImpl(
   onValueChange: (String) -> Unit,
   value: String,
   modifier: Modifier = Modifier,
+  inputModifier: Modifier = Modifier,
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -251,6 +252,7 @@ internal fun ClerkPhoneNumberFieldImpl(
 
       Column(modifier = Modifier.weight(1f)) {
         PhoneNumberInput(
+          modifier = inputModifier,
           computedColors = computedColors,
           value = value,
           onValueChange = onValueChange,
@@ -289,6 +291,7 @@ private fun PhoneNumberInput(
   value: String,
   onValueChange: (String) -> Unit,
   countryCode: String,
+  modifier: Modifier = Modifier,
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -299,7 +302,7 @@ private fun PhoneNumberInput(
 
   Column {
     OutlinedTextField(
-      modifier = Modifier.semantics { contentType = ContentType.PhoneNumber },
+      modifier = modifier.semantics { contentType = ContentType.PhoneNumber },
       colors =
         OutlinedTextFieldDefaults.colors(
           unfocusedBorderColor = computedColors.inputBorder,

@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
@@ -123,7 +125,7 @@ private fun SignUpCollectFieldViewImpl(
       ClerkButton(
         text = stringResource(R.string.continue_text),
         onClick = onSubmit,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignUp.continueButton),
         isEnabled = continueIsEnabled,
         isLoading = state is AuthenticationViewState.Loading,
         icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
@@ -161,6 +163,7 @@ private fun InputField(
     when (collectField) {
       CollectField.Email -> {
         ClerkTextField(
+          modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.emailAddress),
           value = email,
           onValueChange = onEmailChange,
           label = collectFieldHelper.label(collectField),
@@ -173,6 +176,7 @@ private fun InputField(
 
       CollectField.Password -> {
         ClerkTextField(
+          modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.password),
           value = password,
           onValueChange = onPasswordChange,
           label = collectFieldHelper.label(collectField),
@@ -199,6 +203,7 @@ private fun InputField(
 
       CollectField.Username -> {
         ClerkTextField(
+          modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.username),
           value = username,
           onValueChange = onUsernameChange,
           label = collectFieldHelper.label(collectField),

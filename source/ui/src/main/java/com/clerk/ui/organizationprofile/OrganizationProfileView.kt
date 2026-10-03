@@ -26,6 +26,7 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
@@ -96,7 +97,7 @@ fun OrganizationProfileView(
         hasOrganization = organization != null,
       )
 
-      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
+      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
         if (organization != null) {
           OrganizationProfileNavDisplay(
             modifier = Modifier.fillMaxSize(),

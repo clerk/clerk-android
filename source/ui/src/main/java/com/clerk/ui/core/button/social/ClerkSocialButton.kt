@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +44,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -155,6 +157,7 @@ internal fun ClerkSocialButtonImpl(
   onClick: (OAuthProvider) -> Unit = {},
   clerkTheme: ClerkTheme? = null,
 ) {
+  val testTagModifier = Modifier.testTag(ClerkTestTags.Auth.socialProviderButton(provider.strategy))
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     BoxWithConstraints {
       val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
@@ -184,7 +187,8 @@ internal fun ClerkSocialButtonImpl(
                   Modifier.width(120.dp)
                 })
                 .height(dp48)
-                .defaultMinSize(minWidth = if (expandIconWidth) dp48 else 100.dp),
+                .defaultMinSize(minWidth = if (expandIconWidth) dp48 else 100.dp)
+                .then(testTagModifier),
           ) {
             SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = true)
           }
@@ -199,7 +203,12 @@ internal fun ClerkSocialButtonImpl(
           colors = getButtonColors(isPressedCombined),
           border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
           contentPadding = ButtonDefaults.ContentPadding,
-          modifier = modifier.fillMaxWidth().height(dp48).defaultMinSize(minWidth = 100.dp),
+          modifier =
+            modifier
+              .fillMaxWidth()
+              .height(dp48)
+              .defaultMinSize(minWidth = 100.dp)
+              .then(testTagModifier),
         ) {
           SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = false)
         }

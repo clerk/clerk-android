@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
@@ -159,7 +161,8 @@ private fun SignUpCompleteProfileImpl(
       }
 
       ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+          Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignUp.completeProfileContinueButton),
         isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabelRes()),
         isLoading = state is AuthenticationViewState.Loading,
@@ -207,7 +210,8 @@ private fun InputRow(
       ) {
         if (firstEnabled) {
           ClerkTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+              Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignUp.completeProfileFirstName),
             value = first,
             inputContentType = ContentType.PersonFirstName,
             onValueChange = onFirstChange,
@@ -220,7 +224,10 @@ private fun InputRow(
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.fillMaxWidth().focusRequester(lastNameFocusRequester),
+            modifier =
+              Modifier.fillMaxWidth()
+                .focusRequester(lastNameFocusRequester)
+                .testTag(ClerkTestTags.Auth.SignUp.completeProfileLastName),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
@@ -240,7 +247,8 @@ private fun InputRow(
       ) {
         if (firstEnabled) {
           ClerkTextField(
-            modifier = Modifier.weight(1f),
+            modifier =
+              Modifier.weight(1f).testTag(ClerkTestTags.Auth.SignUp.completeProfileFirstName),
             value = first,
             inputContentType = ContentType.PersonFirstName,
             onValueChange = onFirstChange,
@@ -253,7 +261,10 @@ private fun InputRow(
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.weight(1f).focusRequester(lastNameFocusRequester),
+            modifier =
+              Modifier.weight(1f)
+                .focusRequester(lastNameFocusRequester)
+                .testTag(ClerkTestTags.Auth.SignUp.completeProfileLastName),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
