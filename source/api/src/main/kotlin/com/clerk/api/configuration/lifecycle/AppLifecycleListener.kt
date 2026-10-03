@@ -16,7 +16,7 @@ internal object AppLifecycleListener {
 
   private val listener =
     object : DefaultLifecycleObserver {
-      var wasBackgrounded = false
+      @Volatile var wasBackgrounded = false
 
       override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
@@ -37,6 +37,13 @@ internal object AppLifecycleListener {
         wasBackgrounded = true
       }
     }
+
+  /**
+   * True between the process lifecycle's ON_STOP and the next ON_START. A process that was launched
+   * without ever reaching the foreground reports false, as before this flag existed.
+   */
+  val isInBackground: Boolean
+    get() = listener.wasBackgrounded
 
   fun configure(callback: () -> Unit) {
     this.callback = callback
