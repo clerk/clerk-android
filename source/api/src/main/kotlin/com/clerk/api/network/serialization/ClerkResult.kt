@@ -21,6 +21,24 @@ private const val NETWORK_ERROR_MESSAGE =
  * as HTTP status codes, API errors, or unexpected failures. This design ensures predictable error
  * handling and avoids checked exceptions.
  *
+ * # Failure policy
+ *
+ * A function that returns [ClerkResult] reports every failure through [Failure] rather than
+ * throwing:
+ * - Server and transport errors keep the API error, HTTP status code, or throwable.
+ * - Invalid arguments (for example a DSL builder block that leaves out a required value) and
+ *   resources missing data the call needs are reported as [Failure.ErrorType.API] failures with a
+ *   [ClerkErrorResponse] that carries a descriptive error code and message.
+ * - Unexpected exceptions from the platform (Credential Manager, Play Integrity, I/O) are reported
+ *   as [Failure.ErrorType.UNKNOWN] failures with the exception in [Failure.throwable].
+ *
+ * Two things still propagate as exceptions: coroutine cancellation
+ * ([kotlin.coroutines.cancellation.CancellationException]), so structured concurrency keeps
+ * working, and calling the SDK before `Clerk.initialize` has configured it, which throws
+ * [IllegalStateException] because it is a setup error rather than a runtime failure.
+ *
+ * Use [map], [mapError], [flatMap] and [fold] to transform results without unpacking them.
+ *
  * # Usage Example
  *
  * ```kotlin

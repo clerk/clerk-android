@@ -17,9 +17,11 @@ import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -125,11 +127,9 @@ internal object DeviceAttestationHelper {
    * suspends until the integrity verification completes with timeout handling.
    *
    * @param clientId The client identifier to be hashed and included in the token request
-   * @return ClerkResult containing the integrity token string or error
-   * @throws IllegalArgumentException if integrityTokenProvider is null
-   * @throws kotlinx.coroutines.TimeoutCancellationException if operation times out
+   * @return ClerkResult containing the integrity token string or error, including when the provider
+   *   is not prepared or the request times out
    */
-  @Throws(IllegalArgumentException::class)
   suspend fun attestDevice(clientId: String): ClerkResult<String, ClerkErrorResponse> {
     val tokenProvider =
       integrityTokenProvider
@@ -167,6 +167,11 @@ internal object DeviceAttestationHelper {
           continuation.invokeOnCancellation { ClerkLog.d("Integrity token request was cancelled") }
         }
       }
+    } catch (e: TimeoutCancellationException) {
+      ClerkLog.e("Timeout during device attestation: ${e.message}")
+      ClerkResult.unknownFailure(IllegalStateException("Device attestation timeout: ${e.message}"))
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Timeout or error during device attestation: ${e.message}")
       ClerkResult.unknownFailure(IllegalStateException("Device attestation timeout: ${e.message}"))
@@ -178,14 +183,18 @@ internal object DeviceAttestationHelper {
    *
    * @param token The integrity token obtained from Google Play Integrity API
    * @param applicationId The application package name for verification
-   * @return ClerkResult containing Client data or error response
-   * @throws IllegalArgumentException if applicationId is null
+   * @return ClerkResult containing Client data or error response, including when applicationId is
+   *   null
    */
   suspend fun performAssertion(
     token: String,
     applicationId: String?,
   ): ClerkResult<Client, ClerkErrorResponse> {
-    requireNotNull(applicationId) { "Application ID is required for device attestation" }
+    if (applicationId == null) {
+      return ClerkResult.unknownFailure(
+        IllegalArgumentException("Application ID is required for device attestation")
+      )
+    }
 
     return try {
       ClerkLog.d("Performing device assertion with token")
@@ -201,6 +210,8 @@ internal object DeviceAttestationHelper {
           result
         }
       }
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Exception during device assertion: ${e.message}")
       ClerkResult.unknownFailure(IllegalStateException("Device assertion failed: ${e.message}"))
@@ -296,6 +307,11 @@ internal object DeviceAttestationHelper {
         ClerkLog.d("Integrity token provider already prepared or invalid project number")
         true
       }
+    } catch (e: TimeoutCancellationException) {
+      ClerkLog.w("Timed out warming up integrity token provider: ${e.message}")
+      false
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       ClerkLog.w("Failed to warm up integrity token provider: ${e.message}")
       false

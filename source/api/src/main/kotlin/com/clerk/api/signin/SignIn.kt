@@ -17,10 +17,10 @@ import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.GoogleSignInService
@@ -949,7 +949,7 @@ suspend fun SignIn.prepareFirstFactor(
         !isRedirectStrategy &&
         params.strategy !in supportedFirstFactorStrategies ->
         invalidPrepareState(
-          code = "first_factor_strategy_not_supported",
+          code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
           longMessage = "${params.strategy} is not supported for this sign-in attempt",
         )
       else -> null
@@ -980,7 +980,10 @@ suspend fun SignIn.sendPhoneCode(
   val phoneId =
     phoneNumberId
       ?: supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
-      ?: error("No phone number found for phone_code strategy")
+      ?: return invalidPrepareState(
+        code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+        longMessage = "No phone number found for phone_code strategy",
+      )
   return prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
 }
 
@@ -1001,7 +1004,10 @@ suspend fun SignIn.sendEmailCode(
   val emailId =
     emailAddressId
       ?: supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
-      ?: error("No email address found for email_code strategy")
+      ?: return invalidPrepareState(
+        code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+        longMessage = "No email address found for email_code strategy",
+      )
   return prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
 }
 
@@ -1044,23 +1050,27 @@ suspend fun SignIn.prepareSecondFactor(
                 .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
                 ?.emailAddressId
         )
-      else -> error("No supported second factor found")
+      else -> null
     }
 
-  val params = strategy.toParams()
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  return if (strategy == null) {
+    invalidPrepareState(
+      code = SECOND_FACTOR_STRATEGY_NOT_SUPPORTED,
+      longMessage = "No supported second factor found",
+    )
+  } else {
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toMap())
+  }
 }
 
 internal fun invalidPrepareState(
   code: String,
   longMessage: String,
-): ClerkResult.Failure<ClerkErrorResponse> {
-  return ClerkResult.apiFailure(
-    ClerkErrorResponse(
-      errors = listOf(Error(message = "is invalid", longMessage = longMessage, code = code))
-    )
-  )
-}
+): ClerkResult.Failure<ClerkErrorResponse> =
+  localFailure(code = code, longMessage = longMessage, message = "is invalid")
+
+internal const val FIRST_FACTOR_STRATEGY_NOT_SUPPORTED = "first_factor_strategy_not_supported"
+internal const val SECOND_FACTOR_STRATEGY_NOT_SUPPORTED = "second_factor_strategy_not_supported"
 
 /**
  * Sends a verification code to the user's phone number for MFA (second factor) authentication.
@@ -1082,7 +1092,10 @@ suspend fun SignIn.sendMfaPhoneCode(
       ?: supportedSecondFactors
         ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
         ?.phoneNumberId
-      ?: error("No phone number found for phone_code MFA strategy")
+      ?: return invalidPrepareState(
+        code = SECOND_FACTOR_STRATEGY_NOT_SUPPORTED,
+        longMessage = "No phone number found for phone_code MFA strategy",
+      )
   val params =
     SignIn.PrepareSecondFactorParams(
       strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
@@ -1111,7 +1124,10 @@ suspend fun SignIn.sendMfaEmailCode(
       ?: supportedSecondFactors
         ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
         ?.emailAddressId
-      ?: error("No email address found for email_code MFA strategy")
+      ?: return invalidPrepareState(
+        code = SECOND_FACTOR_STRATEGY_NOT_SUPPORTED,
+        longMessage = "No email address found for email_code MFA strategy",
+      )
   val params =
     SignIn.PrepareSecondFactorParams(
       strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,

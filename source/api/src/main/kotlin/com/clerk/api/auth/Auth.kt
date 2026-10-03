@@ -29,6 +29,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.suspendingFlatMap
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
@@ -175,13 +176,12 @@ class Auth internal constructor() {
   suspend fun signIn(
     block: SignInIdentifierBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInIdentifierBuilder().apply(block)
-    builder.validate()
-
-    val params =
-      mapOf("identifier" to builder.getIdentifier(), "locale" to Clerk.locale.value.orEmpty())
-
-    val result = ClerkApi.signIn.createSignIn(params)
+    val result =
+      SignInIdentifierBuilder().apply(block).identifier().suspendingFlatMap { identifier ->
+        ClerkApi.signIn.createSignIn(
+          mapOf("identifier" to identifier, "locale" to Clerk.locale.value.orEmpty())
+        )
+      }
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -236,18 +236,17 @@ class Auth internal constructor() {
   suspend fun signInWithPassword(
     block: SignInWithPasswordBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithPasswordBuilder().apply(block)
-    builder.validate()
-
-    val params =
-      mapOf(
-        "identifier" to builder.identifier!!,
-        "password" to builder.password!!,
-        "strategy" to PASSWORD,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    val result = ClerkApi.signIn.createSignIn(params)
+    val result =
+      SignInWithPasswordBuilder().apply(block).credentials().suspendingFlatMap { credentials ->
+        ClerkApi.signIn.createSignIn(
+          mapOf(
+            "identifier" to credentials.identifier,
+            "password" to credentials.password,
+            "strategy" to PASSWORD,
+            "locale" to Clerk.locale.value.orEmpty(),
+          )
+        )
+      }
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -271,20 +270,16 @@ class Auth internal constructor() {
   suspend fun signInWithOtp(
     block: SignInWithOtpBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithOtpBuilder().apply(block)
-    builder.validate()
-
-    val identifier = builder.email ?: builder.phone!!
-    val strategy = if (builder.email != null) EMAIL_CODE else PHONE_CODE
-
-    val params =
-      mapOf(
-        "identifier" to identifier,
-        "strategy" to strategy,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    val result = ClerkApi.signIn.createSignIn(params)
+    val result =
+      SignInWithOtpBuilder().apply(block).channel().suspendingFlatMap { channel ->
+        ClerkApi.signIn.createSignIn(
+          mapOf(
+            "identifier" to channel.identifier,
+            "strategy" to if (channel.isEmail) EMAIL_CODE else PHONE_CODE,
+            "locale" to Clerk.locale.value.orEmpty(),
+          )
+        )
+      }
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -331,15 +326,14 @@ class Auth internal constructor() {
   suspend fun signInWithIdToken(
     block: SignInWithIdTokenBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val builder = SignInWithIdTokenBuilder().apply(block)
-    builder.validate()
-
     val result =
-      when (builder.provider!!) {
-        IdTokenProvider.GOOGLE -> {
-          when (val result = ClerkApi.signIn.authenticateWithGoogle(token = builder.token!!)) {
-            is ClerkResult.Success -> ClerkResult.success(OAuthResult(signIn = result.value))
-            is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
+      SignInWithIdTokenBuilder().apply(block).idToken().suspendingFlatMap { idToken ->
+        when (idToken.provider) {
+          IdTokenProvider.GOOGLE -> {
+            when (val result = ClerkApi.signIn.authenticateWithGoogle(token = idToken.token)) {
+              is ClerkResult.Success -> ClerkResult.success(OAuthResult(signIn = result.value))
+              is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
+            }
           }
         }
       }
@@ -427,15 +421,14 @@ class Auth internal constructor() {
   suspend fun signInWithEnterpriseSso(
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
     val result =
-      SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-        emailAddress = builder.email,
-      )
+      EnterpriseSsoBuilder().apply(block).emailAddress().suspendingFlatMap { email ->
+        SSOService.authenticateWithRedirect(
+          strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
+          redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+          emailAddress = email,
+        )
+      }
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -633,15 +626,14 @@ class Auth internal constructor() {
   suspend fun signUpWithEnterpriseSso(
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
     val result =
-      SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-        emailAddress = builder.email,
-      )
+      EnterpriseSsoBuilder().apply(block).emailAddress().suspendingFlatMap { email ->
+        SSOService.authenticateWithRedirect(
+          strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
+          redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+          emailAddress = email,
+        )
+      }
     result.onFailure { emitAuthError(it) }
     return result
   }

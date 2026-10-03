@@ -44,7 +44,6 @@ data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
-
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -54,7 +53,6 @@ data class Session(
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
-
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
@@ -263,20 +261,16 @@ suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
  * Fetches a fresh JWT for the session.
  *
  * @param options The options to use when fetching the token.
- * @return The [ClerkResult] containing the [TokenResource] if successful, or [ClerkErrorResponse]
- *   if failed.
+ * @return The [ClerkResult] containing the [TokenResource] if successful. On failure it carries the
+ *   API error, the exception that interrupted the request, or a local error with code
+ *   `session_pending` (the session has tasks to complete) or `session_token_request_superseded`
+ *   (sign-out, reinitialization or reverification invalidated the request).
  * @see GetTokenOptions
  */
 suspend fun Session.fetchToken(
   options: GetTokenOptions = GetTokenOptions()
-): ClerkResult<TokenResource, ClerkErrorResponse> {
-  val token = SessionTokenFetcher.shared.getToken(this, options)
-  return if (token != null) {
-    ClerkResult.success(token)
-  } else {
-    ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList(), clerkTraceId = "local-error"))
-  }
-}
+): ClerkResult<TokenResource, ClerkErrorResponse> =
+  SessionTokenFetcher.shared.getTokenResult(this, options)
 
 /**
  * Revokes the current session.

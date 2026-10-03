@@ -7,10 +7,14 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.catchingClerkResult
+import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.successOrNull
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
+@Suppress("TooManyFunctions")
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
   internal companion object {
     internal val shared: SessionTokenFetcher by lazy { SessionTokenFetcher() }
@@ -25,6 +29,26 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         "session_not_found",
         "session_invalid",
         "authentication_invalid",
+      )
+
+    internal const val SESSION_PENDING_ERROR_CODE = "session_pending"
+    internal const val TOKEN_REQUEST_SUPERSEDED_ERROR_CODE = "session_token_request_superseded"
+
+    private fun pendingSessionFailure(sessionId: String): ClerkResult.Failure<ClerkErrorResponse> =
+      localFailure(
+        code = SESSION_PENDING_ERROR_CODE,
+        longMessage =
+          "Cannot fetch a token for session $sessionId while it is pending. The user has tasks " +
+            "to complete before the session can be activated.",
+      )
+
+    /** Returned when sign-out, reinitialization or reverification invalidated the request. */
+    private fun supersededFailure(): ClerkResult.Failure<ClerkErrorResponse> =
+      localFailure(
+        code = TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+        longMessage =
+          "The token request was cancelled because the session or Clerk runtime changed while " +
+            "it was in flight.",
       )
   }
 
@@ -41,13 +65,14 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val fallbackFactorVerificationAge: List<Int>?,
   )
 
-  private val tokenTasks = ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>()
+  private val tokenTasks =
+    ConcurrentHashMap<String, CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>>()
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
   private val sessionGenerations = mutableMapOf<String, Long>()
 
   /**
-   * Releases deduplicated waiters with a null result and removes requests registered by the
+   * Releases deduplicated waiters with a superseded failure and removes requests registered by the
    * previous Clerk runtime.
    */
   internal fun reset() {
@@ -57,7 +82,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         sessionGenerations.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
-    tasksToRelease.forEach { it.complete(null) }
+    tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
   /**
@@ -72,7 +97,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           .filter { it.belongsToSession(sessionId) }
           .mapNotNull { tokenTasks.remove(it) }
       }
-    tasksToRelease.forEach { it.complete(null) }
+    tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
   /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */
@@ -125,7 +150,17 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   suspend fun getToken(
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
-  ): TokenResource? {
+  ): TokenResource? = getTokenResult(session, options).successOrNull()
+
+  /**
+   * Same as [getToken], but reports why no token is available: the API failure, the exception that
+   * interrupted the request, a pending session, or a request superseded by sign-out,
+   * reinitialization or reverification.
+   */
+  suspend fun getTokenResult(
+    session: Session,
+    options: GetTokenOptions = GetTokenOptions(),
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
     val context =
       synchronized(runtimeLock) {
         val currentSession =
@@ -144,7 +179,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           "Cannot fetch token for session ${context.session.id}: session is in pending state. " +
             "The user has tasks to complete before the session can be activated."
         )
-        null
+        pendingSessionFailure(context.session.id)
       }
       else -> fetchTokenWithDeduplication(context, options)
     }
@@ -153,7 +188,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private suspend fun fetchTokenWithDeduplication(
     context: FetchContext,
     options: GetTokenOptions,
-  ): TokenResource? {
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
     ClerkLog.d(
       "Fetching token for session ${context.session.id} with options: $options and cache key: " +
         context.cacheKey
@@ -162,15 +197,15 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return if (options.skipCache) {
       fetchToken(context, options)
     } else {
-      val deferred = CompletableDeferred<TokenResource?>()
+      val deferred = CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>()
       val existingTask =
         synchronized(runtimeLock) {
-          if (!isCurrentRuntime(context)) return null
+          if (!isCurrentRuntime(context)) return supersededFailure()
           tokenTasks.putIfAbsent(context.cacheKey, deferred)
         }
       if (existingTask != null) {
         // Invalidation can happen after completion but before this waiter resumes.
-        existingTask.await()?.takeIf { isCurrentRuntime(context) }
+        existingTask.await().takeIf { isCurrentRuntime(context) } ?: supersededFailure()
       } else {
         try {
           fetchToken(context, options).also { deferred.complete(it) }
@@ -193,9 +228,12 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         context.sessionGeneration == (sessionGenerations[context.session.id] ?: 0L)
     }
 
-  private suspend fun fetchToken(context: FetchContext, options: GetTokenOptions): TokenResource? {
+  private suspend fun fetchToken(
+    context: FetchContext,
+    options: GetTokenOptions,
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
     return if (!isCurrentRuntime(context)) {
-      null
+      supersededFailure()
     } else {
       // After reverification, snapshots must be newer than a token fetched in this generation.
       if (options.template == null) {
@@ -224,19 +262,16 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           }
         }
 
-      validCachedToken?.takeIf { isCurrentRuntime(context) }
-        ?: if (!isCurrentRuntime(context)) {
-          null
-        } else {
-          try {
+      when {
+        !isCurrentRuntime(context) -> supersededFailure()
+        validCachedToken != null -> ClerkResult.success(validCachedToken)
+        else ->
+          catchingClerkResult(
+            onException = { ClerkLog.e("Failed to fetch token: ${it.message}") }
+          ) {
             reconcileTokenResponse(context, requestToken(context, options))
-          } catch (e: CancellationException) {
-            throw e
-          } catch (e: Exception) {
-            ClerkLog.e("Failed to fetch token: ${e.message}")
-            null
           }
-        }
+      }
     }
   }
 
@@ -274,16 +309,16 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private fun reconcileTokenResponse(
     context: FetchContext,
     tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
-  ): TokenResource? =
+  ): ClerkResult<TokenResource, ClerkErrorResponse> =
     synchronized(runtimeLock) {
-      if (!isCurrentRuntime(context)) return@synchronized null
+      if (!isCurrentRuntime(context)) return@synchronized supersededFailure()
 
       when (tokensRequest) {
         is ClerkResult.Success -> {
           SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
           // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
           // monotonic when responses complete out of order.
-          tokensRequest.value
+          tokensRequest
         }
         is ClerkResult.Failure -> {
           val invalidSession =
@@ -296,7 +331,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
             )
             Clerk.clearSessionAndUserState()
           }
-          null
+          tokensRequest
         }
       }
     }

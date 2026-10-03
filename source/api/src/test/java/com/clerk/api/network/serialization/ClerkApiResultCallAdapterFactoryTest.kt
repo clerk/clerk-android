@@ -88,8 +88,33 @@ class ClerkApiResultCallAdapterFactoryTest {
     assertEquals(error, failure.throwable)
   }
 
+  @Test
+  fun `suspend call returns a failure for an empty success body on a non-Unit result`() {
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          okhttp3.Response.Builder()
+            .request(chain.request())
+            .protocol(Protocol.HTTP_1_1)
+            .code(204)
+            .message("No Content")
+            .body("".toResponseBody(JSON))
+            .build()
+        }
+        .build()
+    val service = retrofit(Json.asConverterFactory(JSON), client).create(ErrorService::class.java)
+
+    val result = runBlocking { withTimeout(SUSPEND_TIMEOUT_MS) { service.fetchString() } }
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertTrue(failure.throwable is IllegalStateException)
+  }
+
   private interface ErrorService {
     @GET("error") suspend fun fetch(): ClerkResult<Unit, ClerkErrorResponse>
+
+    @GET("empty") suspend fun fetchString(): ClerkResult<String, ClerkErrorResponse>
   }
 
   private fun retrofit(

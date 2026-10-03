@@ -1,5 +1,10 @@
 package com.clerk.api.auth.builders
 
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.localFailure
+
 /**
  * DSL marker annotation for Clerk DSL builders.
  *
@@ -29,12 +34,15 @@ class SendCodeBuilder {
   /** The phone number to send the verification code to. */
   var phone: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null) { "Either email or phone must be provided" }
-    require(email == null || phone == null) {
-      "Only one of email or phone should be provided, not both"
+  /** Returns a failure when zero or two channels are set, or null when exactly one is. */
+  internal fun validationFailure(): ClerkResult.Failure<ClerkErrorResponse>? =
+    when {
+      email == null && phone == null ->
+        invalidBuilderArguments("Either email or phone must be provided")
+      email != null && phone != null ->
+        invalidBuilderArguments("Only one of email or phone should be provided, not both")
+      else -> null
     }
-  }
 }
 
 /**
@@ -53,7 +61,12 @@ class EnterpriseSsoBuilder {
    */
   var email: String? = null
 
-  internal fun validate() {
-    require(email != null) { "Email must be provided for Enterprise SSO" }
-  }
+  /** Returns the email address, or a failure when it is missing. */
+  internal fun emailAddress(): ClerkResult<String, ClerkErrorResponse> =
+    email?.let { ClerkResult.success(it) }
+      ?: invalidBuilderArguments("Email must be provided for Enterprise SSO")
 }
+
+/** Failure returned when a DSL builder block leaves out or conflicts required values. */
+internal fun invalidBuilderArguments(message: String): ClerkResult.Failure<ClerkErrorResponse> =
+  localFailure(code = LocalFailureCodes.INVALID_ARGUMENTS, longMessage = message)
