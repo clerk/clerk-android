@@ -31,3 +31,8 @@ local.properties
 /docs/
 .trailblaze/
 .keys.json
+
+# verify skill
+.claude/skills/verify/node_modules/
+.claude/skills/verify/specs/explored/
+.verify/

@@ -1,0 +1,21 @@
+import { test, expect } from '../../fixtures.ts';
+
+test('an existing test user reaches the email code screen and stays on it', async ({ host, screen }) => {
+  const user = await host.seedUser({ instance: 'with-email-codes' });
+  await host.launch({ instance: 'with-email-codes', screen: 'auth', authMode: 'signIn' });
+  await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });
+  await host.fill(screen.getByTestId('clerk.auth.start.identifier'), user.email);
+  await host.tap(screen.getByTestId('clerk.auth.start.continue'));
+  await host.waitForState((s) => s.signInStatus === 'needs_first_factor', 20_000);
+  await host.tap(screen.getByTestId('clerk.auth.signIn.useAnotherMethod'));
+  await host.tap(screen.getByTestId('clerk.auth.signIn.alternativeMethod.email_code'));
+  const code = screen.getByTestId('clerk.auth.signIn.code');
+  await expect(code).toBeVisible({ timeout: 20_000 });
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await expect(code).toBeVisible({ timeout: 1000 });
+  await expect(screen.getByText(user.email)).toBeVisible();
+  const state = await host.state();
+  expect(state.signedIn).toBe(false);
+  expect(state.signInStatus).toBe('needs_first_factor');
+  await host.screenshot('code-screen');
+});
