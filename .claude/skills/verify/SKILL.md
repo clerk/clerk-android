@@ -34,6 +34,8 @@ Never drive `Pixel_9_Pro`, an emulator you did not lease, or a physical device. 
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`. The CLI passes `AGENT_DEVICE_STATE_DIR` to e2e and to every `agent-device` call, and `down` stops the daemon. If you call `agent-device` yourself, set `AGENT_DEVICE_STATE_DIR=.verify/agent-device` and use `node_modules/.bin/agent-device`. To find this worktree's daemon pid, read the `would stop agent-device <pid>` line from `bin/verify down --dry-run`. Never print `.verify/agent-device/daemon.json`: it holds the daemon's auth token.
 
+Interrupting `up` or `run` while a lane boots is safe. On Ctrl-C or SIGTERM, verify stops the emulator it started and prints `boot cancelled; stopped emulator <pid> on <serial>`. If the process dies harder than that (SIGKILL, a crash), the emulator, its claim, and `~/.verify/emulators/android-<slot>.pid` stay behind until the next verb reaps them. That pid file holds the emulator's pid, start time, and claim, and it is how verify recognizes its own orphaned emulator before the lane is marked: the next `up` or `run` in any worktree, or `bin/verify down --stale` in this one, kills that emulator only when the process still matches the file. Plain `down` reports `released nothing` here, because the interrupted `up` never wrote a lease; use `down --stale`. An emulator verify did not start never matches.
+
 Teardown is `bin/verify down` (see Cleanup).
 
 ## Doctor

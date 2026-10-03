@@ -250,7 +250,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     freeSlot(claimsDir, reaper);
   }
 
-  function bootEmulator(slot: number, nonce: string): { readonly exited: () => string | null; readonly stop: () => void } {
+  function bootEmulator(slot: number, nonce: string): { readonly pid: number | undefined; readonly exited: () => string | null; readonly stop: () => void } {
     mkdirSync(emulatorLogDir, { recursive: true });
     const logFile = join(emulatorLogDir, `android-${slot}.log`);
     const out = openSync(logFile, 'w');
@@ -272,6 +272,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     });
     child.unref();
     return {
+      pid: child.pid,
       exited: () => exit,
       stop: () => {
         if (exit === null && child.pid !== undefined) process.kill(-child.pid, 'SIGTERM');
@@ -293,7 +294,10 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
       const serial = laneSerial(claim.slot);
       let boot: ReturnType<typeof bootEmulator> | null = null;
       const interrupted = (signal: NodeJS.Signals) => {
-        boot?.stop();
+        if (boot !== null) {
+          boot.stop();
+          request.progress(`device  boot cancelled; stopped emulator ${boot.pid} on ${serial}`);
+        }
         process.removeListener('SIGINT', interrupted);
         process.removeListener('SIGTERM', interrupted);
         process.kill(process.pid, signal);
