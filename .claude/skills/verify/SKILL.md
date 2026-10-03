@@ -18,8 +18,8 @@ $ bin/verify up                # build the :e2e APK for this tree, then lease ve
 build   android-b17728aef656  local  building...
 build   android-b17728aef656  local  built in 9s
 device  verify-android-1  booting Clerk_Verify_Pixel -read-only on port 5560
-install android-b17728aef656  on verify-android-1
-device  verify-android-1  local  leased by this worktree  installed android-b17728aef656
+install android-b17728aef656  on verify-android-1 (emulator-5560)
+device  verify-android-1 (emulator-5560)  local  leased by this worktree  installed android-b17728aef656
 ```
 
 The lane is ready when `up` prints its last line, `device <name> local leased by this worktree installed <build key>`. The `build`, `device ... booting`, and `install` lines are progress. A reused build prints `build <key> local reused` instead of the two build lines, and a held lease skips the boot and install lines. When a lane is free, a fresh worktree takes about 40 seconds from no build and no emulator to a passing `run auth-start`, with the Gradle cache in `~/.gradle` warm. A held lease runs it in about 15. Waiting for a lane adds to both.
@@ -28,7 +28,7 @@ The lane is ready when `up` prints its last line, `device <name> local leased by
 
 The build runs `./gradlew :e2e:assembleDebug` with Java 21, because the Gradle plugins refuse a Java 17 JVM. With `JAVA_HOME` unset, it uses Android Studio's bundled JBR at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`. With `JAVA_HOME` set to Java 21 or newer, it uses `JAVA_HOME`. With `JAVA_HOME` set to anything older, an `up` that has to build refuses with `NOT_READY` and does not fall back, so the build never uses a JDK you did not ask for. An `up` that reuses a build never runs Gradle, so it does not check the JDK. The fix is `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` or `unset JAVA_HOME`. It sets `ANDROID_HOME` to `~/Library/Android/sdk` when the environment has none, so a fresh worktree with no `local.properties` builds.
 
-A lane emulator boots the `Clerk_Verify_Pixel` AVD with `-read-only -no-window` on console port `5558 + 2 * slot`, so slot 1 is `emulator-5560` and slot 2 is `emulator-5562`. `-read-only` means nothing the run does reaches the AVD, and the next lease boots clean. `up` waits for `sys.boot_completed` and pins the `en-US` locale. Read the serial from `.verify/leases/android.json`. A serial names a port, not a device: after `down`, another worktree can boot its own lane on the same serial at once. The lane's identity is `claimNonce` in the same lease file, which the emulator also holds as the property `debug.verify.lane`. Check `adb -s <serial> shell getprop debug.verify.lane` against it before you trust a serial you wrote down earlier.
+A lane emulator boots the `Clerk_Verify_Pixel` AVD with `-read-only -no-window` on console port `5558 + 2 * slot`, so slot 1 is `emulator-5560` and slot 2 is `emulator-5562`. `-read-only` means nothing the run does reaches the AVD, and the next lease boots clean. `up` waits for `sys.boot_completed` and pins the `en-US` locale. The serial is `deviceId` in `.verify/leases/android.json`. A serial names a port, not a device: after `down`, another worktree can boot its own lane on the same serial at once. The lane's identity is `claimNonce` in the same lease file, which the emulator also holds as the property `debug.verify.lane`. Check `adb -s <deviceId> shell getprop debug.verify.lane` against it before you trust a serial you wrote down earlier.
 
 Never drive `Pixel_9_Pro`, an emulator you did not lease, or a physical device. Two lane emulators can run on the Mac at once, across all agents. Right after boot, `up` sets the property `debug.verify.lane` on each lane emulator to its claim nonce. Verify kills or drives an emulator only when it runs `Clerk_Verify_Pixel` with its own claim in that property. When a boot fails, verify stops the emulator process it started instead of killing whatever answers on the port. Any other emulator on a lane port, such as another AVD or a lane someone booted by hand, counts as taken, shows in the `POOL_FULL` list as `emulator-<port> (<AVD>, not a verify lane)`, and is never killed. When both lanes are taken, `up` and `run` fail with `POOL_FULL`. Pass `--wait <seconds>` to wait for a lane. While waiting, the CLI prints a `wait` line naming each lane and the worktree that holds it, prints it again when that changes, and prints `still waiting after <n>s` every minute otherwise. When a lane port holds an emulator that is not a verify lane, the `POOL_FULL` fix names `adb -s emulator-<port> emu kill`. Run it only if that emulator is yours; verify never kills it.
 
@@ -54,7 +54,7 @@ Run it first, and again whenever anything looks off. It is read-only. It checks:
 - Whether an agent-device daemon, the Mac-wide one in `~/.agent-device` or this worktree's own, runs from an install that no longer exists. The fix names the pid to kill.
 - Whether every feature in the Feature Map has its feature file and at least one golden spec.
 
-A failing check prints the command that fixes it, and `doctor` exits 3. Before the first `up`, only `build` fails, with fix `bin/verify up`. `build` turns `ok` as soon as `up` prints `build <key> local built in <n>s`, before `up` claims a lane. If all lanes are taken, `up` then waits for one. Stopping that waiting `up` with Ctrl-C is safe: the build is kept, no lane is claimed yet, and `doctor` stays green.
+A failing check prints the command that fixes it, and `doctor` exits 3. Before the first `up`, only `build` fails, with fix `bin/verify up`, unless an emulator that is not a verify lane sits on 5560 or 5562; then `lane-ports` fails too, and `up` still works on the other lane. `build` turns `ok` as soon as `up` prints `build <key> local built in <n>s`, before `up` claims a lane. If all lanes are taken, `up` then waits for one. Stopping that waiting `up` with Ctrl-C is safe: the build is kept, no lane is claimed yet, and `doctor` stays green.
 
 ## Drive
 
@@ -78,7 +78,7 @@ How `--wait` works:
 - Waiters get no turn order. When a lane frees, any waiting worktree can take it.
 - When the budget runs out, the verb exits 3 with `POOL_FULL` or `DEVICE_BUSY`.
 
-A spec tagged `known-bug` reproduces a bug the SDK still has. `run` leaves it out by default and prints `skipped: known-bug` beside its title. `--include known-bug` runs it, and it fails while the bug reproduces. Report a run where it fails as "reproduces the known <bug>; not verified". When it passes, the bug is fixed: drop the tag in the same PR. The feature file's Gotchas describe each one. Today `sign-in-email-code/request-code` and `sign-in-email-code/complete` carry it.
+A spec tagged `known-bug` reproduces a bug the SDK still has. `run` leaves it out by default and prints `skipped: known-bug` beside its title. `--include known-bug` runs it, and it fails while the bug reproduces. Report a run where it fails with the bug named, for the email-code specs "reproduces the known email-code bounce; not verified". When it passes, the bug is fixed: drop the tag in the same PR. The feature file's Gotchas describe each one. Today `sign-in-email-code/request-code` and `sign-in-email-code/complete` carry it.
 
 The `host` fixture:
 
@@ -115,8 +115,10 @@ import { test, expect } from '../fixtures.ts';
 
 A failing spec prints `FAIL`, the first assertion message, and the path of its failure page, and `run` exits 1. The failure page (`runs/<id>/e2e/failures/*.md`) lists every step, the screen tree at the failure, and a screenshot. `next` points at it.
 
+The first run below fails on purpose: the spec guessed a locator, and the failure plus `screen` show the right one.
+
 ```console
-$ bin/verify run specs/explored/probe.e2e.ts
+$ bin/verify run specs/explored/probe.e2e.ts          # expected to fail: the locator is still a guess
   FAIL  explored/probe.e2e.ts  probe  9.1s
         expect.toBeVisible failed; locator: getByTestId("verify.probe"); expected: visible; observed: no node (match count 0)
         failure page  .verify/runs/r20261003-040814-846e/e2e/failures/specs_explored_probe.e2e.ts-....md
@@ -125,9 +127,13 @@ text       "verify probe"  id=verify.probe  screen.getByTestId('verify.probe')
 $ bin/verify run specs/explored/probe.e2e.ts          # after fixing the locator
   pass  explored/probe.e2e.ts  probe  4.7s
 $ mkdir -p specs/golden/<feature> && mv specs/explored/probe.e2e.ts specs/golden/<feature>/
+$ sed -i '' "s|'../fixtures.ts'|'../../fixtures.ts'|" specs/golden/<feature>/probe.e2e.ts
+$ bin/verify run <feature>
 ```
 
-`specs/explored/` is gitignored and does not exist in a fresh worktree, so create it with `mkdir -p specs/explored` first. A spec moved into `specs/golden/<feature>/` imports `../../fixtures.ts` instead of `../fixtures.ts`. Plain `mv` is right here, because git never tracked the explored file.
+`specs/explored/` is gitignored and does not exist in a fresh worktree, so create it with `mkdir -p specs/explored` first. The `sed` step is required: a golden spec sits one folder deeper and imports `../../fixtures.ts`, so the moved spec does not load until its import changes. Plain `mv` is right here, because git never tracked the explored file.
+
+`<feature>` is the Feature Map entry whose user-facing behavior the change affects, one of the folders under `specs/golden/`. A change to the `:e2e` host alone (`e2e/**`), such as a probe or a new route, is not an SDK feature: keep its spec under `specs/explored/` and cite the run in the PR instead of committing it.
 
 Every spec keeps at least one exact assertion on `verify.state` or an SDK test tag.
 

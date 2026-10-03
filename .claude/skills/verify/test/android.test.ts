@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { run } from '../src/core/exec.ts';
+import { isRunning, run } from '../src/core/exec.ts';
 import { encodeLaunchArguments } from '../src/core/state.ts';
 import type { EvidencePath, LaunchId, LocalLease, PublishableKey, RunId, StorageScope } from '../src/core/types.ts';
 import { takeSlot } from '../src/core/claims.ts';
@@ -208,5 +209,82 @@ describe('android lane ownership', () => {
       message: /emulator-5560 \(Pixel_9_Pro, not a verify lane\), verify-android-2 \(held by .*other\)/,
       fix: /`adb -s emulator-5560 emu kill` frees a lane, but only if that emulator is yours/,
     });
+  });
+});
+
+describe('android lanes verify spawned', () => {
+  function fakeEmulatorProcess(port: number): { readonly pid: number; readonly startedAt: number } {
+    const child = spawn('bash', ['-c', `exec -a "qemu-system-aarch64-headless -avd Clerk_Verify_Pixel -read-only -port ${port}" sleep 60`], { detached: true, stdio: 'ignore' });
+    child.unref();
+    return { pid: child.pid!, startedAt: Date.now() };
+  }
+
+  async function setup(pidRecord: (own: string) => object | null) {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-spawned-'));
+    const emulatorsDir = join(dir, 'emulators');
+    mkdirSync(emulatorsDir);
+    const claimsDir = join(dir, 'claims');
+    const worktree = join(dir, 'worktree');
+    const claim = takeSlot(claimsDir, 'android', 1, 0, worktree)!;
+    const adbBin = fakeTool(dir, 'adb', ['case "$*" in', '  "devices") echo "List of devices attached" ;;', 'esac']);
+    const emulatorBin = fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']);
+    const emulator = fakeEmulatorProcess(5560);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const record = pidRecord(claim.nonce);
+    if (record !== null) writeFileSync(join(emulatorsDir, 'android-1.pid'), JSON.stringify({ ...emulator, ...record }));
+    const backend = localAndroidBackend({ claimsDir, adbBin, emulatorBin, emulatorsDir });
+    return { backend, emulator, emulatorsDir, worktree };
+  }
+
+  it('reclaims an interrupted boot that left its pid file, through the next up\'s reap', async () => {
+    const { backend, emulator, emulatorsDir, worktree } = await setup((own) => ({ nonce: own }));
+    assert.ok(isRunning(emulator));
+    const [stale] = await backend.reapable(worktree);
+    await backend.release(stale!);
+    assert.equal(isRunning(emulator), false, 'the emulator verify spawned is gone');
+    assert.equal(existsSync(join(emulatorsDir, 'android-1.pid')), false, 'the pid file is removed');
+  });
+
+  it('never kills a hand-booted Clerk_Verify_Pixel with no pid file', async () => {
+    const { backend, emulator, worktree } = await setup(() => null);
+    const [stale] = await backend.reapable(worktree);
+    await backend.release(stale!);
+    assert.ok(isRunning(emulator));
+    process.kill(-emulator.pid, 'SIGKILL');
+  });
+
+  it('never kills a Clerk_Verify_Pixel whose pid file names another claim', async () => {
+    const { backend, emulator, worktree } = await setup(() => ({ nonce: 'another-claim' }));
+    const [stale] = await backend.reapable(worktree);
+    await backend.release(stale!);
+    assert.ok(isRunning(emulator));
+    process.kill(-emulator.pid, 'SIGKILL');
+  });
+
+  it('doctor does not flag a claimed lane that is still booting, before its marker is set', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-booting-'));
+    const emulatorsDir = join(dir, 'emulators');
+    mkdirSync(emulatorsDir);
+    const claim = takeSlot(join(dir, 'claims'), 'android', 1, 0, join(dir, 'worktree'))!;
+    const adbBin = fakeTool(dir, 'adb', [
+      'case "$*" in',
+      '  "devices") printf "List of devices attached\\nemulator-5560\\toffline\\n" ;;',
+      '  *"emu avd name"*) printf "Clerk_Verify_Pixel\\nOK\\n" ;;',
+      'esac',
+    ]);
+    const emulator = fakeEmulatorProcess(5560);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    writeFileSync(join(emulatorsDir, 'android-1.pid'), JSON.stringify({ ...emulator, nonce: claim.nonce }));
+    const backend = localAndroidBackend({ claimsDir: join(dir, 'claims'), adbBin, emulatorBin: fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']), emulatorsDir });
+    assert.equal((await backend.doctorChecks()).device.find((c) => c.id === 'lane-ports')?.ok, true);
+    process.kill(-emulator.pid, 'SIGKILL');
+  });
+
+  it('never kills a reused pid that is no longer the emulator it recorded', async () => {
+    const { backend, emulator, worktree } = await setup((own) => ({ nonce: own, startedAt: Date.now() - 600_000 }));
+    const [stale] = await backend.reapable(worktree);
+    await backend.release(stale!);
+    assert.ok(isRunning(emulator));
+    process.kill(-emulator.pid, 'SIGKILL');
   });
 });
