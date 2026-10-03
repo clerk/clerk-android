@@ -89,7 +89,7 @@ private fun E2EHost(host: VerifyHost, viewModel: E2EViewModel) {
               OrganizationProfileView(isDismissible = false, onDismiss = {})
           }
         }
-        VerifyStateFooter(state)
+        if (host.config.hasVerifyInputs) VerifyStateFooter(state)
       }
     }
   }

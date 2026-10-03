@@ -37,6 +37,7 @@ class VerifyLaunchConfigTest {
         signInTicket = "ticket-1",
         debugLogging = true,
         screenFailure = null,
+        hasVerifyInputs = true,
       ),
       config,
     )
@@ -56,9 +57,26 @@ class VerifyLaunchConfigTest {
         signInTicket = null,
         debugLogging = false,
         screenFailure = null,
+        hasVerifyInputs = false,
       ),
       parse(),
     )
+  }
+
+  @Test
+  fun `any single verify input marks a verify launch`() {
+    listOf(
+        "verifyPublishableKey" to EXTRA_KEY,
+        "verifyRunId" to "run",
+        "verifyStorageScope" to "scope",
+        "verifyLaunchId" to "launch",
+        "verifyScreen" to "home",
+        "verifyAuthMode" to "signIn",
+        "verifySignInTicket" to "ticket",
+        "verifyLogLevel" to "debug",
+      )
+      .forEach { assertEquals(true, parse(it).hasVerifyInputs, it.first) }
+    assertEquals(false, parse("verifyRunId" to " ", "unrelated" to "x").hasVerifyInputs)
   }
 
   @Test
