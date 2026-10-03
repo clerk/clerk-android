@@ -16,6 +16,7 @@ import {
   type HostAdapter,
   type Lease,
   type LeaseView,
+  type ProcessRef,
   type Platform,
   type ScratchPath,
 } from './types.ts';
@@ -58,6 +59,10 @@ export function leaseView(backend: DeviceBackend, lease: Lease, renewed: boolean
     expiresAt: lease.backend === 'eas' ? lease.expiresAt : null,
     renewed,
   };
+}
+
+export function leaseLine(view: LeaseView): string {
+  return `device  ${view.device}  ${view.backend}  ${view.renewed ? 'renewed' : 'leased by this worktree'}  installed ${view.installedBuild ?? 'nothing'}`;
 }
 
 const BUILD_DENYLIST = [/\.md$/i, /(^|\/)\.claude\//, /(^|\/)docs\//, /(^|\/)\.verify\//];
@@ -120,7 +125,7 @@ export async function ensureLease(
   requested: BackendKind | undefined,
   workspace: Workspace,
   host: HostAdapter,
-  options: { readonly waitSeconds: number; readonly progress: (line: string) => void; readonly clerk: () => ClerkBackend },
+  options: { readonly waitSeconds: number; readonly progress: (line: string) => void; readonly clerk: () => ClerkBackend; readonly retryWith: string },
 ): Promise<LeaseOutcome> {
   const { platform } = lock;
   const held = workspace.readLease(platform);
@@ -152,7 +157,7 @@ export async function ensureLease(
     }
     const intent = { id: newEntryId(), kind: 'lease-intent' as const, platform, backend: backend.kind, worktree: workspace.worktree };
     workspace.append(intent);
-    const acquired = await backend.acquire({ platform, worktree: workspace.worktree, waitSeconds: options.waitSeconds, progress: options.progress });
+    const acquired = await backend.acquire({ platform, worktree: workspace.worktree, waitSeconds: options.waitSeconds, retryWith: options.retryWith, progress: options.progress });
     workspace.writeLease(acquired);
     workspace.append({
       id: newEntryId(),
@@ -169,7 +174,13 @@ export async function ensureLease(
   if (lease.installedBuild !== app.key) {
     const target = lease;
     options.progress(`install ${app.key}  on ${backend.describe(target)}`);
-    await workspace.withDevice(platform, options.waitSeconds, () => backend.install(target, app));
+    const wait = {
+      seconds: options.waitSeconds,
+      busyFix: `let the run in this worktree finish, or rerun with a wait: ${options.retryWith}`,
+      onWait: (owner: ProcessRef) =>
+        options.progress(`wait    another bin/verify run in this worktree (pid ${owner.pid}) is driving the device; waiting up to ${options.waitSeconds}s to install`),
+    };
+    await workspace.withDevice(platform, wait, () => backend.install(target, app));
     lease = { ...target, installedBuild: app.key };
     workspace.writeLease(lease);
   }

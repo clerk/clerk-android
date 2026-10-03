@@ -135,7 +135,7 @@ export class VerifyFailure extends Error {
 
 export type DoctorCheckId =
   | 'node' | 'xcode' | 'jdk' | 'e2e-pins' | 'agent-device-global' | 'template' | 'proxy-trust' | 'keys'
-  | `instance:${string}` | 'build' | 'eas' | 'kvm' | 'gh-attach' | 'core-drift' | 'stale-claims' | 'feature-map' | 'agent-device-daemon';
+  | `instance:${string}` | 'build' | 'eas' | 'kvm' | 'gh-attach' | 'core-drift' | 'stale-claims' | 'feature-map' | 'agent-device-daemon' | 'lane-ports';
 
 export interface DoctorCheck {
   readonly id: DoctorCheckId;
@@ -206,17 +206,24 @@ export interface AttachResult {
   readonly alreadyPosted: boolean;
 }
 
-interface DownResultBase {
-  readonly verb: 'down';
-  readonly released: readonly LeaseView[];
-  readonly deletedUsers: number;
-  readonly deletedOrganizations: number;
-  readonly stoppedProcesses: readonly string[];
-  readonly keptRuns: readonly RunId[];
-}
 export type DownResult =
-  | (DownResultBase & { readonly dryRun: true; readonly wouldDelete: readonly DeletionTarget[] })
-  | (DownResultBase & { readonly dryRun: false });
+  | {
+      readonly verb: 'down';
+      readonly dryRun: false;
+      readonly released: readonly LeaseView[];
+      readonly deletedUsers: number;
+      readonly deletedOrganizations: number;
+      readonly stoppedProcesses: readonly string[];
+      readonly keptRuns: readonly RunId[];
+    }
+  | {
+      readonly verb: 'down';
+      readonly dryRun: true;
+      readonly wouldRelease: readonly LeaseView[];
+      readonly wouldDelete: readonly DeletionTarget[];
+      readonly wouldStop: readonly string[];
+      readonly keptRuns: readonly RunId[];
+    };
 
 export type DeletionTarget =
   | { readonly kind: 'user'; readonly instance: InstanceName; readonly id: string; readonly email: TestEmail }
@@ -294,8 +301,10 @@ export interface SpecResult {
   readonly seconds: number;
   readonly error: string | null;
   readonly skipReason: string | null;
+  readonly tags: readonly string[];
   readonly failurePage: EvidencePath | null;
   readonly failureScreen: EvidencePath | null;
+  readonly failureScreenshot: EvidencePath | null;
 }
 
 export interface EvidenceRecord {
@@ -418,10 +427,19 @@ export interface BrokerLaunchResponse {
   readonly launchArguments: readonly string[];
 }
 
+/** How long a verb waits for the device lock, and the fix it prints when it gives up. The fix names only flags that verb takes. */
+export interface DeviceWait {
+  readonly seconds: number;
+  readonly busyFix: string;
+  readonly onWait?: (owner: ProcessRef) => void;
+}
+
 export interface AcquireRequest {
   readonly platform: Platform;
   readonly worktree: string;
   readonly waitSeconds: number;
+  /** The calling verb's own command with a wait flag, for the POOL_FULL fix. */
+  readonly retryWith: string;
   readonly progress: (line: string) => void;
 }
 
