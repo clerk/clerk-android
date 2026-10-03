@@ -231,6 +231,8 @@ $ .claude/skills/verify-clerk-android/bin/control-clerk-android attach <run-id> 
 
 `attach` posts once per run with `gh pr comment --attach`. It refuses a run that is tainted, failed, or shows a user id the run did not create.
 
+Attach the focused run, not the regression run. Run your new or changed spec on its own (`.claude/skills/verify-clerk-android/bin/control-clerk-android run specs/explored/<name>.e2e.ts`, or `.claude/skills/verify-clerk-android/bin/control-clerk-android run <feature>/<spec>` once it is golden) and attach that run, so the PR video shows only the behavior the change is about. Run the golden specs for every feature you touched in a separate `run`, cite its run id in the PR as regression evidence, and leave its video in `.verify/runs/`.
+
 ## Cleanup
 
 ```console
