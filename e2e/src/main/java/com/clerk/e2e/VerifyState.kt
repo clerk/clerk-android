@@ -11,15 +11,21 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonPrimitive
 
 const val VERIFY_STATE_TAG = "verify.state"
 const val VERIFY_SIGN_OUT_TAG = "verify.signOut"
 const val VERIFY_LOG_TAG = "ClerkVerify"
+
+inline fun <reified T> serialName(value: T): String =
+  Json.encodeToJsonElement(value).jsonPrimitive.content
 
 data class VerifyFailure(val code: String, val message: String)
 

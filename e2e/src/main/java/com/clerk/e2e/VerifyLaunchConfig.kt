@@ -1,9 +1,11 @@
 package com.clerk.e2e
 
+import com.clerk.api.Constants
 import com.clerk.ui.auth.AuthMode
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
+import kotlin.io.encoding.Base64
 
 sealed interface HostScreen {
   val wireName: String
@@ -85,7 +87,7 @@ data class VerifyLaunchConfig(
 
     private fun isWellFormedPublishableKey(key: String): Boolean {
       val bytes =
-        listOf("pk_test_", "pk_live_")
+        listOf(Constants.Prefixes.TOKEN_PREFIX_TEST, Constants.Prefixes.TOKEN_PREFIX_LIVE)
           .firstOrNull(key::startsWith)
           ?.let(key::removePrefix)
           ?.takeIf(String::isNotEmpty)
@@ -104,30 +106,12 @@ data class VerifyLaunchConfig(
         false
       }
 
-    private const val BASE64_ALPHABET =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    private const val BASE64_BITS_PER_CHAR = 6
-    private const val BASE64_CHARS_PER_GROUP = 4
-    private const val BITS_PER_BYTE = 8
-    private const val BYTE_MASK = 0xFF
-
-    private fun decodeBase64(value: String): ByteArray? {
-      val digits = value.trimEnd('=').replace('-', '+').replace('_', '/')
-      if (digits.length % BASE64_CHARS_PER_GROUP == 1 || digits.any { it !in BASE64_ALPHABET }) {
-        return null
+    private fun decodeBase64(value: String): ByteArray? =
+      try {
+        Base64.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
+          .decode(value.replace('-', '+').replace('_', '/'))
+      } catch (_: IllegalArgumentException) {
+        null
       }
-      val bytes = ArrayList<Byte>(digits.length * BASE64_BITS_PER_CHAR / BITS_PER_BYTE)
-      var buffer = 0
-      var bufferedBits = 0
-      for (char in digits) {
-        buffer = (buffer shl BASE64_BITS_PER_CHAR) or BASE64_ALPHABET.indexOf(char)
-        bufferedBits += BASE64_BITS_PER_CHAR
-        if (bufferedBits >= BITS_PER_BYTE) {
-          bufferedBits -= BITS_PER_BYTE
-          bytes.add(((buffer shr bufferedBits) and BYTE_MASK).toByte())
-        }
-      }
-      return bytes.toByteArray()
-    }
   }
 }

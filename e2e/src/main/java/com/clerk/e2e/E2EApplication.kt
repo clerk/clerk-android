@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.core.content.edit
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.Constants
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -23,13 +24,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonPrimitive
 
 private const val HOST_PREFERENCES = "verify_host"
 private const val STORAGE_SCOPE_KEY = "storageScope"
-private const val CLERK_PREFERENCES = "clerk_preferences"
 
 class E2EApplication : Application() {
   private var verifyHost: VerifyHost? = null
@@ -143,10 +140,8 @@ class VerifyHost(activity: Activity, val config: VerifyLaunchConfig) {
         },
       pendingTasks = session?.tasks.orEmpty().map { it.key },
       orgId = Clerk.organization?.id,
-      signInStatus =
-        clerk.client?.signIn?.status?.let { Json.encodeToJsonElement(it).jsonPrimitive.content },
-      signUpStatus =
-        clerk.client?.signUp?.status?.let { Json.encodeToJsonElement(it).jsonPrimitive.content },
+      signInStatus = clerk.client?.signIn?.status?.let(::serialName),
+      signUpStatus = clerk.client?.signUp?.status?.let(::serialName),
       ticket = ticket,
       lastError = lastError,
     )
@@ -164,7 +159,7 @@ class VerifyHost(activity: Activity, val config: VerifyLaunchConfig) {
     val storageScope = config.storageScope ?: return
     val preferences = context.getSharedPreferences(HOST_PREFERENCES, Context.MODE_PRIVATE)
     if (preferences.getString(STORAGE_SCOPE_KEY, null) == storageScope) return
-    context.deleteSharedPreferences(CLERK_PREFERENCES)
+    context.deleteSharedPreferences(Constants.Storage.CLERK_PREFERENCES_FILE_NAME)
     preferences.edit(commit = true) { putString(STORAGE_SCOPE_KEY, storageScope) }
   }
 

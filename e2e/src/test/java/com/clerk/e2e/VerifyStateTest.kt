@@ -1,5 +1,7 @@
 package com.clerk.e2e
 
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -60,5 +62,11 @@ class VerifyStateTest {
         "\"ticket\":\"succeeded\",\"userId\":\"user_1\",\"v\":1}",
       state.line,
     )
+  }
+
+  @Test
+  fun `sign-in and sign-up statuses use their wire names`() {
+    assertEquals("needs_first_factor", serialName(SignIn.Status.NEEDS_FIRST_FACTOR))
+    assertEquals("missing_requirements", serialName(SignUp.Status.MISSING_REQUIREMENTS))
   }
 }
