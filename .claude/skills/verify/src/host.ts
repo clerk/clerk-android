@@ -1,5 +1,6 @@
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { VerifyFailure, type HostAdapter, type NativeHostScreen, type ScratchPath } from './core/types.ts';
 import { localAndroidBackend } from './platform/android/local.ts';
@@ -38,7 +39,7 @@ export const host: HostAdapter<NativeHostScreen> = {
   async build(platform, source, key, into) {
     const java = resolveJavaHome();
     if (!java.ok) throw new VerifyFailure('NOT_READY', java.detail, java.fix);
-    const worktree = new URL('../../../../', import.meta.url).pathname;
+    const worktree = fileURLToPath(new URL('../../../../', import.meta.url));
     const result = await gradle([':e2e:assembleDebug', '--console=plain', '--quiet'], worktree, java.home);
     if (result.code !== 0) {
       throw new VerifyFailure('BUILD_FAILED', `./gradlew :e2e:assembleDebug exited ${result.code}:\n${result.tail}`, 'fix the build error above, then rerun bin/verify up');

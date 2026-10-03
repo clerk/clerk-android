@@ -22,15 +22,15 @@ install android-b17728aef656  on verify-android-1
 device  verify-android-1  local  leased by this worktree  installed android-b17728aef656
 ```
 
-The lane is ready when `up` prints its last line, `device <name> local leased by this worktree installed <build key>`. The `build`, `device ... booting`, and `install` lines are progress. A reused build prints `build <key> local reused` instead of the two build lines, and a held lease skips the boot and install lines. A fresh worktree takes about 40 seconds from no build and no emulator to a passing `run auth-start` when the Gradle cache in `~/.gradle` is warm; a held lease runs it in about 15.
+The lane is ready when `up` prints its last line, `device <name> local leased by this worktree installed <build key>`. The `build`, `device ... booting`, and `install` lines are progress. A reused build prints `build <key> local reused` instead of the two build lines, and a held lease skips the boot and install lines. When a lane is free, a fresh worktree takes about 40 seconds from no build and no emulator to a passing `run auth-start`, with the Gradle cache in `~/.gradle` warm. A held lease runs it in about 15. Waiting for a lane adds to both.
 
 `up` is idempotent. It reuses a build whose key matches the current tree (a hash of `source/`, `e2e/`, `gradle/`, and the root Gradle files, minus docs and specs) and a lease this worktree already holds. It builds before it claims a lane, because a build needs no device. `run` calls `up` itself, so `up` exists to start the slow part early. `bin/verify up &` followed by `bin/verify run ...` is fine: `run` waits for the `up` to finish and uses its lease.
 
-The build runs `./gradlew :e2e:assembleDebug` with `JAVA_HOME` set to a Java 21 JDK, because `main` rejects Java 17. It uses `JAVA_HOME` when that is Java 21 or newer, and otherwise Android Studio's bundled JBR at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`. It sets `ANDROID_HOME` to `~/Library/Android/sdk` when the environment has none, so a fresh worktree with no `local.properties` builds.
+The build runs `./gradlew :e2e:assembleDebug` with Java 21, because the Gradle plugins refuse a Java 17 JVM. With `JAVA_HOME` unset, it uses Android Studio's bundled JBR at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`. With `JAVA_HOME` set to Java 21 or newer, it uses `JAVA_HOME`. With `JAVA_HOME` set to anything older, an `up` that has to build refuses with `NOT_READY` and does not fall back, so the build never uses a JDK you did not ask for. An `up` that reuses a build never runs Gradle, so it does not check the JDK. The fix is `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` or `unset JAVA_HOME`. It sets `ANDROID_HOME` to `~/Library/Android/sdk` when the environment has none, so a fresh worktree with no `local.properties` builds.
 
-A lane emulator boots the `Clerk_Verify_Pixel` AVD with `-read-only -no-window` on console port `5558 + 2 * slot`, so slot 1 is `emulator-5560` and slot 2 is `emulator-5562`. `-read-only` means nothing the run does reaches the AVD, and the next lease boots clean. `up` waits for `sys.boot_completed` and pins the `en-US` locale. Read the serial from `.verify/leases/android.json`.
+A lane emulator boots the `Clerk_Verify_Pixel` AVD with `-read-only -no-window` on console port `5558 + 2 * slot`, so slot 1 is `emulator-5560` and slot 2 is `emulator-5562`. `-read-only` means nothing the run does reaches the AVD, and the next lease boots clean. `up` waits for `sys.boot_completed` and pins the `en-US` locale. Read the serial from `.verify/leases/android.json`. A serial names a port, not a device: after `down`, another worktree can boot its own lane on the same serial at once. The lane's identity is `claimNonce` in the same lease file, which the emulator also holds as the property `debug.verify.lane`. Check `adb -s <serial> shell getprop debug.verify.lane` against it before you trust a serial you wrote down earlier.
 
-Never drive `Pixel_9_Pro`, an emulator you did not lease, or a physical device. Two lane emulators can run on the Mac at once, across all agents. An emulator already listening on a lane port without a verify claim counts as taken and is never killed. When both lanes are taken, `up` and `run` fail with `POOL_FULL`. Pass `--wait <seconds>` to wait for a lane. While waiting, the CLI prints one `wait` line naming the lanes in use, and prints it again only when that set changes.
+Never drive `Pixel_9_Pro`, an emulator you did not lease, or a physical device. Two lane emulators can run on the Mac at once, across all agents. Right after boot, `up` sets the property `debug.verify.lane` on each lane emulator to its claim nonce. Verify kills or drives an emulator only when it runs `Clerk_Verify_Pixel` with its own claim in that property. When a boot fails, verify stops the emulator process it started instead of killing whatever answers on the port. Any other emulator on a lane port, such as another AVD or a lane someone booted by hand, counts as taken, shows in the `POOL_FULL` list as `emulator-<port> (<AVD>, not a verify lane)`, and is never killed. When both lanes are taken, `up` and `run` fail with `POOL_FULL`. Pass `--wait <seconds>` to wait for a lane. While waiting, the CLI prints a `wait` line naming each lane and the worktree that holds it, prints it again when that changes, and prints `still waiting after <n>s` every minute otherwise. When a lane port holds an emulator that is not a verify lane, the `POOL_FULL` fix names `adb -s emulator-<port> emu kill`. Run it only if that emulator is yours; verify never kills it.
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`. The CLI passes `AGENT_DEVICE_STATE_DIR` to e2e and to every `agent-device` call, and `down` stops the daemon. If you call `agent-device` yourself, set `AGENT_DEVICE_STATE_DIR=.verify/agent-device` and use `node_modules/.bin/agent-device`.
 
@@ -45,15 +45,16 @@ $ bin/verify doctor --json
 Run it first, and again whenever anything looks off. It is read-only. It checks:
 
 - Node 24 and the pinned e2e and agent-device versions against the global `agent-device`.
-- The JDK the build will use. With `JAVA_HOME` on Java 17 it fails, and the fix is `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
+- The JDK the build will use, by the same rule as `up`. With `JAVA_HOME` on Java 17 the check fails, because the next build would refuse, and the fix is `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
 - The Android SDK `emulator` and `adb`, and the `Clerk_Verify_Pixel` AVD.
+- `lane-ports`: any emulator on 5560 or 5562 that is not a verify lane with a live claim and a matching `debug.verify.lane`. Such an emulator takes a lane from every worktree. The fix is `adb -s emulator-<port> emu kill`, but only if that emulator is yours. Verify never kills it.
 - The three instances' keys by name, and each instance's enabled strategies from `/v1/environment`. Keys come from `.keys.json` at the root of the main clerk-android checkout, not the linked worktree. CI can pass `CLERK_TEST_KEYS_JSON` instead.
 - Whether an `:e2e` APK build matches the current tree.
 - `gh pr comment --attach` support, stale device claims, and drift in `src/core/`.
 - Whether an agent-device daemon, the Mac-wide one in `~/.agent-device` or this worktree's own, runs from an install that no longer exists. The fix names the pid to kill.
 - Whether every feature in the Feature Map has its feature file and at least one golden spec.
 
-A failing check prints the command that fixes it, and `doctor` exits 3. Before the first `up`, only `build` fails, with fix `bin/verify up`.
+A failing check prints the command that fixes it, and `doctor` exits 3. Before the first `up`, only `build` fails, with fix `bin/verify up`. `build` turns `ok` as soon as `up` prints `build <key> local built in <n>s`, before `up` claims a lane. If all lanes are taken, `up` then waits for one. Stopping that waiting `up` with Ctrl-C is safe: the build is kept, no lane is claimed yet, and `doctor` stays green.
 
 ## Drive
 
@@ -68,9 +69,16 @@ $ bin/verify screen                                # current UI tree with testId
 $ bin/verify screen --png                          # plus a screenshot in scratch
 ```
 
-`run` flags are `--skip form-entry`, `--include known-bug`, `--grep <regex>`, `--no-video`, and `--wait <seconds>` (how long to wait for a free lane or for another verb in this worktree that holds the device).
+`run` flags are `--skip form-entry`, `--include known-bug`, `--grep <regex>`, `--no-video`, and `--wait <seconds>`.
 
-A spec tagged `known-bug` reproduces a bug the SDK still has. `run` leaves it out by default and prints `skipped: known-bug` beside its title. `--include known-bug` runs it, and it fails while the bug reproduces. When it passes, the bug is fixed: drop the tag in the same PR. The feature file's Gotchas describe each one. Today `sign-in-email-code/request-code` and `sign-in-email-code/complete` carry it.
+How `--wait` works:
+
+- `--wait` bounds the wait for a free lane in the machine-wide pool, and separately the wait for another verb in this worktree that is driving the device. Each wait gets the full budget.
+- It does not bound the wait for an `up` already running in this worktree. `run` waits for that `up` with no limit and prints that it is waiting.
+- Waiters get no turn order. When a lane frees, any waiting worktree can take it.
+- When the budget runs out, the verb exits 3 with `POOL_FULL` or `DEVICE_BUSY`.
+
+A spec tagged `known-bug` reproduces a bug the SDK still has. `run` leaves it out by default and prints `skipped: known-bug` beside its title. `--include known-bug` runs it, and it fails while the bug reproduces. Report a run where it fails as "reproduces the known <bug>; not verified". When it passes, the bug is fixed: drop the tag in the same PR. The feature file's Gotchas describe each one. Today `sign-in-email-code/request-code` and `sign-in-email-code/complete` carry it.
 
 The `host` fixture:
 
@@ -92,7 +100,7 @@ test('UserProfileView shows the seeded user', async ({ host, screen }) => {
 - `host.state()` reads the footer. `host.waitForState(predicate, timeoutMs?)` polls it. The footer is not readable while a bottom sheet covers the host.
 - `host.tap(locator)` taps the middle of the node's box, and `host.fill(locator, text)` taps it and types `text` into the focused field. Use them for every Compose button and field. A Compose Material `Button` with a test tag exposes the tag on a node whose `android.widget.Button` child is not clickable, so `locator.tap()` on the tag can fail; a tap at the middle of the box always lands on the button.
 - The footer `verify.state` holds `verify ` plus one line of JSON: `screen`, `environmentLoaded`, `signedIn`, `userId`, `sessionId`, `sessionStatus`, `pendingTasks`, `orgId`, `signInStatus`, `signUpStatus`, `ticket`, `lastError`, `runId`, and `launchId`. `screen` is what is on screen, not what was asked for. `signedIn` is true for a pending session, so read `sessionStatus`.
-- Locate with SDK test tags, `screen.getByTestId('clerk.auth.start.identifier')`. The full list is in `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt`. The `:e2e` host adds `verify.signOut` and `verify.state`. Its home buttons (`Prebuilt UI Sign In`, `Custom OTP Sign In`) have no tags, so specs find them with `screen.getByText(...)`.
+- Locate with SDK test tags, `screen.getByTestId('clerk.auth.start.identifier')`. The full list is in `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt`. The `:e2e` host adds `verify.signOut` and `verify.state`. Its home screen is `HomeScreen` in `e2e/src/main/java/com/clerk/e2e/MainActivity.kt`. Its home buttons (`Prebuilt UI Sign In`, `Custom OTP Sign In`) have no tags, so specs find them with `screen.getByText(...)`.
 
 There are two ways to check work.
 
@@ -114,8 +122,12 @@ $ bin/verify run specs/explored/probe.e2e.ts
         failure page  .verify/runs/r20261003-040814-846e/e2e/failures/specs_explored_probe.e2e.ts-....md
 $ bin/verify screen
 text       "verify probe"  id=verify.probe  screen.getByTestId('verify.probe')
-$ git mv specs/explored/probe.e2e.ts specs/golden/<feature>/
+$ bin/verify run specs/explored/probe.e2e.ts          # after fixing the locator
+  pass  explored/probe.e2e.ts  probe  4.7s
+$ mkdir -p specs/golden/<feature> && mv specs/explored/probe.e2e.ts specs/golden/<feature>/
 ```
+
+`specs/explored/` is gitignored and does not exist in a fresh worktree, so create it with `mkdir -p specs/explored` first. A spec moved into `specs/golden/<feature>/` imports `../../fixtures.ts` instead of `../fixtures.ts`. Plain `mv` is right here, because git never tracked the explored file.
 
 Every spec keeps at least one exact assertion on `verify.state` or an SDK test tag.
 
@@ -218,11 +230,11 @@ $ bin/verify down             # kill the lane emulator, delete run users and the
 $ bin/verify down --stale     # also finish cleanup left by a crashed run in this worktree
 ```
 
-`down` deletes only what this worktree created: its lane emulator (with `adb emu kill`) and the users in its ledger. Ledgers live at `~/.verify/ledgers/<id>.jsonl`, where `<id>` is a hash of the worktree path, and `<id>.owner` beside it holds the path. Find yours with `grep -l "$(git rev-parse --show-toplevel)" ~/.verify/ledgers/*.owner`. It never deletes `.verify/runs/`. Evidence survives teardown at `.claude/skills/verify/.verify/runs/<run-id>/`, and `down` lists the kept runs. Run `down` after a failed iteration too, so no emulator is stranded. Emulator console output goes to `~/.verify/emulators/android-<slot>.log`.
+`down` deletes only what this worktree created: its lane emulator (with `adb emu kill`), the users in its ledger, and the organizations those users own. It finds the organizations through each user at cleanup time, not from ledger entries, so an organization a spec created in the UI is deleted too. Ledgers live at `~/.verify/ledgers/<id>.jsonl`, where `<id>` is a hash of the worktree path, and `<id>.owner` beside it holds the path. Find yours with `grep -l "$(git rev-parse --show-toplevel)" ~/.verify/ledgers/*.owner`. It never deletes `.verify/runs/`. Evidence survives teardown at `.claude/skills/verify/.verify/runs/<run-id>/`, and `down` lists the kept runs. Run `down` after a failed iteration too, so no emulator is stranded. Emulator console output goes to `~/.verify/emulators/android-<slot>.log`.
 
 Evidence lives inside the worktree, so `git worktree remove` deletes `.verify/runs/` with it. Copy the runs you need out first.
 
-If a worktree is removed without `down`, the next `up` in any worktree finishes for it. It kills that worktree's lane emulator and deletes the users in its ledger, then closes the ledger. Lane slots are machine-wide claims under `~/.verify/claims/android-<slot>/`. A slot changes hands only by compare-and-swap, so two worktrees never hold the same lane.
+If a worktree is removed without `down`, the next `up` or `run` in any worktree finishes for it, including a worktree that already holds its own lease: every `up` and `run` reaps first. It kills that worktree's lane emulator and deletes the users in its ledger, then closes the ledger. Lane slots are machine-wide claims under `~/.verify/claims/android-<slot>/`. A slot changes hands only by compare-and-swap, so two worktrees never hold the same lane.
 
 ## Helpers
 

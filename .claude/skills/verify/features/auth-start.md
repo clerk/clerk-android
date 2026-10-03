@@ -19,7 +19,7 @@ Preconditions:
 - No user. The spec launches `with-email-codes` signed out.
 
 - **Home button.** Run `bin/verify run auth-start`. The first test launches `screen: 'home'`, checks `environmentLoaded` and `signedIn` false, taps `Prebuilt UI Sign In`, and expects `clerk.auth.start.continue`. Screenshot `auth-start`.
-- **Direct launch.** The second test launches `screen: 'auth'`, checks `state.screen` is `auth` with no `lastError`, and expects `clerk.auth.start.identifier` and `clerk.auth.start.continue`.
+- **Direct launch.** The second test launches `screen: 'auth'`, checks `state.screen` is `auth` with no `lastError`, and expects `clerk.auth.start.identifier` and `clerk.auth.start.continue`. Screenshot `auth-start-identifier`, which shows the identifier field.
 - **Proof.** `specs/golden/auth-start/auth-start.e2e.ts` passes, and `states.jsonl` shows `environmentLoaded` true for both launches.
 
 ## Gotchas

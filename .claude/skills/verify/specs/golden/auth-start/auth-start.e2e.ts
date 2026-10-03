@@ -15,4 +15,5 @@ test('verifyScreen auth opens AuthView without a tap', async ({ host, screen }) 
   expect(state.lastError).toBeNull();
   await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible();
+  await host.screenshot('auth-start-identifier');
 });

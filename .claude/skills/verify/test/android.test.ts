@@ -5,8 +5,9 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { run } from '../src/core/exec.ts';
 import { encodeLaunchArguments } from '../src/core/state.ts';
-import type { EvidencePath, LaunchId, PublishableKey, RunId, StorageScope } from '../src/core/types.ts';
-import { LOG_FILTER, RECORD_SIZE, lanePort, logFilter, laneSerial, logcatSince, parseAdbDevices, startScreenrecord } from '../src/platform/android/local.ts';
+import type { EvidencePath, LaunchId, LocalLease, PublishableKey, RunId, StorageScope } from '../src/core/types.ts';
+import { takeSlot } from '../src/core/claims.ts';
+import { LOG_FILTER, RECORD_SIZE, lanePort, localAndroidBackend, logFilter, laneSerial, logcatSince, parseAdbDevices, startScreenrecord } from '../src/platform/android/local.ts';
 import { jdkCheck, resolveJavaHome } from '../src/platform/android/sdk.ts';
 
 function fakeJdk(root: string, version: string): string {
@@ -117,5 +118,95 @@ describe('android screenrecord', () => {
     assert.match(calls[record]!, new RegExp(`--size ${RECORD_SIZE} --time-limit 0 /sdcard/verify-r20261003-040814-846e\\.mp4`));
     assert.ok(record < kill && kill < lastPidof && lastPidof < pull, calls.join('\n'));
     assert.ok(calls.some((c) => c.includes('rm -f /sdcard/verify-r20261003-040814-846e.mp4')), 'removes the device copy');
+  });
+
+  it('fails stop with adb\'s error when the pull fails', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
+    const adb = fakeTool(dir, 'adb', [
+      `state=${dir}/recording`,
+      'case "$*" in',
+      '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
+      '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+      '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
+      '  *" pull "*) echo "adb: error: remote object does not exist" >&2; exit 1 ;;',
+      'esac',
+    ]);
+    const into = join(dir, 'r20261003-040814-846e') as EvidencePath;
+    mkdirSync(into);
+    const recording = await startScreenrecord({ adbBin: adb, serial: 'emulator-5560', into, exec: run });
+    await assert.rejects(recording.stop(), { code: 'NOT_READY', message: /remote object does not exist/ });
+  });
+});
+
+function fakeTool(dir: string, name: string, body: readonly string[]): string {
+  const path = join(dir, name);
+  writeFileSync(path, ['#!/bin/bash', `echo "$*" >> ${join(dir, 'calls.log')}`, ...body, ''].join('\n'));
+  chmodSync(path, 0o755);
+  return path;
+}
+
+describe('android lane ownership', () => {
+  function setup(avd: string, laneProperty: (ownNonce: string) => string) {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-lane-'));
+    const claimsDir = join(dir, 'claims');
+    const claim = takeSlot(claimsDir, 'android', 1, 0, join(dir, 'worktree'))!;
+    const killed = join(dir, 'killed');
+    const adbBin = fakeTool(dir, 'adb', [
+      'case "$*" in',
+      `  "devices") echo "List of devices attached"; [ -f ${killed} ] || printf "emulator-5560\\tdevice\\n" ;;`,
+      `  *"emu avd name"*) printf "${avd}\\nOK\\n" ;;`,
+      `  *"getprop debug.verify.lane"*) echo "${laneProperty(claim.nonce)}" ;;`,
+      '  *"getprop sys.boot_completed"*) echo 1 ;;',
+      `  *"emu kill"*) touch ${killed} ;;`,
+      'esac',
+    ]);
+    const emulatorBin = fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']);
+    const lease: LocalLease = { backend: 'local', platform: 'android', slot: 1, deviceName: 'verify-android-1', deviceId: 'emulator-5560', claimNonce: claim.nonce, acquiredAt: '', installedBuild: null };
+    const calls = () => readFileSync(join(dir, 'calls.log'), 'utf8');
+    return { backend: localAndroidBackend({ claimsDir, adbBin, emulatorBin }), lease, dir, calls };
+  }
+
+  it('never kills another AVD that sits on a lane port, and frees the claim', async () => {
+    const { backend, lease, calls } = setup('Pixel_9_Pro', () => '');
+    await backend.release(lease);
+    assert.doesNotMatch(calls(), /emu kill/);
+    assert.equal(await backend.check(lease), 'lost');
+  });
+
+  it('never kills a Clerk_Verify_Pixel emulator booted for another claim', async () => {
+    const { backend, lease, calls } = setup('Clerk_Verify_Pixel', () => 'someone-elses-claim');
+    await backend.release(lease);
+    assert.doesNotMatch(calls(), /emu kill/);
+  });
+
+  it('kills the lane it booted', async () => {
+    const { backend, lease, calls } = setup('Clerk_Verify_Pixel', (own) => own);
+    assert.equal(await backend.check(lease), 'held');
+    await backend.release(lease);
+    assert.match(calls(), /-s emulator-5560 emu kill/);
+  });
+
+  it('doctor flags a foreign emulator on a lane port with a kill command for its owner', async () => {
+    const { backend } = setup('Pixel_9_Pro', () => '');
+    const lanePorts = (await backend.doctorChecks()).device.find((c) => c.id === 'lane-ports');
+    assert.equal(lanePorts?.ok, false);
+    assert.match(lanePorts?.detail ?? '', /emulator-5560 \(Pixel_9_Pro, not a verify lane\)/);
+    assert.match(lanePorts?.fix ?? '', /^adb -s emulator-5560 emu kill, but only if that emulator is yours/);
+  });
+
+  it('doctor passes a lane port that holds this claim\'s own lane', async () => {
+    const { backend } = setup('Clerk_Verify_Pixel', (own) => own);
+    assert.equal((await backend.doctorChecks()).device.find((c) => c.id === 'lane-ports')?.ok, true);
+  });
+
+  it('reports a foreign emulator on a lane port in POOL_FULL instead of claiming it', async () => {
+    const { backend, lease, dir } = setup('Pixel_9_Pro', () => '');
+    await backend.release(lease);
+    takeSlot(join(dir, 'claims'), 'android', 2, 0, join(dir, 'other'));
+    await assert.rejects(backend.acquire({ platform: 'android', worktree: join(dir, 'worktree'), waitSeconds: 0, retryWith: 'bin/verify up --wait <seconds>', progress: () => undefined }), {
+      code: 'POOL_FULL',
+      message: /emulator-5560 \(Pixel_9_Pro, not a verify lane\), verify-android-2 \(held by .*other\)/,
+      fix: /`adb -s emulator-5560 emu kill` frees a lane, but only if that emulator is yours/,
+    });
   });
 });
