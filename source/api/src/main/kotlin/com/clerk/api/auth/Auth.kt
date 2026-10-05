@@ -2,9 +2,6 @@ package com.clerk.api.auth
 
 import android.net.Uri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignInWithIdTokenBuilder
@@ -13,7 +10,6 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
-import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
@@ -28,7 +24,6 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
@@ -37,7 +32,6 @@ import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.toMap
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -177,12 +171,9 @@ class Auth internal constructor() {
     val builder = SignInIdentifierBuilder().apply(block)
     builder.validate()
 
-    val params =
-      mapOf("identifier" to builder.getIdentifier(), "locale" to Clerk.locale.value.orEmpty())
-
-    return reportingFailures {
-      ClerkApi.signIn.createSignIn(params)
-    }
+    return createSignIn(
+      SignIn.CreateParams.Strategy.Identifier(identifier = builder.getIdentifier())
+    )
   }
 
   /**
@@ -238,17 +229,12 @@ class Auth internal constructor() {
     val builder = SignInWithPasswordBuilder().apply(block)
     builder.validate()
 
-    val params =
-      mapOf(
-        "identifier" to builder.identifier!!,
-        "password" to builder.password!!,
-        "strategy" to PASSWORD,
-        "locale" to Clerk.locale.value.orEmpty(),
+    return createSignIn(
+      SignIn.CreateParams.Strategy.Password(
+        identifier = builder.identifier!!,
+        password = builder.password!!,
       )
-
-    return reportingFailures {
-      ClerkApi.signIn.createSignIn(params)
-    }
+    )
   }
 
   /**
@@ -273,19 +259,14 @@ class Auth internal constructor() {
     val builder = SignInWithOtpBuilder().apply(block)
     builder.validate()
 
-    val identifier = builder.email ?: builder.phone!!
-    val strategy = if (builder.email != null) EMAIL_CODE else PHONE_CODE
-
-    val params =
-      mapOf(
-        "identifier" to identifier,
-        "strategy" to strategy,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    return reportingFailures {
-      ClerkApi.signIn.createSignIn(params)
-    }
+    val email = builder.email
+    return createSignIn(
+      if (email != null) {
+        SignIn.CreateParams.Strategy.EmailCode(identifier = email)
+      } else {
+        SignIn.CreateParams.Strategy.PhoneCode(identifier = builder.phone!!)
+      }
+    )
   }
 
   /**
@@ -303,12 +284,10 @@ class Auth internal constructor() {
   suspend fun signInWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return reportingFailures {
-      SSOService.authenticateWithRedirect(
-        strategy = provider.strategy,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-      )
-    }
+    return authenticateSignInWithRedirect(
+      SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
+      transferable = true,
+    )
   }
 
   /**
@@ -356,9 +335,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> {
-    return reportingFailures {
-      PasskeyService.signInWithPasskey()
-    }
+    return createSignIn(SignIn.CreateParams.Strategy.Passkey())
   }
 
   /**
@@ -398,14 +375,14 @@ class Auth internal constructor() {
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    return reportingFailures {
-      BiometricCredentials.signIn(
+    return createSignIn(
+      SignIn.CreateParams.Strategy.BiometricCredential(
         id = id,
         identifierHint = identifierHint,
         promptTitle = promptTitle,
         promptSubtitle = promptSubtitle,
       )
-    }
+    )
   }
 
   /**
@@ -426,13 +403,13 @@ class Auth internal constructor() {
     val builder = EnterpriseSsoBuilder().apply(block)
     builder.validate()
 
-    return reportingFailures {
-      SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
+    return authenticateSignInWithRedirect(
+      SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
         emailAddress = builder.email,
-      )
-    }
+      ),
+      transferable = true,
+    )
   }
 
   /**
@@ -448,16 +425,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
-    val params =
-      mapOf(
-        "strategy" to com.clerk.api.Constants.Strategy.TICKET,
-        "ticket" to ticket,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    return reportingFailures {
-      ClerkApi.signIn.createSignIn(params)
-    }
+    return createSignIn(SignIn.CreateParams.Strategy.Ticket(ticket = ticket))
   }
 
   /**
@@ -509,22 +477,18 @@ class Auth internal constructor() {
   suspend fun signUp(block: SignUpBuilder.() -> Unit): ClerkResult<SignUp, ClerkErrorResponse> {
     val builder = SignUpBuilder().apply(block)
 
-    val params =
+    return createSignUp(
       SignUp.CreateParams.Standard(
-          emailAddress = builder.email,
-          phoneNumber = builder.phone,
-          password = builder.password,
-          firstName = builder.firstName,
-          lastName = builder.lastName,
-          username = builder.username,
-          legalAccepted = builder.legalAccepted,
-          unsafeMetadata = builder.unsafeMetadata,
-        )
-        .toMap() + ("locale" to Clerk.locale.value.orEmpty())
-
-    return reportingFailures {
-      ClerkApi.signUp.createSignUp(params)
-    }
+        emailAddress = builder.email,
+        phoneNumber = builder.phone,
+        password = builder.password,
+        firstName = builder.firstName,
+        lastName = builder.lastName,
+        username = builder.username,
+        legalAccepted = builder.legalAccepted,
+        unsafeMetadata = builder.unsafeMetadata,
+      )
+    )
   }
 
   /**
@@ -542,12 +506,7 @@ class Auth internal constructor() {
   suspend fun signUpWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return reportingFailures {
-      SSOService.authenticateSignUpWithRedirect(
-        strategy = provider.strategy,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-      )
-    }
+    return authenticateSignUpWithRedirect(SignUp.AuthenticateWithRedirectParams.OAuth(provider))
   }
 
   /**
@@ -599,17 +558,14 @@ class Auth internal constructor() {
         IdTokenProvider.GOOGLE -> "google_one_tap"
       }
 
-    val params = buildMap {
-      put("strategy", strategy)
-      put("token", token)
-      builder.firstName?.let { put("first_name", it) }
-      builder.lastName?.let { put("last_name", it) }
-      put("locale", Clerk.locale.value.orEmpty())
-    }
-
-    return reportingFailures {
-      ClerkApi.signUp.createSignUp(params)
-    }
+    return postSignUp(
+      buildMap {
+        put("strategy", strategy)
+        put("token", token)
+        builder.firstName?.let { put("first_name", it) }
+        builder.lastName?.let { put("last_name", it) }
+      }
+    )
   }
 
   /**
@@ -630,13 +586,9 @@ class Auth internal constructor() {
     val builder = EnterpriseSsoBuilder().apply(block)
     builder.validate()
 
-    return reportingFailures {
-      SSOService.authenticateSignUpWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-        emailAddress = builder.email,
-      )
-    }
+    return authenticateSignUpWithRedirect(
+      SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(emailAddress = builder.email)
+    )
   }
 
   /**
@@ -652,12 +604,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
-    val params =
-      mapOf("strategy" to "ticket", "ticket" to ticket, "locale" to Clerk.locale.value.orEmpty())
-
-    return reportingFailures {
-      ClerkApi.signUp.createSignUp(params)
-    }
+    return createSignUp(SignUp.CreateParams.Ticket(ticket = ticket))
   }
 
   // endregion

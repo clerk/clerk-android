@@ -12,15 +12,25 @@ suspend fun SignIn.prepareSecondFactor(
   strategy: SignIn.PrepareSecondFactorStrategy
 ): ClerkResult<SignIn, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
-    if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
-      return@reportingFailures invalidPrepareState(
-        code = "sign_in_status_invalid",
-        longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
-      )
-    }
+    if (!canPrepareSecondFactor) return@reportingFailures invalidSecondFactorState()
 
     ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toMap())
   }
+
+internal val SignIn.canPrepareSecondFactor: Boolean
+  get() = status == SignIn.Status.NEEDS_SECOND_FACTOR || status == SignIn.Status.NEEDS_CLIENT_TRUST
+
+internal fun SignIn.invalidSecondFactorState(): ClerkResult.Failure<ClerkErrorResponse> =
+  invalidPrepareState(
+    code = "sign_in_status_invalid",
+    longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
+  )
+
+internal fun noSecondFactor(strategy: String): ClerkResult.Failure<ClerkErrorResponse> =
+  invalidPrepareState(
+    code = "second_factor_strategy_not_supported",
+    longMessage = "No $strategy second factor is available for this sign-in",
+  )
 
 /**
  * Authenticates this sign-in with a passkey.

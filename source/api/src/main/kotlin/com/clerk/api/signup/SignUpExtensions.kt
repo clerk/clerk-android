@@ -3,12 +3,10 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 
@@ -84,15 +82,13 @@ suspend fun SignUp.verifyCode(
   code: String,
   type: VerificationType,
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  val strategy =
+  val params =
     when (type) {
-      VerificationType.EMAIL -> AuthStrategy.EMAIL_CODE
-      VerificationType.PHONE -> AuthStrategy.PHONE_CODE
+      VerificationType.EMAIL -> SignUp.AttemptVerificationParams.EmailCode(code = code)
+      VerificationType.PHONE -> SignUp.AttemptVerificationParams.PhoneCode(code = code)
     }
 
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signUp.attemptSignUpVerification(signUpId = this.id, strategy = strategy, code = code)
-  }
+  return attemptVerification(params)
 }
 
 /**
@@ -115,15 +111,15 @@ suspend fun SignUp.update(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
 
-  val params = buildMap {
-    builder.email?.let { put("email_address", it) }
-    builder.phone?.let { put("phone_number", it) }
-    builder.password?.let { put("password", it) }
-    builder.firstName?.let { put("first_name", it) }
-    builder.lastName?.let { put("last_name", it) }
-    builder.username?.let { put("username", it) }
-    builder.legalAccepted?.let { put("legal_accepted", it.toString()) }
-  }
-
-  return Clerk.auth.reportingFailures { ClerkApi.signUp.updateSignUp(this.id, params) }
+  return update(
+    SignUp.SignUpUpdateParams.Standard(
+      emailAddress = builder.email,
+      phoneNumber = builder.phone,
+      password = builder.password,
+      firstName = builder.firstName,
+      lastName = builder.lastName,
+      username = builder.username,
+      legalAccepted = builder.legalAccepted,
+    )
+  )
 }
