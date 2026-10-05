@@ -8,6 +8,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.verifyCode
@@ -133,6 +134,19 @@ class AuthErrorEventsTest {
     facadeEvents.job.cancel()
     sharedEvents.job.cancel()
   }
+
+  @Test
+  fun `RestoreCredentials signIn failure emits one auth error event when called directly`() =
+    runTest {
+      val events = collect(Clerk.auth.events)
+
+      val result = RestoreCredentials.signIn()
+
+      runCurrent()
+      assertTrue(result is ClerkResult.Failure)
+      assertEquals(1, events.size)
+      events.job.cancel()
+    }
 
   private fun assertSingleError(events: List<AuthEvent>) {
     assertEquals(1, events.size)

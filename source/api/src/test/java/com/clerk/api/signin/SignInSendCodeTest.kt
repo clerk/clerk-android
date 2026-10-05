@@ -115,6 +115,57 @@ class SignInSendCodeTest {
   }
 
   @Test
+  fun `sendCode rejects the only email factor when its mask contradicts the email`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(strategy = "email_code", emailAddressId = "email_123", safeIdentifier = "u***@x.com")
+      )
+
+    val result = signIn.sendCode { email = "other@y.com" }
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `sendCode uses the only phone factor when its mask agrees with the phone`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(
+          strategy = "phone_code",
+          phoneNumberId = "phone_123",
+          safeIdentifier = "+1******0002",
+        )
+      )
+
+    signIn.sendCode { phone = "+1 (555) 000-0002" }
+
+    coVerify(exactly = 1) {
+      signInApi.prepareSignInFirstFactor(
+        SIGN_IN_ID,
+        mapOf("strategy" to "phone_code", "phone_number_id" to "phone_123"),
+      )
+    }
+  }
+
+  @Test
+  fun `sendCode rejects the only phone factor when its mask contradicts the phone`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(
+          strategy = "phone_code",
+          phoneNumberId = "phone_123",
+          safeIdentifier = "+1******0002",
+        )
+      )
+
+    val result = signIn.sendCode { phone = "+1 (555) 000-0009" }
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+  }
+
+  @Test
   fun `sendCode fails without calling the API when no factor matches the email`() = runTest {
     val signIn =
       signInWith(
@@ -153,6 +204,100 @@ class SignInSendCodeTest {
       signInApi.prepareSignInFirstFactor(
         SIGN_IN_ID,
         mapOf("strategy" to "reset_password_email_code", "email_address_id" to "email_second"),
+      )
+    }
+  }
+
+  @Test
+  fun `sendCode picks the masked email factor whose visible characters agree`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(strategy = "email_code", emailAddressId = "email_a", safeIdentifier = "a***@x.com"),
+        Factor(strategy = "email_code", emailAddressId = "email_b", safeIdentifier = "b***@y.com"),
+      )
+
+    signIn.sendCode { email = "bob@y.com" }
+
+    coVerify(exactly = 1) {
+      signInApi.prepareSignInFirstFactor(
+        SIGN_IN_ID,
+        mapOf("strategy" to "email_code", "email_address_id" to "email_b"),
+      )
+    }
+  }
+
+  @Test
+  fun `sendCode refuses to guess between masked email factors that both agree`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(strategy = "email_code", emailAddressId = "email_a", safeIdentifier = "b***@y.com"),
+        Factor(strategy = "email_code", emailAddressId = "email_b", safeIdentifier = "b***@y.com"),
+      )
+
+    val result = signIn.sendCode { email = "bob@y.com" }
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `sendCode fails without calling the API when the sign-in is not awaiting a first factor`() =
+    runTest {
+      val signIn =
+        signInWith(
+            Factor(strategy = "email_code", emailAddressId = "email_first", safeIdentifier = FIRST)
+          )
+          .copy(status = SignIn.Status.NEEDS_SECOND_FACTOR)
+
+      val result = signIn.sendCode { email = FIRST }
+
+      assertEquals(
+        "sign_in_status_invalid",
+        (result as ClerkResult.Failure).error?.errors?.single()?.code,
+      )
+      coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+    }
+
+  @Test
+  fun `sendResetPasswordCode falls back to the email code factor when no reset factor exists`() =
+    runTest {
+      val signIn =
+        signInWith(
+          Factor(strategy = "email_code", emailAddressId = "email_first", safeIdentifier = FIRST)
+        )
+
+      signIn.sendResetPasswordCode { email = FIRST }
+
+      coVerify(exactly = 1) {
+        signInApi.prepareSignInFirstFactor(
+          SIGN_IN_ID,
+          mapOf("strategy" to "reset_password_email_code", "email_address_id" to "email_first"),
+        )
+      }
+    }
+
+  @Test
+  fun `sendResetPasswordCode with phone sends to the reset factor for that phone`() = runTest {
+    val signIn =
+      signInWith(
+        Factor(
+          strategy = "reset_password_phone_code",
+          phoneNumberId = "phone_first",
+          safeIdentifier = "+15550001",
+        ),
+        Factor(
+          strategy = "reset_password_phone_code",
+          phoneNumberId = "phone_second",
+          safeIdentifier = "+15550002",
+        ),
+      )
+
+    signIn.sendResetPasswordCode { phone = "+1 555-0002" }
+
+    coVerify(exactly = 1) {
+      signInApi.prepareSignInFirstFactor(
+        SIGN_IN_ID,
+        mapOf("strategy" to "reset_password_phone_code", "phone_number_id" to "phone_second"),
       )
     }
   }

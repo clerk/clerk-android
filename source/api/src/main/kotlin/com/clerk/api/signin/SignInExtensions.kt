@@ -214,7 +214,8 @@ suspend fun SignIn.authenticateWithPreparedRedirect(
  *
  * The code is sent to the first factor whose identifier matches [SendCodeBuilder.email] or
  * [SendCodeBuilder.phone]. When the sign-in only exposes a masked identifier for its single
- * matching factor (for example after identifying by username), that factor is used.
+ * matching factor (for example after identifying by username), that factor is used as long as the
+ * mask's visible characters agree with the requested identifier.
  *
  * @param block Builder block to configure where to send the code.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
@@ -236,12 +237,12 @@ suspend fun SignIn.sendCode(
   return Clerk.auth.reportingFailures {
     val email = builder.email
     if (email != null) {
-      val factor = firstFactorFor(listOf(EMAIL_CODE), email, ::sameEmail)
+      val factor = firstFactorFor(listOf(EMAIL_CODE), email, ::normalizeEmail)
       val emailAddressId =
         factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(EMAIL_CODE)
       prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
     } else {
-      val factor = firstFactorFor(listOf(PHONE_CODE), builder.phone!!, ::samePhone)
+      val factor = firstFactorFor(listOf(PHONE_CODE), builder.phone!!, ::normalizePhone)
       val phoneNumberId =
         factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(PHONE_CODE)
       prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
@@ -252,32 +253,59 @@ suspend fun SignIn.sendCode(
 /**
  * Finds the first factor of one of [strategies] that belongs to [value].
  *
- * Falls back to the only candidate when its identifier is masked or absent, since Clerk masks
- * identifiers the user has not typed in this sign-in and the caller cannot know the masked form.
+ * Clerk masks identifiers the user has not typed in this sign-in, so the caller cannot know the
+ * masked form. When no identifier matches exactly, this falls back to the masked factors whose
+ * visible characters agree with [value], as long as they all belong to one email address or phone
+ * number. Factors without any identifier are used when they all belong to one destination.
  */
 private fun SignIn.firstFactorFor(
   strategies: List<String>,
   value: String,
-  matches: (String, String) -> Boolean,
+  normalize: (String) -> String,
 ): Factor? {
   val candidates = supportedFirstFactors.orEmpty().filter { it.strategy in strategies }
-  val matching = candidates.filter { factor ->
-    factor.safeIdentifier?.let { matches(it, value) } == true
+  fun preferred(factors: List<Factor>): Factor? = strategies.firstNotNullOfOrNull { strategy ->
+    factors.firstOrNull { it.strategy == strategy }
   }
-  val onlyTarget = candidates.distinctBy { it.emailAddressId ?: it.phoneNumberId }.singleOrNull()
-  return strategies.firstNotNullOfOrNull { strategy ->
-    matching.firstOrNull { it.strategy == strategy }
+
+  val exact = candidates.filter { factor ->
+    factor.safeIdentifier?.let { sameIdentifier(it, value, normalize) } == true
   }
-    ?: onlyTarget?.takeIf {
-      it.safeIdentifier.isNullOrBlank() || MASK_CHARACTER in it.safeIdentifier
-    }
+  val maskMatching = candidates.filter { factor ->
+    val masked = factor.safeIdentifier
+    masked != null && MASK_CHARACTER in masked && maskAllows(masked, value, normalize)
+  }
+  val unidentified = candidates.all { it.safeIdentifier.isNullOrBlank() }
+  return when {
+    exact.isNotEmpty() -> preferred(exact)
+    maskMatching.isNotEmpty() ->
+      preferred(maskMatching)?.takeIf { maskMatching.targets().size == 1 }
+    unidentified -> preferred(candidates)?.takeIf { candidates.targets().size == 1 }
+    else -> null
+  }
 }
 
-private fun sameEmail(a: String, b: String): Boolean = a.trim().equals(b.trim(), ignoreCase = true)
+private fun List<Factor>.targets(): Set<String?> =
+  mapTo(mutableSetOf()) {
+    it.emailAddressId ?: it.phoneNumberId
+  }
 
-private fun samePhone(a: String, b: String): Boolean {
-  val digits = a.filter(Char::isDigit)
-  return digits.isNotEmpty() && digits == b.filter(Char::isDigit)
+private fun sameIdentifier(a: String, b: String, normalize: (String) -> String): Boolean {
+  val normalized = normalize(a)
+  return normalized.isNotEmpty() && normalized == normalize(b)
+}
+
+/** Whether [value] fits [masked], where each run of [MASK_CHARACTER] stands for any characters. */
+private fun maskAllows(masked: String, value: String, normalize: (String) -> String): Boolean {
+  val pattern =
+    normalize(masked).split(MASK_CHARACTER).joinToString(".*") { Regex.escape(it) }.toRegex()
+  return pattern.matches(normalize(value))
+}
+
+private fun normalizeEmail(email: String): String = email.trim().lowercase()
+
+private fun normalizePhone(phone: String): String = phone.filter {
+  it.isDigit() || it == MASK_CHARACTER
 }
 
 private fun noMatchingFactor(strategy: String): ClerkResult.Failure<ClerkErrorResponse> =
@@ -465,14 +493,19 @@ suspend fun SignIn.sendResetPasswordCode(
   return Clerk.auth.reportingFailures {
     val email = builder.email
     if (email != null) {
-      val factor = firstFactorFor(listOf(RESET_PASSWORD_EMAIL_CODE, EMAIL_CODE), email, ::sameEmail)
+      val factor =
+        firstFactorFor(listOf(RESET_PASSWORD_EMAIL_CODE, EMAIL_CODE), email, ::normalizeEmail)
       val emailAddressId =
         factor?.emailAddressId
           ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
       prepareFirstFactor(SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId))
     } else {
       val factor =
-        firstFactorFor(listOf(RESET_PASSWORD_PHONE_CODE, PHONE_CODE), builder.phone!!, ::samePhone)
+        firstFactorFor(
+          listOf(RESET_PASSWORD_PHONE_CODE, PHONE_CODE),
+          builder.phone!!,
+          ::normalizePhone,
+        )
       val phoneNumberId =
         factor?.phoneNumberId
           ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)

@@ -13,6 +13,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.PASSKEY
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyCreateCredentialFailure
 import com.clerk.api.credentials.classifyGetCredentialFailure
@@ -99,7 +100,10 @@ object RestoreCredentials {
    * This method does not display credential-selection UI. When no restore credential is available,
    * it returns a credential-flow failure so the host app can continue with its normal sign-in UI.
    */
-  suspend fun signIn(): ClerkResult<SignIn, ClerkErrorResponse> {
+  suspend fun signIn(): ClerkResult<SignIn, ClerkErrorResponse> =
+    Clerk.auth.reportingFailures { signInWithRestoreCredential() }
+
+  private suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
     if (Clerk.activeSession != null) {
       return ClerkResult.unknownFailure(
