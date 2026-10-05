@@ -4,6 +4,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
@@ -205,6 +206,70 @@ class AuthFacadeUiGapsTest {
 
     assertTrue(result is ClerkResult.Failure)
     coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `SignIn create with a passkey forwards preferImmediatelyAvailableCredentials`() = runTest {
+    mockkObject(PasskeyService)
+    coEvery { PasskeyService.signInWithPasskey(any(), any()) } returns ClerkResult.success(signIn)
+
+    SignIn.create(
+      SignIn.CreateParams.Strategy.Passkey(),
+      preferImmediatelyAvailableCredentials = true,
+    )
+
+    coVerify(exactly = 1) {
+      PasskeyService.signInWithPasskey(
+        allowedCredentialIds = emptyList(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    }
+  }
+
+  @Test
+  fun `signIn rejects an identifier combined with a typed field`() = runTest {
+    val error = runCatching {
+      Auth().signIn {
+        email = "user@example.com"
+        identifier = "someone-else"
+      }
+    }
+
+    assertTrue(error.exceptionOrNull() is IllegalArgumentException)
+    coVerify(exactly = 0) { signInApi.createSignIn(any()) }
+  }
+
+  @Test
+  fun `authenticateWithOAuth does not open a redirect when preparing the factor fails`() = runTest {
+    mockkObject(SSOService)
+    coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+
+    val result = signIn.authenticateWithOAuth(OAuthProvider.GITHUB)
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 0) {
+      SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any())
+    }
+  }
+
+  @Test
+  fun `sendResetPasswordEmailCode without an id uses the reset factor's email address`() = runTest {
+    coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns ClerkResult.success(signIn)
+    val withResetFactor =
+      signIn.copy(
+        supportedFirstFactors =
+          listOf(Factor(strategy = "reset_password_email_code", emailAddressId = "email_456"))
+      )
+
+    withResetFactor.sendResetPasswordEmailCode()
+
+    coVerify(exactly = 1) {
+      signInApi.prepareSignInFirstFactor(
+        SIGN_IN_ID,
+        mapOf("strategy" to "reset_password_email_code", "email_address_id" to "email_456"),
+      )
+    }
   }
 
   @Test

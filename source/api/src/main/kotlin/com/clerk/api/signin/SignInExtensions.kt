@@ -221,7 +221,9 @@ suspend fun SignIn.authenticateWithPreparedRedirect(
  * @param provider The OAuth provider to authenticate with.
  * @param transferable Whether the flow may turn into a sign-up when the provider account has no
  *   Clerk user yet. Defaults to `true`.
- * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+ * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+ *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+ *   in the application manifest.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
@@ -243,7 +245,9 @@ suspend fun SignIn.authenticateWithOAuth(
  *
  * @param transferable Whether the flow may turn into a sign-up when the user has no Clerk account
  *   yet. Defaults to `true`.
- * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+ * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+ *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+ *   in the application manifest.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
@@ -568,9 +572,11 @@ suspend fun SignIn.sendResetPasswordCode(
  * Sends a password reset code to one of the user's email addresses.
  *
  * @param emailAddressId The ID of the email address, from a `reset_password_email_code` factor in
- *   [SignIn.supportedFirstFactors]. Defaults to the first such factor.
+ *   [SignIn.supportedFirstFactors]. When `null`, the first such factor is used, whichever email
+ *   address it belongs to; use [sendResetPasswordCode] to pick the factor by its email address.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when there is no such factor.
+ *   [ClerkErrorResponse] on failure. When [emailAddressId] is `null`, fails without contacting
+ *   Clerk if there is no such factor. An explicit [emailAddressId] is sent as given.
  */
 suspend fun SignIn.sendResetPasswordEmailCode(
   emailAddressId: String? = null
@@ -587,9 +593,11 @@ suspend fun SignIn.sendResetPasswordEmailCode(
  * Sends a password reset code to one of the user's phone numbers.
  *
  * @param phoneNumberId The ID of the phone number, from a `reset_password_phone_code` factor in
- *   [SignIn.supportedFirstFactors]. Defaults to the first such factor.
+ *   [SignIn.supportedFirstFactors]. When `null`, the first such factor is used, whichever phone
+ *   number it belongs to; use [sendResetPasswordCode] to pick the factor by its phone number.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when there is no such factor.
+ *   [ClerkErrorResponse] on failure. When [phoneNumberId] is `null`, fails without contacting Clerk
+ *   if there is no such factor. An explicit [phoneNumberId] is sent as given.
  */
 suspend fun SignIn.sendResetPasswordPhoneCode(
   phoneNumberId: String? = null

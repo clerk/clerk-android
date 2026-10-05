@@ -277,8 +277,9 @@ class Auth internal constructor() {
    * @param provider The OAuth provider to use for authentication.
    * @param transferable Whether the flow may turn into a sign-up when the provider account has no
    *   Clerk user yet. When `false`, that case fails instead. Defaults to `true`.
-   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
-   *   Custom values require a matching intent filter in the application manifest.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+   *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+   *   in the application manifest. [handle] only completes OAuth callbacks with a `clerk` scheme.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
    *   failure. The result holds a sign-up instead of a sign-in when the flow transferred.
    *
@@ -540,8 +541,9 @@ class Auth internal constructor() {
    * Signs up with OAuth provider.
    *
    * @param provider The OAuth provider to use for sign-up.
-   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
-   *   Custom values require a matching intent filter in the application manifest.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+   *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+   *   in the application manifest. [handle] only completes OAuth callbacks with a `clerk` scheme.
    * @param unsafeMetadata Custom metadata attached to the created user. Clerk does not validate it,
    *   so it must not hold sensitive information.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on

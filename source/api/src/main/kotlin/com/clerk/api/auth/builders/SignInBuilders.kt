@@ -38,6 +38,9 @@ class SignInIdentifierBuilder {
     require(email != null || phone != null || username != null || identifier != null) {
       "At least one of email, phone, username, or identifier must be provided"
     }
+    require(identifier == null || (email == null && phone == null && username == null)) {
+      "identifier cannot be combined with email, phone, or username"
+    }
   }
 
   internal fun getIdentifier(): String {
