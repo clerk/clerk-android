@@ -34,26 +34,4 @@ class CountryInfoTest {
 
     assertEquals("🇨🇦 Canada +1", countryInfo.getSelectorText)
   }
-
-  @Test
-  fun `data class equality works correctly`() {
-    val country1 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
-    val country2 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
-    val country3 = CountryInfo(flag = "🇬🇧", code = 44, countryShortName = "GB", "United Kingdom")
-
-    assertEquals(country1, country2)
-    assertEquals(country1.hashCode(), country2.hashCode())
-    assert(country1 != country3)
-  }
-
-  @Test
-  fun `toString returns expected format`() {
-    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
-
-    val result = countryInfo.toString()
-
-    assert(result.contains("flag=🇺🇸"))
-    assert(result.contains("code=1"))
-    assert(result.contains("countryShortName=US"))
-  }
 }

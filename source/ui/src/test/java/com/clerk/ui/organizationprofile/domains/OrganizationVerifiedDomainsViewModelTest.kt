@@ -125,6 +125,19 @@ class OrganizationVerifiedDomainsViewModelTest {
     coVerify(exactly = 0) { organization.getDomains(limit = any(), offset = any()) }
     assertFalse(viewModel.state.value.canLoadDomains)
     assertEquals(emptyList(), viewModel.state.value.domains)
+
+    val disabledViewModel = viewModel(pageSize = 2)
+    disabledViewModel.load(
+      organization = organization,
+      membership = viewerMembership(),
+      domainsEnabled = false,
+    )
+    advanceUntilIdle()
+
+    coVerify(exactly = 0) { organization.getDomains(limit = any(), offset = any()) }
+    assertFalse(disabledViewModel.state.value.canLoadDomains)
+    assertFalse(disabledViewModel.state.value.isLoadingInitial)
+    assertEquals(emptyList(), disabledViewModel.state.value.domains)
   }
 
   @Test

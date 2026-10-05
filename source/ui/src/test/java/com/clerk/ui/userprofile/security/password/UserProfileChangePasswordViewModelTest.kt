@@ -9,6 +9,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.updatePassword
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -52,6 +53,15 @@ class UserProfileChangePasswordViewModelTest {
       assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
       viewModel.resetPassword("old", "new", true)
       assertEquals(UserProfileChangePasswordViewModel.State.Success, awaitItem())
+    }
+    coVerify(exactly = 1) {
+      user.updatePassword(
+        User.UpdatePasswordParams(
+          currentPassword = "old",
+          newPassword = "new",
+          signOutOfOtherSessions = true,
+        )
+      )
     }
   }
 
