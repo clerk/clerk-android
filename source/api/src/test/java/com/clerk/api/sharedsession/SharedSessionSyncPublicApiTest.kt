@@ -30,6 +30,8 @@ class SharedSessionSyncPublicApiTest {
 
   @After
   fun tearDown() {
+    // Clerk.reset() leaves the shared-session coordinator (and its storage listener) running.
+    Clerk.stopSharedSessionSync()
     Clerk.reset()
     StorageHelper.reset(context)
   }

@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -158,6 +159,20 @@ class NativeMagicLinkServiceTest {
     )
 
     verifyEndToEndRequests()
+    assertPkceVerifierMatchesPreparedChallenge()
+    verify(exactly = 1) { Clerk.updateClient(refreshedClient) }
+    assertNull(PersistentPendingNativeMagicLinkStore().load())
+  }
+
+  private fun assertPkceVerifierMatchesPreparedChallenge() {
+    val prepareFields = slot<Map<String, String>>()
+    val completeFields = slot<Map<String, String>>()
+    coVerify { signInApi.prepareSignInFirstFactor(any(), capture(prepareFields)) }
+    coVerify { magicLinkApi.complete(capture(completeFields)) }
+    assertEquals(
+      prepareFields.captured.getValue("code_challenge"),
+      PkceUtil.createS256CodeChallenge(completeFields.captured.getValue("code_verifier")),
+    )
   }
 
   @Test
@@ -324,6 +339,15 @@ class NativeMagicLinkServiceTest {
       coVerify(exactly = 0) { auth.setActive(any(), any()) }
       coVerify(exactly = 0) { clientApi.get() }
       verify(exactly = 1) { auth.send(AuthEvent.SignUpCompleted(completedSignUp)) }
+      val prepareFields = slot<Map<String, String>>()
+      val completeFields = slot<Map<String, String>>()
+      coVerify { signUpApi.prepareSignUpVerification(any(), capture(prepareFields)) }
+      coVerify { magicLinkApi.complete(capture(completeFields)) }
+      assertEquals(
+        prepareFields.captured.getValue("code_challenge"),
+        PkceUtil.createS256CodeChallenge(completeFields.captured.getValue("code_verifier")),
+      )
+      assertNull(PersistentPendingNativeMagicLinkStore().load())
     }
 
   @Test

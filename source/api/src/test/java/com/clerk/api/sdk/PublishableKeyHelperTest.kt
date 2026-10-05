@@ -45,15 +45,12 @@ class PublishableKeyHelperTest {
   }
 
   @Test(expected = IllegalStateException::class)
-  fun `extractApiUrl with empty decoded string throws ClerkClientError`() {
+  fun `extractApiUrl with empty decoded string throws IllegalStateException`() {
     val emptyString = ""
     val encodedEmptyString = Base64.encodeToString(emptyString.toByteArray(), Base64.DEFAULT)
     val testKey = "${TOKEN_PREFIX_TEST}$encodedEmptyString"
 
     publishableKeyHelper.extractApiUrl(testKey)
-
-    // Then
-    // ClerkClientError is expected to be thrown
   }
 
   @Test

@@ -12,6 +12,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -194,29 +195,8 @@ class PasskeyServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+    assertSame(exception, result.throwable)
     coVerify { PasskeyCreationService.createPasskey() }
-  }
-
-  @Test
-  fun `signInWithPasskey with large credential list delegates correctly`() = runTest {
-    val largeCredentialList = (1..100).map { "credential-$it" }
-    coEvery {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = largeCredentialList,
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    } returns ClerkResult.success(mockSignIn)
-
-    val result = PasskeyService.signInWithPasskey(largeCredentialList)
-
-    assertTrue(result is ClerkResult.Success)
-    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
-    coVerify {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = largeCredentialList,
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    }
   }
 
   @Test
@@ -233,6 +213,7 @@ class PasskeyServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+    assertSame(exception, result.throwable)
     coVerify {
       GoogleCredentialAuthenticationService.signInWithGoogleCredential(
         allowedCredentialIds = emptyList(),

@@ -178,28 +178,21 @@ class ClerkTest {
     Clerk.updateClient(uninitializedClient)
   }
 
-  private fun simulateUninitializedEnvironment() {
-    val uninitializedEnvironment = mockk<Environment>(relaxed = true)
-    val uninitializedDisplayConfig = mockk<DisplayConfig>(relaxed = true)
-    val uninitializedUserSettings = mockk<UserSettings>(relaxed = true)
-    every { uninitializedEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
-    every { uninitializedEnvironment.displayConfig } returns uninitializedDisplayConfig
-    every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
-    every { uninitializedDisplayConfig.logoImageUrl } returns ""
-    every { uninitializedDisplayConfig.applicationName } returns ""
-    every { uninitializedDisplayConfig.supportEmail } returns null
-    every { uninitializedUserSettings.social } returns emptyMap()
-    every { uninitializedEnvironment.passkeyIsEnabled } returns false
-    every { uninitializedEnvironment.emailIsEnabled } returns false
-    every { uninitializedEnvironment.phoneNumberIsEnabled } returns false
-    every { uninitializedEnvironment.emailIsImmutable } returns false
-    every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
-    every { uninitializedEnvironment.usernameIsImmutable } returns false
-    Clerk.updateEnvironment(uninitializedEnvironment)
+  private fun signInWithActiveSession() {
+    val activeSessionId = "seeded_session_id"
+    every { mockSession.id } returns activeSessionId
+    every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    initializeClerkWithClient(mockClient)
+    assertEquals(mockSession, Clerk.session)
   }
 
   @Test
   fun `session returns null when client is not initialized`() = runTest {
+    signInWithActiveSession()
+
     simulateUninitializedClient()
 
     val session = Clerk.session
@@ -339,6 +332,9 @@ class ClerkTest {
 
   @Test
   fun `user returns null when no active session exists`() = runTest {
+    signInWithActiveSession()
+    assertEquals(mockUser, Clerk.userFlow.value)
+
     simulateUninitializedClient()
 
     val user = Clerk.userFlow.value
@@ -364,6 +360,9 @@ class ClerkTest {
 
   @Test
   fun `isSignedIn returns false when no session exists`() = runTest {
+    signInWithActiveSession()
+    assertTrue(Clerk.isSignedIn)
+
     simulateUninitializedClient()
 
     val isSignedIn = Clerk.isSignedIn
@@ -426,11 +425,11 @@ class ClerkTest {
 
   @Test
   fun `logoUrl returns null when environment is not initialized`() = runTest {
-    simulateUninitializedEnvironment()
+    Clerk.environment = null
 
     val logoUrl = Clerk.organizationLogoUrl
 
-    assertEquals("", logoUrl)
+    assertNull(logoUrl)
   }
 
   @Test
@@ -446,11 +445,11 @@ class ClerkTest {
 
   @Test
   fun `applicationName returns null when environment is not initialized`() = runTest {
-    simulateUninitializedEnvironment()
+    Clerk.environment = null
 
     val applicationName = Clerk.applicationName
 
-    assertEquals("", applicationName)
+    assertNull(applicationName)
   }
 
   @Test
@@ -485,7 +484,7 @@ class ClerkTest {
 
   @Test
   fun `socialProviders returns empty map when environment is not initialized`() = runTest {
-    simulateUninitializedEnvironment()
+    Clerk.environment = null
 
     val providers = Clerk.socialProviders
 
@@ -505,7 +504,7 @@ class ClerkTest {
 
   @Test
   fun `identifier flags return false when environment is not initialized`() = runTest {
-    simulateUninitializedEnvironment()
+    Clerk.environment = null
 
     assertFalse(Clerk.isEmailEnabled)
     assertFalse(Clerk.isPhoneNumberEnabled)
