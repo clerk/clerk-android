@@ -35,11 +35,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import coil3.compose.SubcomposeAsyncImage
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp1
@@ -181,7 +183,8 @@ internal fun OrganizationProfileFormView(
     )
 
     ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
+      modifier =
+        Modifier.fillMaxWidth().testTag(ClerkTestTags.Organization.ProfileForm.submitButton),
       text = submitText,
       isLoading = isLoading,
       isEnabled = enabled && organizationName.trim().isNotEmpty() && !isLoading && !logoIsLoading,
@@ -310,6 +313,7 @@ private fun OrganizationFormFields(
 ) {
   Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp16)) {
     ClerkTextField(
+      modifier = Modifier.testTag(ClerkTestTags.Organization.ProfileForm.name),
       value = organizationName,
       onValueChange = onOrganizationNameChange,
       label = stringResource(R.string.organization_name),
@@ -317,6 +321,7 @@ private fun OrganizationFormFields(
     )
     if (slugEnabled) {
       ClerkTextField(
+        modifier = Modifier.testTag(ClerkTestTags.Organization.ProfileForm.slug),
         value = slug,
         onValueChange = onSlugChange,
         label = stringResource(R.string.slug),
@@ -365,23 +370,23 @@ private fun PillActionButton(text: String, isEnabled: Boolean, onClick: () -> Un
 private suspend fun loadDefaultLogoFile(context: Context, url: String): File? {
   return withContext(Dispatchers.IO) {
     runCatching {
-        URL(url).openStream().use { input ->
-          val file = File(context.cacheDir, "organization_default_logo_${System.nanoTime()}.jpg")
-          FileOutputStream(file).use { output -> input.copyTo(output) }
-          file
-        }
+      URL(url).openStream().use { input ->
+        val file = File(context.cacheDir, "organization_default_logo_${System.nanoTime()}.jpg")
+        FileOutputStream(file).use { output -> input.copyTo(output) }
+        file
       }
+    }
       .getOrNull()
   }
 }
 
 private fun createImageFileFromUri(context: Context, uri: Uri): File? {
   return runCatching {
-      val file = File(context.cacheDir, "organization_logo_${System.nanoTime()}.jpg")
-      context.contentResolver.openInputStream(uri).use { input ->
-        FileOutputStream(file).use { output -> requireNotNull(input).copyTo(output) }
-      }
-      file
+    val file = File(context.cacheDir, "organization_logo_${System.nanoTime()}.jpg")
+    context.contentResolver.openInputStream(uri).use { input ->
+      FileOutputStream(file).use { output -> requireNotNull(input).copyTo(output) }
     }
+    file
+  }
     .getOrNull()
 }

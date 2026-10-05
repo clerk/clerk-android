@@ -27,6 +27,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentView
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
@@ -110,7 +111,7 @@ fun AuthView(
   mode: AuthMode = AuthMode.SignInOrUp,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
+    val fullScreenModifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     val isAuthNavigationReady = rememberAuthNavigationReady(backStack)
     if (!isAuthNavigationReady) return@ClerkThemeOverrideProvider

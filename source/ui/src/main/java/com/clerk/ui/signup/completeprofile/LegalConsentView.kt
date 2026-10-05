@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
@@ -68,6 +70,7 @@ internal fun LegalConsentView(
     )
 
     Switch(
+      modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.legalAccepted),
       checked = isAccepted,
       onCheckedChange = onAcceptedChange,
       colors =
