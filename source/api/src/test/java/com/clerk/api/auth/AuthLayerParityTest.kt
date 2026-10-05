@@ -1,3 +1,6 @@
+// These tests pin the deprecated entry points until they are removed in the next major.
+@file:Suppress("DEPRECATION")
+
 package com.clerk.api.auth
 
 import com.clerk.api.Clerk
@@ -31,6 +34,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -159,6 +163,14 @@ class AuthLayerParityTest {
     signUp.update(SignUp.SignUpUpdateParams.Standard(username = "ada", legalAccepted = true))
 
     assertEachLayerSent(signUpRequests, mapOf("username" to "ada", "legal_accepted" to "true"))
+  }
+
+  @Test
+  fun `sign-up update rejects unsafe metadata it cannot send`() = runTest {
+    val error = runCatching { signUp.update { unsafeMetadata = mapOf("plan" to "pro") } }
+
+    assertTrue(error.exceptionOrNull() is IllegalArgumentException)
+    assertTrue(signUpRequests.isEmpty())
   }
 
   @Test

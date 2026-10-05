@@ -39,15 +39,15 @@ suspend fun SignUp.sendCode(
     val target =
       when {
         email != null && !email.trim().equals(emailAddress?.trim(), ignoreCase = true) ->
-          update(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
+          updateImpl(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
         email == null && phone != null && phone.digits() != phoneNumber?.digits() ->
-          update(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
+          updateImpl(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
         else -> ClerkResult.success(this)
       }
     when (target) {
       is ClerkResult.Failure -> target
       is ClerkResult.Success ->
-        target.value.prepareVerification(target.value.sendCodeStrategy(email))
+        target.value.prepareVerificationImpl(target.value.sendCodeStrategy(email))
     }
   }
 }
@@ -88,11 +88,14 @@ suspend fun SignUp.verifyCode(
       VerificationType.PHONE -> SignUp.AttemptVerificationParams.PhoneCode(code = code)
     }
 
-  return attemptVerification(params)
+  return attemptVerificationImpl(params)
 }
 
 /**
  * Updates the sign-up with additional information.
+ *
+ * Sending [SignUpBuilder.unsafeMetadata] on update is not supported yet. Setting it here throws
+ * [IllegalArgumentException] instead of silently dropping it.
  *
  * @param block Builder block to configure the update.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
@@ -110,8 +113,9 @@ suspend fun SignUp.update(
   block: SignUpBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
+  require(builder.unsafeMetadata == null) { "update { } cannot change unsafeMetadata" }
 
-  return update(
+  return updateImpl(
     SignUp.SignUpUpdateParams.Standard(
       emailAddress = builder.email,
       phoneNumber = builder.phone,

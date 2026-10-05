@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -17,8 +18,8 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.get
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.prepareFirstFactorImpl
+import com.clerk.api.signin.reload
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.get
 import com.clerk.api.signup.toUnsafeMetadataJsonString
@@ -102,7 +103,7 @@ internal object SSOService {
         ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
         when (
           val prepareResult =
-            initialResult.value.prepareFirstFactor(
+            initialResult.value.prepareFirstFactorImpl(
               firstFactorParams(strategy = resolvedStrategy, redirectUrl = redirectUrl)
             )
         ) {
@@ -312,13 +313,15 @@ internal object SSOService {
 
   private suspend fun handleSignIn(pendingAuth: PendingAuth, nonce: String) {
     val signInResult =
-      requireNotNull(Clerk.auth.currentSignIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
+      requireNotNull(Clerk.auth.currentSignIn)
+        .reload(rotatingTokenNonce = nonce)
+        .signInToOAuthResult()
     finishPendingAuth(pendingAuth, signInResult)
   }
 
   private suspend fun handleSignUpTransfer(pendingAuth: PendingAuth) {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = SignUp.create(SignUp.CreateParams.Transfer).signUpToOAuthResult()
+    val createResult = Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
     finishPendingAuth(pendingAuth, createResult)
   }
 

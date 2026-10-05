@@ -1,3 +1,7 @@
+// TooManyFunctions: the deprecated old-layer wrappers sit next to their implementations until the
+// next major removes them.
+@file:Suppress("TooManyFunctions")
+
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
@@ -46,7 +50,7 @@ import kotlinx.serialization.encoding.Encoder
  * 1. **Initiate the Sign-In Process**
  *
  *    Collect the user's authentication information and pass the appropriate parameters to the
- *    [SignIn.create] method to start the sign-in.
+ *    `Clerk.auth.signIn*` method to start the sign-in.
  * 2. **Prepare for First Factor Verification**
  *
  *    Users **must** complete a first factor verification. This can include:
@@ -753,6 +757,15 @@ private constructor(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
+    @Deprecated(
+      message =
+        "Use the Clerk.auth method for your strategy: signIn { }, signInWithPassword { }, " +
+          "signInWithOtp { }, signInWithTicket(), signInWithPasskey() or signInWithBiometrics(). " +
+          "For a password reset, start with signIn { } and then call sendResetPasswordCode { }. " +
+          "For Strategy.Transfer, use transferToSignIn(). " +
+          "This overload will be removed in the next major version.",
+      level = DeprecationLevel.WARNING,
+    )
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> =
       Clerk.auth.createSignIn(params)
 
@@ -765,6 +778,17 @@ private constructor(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
+    @Deprecated(
+      message =
+        "Use Clerk.auth.signInWithPasskey(). This overload will be removed in the next major " +
+          "version.",
+      replaceWith =
+        ReplaceWith(
+          "Clerk.auth.signInWithPasskey(preferImmediatelyAvailableCredentials)",
+          "com.clerk.api.Clerk",
+        ),
+      level = DeprecationLevel.WARNING,
+    )
     @Suppress("UnusedParameter")
     suspend fun create(
       params: CreateParams.Strategy.Passkey,
@@ -794,6 +818,14 @@ private constructor(
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
+    @Deprecated(
+      message =
+        "Use Clerk.auth.signInWithGoogleOneTap(). This method will be removed in the next major " +
+          "version.",
+      replaceWith =
+        ReplaceWith("Clerk.auth.signInWithGoogleOneTap(transferable)", "com.clerk.api.Clerk"),
+      level = DeprecationLevel.WARNING,
+    )
     suspend fun authenticateWithGoogleOneTap(
       transferable: Boolean = true
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
@@ -890,11 +922,20 @@ internal object SignInSerializer : KSerializer<SignIn> {
 /**
  * Begins the first factor verification process.
  *
+ * Prefer the step method for the factor, such as [sendEmailCode], [sendEmailLink] or
+ * [authenticateWithOAuth]. Use this for an email link with a PKCE challenge you generated yourself;
+ * [sendEmailLink] generates and stores its own.
+ *
  * @param params The parameters for preparing the first factor verification.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.prepareFirstFactor(
+  params: SignIn.PrepareFirstFactorParams
+): ClerkResult<SignIn, ClerkErrorResponse> = prepareFirstFactorImpl(params)
+
+/** Canonical implementation behind [prepareFirstFactor] and the first-factor `send*` methods. */
+internal suspend fun SignIn.prepareFirstFactorImpl(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
@@ -952,7 +993,7 @@ suspend fun SignIn.sendPhoneCode(
     phoneNumberId
       ?: supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
       ?: error("No phone number found for phone_code strategy")
-  return prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
+  return prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
 }
 
 /**
@@ -973,7 +1014,7 @@ suspend fun SignIn.sendEmailCode(
     emailAddressId
       ?: supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
       ?: error("No email address found for email_code strategy")
-  return prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
+  return prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
 }
 
 /**
@@ -990,6 +1031,15 @@ suspend fun SignIn.sendEmailCode(
  *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when the sign-in is not
  *   awaiting a second factor or no phone or email code factor is available.
  */
+@Deprecated(
+  message =
+    "Use sendMfaPhoneCode(phoneNumberId) or sendMfaEmailCode(emailAddressId), or " +
+      "prepareSecondFactor(PrepareSecondFactorStrategy) to pick the channel explicitly. Called " +
+      "with no ids, this picks phone and then email; sendMfaPhoneCode() and sendMfaEmailCode() " +
+      "each fail when their channel is unavailable, so check supportedSecondFactors to choose. " +
+      "This overload will be removed in the next major version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
   emailAddressId: String? = null,
@@ -1102,11 +1152,19 @@ suspend fun SignIn.attemptFirstFactor(
 /**
  * Attempts to complete the second factor verification process.
  *
+ * Prefer [verifyMfaCode] for codes and [authenticateWithPasskey] for a passkey. Use this to submit
+ * a passkey credential obtained from your own Credential Manager UI.
+ *
  * @param params The parameters for the second factor verification.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.attemptSecondFactor(
+  params: SignIn.AttemptSecondFactorParams
+): ClerkResult<SignIn, ClerkErrorResponse> = attemptSecondFactorImpl(params)
+
+/** Canonical implementation behind [attemptSecondFactor] and [verifyMfaCode]. */
+internal suspend fun SignIn.attemptSecondFactorImpl(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
@@ -1121,12 +1179,13 @@ suspend fun SignIn.attemptSecondFactor(
  * @return A [ClerkResult] containing the refreshed [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message = "Use reload(). This method will be removed in the next major version.",
+  replaceWith = ReplaceWith("reload(rotatingTokenNonce)", "com.clerk.api.signin.reload"),
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
-  }
-}
+): ClerkResult<SignIn, ClerkErrorResponse> = reload(rotatingTokenNonce)
 
 // endregion
