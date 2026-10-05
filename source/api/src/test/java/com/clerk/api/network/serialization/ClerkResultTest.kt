@@ -63,6 +63,22 @@ class ClerkResultTest {
   }
 
   @Test
+  fun `httpFailure accepts any non-2xx status code`() {
+    listOf(101, 304, 404, 503, 600, 999).forEach { code ->
+      assertEquals(code, ClerkResult.httpFailure<ClerkErrorResponse>(code = code).code)
+    }
+  }
+
+  @Test
+  fun `httpFailure rejects codes outside the HTTP status range`() {
+    listOf(-1, 99, 1000).forEach { code ->
+      assertThrows(IllegalArgumentException::class.java) {
+        ClerkResult.httpFailure<ClerkErrorResponse>(code = code)
+      }
+    }
+  }
+
+  @Test
   fun `httpFailure rejects successful status codes`() {
     assertThrows(IllegalArgumentException::class.java) {
       ClerkResult.httpFailure<ClerkErrorResponse>(code = 200)
