@@ -486,6 +486,28 @@ class HostedAuthServiceTest {
       }
   }
 
+  @Test
+  fun startCancelledBeforeLaunchFreesTheRedirectSlot() = runBlocking {
+    val createStarted = CompletableDeferred<Unit>()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } coAnswers
+      {
+        createStarted.complete(Unit)
+        CompletableDeferred<ClerkResult<HostedAuthResource, ClerkErrorResponse>>().await()
+      }
+
+    val start = startInBackground()
+    withTimeout(TIMEOUT_MS) { createStarted.await() }
+    assertTrue(RedirectCoordinator.hasPendingRedirect.value)
+
+    start.cancel()
+    start.join()
+
+    assertFalse(RedirectCoordinator.hasPendingRedirect.value)
+    assertEquals(null, RedirectCoordinator.current())
+  }
+
   private fun CoroutineScope.startInBackground(
     mode: HostedAuthMode? = null
   ): Deferred<ClerkResult<Session, ClerkErrorResponse>> =

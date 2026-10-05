@@ -37,10 +37,12 @@ import io.mockk.verify
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -110,6 +112,38 @@ class SSOManagerActivityTest {
 
     coVerify(exactly = 1) { RedirectCoordinator.dispatch(responseUri) }
     assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+  }
+
+  @Test
+  fun ignoredCallback_failsThePendingFlowItsBrowserSessionCleared() {
+    val pending = startPendingSso()
+    // A callback for no flow (e.g. delivered through Auth.handle) still cleared the Custom Tab.
+    val activity = resumeWithCallback(Uri.parse("clerk://callback?clerk_redirect_state=forged"))
+
+    waitForMainLooper { activity.isFinishing }
+    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+    val failure = runBlocking { pending.result.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse(RedirectCoordinator.hasPendingRedirect.value)
+  }
+
+  @Test
+  fun ignoredCallback_leavesAFlowStartedAfterItAlone() {
+    mockkObject(RedirectCoordinator)
+    val newer = PendingRedirect.Sso("newer", true, PendingRedirect.RedirectFlow.SIGN_IN, null)
+    coEvery { RedirectCoordinator.dispatch(any()) } coAnswers
+      {
+        // A newer flow starts while this callback is being handled.
+        RedirectCoordinator.begin(newer)
+        CallbackOutcome.Ignored
+      }
+    startPendingSso()
+
+    val activity = resumeWithCallback(Uri.parse("clerk://callback?clerk_redirect_state=state"))
+
+    waitForMainLooper { activity.isFinishing }
+    assertFalse(newer.result.isCompleted)
+    assertTrue(RedirectCoordinator.isCurrent(newer))
   }
 
   @Test
@@ -335,7 +369,10 @@ class SSOManagerActivityTest {
     assertFalse(pendingResult.isCompleted)
 
     gate.complete(Unit)
-    val result = withTimeout(5_000L) { pendingResult.await() } as ClerkResult.Success
+    // The completion runs on Dispatchers.IO, so wait in real time, not runTest's virtual time.
+    val result =
+      withContext(Dispatchers.Default) { withTimeout(5_000L) { pendingResult.await() } }
+        as ClerkResult.Success
     assertEquals(signUp, result.value.signUp)
     waitForMainLooper { controller.get().isFinishing }
     assertEquals(Activity.RESULT_OK, Shadows.shadowOf(controller.get()).resultCode)

@@ -47,13 +47,21 @@ internal object HostedAuthService {
     val responseGuard = ResponseGuard { sideEffect ->
       RedirectCoordinator.runIfCurrent(pendingAuth, sideEffect)
     }
-    return when (val result = createHostedAuth(preparation, mode, responseGuard)) {
-      is ClerkResult.Failure -> {
-        finishPendingAuth(pendingAuth, result)
-        RedirectCoordinator.await(pendingAuth)
+    try {
+      return when (val result = createHostedAuth(preparation, mode, responseGuard)) {
+        is ClerkResult.Failure -> {
+          finishPendingAuth(pendingAuth, result)
+          RedirectCoordinator.await(pendingAuth)
+        }
+        is ClerkResult.Success ->
+          RedirectCoordinator.launchAndAwait(pendingAuth, preparation.context, result.value)
       }
-      is ClerkResult.Success ->
-        RedirectCoordinator.launchAndAwait(pendingAuth, preparation.context, result.value)
+    } finally {
+      // The slot is taken before the creation request; a caller cancelled (or a request that
+      // threw) before the browser launched must not leave it held.
+      if (!pendingAuth.result.isCompleted) {
+        RedirectCoordinator.cancelPending(matches = { it === pendingAuth })
+      }
     }
   }
 

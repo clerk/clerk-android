@@ -244,6 +244,63 @@ class RedirectCoordinatorTest {
   }
 
   @Test
+  fun `while a flow is pending the receiver forwards only that flow's callback`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
+
+    assertEquals(ReceiverDelivery.FORWARD, RedirectCoordinator.receiverDelivery(callback(STATE)))
+    assertEquals(ReceiverDelivery.DROP, RedirectCoordinator.receiverDelivery(callback("forged")))
+    assertEquals(ReceiverDelivery.DROP, RedirectCoordinator.receiverDelivery(callback(null)))
+    assertEquals(
+      ReceiverDelivery.COMPLETE_IN_BACKGROUND,
+      RedirectCoordinator.receiverDelivery(MAGIC_LINK),
+    )
+
+    SSOService.cancelPendingAuthentication()
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
+  }
+
+  @Test
+  fun `a callback for no flow is dropped while a hosted auth flow is pending`() {
+    RedirectCoordinator.begin(
+      PendingRedirect.HostedAuth("myapp://hosted", state = "s", codeVerifier = "v")
+    )
+
+    assertEquals(
+      ReceiverDelivery.DROP,
+      RedirectCoordinator.receiverDelivery(Uri.parse("clerk://com.example.app.callback")),
+    )
+    assertEquals(
+      ReceiverDelivery.FORWARD,
+      RedirectCoordinator.receiverDelivery(
+        Uri.parse("myapp://hosted?state=s&rotating_token_nonce=n&created_session_id=sess_1")
+      ),
+    )
+
+    RedirectCoordinator.cancelPending()
+    assertEquals(
+      ReceiverDelivery.FORWARD,
+      RedirectCoordinator.receiverDelivery(Uri.parse("clerk://com.example.app.callback")),
+    )
+    assertEquals(ReceiverDelivery.FORWARD, RedirectCoordinator.receiverDelivery(MAGIC_LINK))
+  }
+
+  @Test
+  fun `a finished flow without state does not claim the app's own deep links`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = null)
+    completionGate.complete(Unit)
+    assertEquals(
+      CallbackOutcome.Completed(success = true),
+      RedirectCoordinator.dispatch(callback(state = null)),
+    )
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Success)
+
+    val appLink = RedirectCoordinator.dispatch(Uri.parse("myapp://orders?error=out_of_stock"))
+
+    assertEquals(CallbackOutcome.NotHandled, appLink)
+    assertEquals(1, completeCalls.get())
+  }
+
+  @Test
   fun `withState keeps the existing query and fragment`() {
     assertEquals(
       "clerk://a.callback?clerk_redirect_state=s",
@@ -289,6 +346,7 @@ class RedirectCoordinatorTest {
     const val EXTERNAL_URL_A = "https://accounts.example.com/oauth/a"
     const val EXTERNAL_URL_B = "https://accounts.example.com/oauth/b"
     const val STATE = "state_123"
+    val MAGIC_LINK: Uri = Uri.parse("myapp://email-link?flow_id=flow_123&approval_token=tok")
     const val TIMEOUT_MS = 5_000L
     const val POLL_MS = 5L
   }

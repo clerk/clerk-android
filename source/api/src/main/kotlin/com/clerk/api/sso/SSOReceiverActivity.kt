@@ -4,11 +4,13 @@ import android.app.Activity
 import android.os.Bundle
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
+import com.clerk.api.redirect.ReceiverDelivery
 import com.clerk.api.redirect.RedirectCoordinator
 
 /**
- * Exported entry point for redirect callbacks. Any app can start it, so a callback that targets the
- * pending flow but fails its state check is dropped here and never reaches the flow.
+ * Exported entry point for redirect callbacks. Any app can start it, so while a flow is pending
+ * only a callback that passes that flow's state check reaches [SSOManagerActivity]; see
+ * [RedirectCoordinator.receiverDelivery].
  */
 internal class SSOReceiverActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,12 +22,14 @@ internal class SSOReceiverActivity : Activity() {
       finish()
       return
     }
-    if (RedirectCoordinator.isRejected(callbackUri)) {
-      ClerkLog.w("Ignoring redirect callback with invalid state")
-      finish()
-      return
+    when (RedirectCoordinator.receiverDelivery(callbackUri)) {
+      ReceiverDelivery.FORWARD ->
+        startActivity(SSOManagerActivity.createResponseHandlingIntent(this, callbackUri))
+      ReceiverDelivery.COMPLETE_IN_BACKGROUND ->
+        RedirectCoordinator.dispatchInBackground(callbackUri)
+      ReceiverDelivery.DROP ->
+        ClerkLog.w("Ignoring redirect callback that does not belong to the pending flow")
     }
-    startActivity(SSOManagerActivity.createResponseHandlingIntent(this, callbackUri))
     finish()
   }
 }

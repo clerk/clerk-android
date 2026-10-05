@@ -220,7 +220,8 @@ internal object SSOService {
   /**
    * Completes [pendingAuth] from its redirect callback [uri]. [RedirectCoordinator] has already
    * checked the callback's state and runs this once per flow, in its process-wide scope, without
-   * auth error reporting: the outcome is reported by the `authenticateWithRedirect` call awaiting it.
+   * auth error reporting: the outcome is reported by the `authenticateWithRedirect` call awaiting
+   * it.
    *
    * The method handles two authentication scenarios:
    * 1. **Sign In**: When the URI contains a `rotating_token_nonce` parameter

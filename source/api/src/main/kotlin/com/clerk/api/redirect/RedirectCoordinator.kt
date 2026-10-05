@@ -16,6 +16,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.sso.SSOService
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -49,8 +50,13 @@ internal object RedirectCoordinator {
   private val lock = Any()
   private var current: PendingRedirect<*>? = null
 
-  /** The last flow a callback completed, so a repeat of that callback joins its result. */
+  /**
+   * The last flow a callback completed, so a repeat of that callback joins its result. Kept only
+   * for [RECENT_WINDOW_NANOS] and only for a flow with a state, so it cannot keep claiming the
+   * app's own deep links afterwards.
+   */
   private var recent: PendingRedirect<*>? = null
+  private var recentUntilNanos = 0L
   private var magicLinkCompletion: Pair<String, Deferred<Boolean>>? = null
   private val pending = MutableStateFlow(false)
   private val completionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -91,6 +97,11 @@ internal object RedirectCoordinator {
    */
   fun cancelPendingUnlessCompleting() {
     cancelPending { !it.completionStarted.get() }
+  }
+
+  /** Like [cancelPendingUnlessCompleting], but only while [redirect] is still the pending flow. */
+  fun cancelPendingUnlessCompleting(redirect: PendingRedirect<*>) {
+    cancelPending { it === redirect && !it.completionStarted.get() }
   }
 
   /** Runs [sideEffect] under the slot lock only while [redirect] is the pending flow. */
@@ -221,6 +232,29 @@ internal object RedirectCoordinator {
   /** True when [uri] targets the pending flow but fails its state check. */
   fun isRejected(uri: Uri): Boolean = classify(uri) == CallbackVerdict.Rejected
 
+  /**
+   * How the exported receiver should deliver [uri]. Starting [SSOManagerActivity] (singleTask)
+   * clears the Custom Tab above it, so while a flow is pending only a callback that passed that
+   * flow's state check may reach it. Anything else would end the browser session and strand the
+   * flow, which is exactly what a forged callback from another app would try to do.
+   */
+  fun receiverDelivery(uri: Uri): ReceiverDelivery {
+    val hasPending = current() != null
+    return when (classify(uri)) {
+      is CallbackVerdict.Accepted -> ReceiverDelivery.FORWARD
+      CallbackVerdict.Rejected -> ReceiverDelivery.DROP
+      CallbackVerdict.MagicLink ->
+        if (hasPending) ReceiverDelivery.COMPLETE_IN_BACKGROUND else ReceiverDelivery.FORWARD
+      CallbackVerdict.Unmatched ->
+        if (hasPending) ReceiverDelivery.DROP else ReceiverDelivery.FORWARD
+    }
+  }
+
+  /** Dispatches [uri] in the process-wide scope, without any UI. */
+  fun dispatchInBackground(uri: Uri) {
+    completionScope.launch { dispatch(uri) }
+  }
+
   /** Whether [uri] has the shape of a redirect callback of any flow. */
   fun looksLikeCallback(uri: Uri): Boolean {
     val hostedAuth = current() as? PendingRedirect.HostedAuth
@@ -231,7 +265,8 @@ internal object RedirectCoordinator {
   }
 
   private fun classify(uri: Uri): CallbackVerdict {
-    val (pendingRedirect, recentRedirect) = synchronized(lock) { current to recent }
+    val (pendingRedirect, recentRedirect) =
+      synchronized(lock) { current to recent?.takeIf { System.nanoTime() - recentUntilNanos < 0 } }
     return when {
       canHandleNativeMagicLink(uri) -> CallbackVerdict.MagicLink
       pendingRedirect != null -> classifyFor(pendingRedirect, uri)
@@ -307,7 +342,8 @@ internal object RedirectCoordinator {
     }
 
   private fun clearSlot() {
-    recent = current?.takeIf { it.completionStarted.get() }
+    recent = current?.takeIf { it.completionStarted.get() && it.expectedState != null }
+    recentUntilNanos = System.nanoTime() + RECENT_WINDOW_NANOS
     current = null
     pending.value = false
   }
@@ -338,9 +374,21 @@ internal object RedirectCoordinator {
       "error_description",
     )
 
+  private val RECENT_WINDOW_NANOS = TimeUnit.SECONDS.toNanos(60)
   private const val NO_RESULT = "Redirect completion ended without a result."
   private const val INTERRUPTED =
     "Authentication was interrupted before it could complete. Please try again."
+}
+
+internal enum class ReceiverDelivery {
+  /** Start the manager activity with the callback. */
+  FORWARD,
+
+  /** Handle it without starting the manager, so the pending flow's browser session survives. */
+  COMPLETE_IN_BACKGROUND,
+
+  /** Do not deliver it. */
+  DROP,
 }
 
 internal sealed interface CallbackOutcome {

@@ -98,6 +98,9 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
+      var activityGoingAway = false
+      // The flow whose browser session this activity hosted; a newer flow is not this one's to end.
+      val hostedFlow = RedirectCoordinator.current()
       try {
         val outcome = RedirectCoordinator.dispatch(uri)
         pendingCallbackUri = null
@@ -106,11 +109,17 @@ internal class SSOManagerActivity : AppCompatActivity() {
       } catch (cancellation: CancellationException) {
         // This activity is going away; the completion keeps running and a recreated activity
         // attaches to it again.
+        activityGoingAway = true
         throw cancellation
       } catch (t: Throwable) {
         ClerkLog.e("authorizationComplete failed: ${t.message}")
         setResult(RESULT_CANCELED, Intent())
       } finally {
+        // Delivering the callback cleared the Custom Tab, so a flow this callback did not complete
+        // can no longer receive one; fail it rather than leave its caller waiting.
+        if (!activityGoingAway && hostedFlow != null) {
+          RedirectCoordinator.cancelPendingUnlessCompleting(hostedFlow)
+        }
         finish()
       }
     }

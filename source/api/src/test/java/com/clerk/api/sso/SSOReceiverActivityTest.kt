@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.redirect.ReceiverDelivery
 import com.clerk.api.redirect.RedirectCoordinator
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -27,23 +29,39 @@ class SSOReceiverActivityTest {
   }
 
   @Test
-  fun invalidHostedAuthCallbackIsNotForwarded() {
+  fun callbackThatDoesNotBelongToThePendingFlowIsNotForwarded() {
     val callbackUri = Uri.parse("clerk://example.callback?state=forged")
     mockkObject(RedirectCoordinator)
-    every { RedirectCoordinator.isRejected(callbackUri) } returns true
+    every { RedirectCoordinator.receiverDelivery(callbackUri) } returns ReceiverDelivery.DROP
 
     val activity = createReceiver(callbackUri)
 
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
-    verify(exactly = 1) { RedirectCoordinator.isRejected(callbackUri) }
+    verify(exactly = 1) { RedirectCoordinator.receiverDelivery(callbackUri) }
   }
 
   @Test
-  fun validHostedAuthCallbackIsForwardedToManager() {
+  fun magicLinkWhileAFlowIsPendingCompletesWithoutStartingTheManager() {
+    val magicLink = Uri.parse("clerk://example.callback?flow_id=flow_123&approval_token=tok")
+    mockkObject(RedirectCoordinator)
+    every { RedirectCoordinator.receiverDelivery(magicLink) } returns
+      ReceiverDelivery.COMPLETE_IN_BACKGROUND
+    justRun { RedirectCoordinator.dispatchInBackground(magicLink) }
+
+    val activity = createReceiver(magicLink)
+
+    // Starting the singleTask manager would clear the pending flow's Custom Tab.
+    assertNull(Shadows.shadowOf(activity).nextStartedActivity)
+    assertTrue(activity.isFinishing)
+    verify(exactly = 1) { RedirectCoordinator.dispatchInBackground(magicLink) }
+  }
+
+  @Test
+  fun pendingFlowCallbackIsForwardedToManager() {
     val callbackUri = Uri.parse("clerk://example.callback?state=expected")
     mockkObject(RedirectCoordinator)
-    every { RedirectCoordinator.isRejected(callbackUri) } returns false
+    every { RedirectCoordinator.receiverDelivery(callbackUri) } returns ReceiverDelivery.FORWARD
 
     val activity = createReceiver(callbackUri)
 
@@ -61,7 +79,7 @@ class SSOReceiverActivityTest {
 
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
-    verify(exactly = 0) { RedirectCoordinator.isRejected(any()) }
+    verify(exactly = 0) { RedirectCoordinator.receiverDelivery(any()) }
   }
 
   private fun createReceiver(callbackUri: Uri): SSOReceiverActivity {
