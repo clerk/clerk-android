@@ -114,7 +114,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+    coVerify { mockSignIn.verifyMfaCode(code, MfaType.EMAIL_CODE) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -139,7 +139,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+    coVerify { mockSignIn.verifyMfaCode(code, MfaType.EMAIL_CODE) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -214,7 +214,7 @@ class SignInAttemptHandlerTest {
         onErrorCallback = { errorCallbackCalled = true },
       )
 
-      coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+      coVerify { mockSignIn.verifyMfaCode(code, MfaType.PHONE_CODE) }
       assert(successCallbackCalled)
       assert(!errorCallbackCalled)
     }
@@ -239,7 +239,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+    coVerify { mockSignIn.verifyMfaCode(code, MfaType.PHONE_CODE) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -262,7 +262,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+    coVerify { mockSignIn.verifyMfaCode(code, MfaType.TOTP) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -286,7 +286,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.verifyMfaCode(any(), any()) }
+    coVerify { mockSignIn.verifyMfaCode(code, MfaType.TOTP) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
