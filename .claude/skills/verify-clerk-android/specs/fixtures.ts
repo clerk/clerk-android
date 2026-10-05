@@ -3,6 +3,8 @@ import { appendFileSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test as base } from '@e2e-dev/mobile';
 import { expect } from 'e2e';
+import { agentDeviceFor } from '../src/core/agent-device.ts';
+import { deviceCommand } from '../src/core/device-command.ts';
 import { ASSERTION_TIMEOUT_MS, loadRunContext } from '../src/core/e2e-config.ts';
 import { appStart, describeState, parseVerifyState, performAppStart } from '../src/core/state.ts';
 import { agentDeviceStateDir } from '../src/core/workspace.ts';
@@ -18,6 +20,7 @@ import {
   type BrokerLaunchResponse,
   type ErrorCode,
   type HostFixture,
+  type Lease,
   type RunContext,
   type RunTarget,
   type SeededUser,
@@ -33,25 +36,18 @@ const POLL_MS = 400;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function adb(target: RunTarget, args: readonly string[]): Promise<void> {
-  const lease = JSON.parse(readFileSync(target.leaseFile, 'utf8')) as { deviceId: string };
-  return new Promise((resolve, reject) => {
-    execFile('adb', ['-s', lease.deviceId, ...args], (error, _stdout, stderr) => {
-      if (error === null) resolve();
-      else reject(new Error(`adb ${args[0]} failed: ${stderr.trim() || error.message}`));
-    });
-  });
+async function adb(target: RunTarget, args: readonly string[]): Promise<void> {
+  const result = await deviceCommand(JSON.parse(readFileSync(target.leaseFile, 'utf8')) as Lease, args);
+  if (result.code !== 0) throw new Error(`adb ${args[0]} failed: ${result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`}`);
 }
 
 /** e2e names the worker's agent-device session `<session>-<slot>`, and verify runs one worker, so slot 0. */
 function typeIntoFocused(context: RunContext, target: RunTarget, text: string): Promise<void> {
-  const lease = JSON.parse(readFileSync(target.leaseFile, 'utf8')) as { deviceId?: string };
-  const device =
-    lease.deviceId === undefined ? [] : ['--platform', target.platform, target.platform === 'ios' ? '--udid' : '--serial', lease.deviceId];
+  const device = agentDeviceFor(JSON.parse(readFileSync(target.leaseFile, 'utf8')) as Lease);
   return new Promise((resolve, reject) => {
     const bin = join(dirname(context.workspace), 'node_modules', '.bin', 'agent-device');
-    const env = { ...process.env, AGENT_DEVICE_STATE_DIR: agentDeviceStateDir(context.workspace) };
-    execFile(bin, ['type', text, '--session', `${context.agentDeviceSession}-0`, ...device], { env }, (error, _stdout, stderr) => {
+    const env = { ...process.env, AGENT_DEVICE_STATE_DIR: agentDeviceStateDir(context.workspace), ...device.env };
+    execFile(bin, ['type', text, '--session', `${context.agentDeviceSession}-0`, ...device.selector], { env }, (error, _stdout, stderr) => {
       if (error === null) resolve();
       else reject(new Error(`agent-device type failed: ${stderr.trim() || error.message}`));
     });

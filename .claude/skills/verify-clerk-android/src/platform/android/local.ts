@@ -1,6 +1,5 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { defaultClaimsDir, freeSlot, isOrphaned, readClaim, readClaims, takeSlot, type Claim } from '../../core/claims.ts';
 import { isRunning, run, sleep, type ProcessRef, type Runner } from '../../core/exec.ts';
@@ -14,13 +13,10 @@ import {
   type LocalLease,
   type Recording,
 } from '../../core/types.ts';
-import { jdkCheck, sdkTool } from './sdk.ts';
+import { emulatorArgs, installArgs, logcatArgs, recordingOnDevice, screenrecordArgs } from './emulator.ts';
+import { AVD_NAME, ensureLaneAvd, jdkCheck, localAvailability, sdkTool, thisMachine, type Machine } from './sdk.ts';
 
-export const AVD_NAME = 'Clerk_Verify_Pixel';
 export const LOCALE = 'en-US';
-/** The default size fails on this AVD's 1280x2856 panel. */
-export const RECORD_SIZE = '720x1608';
-export const LOG_FILTER = ['ClerkVerify:V', 'ClerkLog:V', 'OkHttp:V', 'ReactNativeJS:V', 'AndroidRuntime:E', '*:S'];
 const BOOT_TIMEOUT_MS = 240_000;
 const STILL_WAITING_MS = 60_000;
 /**
@@ -43,17 +39,6 @@ export function parseAdbDevices(stdout: string): ReadonlyMap<string, string> {
   );
 }
 
-/** Logcat filter specs (`Tag:Level`, space separated) from HostAdapter.logPredicates go before the final `*:S`. */
-export function logFilter(extraPredicate?: string): readonly string[] {
-  const extra = extraPredicate?.split(/\s+/).filter((spec) => spec.length > 0) ?? [];
-  return [...LOG_FILTER.slice(0, -1), ...extra, '*:S'];
-}
-
-export function logcatSince(since: Date): string {
-  return (since.getTime() / 1000).toFixed(3);
-}
-
-const AVD_FIX = `create ${AVD_NAME} in Android Studio's Device Manager (Pixel 9 Pro, API 36, Google APIs), boot it once without a PIN, and set the locale to ${LOCALE}`;
 const listsAvd = (stdout: string) => stdout.split('\n').some((line) => line.trim() === AVD_NAME);
 
 export interface LocalAndroidOptions {
@@ -61,6 +46,7 @@ export interface LocalAndroidOptions {
   readonly adbBin?: string;
   readonly emulatorBin?: string;
   readonly emulatorsDir?: string;
+  readonly machine?: Machine;
 }
 
 /** The emulator process verify spawned for a claim, written before boot so an interrupted or wedged boot can still be reclaimed. */
@@ -85,9 +71,10 @@ function retryFix(request: AcquireRequest): string {
 export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBackend<LocalLease> {
   const claimsDir = options.claimsDir ?? defaultClaimsDir();
   const exec = run;
-  const emulatorLogDir = options.emulatorsDir ?? join(homedir(), '.verify', 'emulators');
-  const adbBin = options.adbBin ?? sdkTool('adb');
-  const emulatorBin = options.emulatorBin ?? sdkTool('emulator');
+  const machine = options.machine ?? thisMachine();
+  const emulatorLogDir = options.emulatorsDir ?? join(machine.home, '.verify', 'emulators');
+  const adbBin = options.adbBin ?? sdkTool('adb', machine);
+  const emulatorBin = options.emulatorBin ?? sdkTool('emulator', machine);
 
   const adb = (serial: string, args: readonly string[]) => exec(adbBin, ['-s', serial, ...args]);
   const shell = async (serial: string, command: string) => (await adb(serial, ['shell', command])).stdout.trim();
@@ -229,7 +216,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
       if (Date.now() >= deadline) {
         throw new VerifyFailure(
           'POOL_FULL',
-          `${inUse.length} of ${LOCAL_POOL.android} Android lanes are in use on this Mac (${inUse.join(', ')})`,
+          `${inUse.length} of ${LOCAL_POOL.android} Android lanes are in use on this machine (${inUse.join(', ')})`,
           `rerun with a longer --wait than ${request.waitSeconds}s, for example ${retryFix(request)}, or run {cli} down in a worktree that no longer needs its lane${foreignFix}`,
         );
       }
@@ -254,11 +241,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     mkdirSync(emulatorLogDir, { recursive: true });
     const logFile = join(emulatorLogDir, `android-${slot}.log`);
     const out = openSync(logFile, 'w');
-    const child = spawn(
-      emulatorBin,
-      ['-avd', AVD_NAME, '-read-only', '-no-window', '-no-audio', '-no-boot-anim', '-port', String(lanePort(slot))],
-      { detached: true, stdio: ['ignore', out, out] },
-    );
+    const child = spawn(emulatorBin, [...emulatorArgs(lanePort(slot), machine.os)], { detached: true, stdio: ['ignore', out, out] });
     closeSync(out);
     if (child.pid !== undefined) {
       const spawned: LaneProcess = { nonce, pid: child.pid, startedAt: Date.now() };
@@ -283,12 +266,14 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
   const backend: DeviceBackend<LocalLease> = {
     kind: 'local',
     platform: 'android',
-    supports: (os) => os === 'darwin' || os === 'linux',
-    requirement: 'the Android SDK emulator and adb, with the Clerk_Verify_Pixel AVD',
+    availability: () => localAvailability(machine),
+    requirement: 'the Android SDK emulator and adb with an Android 36 Google APIs system image, and on Linux a /dev/kvm this user can open',
 
     async acquire(request) {
-      if (!listsAvd((await exec(emulatorBin, ['-list-avds'])).stdout)) {
-        throw new VerifyFailure('NOT_READY', `no Android Virtual Device named ${AVD_NAME}`, AVD_FIX);
+      if (ensureLaneAvd(machine) === 'created') request.progress(`device  wrote the ${AVD_NAME} AVD, which this machine did not have`);
+      const listed = await exec(emulatorBin, ['-list-avds']);
+      if (!listsAvd(listed.stdout)) {
+        throw new VerifyFailure('NOT_READY', `the emulator does not list ${AVD_NAME}: ${(listed.stderr || listed.stdout).trim() || `exit ${listed.code}`}`, 'run `{cli} doctor`; if ANDROID_AVD_HOME is set, the AVD must be under it');
       }
       const claim = await claimSlot(request);
       const serial = laneSerial(claim.slot);
@@ -349,10 +334,11 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     },
 
     async install(lease, app) {
-      const result = await adb(lease.deviceId, ['install', '-r', '-t', app.path]);
+      const result = await adb(lease.deviceId, installArgs(app.path));
       if (result.code !== 0 || !/Success/.test(result.stdout)) {
         throw new VerifyFailure('NOT_READY', `adb install on ${lease.deviceName} failed: ${(result.stderr || result.stdout).trim()}`, '{cli} down, then {cli} up');
       }
+      return lease;
     },
 
     async release(lease) {
@@ -382,26 +368,24 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     },
 
     async logs(lease, since, extraPredicate) {
-      const result = await adb(lease.deviceId, ['logcat', '-d', '-v', 'threadtime', '-T', logcatSince(since), ...logFilter(extraPredicate)]);
+      const result = await adb(lease.deviceId, logcatArgs(since, extraPredicate));
       return result.stdout;
     },
 
-    agentDeviceTarget: (lease) => ({ daemon: 'local', deviceId: lease.deviceId }),
     describe: (lease) => `${lease.deviceName} (${lease.deviceId})`,
 
     async doctorChecks() {
       const device: DoctorCheck[] = [];
       const avds = await exec(emulatorBin, ['-list-avds']);
       const adbVersion = await exec(adbBin, ['version']);
+      const ports = `lanes boot it -read-only on ports ${lanePort(1)} to ${lanePort(LOCAL_POOL.android)}`;
       if (avds.code !== 0 || adbVersion.code !== 0) {
-        device.push({ id: 'template', ok: false, detail: 'the Android SDK emulator or adb is not installed', fix: 'install the Android SDK (Android Studio) and set ANDROID_HOME' });
-      } else if (!listsAvd(avds.stdout)) {
-        device.push({ id: 'template', ok: false, detail: `no Android Virtual Device named ${AVD_NAME}`, fix: AVD_FIX });
+        device.push({ id: 'template', ok: false, detail: 'the Android SDK emulator or adb does not run', fix: 'install the Android SDK (Android Studio) and set ANDROID_HOME' });
       } else {
-        device.push({ id: 'template', ok: true, detail: `${AVD_NAME}; lanes boot it -read-only on ports ${lanePort(1)} to ${lanePort(LOCAL_POOL.android)}` });
+        device.push({ id: 'template', ok: true, detail: listsAvd(avds.stdout) ? `${AVD_NAME}; ${ports}` : `no ${AVD_NAME} AVD yet; the first up writes it, and ${ports}` });
       }
       device.push(await lanePortsCheck());
-      return { toolchain: [jdkCheck()], device };
+      return { toolchain: [jdkCheck(machine.env)], device };
     },
   };
   return backend;
@@ -416,13 +400,13 @@ interface ScreenrecordOptions {
 
 /**
  * Stops screenrecord on the device with SIGINT and waits for `pidof` to come back empty before pulling: killing the
- * host-side adb instead leaves an mp4 with no moov atom that no player opens. `--time-limit 0` lifts the 180 second cap.
+ * host-side adb instead leaves an mp4 with no moov atom that no player opens.
  */
 export async function startScreenrecord(options: ScreenrecordOptions): Promise<Recording> {
   const { adbBin, serial, into, exec } = options;
   const shell = async (command: string) => (await exec(adbBin, ['-s', serial, 'shell', command])).stdout.trim();
-  const remote = `/sdcard/verify-${basename(into)}.mp4`;
-  const child = spawn(adbBin, ['-s', serial, 'shell', 'screenrecord', '--size', RECORD_SIZE, '--time-limit', '0', remote], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const remote = recordingOnDevice(basename(into));
+  const child = spawn(adbBin, ['-s', serial, ...screenrecordArgs(remote)], { stdio: ['ignore', 'pipe', 'pipe'] });
   const startedAt = Date.now();
   let output = '';
   child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));

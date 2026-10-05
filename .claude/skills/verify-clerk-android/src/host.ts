@@ -1,13 +1,26 @@
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { remoteBackend } from './core/remote/backend.ts';
 import { VerifyFailure, type HostAdapter, type NativeHostScreen, type ScratchPath } from './core/types.ts';
+import { APK, APP_ID, assembleHost } from './platform/android/emulator.ts';
 import { localAndroidBackend } from './platform/android/local.ts';
-import { resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
+import { AVD_NAME, resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
 
-const APP_ID = 'com.clerk.e2e';
-const APK = join('e2e', 'build', 'outputs', 'apk', 'debug', 'e2e-debug.apk');
+const SKILL_DIR = fileURLToPath(new URL('../', import.meta.url));
+const GITHUB_REPO = 'clerk/clerk-android';
+
+function pinnedAgentDevice(): string {
+  try {
+    const mobile = JSON.parse(readFileSync(join(SKILL_DIR, 'node_modules', '@e2e-dev', 'mobile', 'package.json'), 'utf8')) as { dependencies?: Record<string, string> };
+    const version = mobile.dependencies?.['agent-device'];
+    if (version !== undefined) return version;
+  } catch {
+    // Falls through to the fix below.
+  }
+  throw new VerifyFailure('NOT_READY', 'the pinned @e2e-dev/mobile is not installed, so the agent-device version a session needs is unknown', `npm ci --prefix ${SKILL_DIR}`);
+}
 
 function gradle(args: readonly string[], cwd: string, javaHome: string): Promise<{ code: number; tail: string }> {
   return new Promise((resolve) => {
@@ -32,7 +45,7 @@ export const host: HostAdapter<NativeHostScreen> = {
   platforms: ['android'],
   screens: ['home', 'auth', 'userProfile', 'orgSwitcher', 'orgList', 'orgProfile'],
   keysFile: '.keys.json',
-  githubRepo: 'clerk/clerk-android',
+  githubRepo: GITHUB_REPO,
   cli: '.claude/skills/verify-clerk-android/bin/control-clerk-android',
   appId: () => APP_ID,
   buildInputs: () => ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew'],
@@ -41,7 +54,7 @@ export const host: HostAdapter<NativeHostScreen> = {
     const java = resolveJavaHome();
     if (!java.ok) throw new VerifyFailure('NOT_READY', java.detail, java.fix);
     const worktree = fileURLToPath(new URL('../../../../', import.meta.url));
-    const result = await gradle([':e2e:assembleDebug', '--console=plain', '--quiet'], worktree, java.home);
+    const result = await gradle(assembleHost().args, worktree, java.home);
     if (result.code !== 0) {
       throw new VerifyFailure('BUILD_FAILED', `./gradlew :e2e:assembleDebug exited ${result.code}:\n${result.tail}`, 'fix the build error above, then rerun {cli} up');
     }
@@ -52,5 +65,21 @@ export const host: HostAdapter<NativeHostScreen> = {
   },
   entry: () => ({ kind: 'binary' }),
   features: ['auth-start', 'sign-in-email-code', 'sign-up', 'user-button-and-profile', 'session-tasks', 'organizations'],
-  backends: [localAndroidBackend()],
+  backends: [
+    localAndroidBackend(),
+    remoteBackend({
+      platform: 'android',
+      repo: GITHUB_REPO,
+      workflow: 'verify-remote.yml',
+      sessionsDir: join(SKILL_DIR, '.verify', 'remote'),
+      runner: 'blacksmith-4vcpu-ubuntu-2404',
+      planRunner: 'blacksmith-2vcpu-ubuntu-2404',
+      plumbingRunner: 'ubuntu-latest',
+      device: AVD_NAME,
+      idleMinutes: 15,
+      capMinutes: 60,
+      agentDevice: pinnedAgentDevice,
+      requirement: 'a pushed branch and access to GitHub Actions on clerk/clerk-android',
+    }),
+  ],
 };
