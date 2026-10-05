@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -55,8 +56,10 @@ import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp12
@@ -303,7 +306,11 @@ private fun handleUserButtonClick(
 private fun UserAvatarButtonContent(imageUrl: String?, onClick: () -> Unit) {
   val context = LocalContext.current
   val profilePainter = painterResource(id = R.drawable.ic_profile)
-  IconButton(onClick = onClick) {
+  IconButton(
+    onClick = onClick,
+    modifier =
+      Modifier.clerkTestTagsAsResourceIds().testTag(ClerkTestTags.UserButton.profileButton),
+  ) {
     Box(
       modifier =
         Modifier.size(dp36).clip(CircleShape).semantics {

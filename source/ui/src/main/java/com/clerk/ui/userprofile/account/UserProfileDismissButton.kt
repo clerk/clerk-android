@@ -5,8 +5,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -22,7 +24,7 @@ internal fun userProfileDismissTrailingContent(
 
 @Composable
 private fun UserProfileCloseButton(onDismiss: () -> Unit) {
-  IconButton(onClick = onDismiss) {
+  IconButton(onClick = onDismiss, modifier = Modifier.testTag(ClerkTestTags.dismissButton)) {
     Icon(
       modifier = Modifier.size(dp24),
       painter = painterResource(R.drawable.ic_cross),

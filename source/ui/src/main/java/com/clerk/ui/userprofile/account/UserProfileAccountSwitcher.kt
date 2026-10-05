@@ -22,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,7 +32,9 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import com.clerk.api.user.fullName
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.avatar.AvatarView
@@ -72,7 +75,7 @@ internal fun UserProfileAccountSwitcherSheet(
       containerColor = ClerkMaterialTheme.colors.background,
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
-      Column(modifier = Modifier.fillMaxWidth()) {
+      Column(modifier = Modifier.fillMaxWidth().clerkTestTagsAsResourceIds()) {
         Text(
           modifier = Modifier.padding(horizontal = dp24, vertical = dp16),
           text = stringResource(R.string.switch_account),
@@ -85,6 +88,7 @@ internal fun UserProfileAccountSwitcherSheet(
           val user = session.user
           if (user != null) {
             AccountSessionRow(
+              modifier = Modifier.testTag(ClerkTestTags.AccountSwitcher.sessionButton(user.id)),
               session = session,
               user = user,
               isCurrent = session.id == currentSession?.id,
@@ -120,6 +124,7 @@ internal fun UserProfileAccountSwitcherSheet(
         }
 
         AccountActionRow(
+          modifier = Modifier.testTag(ClerkTestTags.AccountSwitcher.addAccountButton),
           iconResId = R.drawable.ic_plus,
           text = stringResource(R.string.add_account),
           enabled = loadingActionId == null,
@@ -130,6 +135,7 @@ internal fun UserProfileAccountSwitcherSheet(
         )
         HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
         AccountActionRow(
+          modifier = Modifier.testTag(ClerkTestTags.AccountSwitcher.signOutAllButton),
           iconResId = R.drawable.ic_sign,
           text = stringResource(R.string.sign_out_of_all_accounts),
           enabled = loadingActionId == null,
@@ -174,10 +180,12 @@ private fun AccountSessionRow(
   isCurrent: Boolean,
   isLoading: Boolean,
   onClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   Row(
     modifier =
-      Modifier.fillMaxWidth()
+      modifier
+        .fillMaxWidth()
         .clickable(enabled = !isCurrent && !isLoading, onClick = onClick)
         .padding(horizontal = dp24, vertical = dp16),
     verticalAlignment = Alignment.CenterVertically,
@@ -224,11 +232,13 @@ private fun AccountActionRow(
   text: String,
   enabled: Boolean,
   onClick: () -> Unit,
+  modifier: Modifier = Modifier,
   isLoading: Boolean = false,
 ) {
   Row(
     modifier =
-      Modifier.fillMaxWidth()
+      modifier
+        .fillMaxWidth()
         .clickable(enabled = enabled, onClick = onClick)
         .padding(horizontal = dp24, vertical = dp16),
     verticalAlignment = Alignment.CenterVertically,

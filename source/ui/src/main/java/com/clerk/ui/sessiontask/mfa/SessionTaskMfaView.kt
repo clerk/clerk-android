@@ -13,10 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -148,6 +150,7 @@ private fun SessionTaskMfaMethodButtons(
     SessionTaskMfaMethodButton(
       text = stringResource(R.string.sms_code),
       iconRes = R.drawable.ic_phone,
+      testTag = ClerkTestTags.Auth.SessionTask.SetupMfa.smsCode,
       onClick = { onClick(ViewType.Sms) },
     )
   }
@@ -156,15 +159,21 @@ private fun SessionTaskMfaMethodButtons(
     SessionTaskMfaMethodButton(
       text = stringResource(R.string.authenticator_application),
       iconRes = R.drawable.ic_key,
+      testTag = ClerkTestTags.Auth.SessionTask.SetupMfa.authenticatorApp,
       onClick = { onClick(ViewType.AuthenticatorApp) },
     )
   }
 }
 
 @Composable
-private fun SessionTaskMfaMethodButton(text: String, iconRes: Int, onClick: () -> Unit) {
+private fun SessionTaskMfaMethodButton(
+  text: String,
+  iconRes: Int,
+  testTag: String,
+  onClick: () -> Unit,
+) {
   ClerkButton(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = Modifier.fillMaxWidth().testTag(testTag),
     text = text,
     onClick = onClick,
     configuration =

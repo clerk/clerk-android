@@ -6,11 +6,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.VerificationUiState
@@ -96,6 +98,7 @@ private fun SignUpCodeViewImpl(
   ) {
     Spacers.Vertical.Spacer32()
     ClerkCodeInputField(
+      modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.code),
       verificationState = verificationTextState.verificationState(),
       onTextChange = {
         if (verificationTextState is VerificationUiState.Error) {

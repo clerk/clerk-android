@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,6 +32,7 @@ import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.user.User
 import com.clerk.api.user.fullName
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -164,6 +166,7 @@ private fun LazyListScope.membershipsSection(
       name = membership.organization.name,
       imageUrl = membership.organization.imageUrl,
       subtitle = membership.roleName,
+      modifier = Modifier.testTag(ClerkTestTags.Organization.AccountList.membershipButton),
       isSelected = showSelectedAccessory && membership.organization.id == activeOrganizationId,
       isLoading = state.activeActionId == membership.organization.id,
       onClick = { actions.onSelectOrganization(membership.organization.id) },
@@ -285,6 +288,7 @@ private fun PersonalAccountRow(
     name = user.displayName().ifBlank { stringResource(R.string.personal_account) },
     imageUrl = user.imageUrl,
     subtitle = user.primaryEmailAddress?.emailAddress ?: user.username,
+    modifier = Modifier.testTag(ClerkTestTags.Organization.AccountList.personalAccountButton),
     avatarType = AvatarType.USER,
     isSelected = isSelected,
     isLoading = isLoading,
@@ -306,11 +310,18 @@ private fun InvitationRow(
     name = data.name,
     imageUrl = data.imageUrl,
     subtitle = if (isAccepted) displayRoleName(invitation.role) else null,
+    modifier =
+      if (isAccepted) {
+        Modifier.testTag(ClerkTestTags.Organization.AccountList.acceptedInvitationButton)
+      } else {
+        Modifier
+      },
     isLoading = isSelecting,
     onClick = if (isAccepted) onSelect else null,
     action = {
       if (!isAccepted) {
         PillActionButton(
+          modifier = Modifier.testTag(ClerkTestTags.Organization.AccountList.invitationJoinButton),
           text = stringResource(R.string.join),
           isLoading = isLoading,
           onClick = onAccept,
@@ -348,6 +359,7 @@ private fun CreateOrganizationRow(onClick: () -> Unit) {
   OrganizationRow(
     name = stringResource(R.string.create_organization),
     imageUrl = null,
+    modifier = Modifier.testTag(ClerkTestTags.Organization.AccountList.createOrganizationButton),
     leadingIcon = R.drawable.ic_plus,
     onClick = onClick,
   )
@@ -477,9 +489,14 @@ private fun OrganizationAccountAvatar(
 }
 
 @Composable
-internal fun PillActionButton(text: String, isLoading: Boolean = false, onClick: () -> Unit) {
+internal fun PillActionButton(
+  text: String,
+  modifier: Modifier = Modifier,
+  isLoading: Boolean = false,
+  onClick: () -> Unit,
+) {
   Surface(
-    modifier = Modifier.clickable(enabled = !isLoading, onClick = onClick),
+    modifier = modifier.clickable(enabled = !isLoading, onClick = onClick),
     shape = ClerkMaterialTheme.shape,
     color = ClerkMaterialTheme.colors.background,
     border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.buttonBorder),
