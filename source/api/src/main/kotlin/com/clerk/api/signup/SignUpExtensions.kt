@@ -94,6 +94,9 @@ suspend fun SignUp.verifyCode(
 /**
  * Updates the sign-up with additional information.
  *
+ * Sending [SignUpBuilder.unsafeMetadata] on update is not supported yet. Setting it here throws
+ * [IllegalArgumentException] instead of silently dropping it.
+ *
  * @param block Builder block to configure the update.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
@@ -110,6 +113,7 @@ suspend fun SignUp.update(
   block: SignUpBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
+  require(builder.unsafeMetadata == null) { "update { } cannot change unsafeMetadata" }
 
   return updateImpl(
     SignUp.SignUpUpdateParams.Standard(

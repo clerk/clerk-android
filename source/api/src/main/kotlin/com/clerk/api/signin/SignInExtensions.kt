@@ -188,7 +188,9 @@ private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
  * Continues a prepared redirect verification.
  *
  * Use this after a sign-in has prepared a first factor that returned an
- * `externalVerificationRedirectUrl`, such as Enterprise SSO.
+ * `externalVerificationRedirectUrl`, such as Enterprise SSO. Most callers should use
+ * [authenticateWithOAuth] or [authenticateWithEnterpriseSso], which prepare the factor and then
+ * call this.
  *
  * @param transferable Whether this authentication flow allows transferring to a sign-up if the user
  *   doesn't have an account. Defaults to `true`.

@@ -227,8 +227,8 @@ data class SignUp(
    * sealed interface encapsulates the different types of verification attempts, such as email or
    * phone code verification.
    *
-   * Use these parameters when calling [attemptVerification] to complete a verification that was
-   * previously initiated with [prepareVerification].
+   * The deprecated [attemptVerification] takes these parameters. New code should call [verifyCode]
+   * with a [com.clerk.api.auth.types.VerificationType] instead.
    */
   sealed interface AttemptVerificationParams {
     /**
@@ -451,7 +451,8 @@ data class SignUp(
     /**
      * The `SignUp` will be created using a Google One Tap token.
      *
-     * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
+     * Note: obtain the token from Google One Tap, or use `Clerk.auth.signUpWithGoogleOneTap()`,
+     * which runs the whole flow.
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
@@ -500,7 +501,8 @@ data class SignUp(
     @Deprecated(
       message =
         "Use the Clerk.auth method for your strategy: signUp { }, signUpWithTicket() or " +
-          "signUpWithIdToken(). This overload will be removed in the next major version.",
+          "signUpWithIdToken(). For CreateParams.Transfer, use transferToSignUp(). " +
+          "This overload will be removed in the next major version.",
       level = DeprecationLevel.WARNING,
     )
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
@@ -626,8 +628,8 @@ suspend fun SignUp.get(
  */
 @Deprecated(
   message =
-    "Use sendEmailCode(), sendPhoneCode() or sendEmailLink(). This method will be removed in the " +
-      "next major version.",
+    "Use sendEmailCode(), sendPhoneCode() or sendEmailLink(redirectUrl). This method will be " +
+      "removed in the next major version.",
   level = DeprecationLevel.WARNING,
 )
 suspend fun SignUp.prepareVerification(

@@ -762,6 +762,7 @@ private constructor(
         "Use the Clerk.auth method for your strategy: signIn { }, signInWithPassword { }, " +
           "signInWithOtp { }, signInWithTicket(), signInWithPasskey() or signInWithBiometrics(). " +
           "For a password reset, start with signIn { } and then call sendResetPasswordCode { }. " +
+          "For Strategy.Transfer, use transferToSignIn(). " +
           "This overload will be removed in the next major version.",
       level = DeprecationLevel.WARNING,
     )
@@ -921,18 +922,14 @@ internal object SignInSerializer : KSerializer<SignIn> {
 /**
  * Begins the first factor verification process.
  *
+ * Prefer the step method for the factor, such as [sendEmailCode], [sendEmailLink] or
+ * [authenticateWithOAuth]. Use this for an email link with a PKCE challenge you generated yourself;
+ * [sendEmailLink] generates and stores its own.
+ *
  * @param params The parameters for preparing the first factor verification.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-@Deprecated(
-  message =
-    "Use the step method for the factor: sendEmailCode(), sendPhoneCode(), sendEmailLink(), " +
-      "sendResetPasswordEmailCode(), sendResetPasswordPhoneCode(), authenticateWithOAuth(), " +
-      "authenticateWithEnterpriseSso() or authenticateWithPasskey(). This method will be removed " +
-      "in the next major version.",
-  level = DeprecationLevel.WARNING,
-)
 suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> = prepareFirstFactorImpl(params)
@@ -1037,8 +1034,10 @@ suspend fun SignIn.sendEmailCode(
 @Deprecated(
   message =
     "Use sendMfaPhoneCode(phoneNumberId) or sendMfaEmailCode(emailAddressId), or " +
-      "prepareSecondFactor(PrepareSecondFactorStrategy) to pick the channel explicitly. This " +
-      "overload will be removed in the next major version.",
+      "prepareSecondFactor(PrepareSecondFactorStrategy) to pick the channel explicitly. Called " +
+      "with no ids, this picks phone and then email; sendMfaPhoneCode() and sendMfaEmailCode() " +
+      "each fail when their channel is unavailable, so check supportedSecondFactors to choose. " +
+      "This overload will be removed in the next major version.",
   level = DeprecationLevel.WARNING,
 )
 suspend fun SignIn.prepareSecondFactor(
@@ -1153,16 +1152,13 @@ suspend fun SignIn.attemptFirstFactor(
 /**
  * Attempts to complete the second factor verification process.
  *
+ * Prefer [verifyMfaCode] for codes and [authenticateWithPasskey] for a passkey. Use this to submit
+ * a passkey credential obtained from your own Credential Manager UI.
+ *
  * @param params The parameters for the second factor verification.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-@Deprecated(
-  message =
-    "Use verifyMfaCode(code, MfaType) for codes, or authenticateWithPasskey() for a passkey " +
-      "second factor. This method will be removed in the next major version.",
-  level = DeprecationLevel.WARNING,
-)
 suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> = attemptSecondFactorImpl(params)
