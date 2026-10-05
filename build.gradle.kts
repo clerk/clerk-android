@@ -234,6 +234,20 @@ subprojects {
         description = "Builds the public ABI dump of the release variant."
         runtimeClasspath.from(abiRuntime)
         outputApiFile.set(layout.buildDirectory.file("api/${project.name}.api"))
+        // The Compose compiler emits a public ComposableSingletons$<File>Kt class holding
+        // getLambda$<hash>$<module> getters for every lambda it hoists, including those in private
+        // previews. They are not callable API and their hashes change with unrelated edits, so
+        // drop those classes from the dump. ignoredClasses only takes exact names, hence the
+        // post-processing.
+        val dumpFile = outputApiFile
+        doLast {
+          val file = dumpFile.get().asFile
+          val blocks = file.readText().split(Regex("\n\n+"))
+          val kept = blocks.filterNot { block ->
+            block.lineSequence().firstOrNull()?.contains("/ComposableSingletons$") == true
+          }
+          if (kept.size != blocks.size) file.writeText(kept.joinToString("\n\n"))
+        }
       }
     extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
       if (name == "release") {

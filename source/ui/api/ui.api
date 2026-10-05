@@ -19,38 +19,6 @@ public final class com/clerk/ui/auth/AuthViewKt {
 	public static final fun AuthView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZZLjava/util/Map;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/clerk/ui/auth/AuthMode;Landroidx/compose/runtime/Composer;III)V
 }
 
-public final class com/clerk/ui/auth/ComposableSingletons$AuthStartViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/auth/ComposableSingletons$AuthStartViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-979314625$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/auth/ComposableSingletons$AuthViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/auth/ComposableSingletons$AuthViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1762602566$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/auth/biometriccredential/ComposableSingletons$BiometricCredentialEnrollmentViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/auth/biometriccredential/ComposableSingletons$BiometricCredentialEnrollmentViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1117811532$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/appbar/ComposableSingletons$ClerkTopAppbarKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/appbar/ComposableSingletons$ClerkTopAppbarKt;
-	public fun <init> ()V
-	public final fun getLambda$-1257884638$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1325688495$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1581503666$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1702673703$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1891866302$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-717280227$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$2035238102$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$720756476$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$867174240$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/core/avatar/AvatarSize : java/lang/Enum {
 	public static final field LARGE Lcom/clerk/ui/core/avatar/AvatarSize;
 	public static final field MEDIUM Lcom/clerk/ui/core/avatar/AvatarSize;
@@ -59,15 +27,6 @@ public final class com/clerk/ui/core/avatar/AvatarSize : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/avatar/AvatarSize;
 	public static fun values ()[Lcom/clerk/ui/core/avatar/AvatarSize;
-}
-
-public final class com/clerk/ui/core/avatar/ComposableSingletons$AvatarViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/avatar/ComposableSingletons$AvatarViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1303096714$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-739546054$ui ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$1287366638$ui ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$369617549$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/core/badge/ClerkBadgeKt {
@@ -83,12 +42,6 @@ public final class com/clerk/ui/core/badge/ClerkBadgeType : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/badge/ClerkBadgeType;
 	public static fun values ()[Lcom/clerk/ui/core/badge/ClerkBadgeType;
-}
-
-public final class com/clerk/ui/core/badge/ComposableSingletons$ClerkBadgeKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/badge/ComposableSingletons$ClerkBadgeKt;
-	public fun <init> ()V
-	public final fun getLambda$-1944494020$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/core/button/social/ClerkSocialButtonKt {
@@ -211,63 +164,6 @@ public final class com/clerk/ui/core/button/standard/ClerkTextButtonKt {
 	public static final fun ClerkTextButton-ByhqlGk (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/text/TextStyle;ZJLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/core/button/standard/ComposableSingletons$ClerkButtonKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/button/standard/ComposableSingletons$ClerkButtonKt;
-	public fun <init> ()V
-	public final fun getLambda$-1531078528$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1664878468$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1897321667$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-2031121607$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-490786689$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-624586629$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-723229888$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-776982527$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-857029828$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-990829768$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1128166554$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1223553850$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1357353790$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1374530604$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1589796989$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1686329215$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1723596929$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$183262011$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$317061951$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$415705210$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$549505150$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$683305090$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/core/button/standard/ComposableSingletons$ClerkTextButtonKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/button/standard/ComposableSingletons$ClerkTextButtonKt;
-	public fun <init> ()V
-	public final fun getLambda$390750348$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/divider/ComposableSingletons$TextDividerKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/divider/ComposableSingletons$TextDividerKt;
-	public fun <init> ()V
-	public final fun getLambda$-1389944491$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/error/ComposableSingletons$ClerkErrorSnackbarKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/error/ComposableSingletons$ClerkErrorSnackbarKt;
-	public fun <init> ()V
-	public final fun getLambda$-1305410810$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/footer/ComposableSingletons$SecuredByClerkViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/footer/ComposableSingletons$SecuredByClerkViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1790936316$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/header/ComposableSingletons$HeaderTextViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/header/ComposableSingletons$HeaderTextViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1298623625$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/core/input/ClerkCodeInputFieldKt {
 	public static final fun ClerkCodeInputField (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ILcom/clerk/ui/signin/code/VerificationState;ZLcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
 }
@@ -280,96 +176,20 @@ public final class com/clerk/ui/core/input/ClerkTextFieldKt {
 	public static final fun ClerkTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZILandroidx/compose/ui/autofill/ContentType;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;III)V
 }
 
-public final class com/clerk/ui/core/input/ComposableSingletons$ClerkCodeInputFieldKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/input/ComposableSingletons$ClerkCodeInputFieldKt;
-	public fun <init> ()V
-	public final fun getLambda$-1092802848$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/input/ComposableSingletons$ClerkPhoneNumberFieldKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/input/ComposableSingletons$ClerkPhoneNumberFieldKt;
-	public fun <init> ()V
-	public final fun getLambda$283583670$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/input/ComposableSingletons$ClerkTextFieldKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/input/ComposableSingletons$ClerkTextFieldKt;
-	public fun <init> ()V
-	public final fun getLambda$-1073469475$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1147054053$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-776279081$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-999884897$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1037221884$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1110806462$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1184391040$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1496118540$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1989384542$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/core/input/PasswordKeyboardOptionsKt {
 	public static final fun getPasswordKeyboardOptions ()Landroidx/compose/foundation/text/KeyboardOptions;
-}
-
-public final class com/clerk/ui/core/menu/ComposableSingletons$ItemMoreMenuKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/menu/ComposableSingletons$ItemMoreMenuKt;
-	public fun <init> ()V
-	public final fun getLambda$1381020030$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/progress/ComposableSingletons$ClerkLinearProgressIndicatorKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/progress/ComposableSingletons$ClerkLinearProgressIndicatorKt;
-	public fun <init> ()V
-	public final fun getLambda$1527567151$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/scaffold/ComposableSingletons$ClerkThemedAuthScaffoldKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/scaffold/ComposableSingletons$ClerkThemedAuthScaffoldKt;
-	public fun <init> ()V
-	public final fun getLambda$1918261371$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/core/scaffold/ComposableSingletons$ClerkThemedProfileScaffoldKt {
-	public static final field INSTANCE Lcom/clerk/ui/core/scaffold/ComposableSingletons$ClerkThemedProfileScaffoldKt;
-	public fun <init> ()V
-	public final fun getLambda$-721881499$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$2040957663$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/navigation/ClerkHostBackActionKt {
 	public static final fun ClerkHostBackActionProvider (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
 }
 
-public final class com/clerk/ui/organizationlist/ComposableSingletons$OrganizationAccountListContentKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationlist/ComposableSingletons$OrganizationAccountListContentKt;
-	public fun <init> ()V
-	public final fun getLambda$914005352$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/organizationlist/ComposableSingletons$OrganizationListPreviewsKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationlist/ComposableSingletons$OrganizationListPreviewsKt;
-	public fun <init> ()V
-	public final fun getLambda$-1413824471$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/organizationlist/OrganizationListViewKt {
 	public static final fun OrganizationListView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;ZZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/organizationprofile/ComposableSingletons$OrganizationProfilePreviewsKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/ComposableSingletons$OrganizationProfilePreviewsKt;
-	public fun <init> ()V
-	public final fun getLambda$1134708290$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/organizationprofile/OrganizationProfileViewKt {
 	public static final fun OrganizationProfileView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;ZLjava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/organizationprofile/create/ComposableSingletons$OrganizationCreateFlowViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/create/ComposableSingletons$OrganizationCreateFlowViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1769118773$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$451585277$ui ()Lkotlin/jvm/functions/Function3;
 }
 
 public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomNavigator {
@@ -498,65 +318,6 @@ public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileSe
 	public static fun values ()[Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
 }
 
-public final class com/clerk/ui/organizationprofile/domains/ComposableSingletons$OrganizationVerifiedDomainsViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/domains/ComposableSingletons$OrganizationVerifiedDomainsViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1074428154$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-132535267$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1347325605$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/organizationprofile/form/ComposableSingletons$OrganizationLogoUploadSectionKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/form/ComposableSingletons$OrganizationLogoUploadSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-1214446444$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1497245149$ui ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$-662756327$ui ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$1784140503$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$877373724$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/organizationprofile/form/ComposableSingletons$OrganizationProfileFormViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/form/ComposableSingletons$OrganizationProfileFormViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1087054311$ui ()Lkotlin/jvm/functions/Function4;
-	public final fun getLambda$1380302396$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$910072783$ui ()Lkotlin/jvm/functions/Function4;
-}
-
-public final class com/clerk/ui/organizationprofile/invite/ComposableSingletons$OrganizationInviteMembersViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/invite/ComposableSingletons$OrganizationInviteMembersViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-2119895381$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/organizationprofile/members/ComposableSingletons$OrganizationMembersViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationprofile/members/ComposableSingletons$OrganizationMembersViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1128527951$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1315003336$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1385561273$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1423960850$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1755303487$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-2028518511$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-304189034$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-691657019$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-73739851$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1162951633$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1285127166$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$151303100$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1588688046$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$552850441$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$634021827$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/organizationswitcher/ComposableSingletons$OrganizationSwitcherPreviewsKt {
-	public static final field INSTANCE Lcom/clerk/ui/organizationswitcher/ComposableSingletons$OrganizationSwitcherPreviewsKt;
-	public fun <init> ()V
-	public final fun getLambda$-1798487852$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1172716755$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public abstract class com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode {
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Companion;
@@ -590,37 +351,6 @@ public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherKt {
 	public static final fun OrganizationSwitcher (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;ZLcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/List;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskChooseOrganizationViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskChooseOrganizationViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-513041397$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskCreateOrganizationViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskCreateOrganizationViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-2015528943$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1940597065$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskOrganizationScaffoldKt {
-	public static final field INSTANCE Lcom/clerk/ui/sessiontask/organization/ComposableSingletons$SessionTaskOrganizationScaffoldKt;
-	public fun <init> ()V
-	public final fun getLambda$-1254804933$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/ComposableSingletons$SignInFactorOneViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/ComposableSingletons$SignInFactorOneViewKt;
-	public fun <init> ()V
-	public final fun getLambda$102400364$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/ComposableSingletons$SignInFactorTwoViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/ComposableSingletons$SignInFactorTwoViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1363919203$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/SignInFactorOneViewKt {
 	public static final fun SignInFactorOneView (Lcom/clerk/api/network/model/factor/Factor;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
@@ -629,42 +359,16 @@ public final class com/clerk/ui/signin/SignInFactorTwoViewKt {
 	public static final fun SignInFactorTwoView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signin/alternativemethods/ComposableSingletons$SignInFactorAlternativeMethodsViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/alternativemethods/ComposableSingletons$SignInFactorAlternativeMethodsViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1655725835$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/alternativemethods/SignInFactorAlternativeMethodsViewKt {
 	public static final fun SignInFactorAlternativeMethodsView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;ZLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/backupcode/ComposableSingletons$SigninFactorTwoBackupCodeViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/backupcode/ComposableSingletons$SigninFactorTwoBackupCodeViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1328149279$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-1938687610$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/signin/backupcode/SigninFactorTwoBackupCodeViewKt {
 	public static final fun SignInFactorTwoBackupCodeView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signin/clienttrust/ComposableSingletons$SignInClientTrustViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/clienttrust/ComposableSingletons$SignInClientTrustViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-506153460$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/clienttrust/SignInClientTrustViewKt {
 	public static final fun SignInClientTrustView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/code/ComposableSingletons$SignInFactorCodeViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/code/ComposableSingletons$SignInFactorCodeViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1641887206$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$2103811609$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/signin/code/SignInFactorCodeViewKt {
@@ -706,37 +410,12 @@ public final class com/clerk/ui/signin/code/VerificationState$Verifying : com/cl
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/clerk/ui/signin/emaillink/ComposableSingletons$SignInFactorOneEmailLinkViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/emaillink/ComposableSingletons$SignInFactorOneEmailLinkViewKt;
-	public fun <init> ()V
-	public final fun getLambda$147748189$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/emaillink/SignInFactorOneEmailLinkViewKt {
 	public static final fun SignInFactorOneEmailLinkView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signin/help/ComposableSingletons$SignInGetHelpViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/help/ComposableSingletons$SignInGetHelpViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1910319134$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$75541629$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/help/SignInGetHelpViewKt {
 	public static final fun SignInGetHelpView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/passkey/ComposableSingletons$SignInFactorOnePasskeyViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/passkey/ComposableSingletons$SignInFactorOnePasskeyViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-678151787$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/signin/passkey/ComposableSingletons$SignInFactorTwoPasskeyViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/passkey/ComposableSingletons$SignInFactorTwoPasskeyViewKt;
-	public fun <init> ()V
-	public final fun getLambda$20091993$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/signin/passkey/SignInFactorOnePasskeyViewKt {
@@ -747,43 +426,16 @@ public final class com/clerk/ui/signin/passkey/SignInFactorTwoPasskeyViewKt {
 	public static final fun SignInFactorTwoPasskeyView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signin/password/forgot/ComposableSingletons$SignInFactorOneForgotPasswordViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/password/forgot/ComposableSingletons$SignInFactorOneForgotPasswordViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1281050988$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$507717805$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/password/forgot/SignInFactorOneForgotPasswordViewKt {
 	public static final fun SignInFactorOneForgotPasswordView (Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signin/password/reset/ComposableSingletons$SignInSetNewPasswordViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/password/reset/ComposableSingletons$SignInSetNewPasswordViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-406375825$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1613211146$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/signin/password/reset/SignInSetNewPasswordViewKt {
 	public static final fun SignInSetNewPasswordView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signin/password/set/ComposableSingletons$SignInFactorOnePasswordViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signin/password/set/ComposableSingletons$SignInFactorOnePasswordViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1174449606$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1601601621$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signin/password/set/SignInFactorOnePasswordViewKt {
 	public static final fun SignInFactorOnePasswordView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signup/code/ComposableSingletons$SignUpCodeViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signup/code/ComposableSingletons$SignUpCodeViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1141138502$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public abstract interface class com/clerk/ui/signup/code/SignUpCodeField {
@@ -868,32 +520,12 @@ public final class com/clerk/ui/signup/collectfield/CollectField : java/lang/Enu
 	public static fun values ()[Lcom/clerk/ui/signup/collectfield/CollectField;
 }
 
-public final class com/clerk/ui/signup/collectfield/ComposableSingletons$SignUpCollectFieldViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signup/collectfield/ComposableSingletons$SignUpCollectFieldViewKt;
-	public fun <init> ()V
-	public final fun getLambda$834894788$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signup/collectfield/SignUpCollectFieldViewKt {
 	public static final fun SignUpCollectFieldView (Lcom/clerk/ui/signup/collectfield/CollectField;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/signup/completeprofile/ComposableSingletons$LegalConsentViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signup/completeprofile/ComposableSingletons$LegalConsentViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-2034768349$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$326228564$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$436849525$ui ()Lkotlin/jvm/functions/Function2;
-}
-
 public final class com/clerk/ui/signup/completeprofile/SignUpCompleteProfileViewKt {
 	public static final fun SignUpCompleteProfileView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/signup/emaillink/ComposableSingletons$SignUpEmailLinkViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/signup/emaillink/ComposableSingletons$SignUpEmailLinkViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-125836023$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/signup/emaillink/SignUpEmailLinkViewKt {
@@ -904,76 +536,8 @@ public final class com/clerk/ui/userbutton/UserButtonKt {
 	public static final fun UserButton (Lcom/clerk/api/ui/ClerkTheme;ZZLjava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
-public final class com/clerk/ui/userprofile/ComposableSingletons$UserProfileViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/ComposableSingletons$UserProfileViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1383786232$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1596260451$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-1914864686$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$2081835425$ui ()Lkotlin/jvm/functions/Function3;
-}
-
 public final class com/clerk/ui/userprofile/UserProfileViewKt {
 	public static final fun UserProfileView (Lcom/clerk/api/ui/ClerkTheme;Ljava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ZLandroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/userprofile/account/ComposableSingletons$UserProfileAccountViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/account/ComposableSingletons$UserProfileAccountViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1662326174$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/account/ComposableSingletons$UserProfileDeleteAccountConfirmationViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/account/ComposableSingletons$UserProfileDeleteAccountConfirmationViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-410847896$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-581656655$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/account/ComposableSingletons$UserProfileDismissButtonKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/account/ComposableSingletons$UserProfileDismissButtonKt;
-	public fun <init> ()V
-	public final fun getLambda$-943427265$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/account/ComposableSingletons$UserProfileIconActionRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/account/ComposableSingletons$UserProfileIconActionRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-582323287$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/common/ComposableSingletons$BottomSheetTopBarKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/common/ComposableSingletons$BottomSheetTopBarKt;
-	public fun <init> ()V
-	public final fun getLambda$213507092$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$384599819$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/common/ComposableSingletons$UserProfileButtonRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/common/ComposableSingletons$UserProfileButtonRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-843407566$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileAddConnectedAccountViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileAddConnectedAccountViewKt;
-	public fun <init> ()V
-	public final fun getLambda$39825623$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileExternalAccountRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileExternalAccountRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-874138283$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1456625101$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileExternalAccountSectionKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/connectedaccount/ComposableSingletons$UserProfileExternalAccountSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-554259915$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-616346804$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-869440406$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/clerk/ui/userprofile/custom/UserProfileCustomNavigator {
@@ -1103,142 +667,8 @@ public final class com/clerk/ui/userprofile/custom/UserProfileSection : java/lan
 	public static fun values ()[Lcom/clerk/ui/userprofile/custom/UserProfileSection;
 }
 
-public final class com/clerk/ui/userprofile/detail/ComposableSingletons$UserProfileDetailViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/detail/ComposableSingletons$UserProfileDetailViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1222525358$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-797100188$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-804903953$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1803960768$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$2057921834$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$239363113$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$314615739$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$957747753$ui ()Lkotlin/jvm/functions/Function3;
-}
-
 public final class com/clerk/ui/userprofile/detail/UserProfileDetailViewKt {
 	public static final fun UserProfileDetailView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
-}
-
-public final class com/clerk/ui/userprofile/email/ComposableSingletons$UserProfileAddEmailViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/email/ComposableSingletons$UserProfileAddEmailViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1820195561$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/email/ComposableSingletons$UserProfileEmailRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/email/ComposableSingletons$UserProfileEmailRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-1587628213$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/email/ComposableSingletons$UserProfileEmailSectionKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/email/ComposableSingletons$UserProfileEmailSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-332750091$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-497177364$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$1489533792$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/mfa/ComposableSingletons$UserProfileAddMfaBottomSheetContentKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/mfa/ComposableSingletons$UserProfileAddMfaBottomSheetContentKt;
-	public fun <init> ()V
-	public final fun getLambda$-1757468531$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-525672202$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-770899055$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-991949912$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$2142904209$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$975920022$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/mfa/ComposableSingletons$UserProfileMfaAddSmsViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/mfa/ComposableSingletons$UserProfileMfaAddSmsViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1613709270$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-251383782$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-336285425$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1180757727$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1849283782$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/phone/ComposableSingletons$UserProfileAddPhoneViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/phone/ComposableSingletons$UserProfileAddPhoneViewKt;
-	public fun <init> ()V
-	public final fun getLambda$912777897$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/phone/ComposableSingletons$UserProfilePhoneRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/phone/ComposableSingletons$UserProfilePhoneRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-1193646481$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/phone/ComposableSingletons$UserProfilePhoneSectionKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/phone/ComposableSingletons$UserProfilePhoneSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-2117458681$ui ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$-556795772$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$2013081342$ui ()Lkotlin/jvm/functions/Function3;
-}
-
-public final class com/clerk/ui/userprofile/security/ComposableSingletons$BackupCodesViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/ComposableSingletons$BackupCodesViewKt;
-	public fun <init> ()V
-	public final fun getLambda$32531454$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/ComposableSingletons$UserProfileSecurityViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/ComposableSingletons$UserProfileSecurityViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1085208188$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/mfa/ComposableSingletons$UserProfileMfaRowKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/mfa/ComposableSingletons$UserProfileMfaRowKt;
-	public fun <init> ()V
-	public final fun getLambda$-739083881$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1159371548$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/passkey/rename/ComposableSingletons$UserProfilePasskeyRenameViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/passkey/rename/ComposableSingletons$UserProfilePasskeyRenameViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-713108220$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfileCurrentPasswordViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfileCurrentPasswordViewKt;
-	public fun <init> ()V
-	public final fun getLambda$781062687$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfileNewPasswordViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfileNewPasswordViewKt;
-	public fun <init> ()V
-	public final fun getLambda$1074129816$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfilePasswordSectionKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/security/password/ComposableSingletons$UserProfilePasswordSectionKt;
-	public fun <init> ()V
-	public final fun getLambda$-1013915552$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1874013486$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/verify/ComposableSingletons$UserProfileVerifyBottomSheetContentKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/verify/ComposableSingletons$UserProfileVerifyBottomSheetContentKt;
-	public fun <init> ()V
-	public final fun getLambda$1015250299$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$601089252$ui ()Lkotlin/jvm/functions/Function2;
-}
-
-public final class com/clerk/ui/userprofile/verify/ComposableSingletons$UserProfileVerifyViewKt {
-	public static final field INSTANCE Lcom/clerk/ui/userprofile/verify/ComposableSingletons$UserProfileVerifyViewKt;
-	public fun <init> ()V
-	public final fun getLambda$-1349357329$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$-149934010$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$1513468458$ui ()Lkotlin/jvm/functions/Function2;
-	public final fun getLambda$795499521$ui ()Lkotlin/jvm/functions/Function2;
 }
 
 public abstract interface class com/clerk/ui/userprofile/verify/Mode {
