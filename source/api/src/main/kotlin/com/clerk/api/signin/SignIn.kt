@@ -25,7 +25,6 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
-import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -771,11 +770,9 @@ private constructor(
       params: CreateParams.Strategy.Passkey,
       preferImmediatelyAvailableCredentials: Boolean = false,
     ): ClerkResult<SignIn, ClerkErrorResponse> {
-      return Clerk.auth.reportingFailures {
-        PasskeyService.signInWithPasskey(
-          preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
-        )
-      }
+      return Clerk.auth.signInWithPasskey(
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
+      )
     }
 
     /**
@@ -800,7 +797,7 @@ private constructor(
     suspend fun authenticateWithGoogleOneTap(
       transferable: Boolean = true
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return Clerk.auth.reportingFailures { GoogleSignInService().signInWithGoogle(transferable) }
+      return Clerk.auth.signInWithGoogleOneTap(transferable)
     }
 
     /**

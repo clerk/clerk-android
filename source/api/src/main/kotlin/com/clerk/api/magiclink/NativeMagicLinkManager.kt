@@ -125,9 +125,11 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   internal suspend fun prepareSignInEmailLink(
     signIn: SignIn,
     emailAddressId: String,
+    customRedirectUri: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val redirectUri =
-      resolveNativeEmailLinkRedirectUri()
+      customRedirectUri?.takeIf { it.isNotBlank() }
+        ?: resolveNativeEmailLinkRedirectUri()
         ?: return ClerkResult.apiFailure(nativeRedirectUriRequiredError())
 
     return prepareSignInEmailLink(signIn, emailAddressId, redirectUri)

@@ -203,6 +203,43 @@ class SignUpEmailVerificationStrategyTest {
     coVerify(exactly = 0) { mockSignUpApi.prepareSignUpVerification(any(), any()) }
   }
 
+  @Test
+  fun sendEmailLinkUsesACustomRedirectUrlWhenGiven() {
+    val fieldsSlot = slot<Map<String, String>>()
+    val signUp = signUp()
+    coEvery { mockSignUpApi.prepareSignUpVerification(signUp.id, capture(fieldsSlot)) } returns
+      ClerkResult.success(signUp)
+
+    runBlocking { signUp.sendEmailLink(redirectUrl = "myapp://email-link") }
+
+    assertEquals("myapp://email-link", fieldsSlot.captured["redirect_uri"])
+  }
+
+  @Test
+  fun sendEmailLinkKeepsItsPreviousJvmSignatures() {
+    val signUpMethods = Class.forName("com.clerk.api.signup.SignUpKt").declaredMethods
+    val signInMethods = Class.forName("com.clerk.api.signin.SignInExtensionsKt").declaredMethods
+
+    assertTrue(
+      signUpMethods.any {
+        it.name == "sendEmailLink" &&
+          it.parameterTypes.toList() ==
+            listOf(SignUp::class.java, kotlin.coroutines.Continuation::class.java)
+      }
+    )
+    assertTrue(
+      signInMethods.any {
+        it.name == "sendEmailLink" &&
+          it.parameterTypes.toList() ==
+            listOf(
+              com.clerk.api.signin.SignIn::class.java,
+              String::class.java,
+              kotlin.coroutines.Continuation::class.java,
+            )
+      }
+    )
+  }
+
   private fun emailAttributeConfig(verifications: List<String>): UserSettings.AttributesConfig {
     return UserSettings.AttributesConfig(
       enabled = true,

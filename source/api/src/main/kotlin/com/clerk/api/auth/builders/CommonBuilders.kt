@@ -1,5 +1,7 @@
 package com.clerk.api.auth.builders
 
+import com.clerk.api.sso.RedirectConfiguration
+
 /**
  * DSL marker annotation for Clerk DSL builders.
  *
@@ -52,6 +54,13 @@ class EnterpriseSsoBuilder {
    * SSO provider based on the email domain.
    */
   var email: String? = null
+
+  /**
+   * The native callback URL. Defaults to the callback registered by the SDK. A custom value needs
+   * an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity` in the application
+   * manifest.
+   */
+  var redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL
 
   internal fun validate() {
     require(email != null) { "Email must be provided for Enterprise SSO" }

@@ -187,6 +187,20 @@ class NativeMagicLinkServiceTest {
     coVerify(exactly = 0) { signInApi.createSignIn(any()) }
   }
 
+  @Test
+  fun `send email link uses a custom redirect uri when given`() = runTest {
+    val prepareFields = slot<Map<String, String>>()
+    val signIn = emailLinkSignIn().copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
+
+    coEvery { signInApi.prepareSignInFirstFactor(signIn.id, capture(prepareFields)) } returns
+      ClerkResult.success(signIn)
+
+    signIn.sendEmailLink(redirectUri = "myapp://email-link")
+
+    assertEquals("myapp://email-link", prepareFields.captured["redirect_uri"])
+    assertTrue(prepareFields.captured["code_challenge"]?.isNotBlank() == true)
+  }
+
   private fun verifyEndToEndRequests() {
     coVerify(exactly = 1) {
       signInApi.createSignIn(
