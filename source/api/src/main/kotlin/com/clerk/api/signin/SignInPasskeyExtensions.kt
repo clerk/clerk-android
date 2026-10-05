@@ -1,5 +1,7 @@
 package com.clerk.api.signin
 
+import com.clerk.api.Clerk
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -8,16 +10,17 @@ import com.clerk.api.passkeys.PasskeyService
 /** Prepares an explicit second-factor strategy, including passkeys. */
 suspend fun SignIn.prepareSecondFactor(
   strategy: SignIn.PrepareSecondFactorStrategy
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
-    return invalidPrepareState(
-      code = "sign_in_status_invalid",
-      longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
-    )
-  }
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
+      return@reportingFailures invalidPrepareState(
+        code = "sign_in_status_invalid",
+        longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
+      )
+    }
 
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toMap())
-}
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toMap())
+  }
 
 /**
  * Authenticates this sign-in with a passkey.
@@ -29,5 +32,7 @@ suspend fun SignIn.prepareSecondFactor(
 suspend fun SignIn.authenticateWithPasskey(
   allowedCredentialIds: List<String> = emptyList()
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return PasskeyService.authenticateWithPasskey(this, allowedCredentialIds)
+  return Clerk.auth.reportingFailures {
+    PasskeyService.authenticateWithPasskey(this, allowedCredentialIds)
+  }
 }

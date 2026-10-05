@@ -4,7 +4,11 @@ import android.app.Application
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
+import com.clerk.api.auth.AuthEvent
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.shortErrorMessageOrNull
@@ -139,6 +143,33 @@ class SSOServiceCancellationTest {
     val result = pendingResult.await() as ClerkResult.Success
     assertSame(signUp, result.value.signUp)
     coVerify(exactly = 1) { SignUp.create(SignUp.CreateParams.Transfer) }
+  }
+
+  @Test
+  fun `a failing callback leaves error reporting to the awaiting caller`() = runTest {
+    val signUpApi = mockk<SignUpApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.signUp } returns signUpApi
+    coEvery { signUpApi.createSignUp(any()) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(Error(code = "transfer_failed"))))
+    val errors = mutableListOf<AuthEvent.Error>()
+    val collector =
+      launch(start = CoroutineStart.UNDISPATCHED) {
+        Clerk.auth.events.collect { if (it is AuthEvent.Error) errors += it }
+      }
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(
+      Uri.parse("$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found")
+    )
+
+    assertTrue(pendingResult.await() is ClerkResult.Failure)
+    runCurrent()
+    assertTrue(errors.isEmpty())
+    collector.cancel()
   }
 
   @Test

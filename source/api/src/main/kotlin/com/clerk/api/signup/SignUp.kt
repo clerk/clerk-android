@@ -4,6 +4,7 @@ package com.clerk.api.signup
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.PkceUtil
@@ -505,7 +506,7 @@ data class SignUp(
           else -> params.toMap()
         }
       val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
-      return ClerkApi.signUp.createSignUp(paramMap)
+      return Clerk.auth.reportingFailures { ClerkApi.signUp.createSignUp(paramMap) }
     }
 
     /**
@@ -516,7 +517,7 @@ data class SignUp(
      *   [ClerkErrorResponse].
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
-      return ClerkApi.signUp.createSignUp(params)
+      return Clerk.auth.reportingFailures { ClerkApi.signUp.createSignUp(params) }
     }
 
     /**
@@ -527,7 +528,7 @@ data class SignUp(
      *   failure.
      */
     suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signUpWithGoogle()
+      return Clerk.auth.reportingFailures { GoogleSignInService().signUpWithGoogle() }
     }
 
     /**
@@ -544,14 +545,16 @@ data class SignUp(
           is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
           is AuthenticateWithRedirectParams.OAuth -> params.provider.strategy
         }
-      return SSOService.authenticateSignUpWithRedirect(
-        strategy = strategy,
-        redirectUrl = params.redirectUrl,
-        identifier = params.identifier,
-        emailAddress = params.emailAddress,
-        legalAccepted = params.legalAccepted,
-        unsafeMetadata = params.unsafeMetadata,
-      )
+      return Clerk.auth.reportingFailures {
+        SSOService.authenticateSignUpWithRedirect(
+          strategy = strategy,
+          redirectUrl = params.redirectUrl,
+          identifier = params.identifier,
+          emailAddress = params.emailAddress,
+          legalAccepted = params.legalAccepted,
+          unsafeMetadata = params.unsafeMetadata,
+        )
+      }
     }
 
     val fieldPriority: List<String> =
@@ -599,7 +602,9 @@ val SignUp.firstFieldToVerify: String?
 suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+  }
 }
 
 /**
@@ -612,7 +617,9 @@ suspend fun SignUp.update(
 suspend fun SignUp.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  }
 }
 
 /**
@@ -624,12 +631,14 @@ suspend fun SignUp.get(
  */
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
-): ClerkResult<SignUp, ClerkErrorResponse> {
-  if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
-    return NativeMagicLinkService.prepareSignUpEmailLink(this.id, prepareVerification)
+): ClerkResult<SignUp, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
+      NativeMagicLinkService.prepareSignUpEmailLink(this.id, prepareVerification)
+    } else {
+      ClerkApi.signUp.prepareSignUpVerification(this.id, fields = prepareVerification.toFields())
+    }
   }
-  return ClerkApi.signUp.prepareSignUpVerification(this.id, fields = prepareVerification.toFields())
-}
 
 /**
  * Sends a verification code to the phone number associated with this sign-up.
@@ -677,11 +686,13 @@ suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.attemptSignUpVerification(
-    signUpId = this.id,
-    strategy = params.strategy,
-    code = params.code,
-  )
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.attemptSignUpVerification(
+      signUpId = this.id,
+      strategy = params.strategy,
+      code = params.code,
+    )
+  }
 }
 
 // endregion
@@ -695,11 +706,10 @@ val SignUp.emailVerificationStrategy: String
     val activeStrategy = verifications[EMAIL_ADDRESS]?.strategy
     if (!activeStrategy.isNullOrBlank()) return activeStrategy
 
-    val configuredStrategies =
-      runCatching {
-          Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
-        }
-        .getOrDefault(emptyList())
+    val configuredStrategies = runCatching {
+      Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
+    }
+      .getOrDefault(emptyList())
 
     return when {
       configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
@@ -719,16 +729,16 @@ private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, St
       redirectUri
         ?: redirectUrl
         ?: runCatching {
-            val applicationId = Clerk.applicationId
-            if (applicationId.isNullOrBlank()) {
-              null
-            } else {
-              RedirectConfiguration.emailLinkRedirectUrl(
-                applicationId = applicationId,
-                proxyUrl = Clerk.proxyUrl,
-              )
-            }
+          val applicationId = Clerk.applicationId
+          if (applicationId.isNullOrBlank()) {
+            null
+          } else {
+            RedirectConfiguration.emailLinkRedirectUrl(
+              applicationId = applicationId,
+              proxyUrl = Clerk.proxyUrl,
+            )
           }
+        }
           .getOrNull()
     if (!resolvedRedirectUri.isNullOrBlank()) {
       strategyFields[ApiParams.REDIRECT_URI] = resolvedRedirectUri
