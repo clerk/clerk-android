@@ -23,6 +23,8 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -83,6 +85,45 @@ class DeviceTokenDecryptCountTest {
 
     // Every value above came from the in-memory copy kept in step with each write.
     assertEquals(0, decryptedValues.count { it.startsWith("token_") })
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken replaces the cached token`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_1")
+    assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    // The path Clerk.setDeviceToken() and DeviceTokenSavingMiddleware write through.
+    assertTrue(StorageHelper.compareAndSetDeviceToken(expected = "token_1", value = "token_2"))
+    assertEquals("token_2", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    assertTrue(StorageHelper.compareAndSetDeviceToken(expected = "token_2", value = null))
+    assertEquals(null, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    assertFalse(StorageHelper.compareAndSetDeviceToken(expected = "token_2", value = "token_3"))
+    assertEquals(null, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `a read before the cipher is ready is not cached`() {
+    StorageHelper.resetToUninitializedForTesting()
+    context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE).edit(
+      commit = true
+    ) {
+      putString(StorageKey.DEVICE_TOKEN.name, "clerk:v1:${encode("token_1")}")
+    }
+    var cipherAvailable = false
+    StorageHelper.storageCipherFactoryOverride = {
+      check(cipherAvailable) { "keystore not ready" }
+      CountingCipher(decryptedValues)
+    }
+
+    // Preferences are open but the cipher failed to initialize, so the token can't be read yet.
+    StorageHelper.initialize(context)
+    assertEquals(null, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    cipherAvailable = true
+    StorageHelper.initialize(context)
+    assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 
   private fun tokenDecrypts(token: String): Int = decryptedValues.count { it == token }

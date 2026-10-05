@@ -286,8 +286,10 @@ private object DeviceTokenCache {
     return value
   }
 
-  /** Runs [commit] under the lock; caches [value] if it reached disk, otherwise forgets the entry. */
-  inline fun write(value: String?, commit: () -> Boolean): Boolean =
+  /**
+   * Runs [commit] under the lock; caches [value] if it reached disk, otherwise forgets the entry.
+   */
+  fun write(value: String?, commit: () -> Boolean): Boolean =
     synchronized(lock) {
       val committed = commit()
       generation += 1
