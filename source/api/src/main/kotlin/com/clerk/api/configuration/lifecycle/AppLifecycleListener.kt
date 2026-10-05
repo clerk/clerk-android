@@ -23,10 +23,13 @@ internal object AppLifecycleListener {
         if (Clerk.debugMode) {
           ClerkLog.d("AppLifecycleListener, onStart")
         }
-        if (wasBackgrounded) {
+        // Clear the flag before notifying: the callback restarts the token refresh loop, which
+        // exits as soon as it sees isInBackground == true.
+        val returningFromBackground = wasBackgrounded
+        wasBackgrounded = false
+        if (returningFromBackground) {
           callback()
         }
-        wasBackgrounded = false
       }
 
       override fun onStop(owner: LifecycleOwner) {
