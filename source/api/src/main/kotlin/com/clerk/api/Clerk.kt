@@ -1112,11 +1112,10 @@ object Clerk {
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
-    updateClient(
-      client = client,
-      serverFetchAtMillis = serverFetchAtMillisFor(client),
-      completedAuthFlow = completedAuthFlow,
-    )
+    if (completedAuthFlow != null) {
+      holdAuthFlowCompletion(completedAuthFlow)
+    }
+    applyClientUpdate(client, serverFetchAtMillis = null, expectedUpdateCount = null)
   }
 
   internal fun updateClient(
@@ -1139,42 +1138,47 @@ object Clerk {
   internal fun updateClientIfUnchangedSince(expectedUpdateCount: Long, client: Client): Boolean =
     applyClientUpdate(
       client = client,
-      serverFetchAtMillis = serverFetchAtMillisFor(client),
+      serverFetchAtMillis = null,
       expectedUpdateCount = expectedUpdateCount,
     )
 
-  private fun serverFetchAtMillisFor(client: Client): Long {
-    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
-    return if (_clientFlow.value == resolvedClient) {
-      lastClientServerFetchAtMillis ?: System.currentTimeMillis()
-    } else {
-      System.currentTimeMillis()
-    }
-  }
-
+  /**
+   * Applies [client] and records its server fetch time. A null [serverFetchAtMillis] keeps the
+   * previous fetch time when the resolved client is unchanged and uses the current time otherwise;
+   * it is resolved under [clientUpdateLock] so the recorded time cannot go backwards when updates
+   * interleave.
+   */
   private fun applyClientUpdate(
     client: Client,
-    serverFetchAtMillis: Long,
+    serverFetchAtMillis: Long?,
     expectedUpdateCount: Long?,
   ): Boolean {
     // The client fields and the session/user state derived from them are published under one lock
     // so a concurrent update cannot interleave and leave them out of sync. Shared-session sync
-    // stays
-    // outside it: the coordinator holds its own lock and may call back into updateClient.
-    val updatedClient =
+    // stays outside it: the coordinator holds its own lock and may call back into updateClient.
+    // Because of that, concurrent updates may reach handleClientChange in a different order than
+    // they were applied here.
+    val (updatedClient, appliedServerFetchAtMillis) =
       synchronized(clientUpdateLock) {
         if (expectedUpdateCount != null && clientUpdates != expectedUpdateCount) {
           return false
         }
         val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+        val resolvedServerFetchAtMillis =
+          serverFetchAtMillis
+            ?: if (_clientFlow.value == resolvedClient) {
+              lastClientServerFetchAtMillis ?: System.currentTimeMillis()
+            } else {
+              System.currentTimeMillis()
+            }
         this.client = resolvedClient
-        lastClientServerFetchAtMillis = serverFetchAtMillis
+        lastClientServerFetchAtMillis = resolvedServerFetchAtMillis
         _clientFlow.value = resolvedClient
         clientUpdates += 1
         updateSessionAndUserState()
-        resolvedClient
+        resolvedClient to resolvedServerFetchAtMillis
       }
-    sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
+    sharedSessionSyncCoordinator?.handleClientChange(updatedClient, appliedServerFetchAtMillis)
     cacheStateIfReady()
     return true
   }
