@@ -12,7 +12,9 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.sso.SSOCancellationException
@@ -46,8 +48,9 @@ internal object ExternalAccountService {
         val context = Clerk.applicationContext?.get()
         when {
           externalUrl == null ->
-            ClerkResult.unknownFailure(
-              IllegalStateException("External verification redirect URL is missing")
+            localFailure(
+              code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+              longMessage = "External verification redirect URL is missing",
             )
           context == null ->
             ClerkResult.unknownFailure(

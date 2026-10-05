@@ -27,6 +27,8 @@ import com.clerk.api.signin.sendMfaPhoneCode
 import com.clerk.api.signin.sendPhoneCode
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendCode
+import com.clerk.api.sso.OAuthProvider
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -147,6 +149,18 @@ class ClerkResultNoThrowTest {
     assertErrorCode(LocalFailureCodes.MISSING_RESOURCE_DATA, externalAccount.reauthorize())
     verify(exactly = 0) { ClerkApi.organization }
     verify(exactly = 0) { ClerkApi.user }
+  }
+
+  @Test
+  fun `redirect sign-up without an external verification URL is a coded failure`() = runTest {
+    val signUp = mockk<SignUp>(relaxed = true)
+    every { signUp.verifications } returns emptyMap()
+    coEvery { signUpApi.createSignUp(any()) } returns ClerkResult.success(signUp)
+
+    val result = Auth().signUpWithOAuth(OAuthProvider.GOOGLE)
+
+    assertEquals(ClerkResult.Failure.ErrorType.API, (result as ClerkResult.Failure).errorType)
+    assertErrorCode(LocalFailureCodes.MISSING_RESOURCE_DATA, result)
   }
 
   private fun assertErrorCode(code: String, result: ClerkResult<*, ClerkErrorResponse>) {

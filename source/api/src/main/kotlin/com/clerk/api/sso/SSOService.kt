@@ -16,7 +16,9 @@ import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactorImpl
 import com.clerk.api.signin.reload
@@ -77,8 +79,9 @@ internal object SSOService {
     cancelCompetingAuthenticationFlows()
     val resolvedStrategy =
       strategy
-        ?: return ClerkResult.unknownFailure(
-          Exception("Strategy cannot be null for redirect authentication")
+        ?: return localFailure(
+          code = LocalFailureCodes.INVALID_ARGUMENTS,
+          longMessage = "Strategy cannot be null for redirect authentication",
         )
 
     val initialResult =
@@ -123,9 +126,12 @@ internal object SSOService {
     }
   }
 
-  private fun missingExternalUrlFailure(): ClerkResult.Failure<Nothing> {
+  private fun missingExternalUrlFailure(): ClerkResult.Failure<ClerkErrorResponse> {
     ClerkLog.e("Redirect authentication response is missing the external verification URL")
-    return ClerkResult.unknownFailure(IllegalStateException("External URL cannot be null"))
+    return localFailure(
+      code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+      longMessage = "Redirect authentication response is missing the external verification URL",
+    )
   }
 
   private fun firstFactorParams(

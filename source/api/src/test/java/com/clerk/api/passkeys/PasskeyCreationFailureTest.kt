@@ -6,6 +6,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -15,6 +16,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -62,7 +64,12 @@ class PasskeyCreationFailureTest {
 
     val result = PasskeyCreationService.createPasskey()
 
-    assertTrue((result as ClerkResult.Failure).throwable is IllegalStateException)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+    assertEquals(
+      LocalFailureCodes.MISSING_RESOURCE_DATA,
+      failure.error?.errors?.single()?.code,
+    )
     coVerify(exactly = 0) { credentialManager.createCredential(any(), any()) }
   }
 

@@ -31,6 +31,9 @@ private const val NETWORK_ERROR_MESSAGE =
  *   [ClerkErrorResponse] that carries a descriptive error code and message.
  * - Unexpected exceptions from the platform (Credential Manager, Play Integrity, I/O) are reported
  *   as [Failure.ErrorType.UNKNOWN] failures with the exception in [Failure.throwable].
+ * - Flows that document a specific exception type for a failure, such as a dismissed or superseded
+ *   browser flow, report it as [Failure.ErrorType.UNKNOWN] with that exception in
+ *   [Failure.throwable].
  *
  * Two things still propagate as exceptions: coroutine cancellation
  * ([kotlin.coroutines.cancellation.CancellationException]), so structured concurrency keeps

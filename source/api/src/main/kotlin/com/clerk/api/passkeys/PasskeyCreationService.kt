@@ -12,7 +12,9 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.catchingClerkResult
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import kotlinx.serialization.json.Json
@@ -44,8 +46,9 @@ internal object PasskeyCreationService {
         val nonce = createPasskeyResult.value.verification?.nonce
         if (nonce == null) {
           ClerkLog.e("Passkey creation failed: missing verification nonce")
-          ClerkResult.unknownFailure(
-            IllegalStateException("Passkey creation response is missing the nonce")
+          localFailure(
+            code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+            longMessage = "Passkey creation response is missing the nonce",
           )
         } else {
           catchingClerkResult(

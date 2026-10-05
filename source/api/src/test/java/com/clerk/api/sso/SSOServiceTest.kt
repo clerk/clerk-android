@@ -12,6 +12,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import io.mockk.coEvery
@@ -70,11 +71,8 @@ class SSOServiceTest {
       val result = SSOService.authenticateWithRedirect(strategy = null, redirectUrl = REDIRECT_URL)
 
       val failure = result as ClerkResult.Failure
-      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
-      assertEquals(
-        "Strategy cannot be null for redirect authentication",
-        failure.throwable?.message,
-      )
+      assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+      assertEquals(LocalFailureCodes.INVALID_ARGUMENTS, failure.error?.errors?.single()?.code)
       coVerify(exactly = 0) { signInApi.createSignIn(any()) }
       verify(exactly = 0) { context.startActivity(any()) }
       assertFalse(SSOService.hasPendingAuthentication())
