@@ -67,9 +67,10 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             } else {
               emptyList()
             }
-          val completedAuthFlow = authEvents.firstOrNull { event ->
-            event is AuthEvent.SignInCompleted || event is AuthEvent.SignUpCompleted
-          }
+          val completedAuthFlow =
+            authEvents.firstOrNull { event ->
+              event is AuthEvent.SignInCompleted || event is AuthEvent.SignUpCompleted
+            }
           syncClientFromResponse(
             request = request,
             response = response,

@@ -43,12 +43,10 @@ internal fun buildRenderedRows(
 ): List<UserProfileListRow> {
   val sectionCustomRows = customRows.filter { it.placement.section == section }
 
-  val sectionStartRows = sectionCustomRows.filter {
-    it.placement is UserProfileCustomRowPlacement.SectionStart
-  }
-  val sectionEndRows = sectionCustomRows.filter {
-    it.placement is UserProfileCustomRowPlacement.SectionEnd
-  }
+  val sectionStartRows =
+    sectionCustomRows.filter { it.placement is UserProfileCustomRowPlacement.SectionStart }
+  val sectionEndRows =
+    sectionCustomRows.filter { it.placement is UserProfileCustomRowPlacement.SectionEnd }
   val beforeMap =
     sectionCustomRows
       .filter { it.placement is UserProfileCustomRowPlacement.Before }
