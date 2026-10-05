@@ -344,10 +344,11 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun prepareShouldRerouteToFirstFactorWhenEmailLinkIsAvailableForEmailIdentifier() = runTest {
+  fun prepareShouldSendEmailCodeWhenEmailLinkIsSupported() = runTest {
     every { mockSignIn.identifier } returns "sam@clerk.dev"
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
+        Factor(strategy = StrategyKeys.PASSWORD),
         Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
         Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
       )
@@ -360,15 +361,23 @@ class SignInFactorCodeViewModelTest {
       testDispatcher.scheduler.advanceUntilIdle()
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
-      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+      expectNoEvents()
     }
 
-    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+    coVerify(exactly = 1) {
+      mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, false, any())
+    }
   }
 
   @Test
-  fun prepareShouldRerouteToFirstFactorWhenIdentifierIsMissingButEmailFactorExists() = runTest {
-    every { mockSignIn.identifier } returns null
+  fun prepareShouldSendEmailCodeWhenEmailLinkIsPrepared() = runTest {
+    every { mockSignIn.identifier } returns "sam@clerk.dev"
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.EMAIL_LINK,
+        expireAt = Long.MAX_VALUE,
+      )
     every { mockSignIn.supportedFirstFactors } returns
       listOf(
         Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
@@ -383,10 +392,12 @@ class SignInFactorCodeViewModelTest {
       testDispatcher.scheduler.advanceUntilIdle()
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
-      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+      expectNoEvents()
     }
 
-    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+    coVerify(exactly = 1) {
+      mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, false, any())
+    }
   }
 
   @Test
