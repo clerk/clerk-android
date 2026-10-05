@@ -6,6 +6,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.content.TextContent
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -234,11 +235,13 @@ internal fun interface TelemetryTransport {
  * Building an OkHttpClient initializes the TLS platform, so the default client is created lazily on
  * the IO dispatcher rather than when the UI composes its first telemetry provider.
  */
-private class OkHttpTelemetryTransport(private val client: Lazy<OkHttpClient>) :
-  TelemetryTransport {
+private class OkHttpTelemetryTransport(
+  private val client: Lazy<OkHttpClient>,
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+) : TelemetryTransport {
   override suspend fun post(url: String, jsonBody: String) {
     val request = Request.Builder().url(url).post(jsonBody.toRequestBody(JSON_MEDIA_TYPE)).build()
-    withContext(Dispatchers.IO) { client.value.newCall(request).execute().close() }
+    withContext(ioDispatcher) { client.value.newCall(request).execute().close() }
   }
 
   private companion object {
