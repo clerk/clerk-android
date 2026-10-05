@@ -3,13 +3,16 @@ package com.clerk.api.user
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
+import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
@@ -20,6 +23,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -124,6 +128,34 @@ class UserReloadTest {
     val reloaded = (result as ClerkResult.Success).value
     assertEquals("user_other", reloaded.id)
     assertEquals("Fresh", reloaded.firstName)
+  }
+
+  @Test
+  fun `reload falls back to me when the client omits the user`() = runTest {
+    val stale = user(firstName = "Stale")
+    fetchedClient = Client(id = "client_1", sessions = emptyList())
+    val fresh = user(firstName = "Fresh")
+    val userApi = mockk<UserApi>()
+    coEvery { userApi.getUser(any()) } returns ClerkResult.success(fresh)
+    every { ClerkApi.user } returns userApi
+
+    val result = stale.reload()
+
+    assertSame(fresh, (result as ClerkResult.Success).value)
+  }
+
+  @Test
+  fun `reload fails instead of returning a different user from the me fallback`() = runTest {
+    val stale = user(id = "user_other", firstName = "Stale")
+    fetchedClient = Client(id = "client_1", sessions = emptyList())
+    val userApi = mockk<UserApi>()
+    coEvery { userApi.getUser(any()) } returns ClerkResult.success(user(firstName = "Active"))
+    every { ClerkApi.user } returns userApi
+
+    val result = stale.reload()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
   }
 
   private fun clientWith(session: Session): Client =

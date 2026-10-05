@@ -430,17 +430,7 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
       } else {
         // Extremely defensive: if the backend doesn't include `session.user` in the client payload.
         // In that case, fall back to the dedicated "me" endpoint.
-        when (val meResult = ClerkApi.user.getUser()) {
-          is ClerkResult.Success -> meResult
-          is ClerkResult.Failure ->
-            ClerkResult.Failure(
-              error = meResult.error,
-              throwable = meResult.throwable,
-              code = meResult.code,
-              errorType = meResult.errorType,
-              tags = meResult.tags,
-            )
-        }
+        reloadFromMe()
       }
     }
     is ClerkResult.Failure ->
@@ -453,6 +443,30 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
       )
   }
 }
+
+/**
+ * `/me` resolves the active session's user, which may not be the receiver when several sessions are
+ * signed in, so a different user is reported as a failure instead of being returned.
+ */
+private suspend fun User.reloadFromMe(): ClerkResult<User, ClerkErrorResponse> =
+  when (val meResult = ClerkApi.user.getUser()) {
+    is ClerkResult.Success ->
+      if (meResult.value.id == id) {
+        meResult
+      } else {
+        ClerkResult.unknownFailure(
+          IllegalStateException("User $id is not part of the reloaded client")
+        )
+      }
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = meResult.error,
+        throwable = meResult.throwable,
+        code = meResult.code,
+        errorType = meResult.errorType,
+        tags = meResult.tags,
+      )
+  }
 
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
@@ -913,18 +927,17 @@ suspend fun User.getPaymentMethods(
 }
 
 internal fun currentSessionId(): String? {
-  val clientSessionId =
-    runCatching {
-        val client = Clerk.client
-        val pendingChooseOrganizationSession =
-          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-        val lastActiveSession =
-          client.lastActiveSessionId?.let { lastActiveSessionId ->
-            client.sessions.firstOrNull { it.id == lastActiveSessionId }
-          }
-        pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  val clientSessionId = runCatching {
+    val client = Clerk.client
+    val pendingChooseOrganizationSession =
+      client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+    val lastActiveSession =
+      client.lastActiveSessionId?.let { lastActiveSessionId ->
+        client.sessions.firstOrNull { it.id == lastActiveSessionId }
       }
-      .getOrNull()
+    pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  }
+    .getOrNull()
 
   return clientSessionId ?: Clerk.session?.id
 }
