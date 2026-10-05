@@ -70,17 +70,19 @@ class UserProfileEmailRowViewModelTest {
     }
     composeTestRule.waitForIdle()
 
-    val rowViewModels =
-      owner.viewModelStore.keys().map {
-        ViewModelProvider(owner)[it, EmailViewModel::class.java]
-      }
-    assertEquals(2, rowViewModels.toSet().size)
+    assertEquals(
+      setOf("user-profile-email-row-email_1", "user-profile-email-row-email_2"),
+      owner.viewModelStore.keys(),
+    )
+    val firstRowViewModel =
+      ViewModelProvider(owner)["user-profile-email-row-email_1", EmailViewModel::class.java]
 
-    composeTestRule.runOnIdle { rowViewModels.first().setAsPrimary(first) }
+    composeTestRule.runOnIdle { firstRowViewModel.setAsPrimary(first) }
     composeTestRule.waitForIdle()
 
     // Only the row whose action failed reports the error.
-    assertEquals(1, firstRowErrors.size + secondRowErrors.size)
+    assertEquals(1, firstRowErrors.size)
+    assertEquals(0, secondRowErrors.size)
   }
 
   private fun emailAddress(id: String, address: String) =

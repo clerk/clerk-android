@@ -10,11 +10,13 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.prepareVerification
+import com.clerk.api.signup.sendEmailCode
+import com.clerk.api.signup.sendPhoneCode
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthenticationViewState
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -23,6 +25,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -44,7 +47,6 @@ import org.robolectric.RobolectricTestRunner
 class SignUpCodeDoublePushTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private val field = SignUpCodeField.Email("sam@clerk.dev")
 
   @Before
   fun setUp() {
@@ -54,8 +56,8 @@ class SignUpCodeDoublePushTest {
     val client = mockk<Client>(relaxed = true)
     every { Clerk.client } returns client
     every { client.signUp } returns unverifiedSignUp()
-    coEvery { any<SignUp>().prepareVerification(any()) } returns
-      ClerkResult.success(unverifiedSignUp())
+    coEvery { any<SignUp>().sendEmailCode() } returns ClerkResult.success(unverifiedSignUp())
+    coEvery { any<SignUp>().sendPhoneCode() } returns ClerkResult.success(unverifiedSignUp())
   }
 
   @After
@@ -65,7 +67,18 @@ class SignUpCodeDoublePushTest {
   }
 
   @Test
-  fun preparingTheCodeDoesNotPushTheCodeScreenAgain() = runTest {
+  fun preparingAnEmailCodeDoesNotPushTheCodeScreenAgain() = runTest {
+    assertPrepareKeepsBackStack(SignUpCodeField.Email("sam@clerk.dev"))
+    coVerify(exactly = 1) { any<SignUp>().sendEmailCode() }
+  }
+
+  @Test
+  fun preparingAPhoneCodeDoesNotPushTheCodeScreenAgain() = runTest {
+    assertPrepareKeepsBackStack(SignUpCodeField.Phone("+15555550100"))
+    coVerify(exactly = 1) { any<SignUp>().sendPhoneCode() }
+  }
+
+  private fun TestScope.assertPrepareKeepsBackStack(field: SignUpCodeField) {
     val backStack =
       NavBackStack<NavKey>(AuthDestination.AuthStart, AuthDestination.SignUpCode(field))
     val authState = AuthState(backStack = backStack, sharedPreferences = preferences())
