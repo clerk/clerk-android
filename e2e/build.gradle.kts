@@ -50,6 +50,8 @@ dependencies {
   implementation(projects.source.ui)
 
   debugImplementation(libs.androidx.ui.tooling)
+
+  testImplementation(libs.kotlin.test.junit)
 }
 
 tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }

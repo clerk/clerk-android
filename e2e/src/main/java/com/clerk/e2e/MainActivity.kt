@@ -30,13 +30,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.user.User
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.organizationlist.OrganizationListView
+import com.clerk.ui.organizationprofile.OrganizationProfileView
+import com.clerk.ui.organizationswitcher.OrganizationSwitcher
+import com.clerk.ui.userbutton.UserButton
 import com.clerk.ui.userprofile.UserProfileView
 
 private const val TEST_PHONE_E164 = "+15555550100"
@@ -46,13 +54,54 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { E2EApp(viewModel) }
+    val host = (application as E2EApplication).verifyHost(this)
+    setContent { E2EHost(host, viewModel) }
+  }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun E2EHost(host: VerifyHost, viewModel: E2EViewModel) {
+  val state by host.state.collectAsStateWithLifecycle()
+
+  MaterialTheme {
+    Surface(modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+      Column {
+        Box(modifier = Modifier.weight(1f)) {
+          when (state.screen) {
+            HostScreen.Error -> ConfigurationFailureScreen(host.config.publishableKeyFailure)
+            HostScreen.Launching -> LoadingScreen()
+            VerifyScreen.Home -> E2EApp(viewModel)
+            VerifyScreen.Auth ->
+              AuthView(
+                persistIdentifiers = false,
+                preferGoogleOneTap = false,
+                isDismissible = false,
+                mode = host.config.authMode,
+              )
+            VerifyScreen.UserProfile -> UserProfileView(isDismissible = false, onDismiss = {})
+            VerifyScreen.OrgSwitcher ->
+              Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                OrganizationSwitcher()
+              }
+            VerifyScreen.OrgList -> OrganizationListView(isDismissible = false)
+            VerifyScreen.OrgProfile ->
+              OrganizationProfileView(isDismissible = false, onDismiss = {})
+          }
+        }
+        if (host.config.hasVerifyInputs) VerifyStateFooter(state)
+      }
+    }
   }
 }
 
 @Composable
+private fun ConfigurationFailureScreen(failure: VerifyFailure?) {
+  E2EColumn { Text(failure?.message.orEmpty(), color = MaterialTheme.colorScheme.error) }
+}
+
+@Composable
 private fun E2EApp(viewModel: E2EViewModel) {
-  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val customOtpState by viewModel.customOtpState.collectAsStateWithLifecycle()
   var route by rememberSaveable { mutableStateOf(E2ERoute.Home) }
@@ -70,44 +119,38 @@ private fun E2EApp(viewModel: E2EViewModel) {
     }
   }
 
-  MaterialTheme {
-    Surface(modifier = Modifier.fillMaxSize()) {
-      when {
-        !isInitialized -> LoadingScreen()
-        route == E2ERoute.Home ->
-          HomeScreen(
-            user = user,
-            actions =
-              HomeActions(
-                onCustomOtpSignIn = {
-                  viewModel.resetCustomOtpState()
-                  route = E2ERoute.CustomOtpSignIn
-                },
-                onPrebuiltSignIn = { route = E2ERoute.PrebuiltAuth },
-                onCustomProfile = { route = E2ERoute.CustomProfile },
-                onPrebuiltProfile = { route = E2ERoute.PrebuiltProfile },
-                onSignOut = viewModel::signOut,
-              ),
-          )
-        route == E2ERoute.CustomOtpSignIn ->
-          CustomOtpSignInScreen(
-            state = customOtpState,
-            onSubmitPhone = viewModel::submitCustomOtpPhone,
-            onVerifyCode = viewModel::verifyCustomOtpCode,
-            onBack = { route = E2ERoute.Home },
-          )
-        route == E2ERoute.CustomProfile ->
-          CustomProfileScreen(user = user, onSignOut = viewModel::signOut)
-        route == E2ERoute.PrebuiltAuth ->
-          AuthView(
-            initialIdentifier = TEST_PHONE_E164,
-            persistIdentifiers = false,
-            preferGoogleOneTap = false,
-            onAuthComplete = { route = E2ERoute.PrebuiltProfile },
-          )
-        route == E2ERoute.PrebuiltProfile -> UserProfileView(onDismiss = { route = E2ERoute.Home })
-      }
-    }
+  when (route) {
+    E2ERoute.Home ->
+      HomeScreen(
+        user = user,
+        actions =
+          HomeActions(
+            onCustomOtpSignIn = {
+              viewModel.resetCustomOtpState()
+              route = E2ERoute.CustomOtpSignIn
+            },
+            onPrebuiltSignIn = { route = E2ERoute.PrebuiltAuth },
+            onCustomProfile = { route = E2ERoute.CustomProfile },
+            onPrebuiltProfile = { route = E2ERoute.PrebuiltProfile },
+            onSignOut = viewModel::signOut,
+          ),
+      )
+    E2ERoute.CustomOtpSignIn ->
+      CustomOtpSignInScreen(
+        state = customOtpState,
+        onSubmitPhone = viewModel::submitCustomOtpPhone,
+        onVerifyCode = viewModel::verifyCustomOtpCode,
+        onBack = { route = E2ERoute.Home },
+      )
+    E2ERoute.CustomProfile -> CustomProfileScreen(user = user, onSignOut = viewModel::signOut)
+    E2ERoute.PrebuiltAuth ->
+      AuthView(
+        initialIdentifier = TEST_PHONE_E164,
+        persistIdentifiers = false,
+        preferGoogleOneTap = false,
+        onAuthComplete = { route = E2ERoute.PrebuiltProfile },
+      )
+    E2ERoute.PrebuiltProfile -> UserProfileView(onDismiss = { route = E2ERoute.Home })
   }
 }
 
@@ -131,13 +174,20 @@ private fun HomeScreen(user: User?, actions: HomeActions) {
       }
     } else {
       Text("Already signed in")
+      UserButton()
+      OrganizationSwitcher()
       Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onCustomProfile) {
         Text("Open Custom Profile")
       }
       Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onPrebuiltProfile) {
         Text("Open Prebuilt Profile")
       }
-      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onSignOut) { Text("Sign Out") }
+      Button(
+        modifier = Modifier.fillMaxWidth().testTag(VERIFY_SIGN_OUT_TAG),
+        onClick = actions.onSignOut,
+      ) {
+        Text("Sign Out")
+      }
     }
   }
 }
