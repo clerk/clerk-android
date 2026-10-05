@@ -304,7 +304,7 @@ suspend fun SignIn.sendCode(
         factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(Strategy.EmailCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
     } else {
-      val factor = firstFactorFor(listOf(Strategy.PhoneCode), builder.phone!!, ::normalizePhone)
+      val factor = firstFactorFor(listOf(Strategy.PhoneCode), checkNotNull(builder.phone), ::normalizePhone)
       val phoneNumberId =
         factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(Strategy.PhoneCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
@@ -569,7 +569,7 @@ suspend fun SignIn.sendResetPasswordCode(
       val factor =
         firstFactorFor(
           listOf(Strategy.ResetPasswordPhoneCode, Strategy.PhoneCode),
-          builder.phone!!,
+          checkNotNull(builder.phone),
           ::normalizePhone,
         )
       val phoneNumberId =
