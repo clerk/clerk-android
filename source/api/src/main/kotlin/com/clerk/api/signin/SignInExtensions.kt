@@ -387,11 +387,14 @@ private const val MASK_CHARACTER = '*'
  *
  * @param emailAddressId Optional ID of the email address to send the link to. If not provided, the
  *   email address ID will be automatically retrieved from the supported first factors.
+ * @param redirectUri The URI the link opens. Defaults to the SDK's email-link callback. A custom
+ *   value must be handled by the app and forwarded to [com.clerk.api.auth.Auth.handle].
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.sendEmailLink(
-  emailAddressId: String? = null
+  emailAddressId: String? = null,
+  redirectUri: String? = null,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
     emailAddressId
@@ -414,9 +417,14 @@ suspend fun SignIn.sendEmailLink(
     }
 
   return Clerk.auth.reportingFailures {
-    validationError ?: NativeMagicLinkService.prepareSignInEmailLink(this, emailId)
+    validationError ?: NativeMagicLinkService.prepareSignInEmailLink(this, emailId, redirectUri)
   }
 }
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+suspend fun SignIn.sendEmailLink(
+  emailAddressId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> = sendEmailLink(emailAddressId, redirectUri = null)
 
 private fun invalidEmailLinkPrepareState(
   code: String,

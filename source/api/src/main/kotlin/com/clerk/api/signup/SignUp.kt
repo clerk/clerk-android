@@ -645,12 +645,22 @@ suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
 /**
  * Sends a verification link to the email address associated with this sign-up.
  *
+ * @param redirectUrl The URL the link opens. Defaults to the SDK's email-link callback. A custom
+ *   value must be handled by the app and forwarded to [com.clerk.api.auth.Auth.handle].
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
+suspend fun SignUp.sendEmailLink(
+  redirectUrl: String? = null
+): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(
+    SignUp.PrepareVerificationParams.Strategy.EmailLink(redirectUrl = redirectUrl)
+  )
 }
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> =
+  sendEmailLink(redirectUrl = null)
 
 /**
  * Attempts to complete the verification process.

@@ -434,6 +434,8 @@ class Auth internal constructor() {
   /**
    * Signs in with Enterprise SSO.
    *
+   * @param transferable Whether the flow may turn into a sign-up when the user has no Clerk account
+   *   yet. Defaults to `true`.
    * @param block Builder block to configure the Enterprise SSO options.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
    *   failure.
@@ -444,19 +446,26 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signInWithEnterpriseSso(
-    block: EnterpriseSsoBuilder.() -> Unit
+    transferable: Boolean = true,
+    block: EnterpriseSsoBuilder.() -> Unit,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
     builder.validate()
 
     return authenticateSignInWithRedirect(
       SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+        redirectUrl = builder.redirectUrl,
         emailAddress = builder.email,
       ),
-      transferable = true,
+      transferable = transferable,
     )
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  suspend fun signInWithEnterpriseSso(
+    block: EnterpriseSsoBuilder.() -> Unit
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    signInWithEnterpriseSso(transferable = true, block = block)
 
   /**
    * Signs in with a ticket.
@@ -472,6 +481,20 @@ class Auth internal constructor() {
    */
   suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
     return createSignIn(SignIn.CreateParams.Strategy.Ticket(ticket = ticket))
+  }
+
+  /**
+   * Turns the current sign-up into a sign-in for its already existing account.
+   *
+   * The OAuth and Google One Tap flows do this on their own when `transferable` is `true`. Call it
+   * after a flow that doesn't, such as [signUpWithIdToken], when the sign-up's external account
+   * belongs to an existing user.
+   *
+   * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
+   *   failure.
+   */
+  suspend fun transferToSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
+    return createSignIn(SignIn.CreateParams.Strategy.Transfer())
   }
 
   /**
@@ -650,7 +673,10 @@ class Auth internal constructor() {
     builder.validate()
 
     return authenticateSignUpWithRedirect(
-      SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(emailAddress = builder.email)
+      SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(
+        redirectUrl = builder.redirectUrl,
+        emailAddress = builder.email,
+      )
     )
   }
 
@@ -668,6 +694,19 @@ class Auth internal constructor() {
    */
   suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
     return createSignUp(SignUp.CreateParams.Ticket(ticket = ticket))
+  }
+
+  /**
+   * Turns the current sign-in into a sign-up when its external account has no Clerk user yet.
+   *
+   * The OAuth and Google One Tap flows do this on their own when `transferable` is `true`. Call it
+   * after a flow that doesn't, such as [signInWithIdToken].
+   *
+   * @return A [ClerkResult] containing the [SignUp] object on success, or a [ClerkErrorResponse] on
+   *   failure.
+   */
+  suspend fun transferToSignUp(): ClerkResult<SignUp, ClerkErrorResponse> {
+    return createSignUp(SignUp.CreateParams.Transfer)
   }
 
   // endregion

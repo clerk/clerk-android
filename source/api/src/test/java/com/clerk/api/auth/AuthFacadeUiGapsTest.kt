@@ -3,6 +3,7 @@ package com.clerk.api.auth
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
+import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
@@ -273,6 +274,62 @@ class AuthFacadeUiGapsTest {
   }
 
   @Test
+  fun `transferToSignIn and transferToSignUp send a transfer`() = runTest {
+    val signUpApi = mockk<SignUpApi>()
+    every { ClerkApi.signUp } returns signUpApi
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
+    coEvery { signUpApi.createSignUp(any()) } returns
+      ClerkResult.success(mockk<SignUp>(relaxed = true))
+
+    Auth().transferToSignIn()
+    Auth().transferToSignUp()
+
+    coVerify(exactly = 1) { signInApi.createSignIn(match { it["transfer"] == "true" }) }
+    coVerify(exactly = 1) { signUpApi.createSignUp(match { it["transfer"] == "true" }) }
+  }
+
+  @Test
+  fun `enterprise SSO forwards transferable and redirectUrl`() = runTest {
+    mockkObject(SSOService)
+    coEvery {
+      SSOService.authenticateWithRedirect(any(), any(), any(), any(), any(), any())
+    } returns ClerkResult.success(oauthResult)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(any(), any(), any(), any(), any(), any())
+    } returns ClerkResult.success(OAuthResult(signUp = mockk<SignUp>(relaxed = true)))
+
+    Auth().signInWithEnterpriseSso(transferable = false) {
+      email = "user@company.com"
+      redirectUrl = REDIRECT
+    }
+    Auth().signUpWithEnterpriseSso {
+      email = "user@company.com"
+      redirectUrl = REDIRECT
+    }
+
+    coVerify(exactly = 1) {
+      SSOService.authenticateWithRedirect(
+        "enterprise_sso",
+        REDIRECT,
+        null,
+        "user@company.com",
+        null,
+        false,
+      )
+    }
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        "enterprise_sso",
+        REDIRECT,
+        null,
+        "user@company.com",
+        null,
+        null,
+      )
+    }
+  }
+
+  @Test
   fun `widened facade methods keep their previous JVM signatures`() {
     val methods = Auth::class.java.declaredMethods
     fun hasSignature(name: String, vararg params: Class<*>) = methods.any {
@@ -282,6 +339,9 @@ class AuthFacadeUiGapsTest {
     assertTrue(hasSignature("signInWithOAuth", OAuthProvider::class.java, Continuation::class.java))
     assertTrue(hasSignature("signUpWithOAuth", OAuthProvider::class.java, Continuation::class.java))
     assertTrue(hasSignature("signInWithPasskey", Continuation::class.java))
+    assertTrue(
+      hasSignature("signInWithEnterpriseSso", Function1::class.java, Continuation::class.java)
+    )
     assertEquals(
       1,
       methods.count { it.name == "signInWithPasskey" && it.parameterTypes.size == 2 },
