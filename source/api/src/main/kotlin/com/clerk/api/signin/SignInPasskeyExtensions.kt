@@ -26,6 +26,12 @@ internal fun SignIn.invalidSecondFactorState(): ClerkResult.Failure<ClerkErrorRe
     longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
   )
 
+internal fun noSecondFactor(strategy: String): ClerkResult.Failure<ClerkErrorResponse> =
+  invalidPrepareState(
+    code = "second_factor_strategy_not_supported",
+    longMessage = "No $strategy second factor is available for this sign-in",
+  )
+
 /**
  * Authenticates this sign-in with a passkey.
  *

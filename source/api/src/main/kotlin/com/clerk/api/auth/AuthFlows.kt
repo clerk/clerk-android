@@ -77,11 +77,14 @@ internal suspend fun Auth.createSignUp(
         mapOf("strategy" to SignUp.CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
       else -> params.toMap()
     }
-  return createSignUp(fields)
+  return postSignUp(fields)
 }
 
-/** Creates a sign-up from raw fields, adding the current locale. */
-internal suspend fun Auth.createSignUp(
+/**
+ * Creates a sign-up from raw fields, adding the current locale. Unlike the public
+ * `SignUp.create(Map)`, which sends the map as given, this always sends `locale`.
+ */
+internal suspend fun Auth.postSignUp(
   fields: Map<String, String>
 ): ClerkResult<SignUp, ClerkErrorResponse> = reportingFailures {
   ClerkApi.signUp.createSignUp(fields + ("locale" to Clerk.locale.value.orEmpty()))

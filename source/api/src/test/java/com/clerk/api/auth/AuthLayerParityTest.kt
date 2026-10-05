@@ -79,7 +79,15 @@ class AuthLayerParityTest {
     }
     SignIn.create(SignIn.CreateParams.Strategy.Password("user@example.com", "secret"))
 
-    assertBothLayersSentTheSame(signInRequests)
+    assertEachLayerSent(
+      signInRequests,
+      mapOf(
+        "identifier" to "user@example.com",
+        "password" to "secret",
+        "strategy" to "password",
+        "locale" to "",
+      ),
+    )
   }
 
   @Test
@@ -89,9 +97,11 @@ class AuthLayerParityTest {
     Clerk.auth.signInWithOtp { phone = "+15555550100" }
     SignIn.create(SignIn.CreateParams.Strategy.PhoneCode("+15555550100"))
 
-    assertEquals(4, signInRequests.size)
-    assertEquals(signInRequests[0], signInRequests[1])
-    assertEquals(signInRequests[2], signInRequests[3])
+    assertEachLayerSent(
+      signInRequests,
+      mapOf("identifier" to "user@example.com", "strategy" to "email_code", "locale" to ""),
+      mapOf("identifier" to "+15555550100", "strategy" to "phone_code", "locale" to ""),
+    )
   }
 
   @Test
@@ -101,9 +111,11 @@ class AuthLayerParityTest {
     Clerk.auth.signInWithTicket("ticket_123")
     SignIn.create(SignIn.CreateParams.Strategy.Ticket("ticket_123"))
 
-    assertEquals(4, signInRequests.size)
-    assertEquals(signInRequests[0], signInRequests[1])
-    assertEquals(signInRequests[2], signInRequests[3])
+    assertEachLayerSent(
+      signInRequests,
+      mapOf("identifier" to "user_123", "locale" to ""),
+      mapOf("ticket" to "ticket_123", "strategy" to "ticket", "locale" to ""),
+    )
   }
 
   @Test
@@ -125,9 +137,17 @@ class AuthLayerParityTest {
     Clerk.auth.signUpWithTicket("ticket_123")
     SignUp.create(SignUp.CreateParams.Ticket("ticket_123"))
 
-    assertEquals(4, signUpRequests.size)
-    assertEquals(signUpRequests[0], signUpRequests[1])
-    assertEquals(signUpRequests[2], signUpRequests[3])
+    assertEachLayerSent(
+      signUpRequests,
+      mapOf(
+        "email_address" to "user@example.com",
+        "first_name" to "Ada",
+        "legal_accepted" to "true",
+        "unsafe_metadata" to """{"plan":"pro"}""",
+        "locale" to "",
+      ),
+      mapOf("strategy" to "ticket", "ticket" to "ticket_123", "locale" to ""),
+    )
   }
 
   @Test
@@ -138,7 +158,7 @@ class AuthLayerParityTest {
     }
     signUp.update(SignUp.SignUpUpdateParams.Standard(username = "ada", legalAccepted = true))
 
-    assertBothLayersSentTheSame(signUpRequests)
+    assertEachLayerSent(signUpRequests, mapOf("username" to "ada", "legal_accepted" to "true"))
   }
 
   @Test
@@ -150,9 +170,11 @@ class AuthLayerParityTest {
     signIn.verifyWithPassword("secret")
     signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.Password("secret"))
 
-    assertEquals(4, signInRequests.size)
-    assertEquals(signInRequests[0], signInRequests[1])
-    assertEquals(signInRequests[2], signInRequests[3])
+    assertEachLayerSent(
+      signInRequests,
+      mapOf("code" to "123456", "strategy" to "email_code"),
+      mapOf("password" to "secret", "strategy" to "password"),
+    )
   }
 
   @Test
@@ -160,7 +182,7 @@ class AuthLayerParityTest {
     signIn.verifyMfaCode("123456", MfaType.TOTP)
     signIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP("123456"))
 
-    assertBothLayersSentTheSame(signInRequests)
+    assertEachLayerSent(signInRequests, mapOf("code" to "123456", "strategy" to "totp"))
   }
 
   @Test
@@ -245,9 +267,16 @@ class AuthLayerParityTest {
     }
   }
 
-  private fun assertBothLayersSentTheSame(requests: List<Map<String, String>>) {
-    assertEquals(2, requests.size)
-    assertEquals(requests[0], requests[1])
+  /**
+   * Asserts that the facade and then the older entry point each sent every [expected] request, in
+   * order. Both layers share one implementation, so comparing them with each other alone would not
+   * catch a change to the request itself.
+   */
+  private fun assertEachLayerSent(
+    requests: List<Map<String, String>>,
+    vararg expected: Map<String, String>,
+  ) {
+    assertEquals(expected.flatMap { listOf(it, it) }, requests)
   }
 
   private companion object {

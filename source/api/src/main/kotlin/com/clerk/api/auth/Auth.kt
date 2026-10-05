@@ -558,7 +558,7 @@ class Auth internal constructor() {
         IdTokenProvider.GOOGLE -> "google_one_tap"
       }
 
-    return createSignUp(
+    return postSignUp(
       buildMap {
         put("strategy", strategy)
         put("token", token)

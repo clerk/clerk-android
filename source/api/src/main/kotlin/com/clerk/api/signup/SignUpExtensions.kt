@@ -2,8 +2,10 @@
 
 package com.clerk.api.signup
 
+import com.clerk.api.Clerk
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult

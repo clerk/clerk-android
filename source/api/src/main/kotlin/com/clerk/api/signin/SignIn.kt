@@ -982,10 +982,16 @@ suspend fun SignIn.sendEmailCode(
 /**
  * Prepares the second factor verification for the sign-in process.
  *
- * @param phoneNumberId Optional phone number ID for phone_code strategy.
- * @param emailAddressId Optional email address ID for email_code strategy.
+ * An explicit [phoneNumberId] sends a phone code to that number, even when [supportedSecondFactors]
+ * does not list it, and wins over [emailAddressId]. An explicit [emailAddressId] sends an email
+ * code. Without either, the first supported phone code factor is used, then the first supported
+ * email code factor.
+ *
+ * @param phoneNumberId Optional phone number ID to send a phone code to.
+ * @param emailAddressId Optional email address ID to send an email code to.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure.
+ *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when the sign-in is not
+ *   awaiting a second factor or no phone or email code factor is available.
  */
 suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
@@ -1010,7 +1016,7 @@ suspend fun SignIn.prepareSecondFactor(
           SignIn.PrepareSecondFactorStrategy.PhoneCode(phoneFactor.phoneNumberId)
         emailFactor != null ->
           SignIn.PrepareSecondFactorStrategy.EmailCode(emailFactor.emailAddressId)
-        else -> error("No supported second factor found")
+        else -> return@reportingFailures noSecondFactor("phone_code or email_code")
       }
 
     prepareSecondFactor(strategy)
@@ -1037,19 +1043,22 @@ internal fun invalidPrepareState(
  * @param phoneNumberId Optional ID of the phone number to send the code to. If not provided, the
  *   phone number ID will be automatically retrieved from the supported second factors.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure.
+ *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when the sign-in is not
+ *   awaiting a second factor or no phone number is available.
  */
 suspend fun SignIn.sendMfaPhoneCode(
   phoneNumberId: String? = null
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val phoneId =
-    phoneNumberId
-      ?: supportedSecondFactors
-        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
-        ?.phoneNumberId
-      ?: error("No phone number found for phone_code MFA strategy")
-  return prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.PhoneCode(phoneNumberId = phoneId))
-}
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (!canPrepareSecondFactor) return@reportingFailures invalidSecondFactorState()
+    val phoneId =
+      phoneNumberId
+        ?: supportedSecondFactors
+          ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+          ?.phoneNumberId
+        ?: return@reportingFailures noSecondFactor(SignIn.PrepareSecondFactorParams.PHONE_CODE)
+    prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.PhoneCode(phoneNumberId = phoneId))
+  }
 
 /**
  * Sends a verification code to the user's email address for MFA (second factor) authentication.
@@ -1061,19 +1070,22 @@ suspend fun SignIn.sendMfaPhoneCode(
  * @param emailAddressId Optional ID of the email address to send the code to. If not provided, the
  *   email address ID will be automatically retrieved from the supported second factors.
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure.
+ *   [ClerkErrorResponse] on failure. Fails without contacting Clerk when the sign-in is not
+ *   awaiting a second factor or no email address is available.
  */
 suspend fun SignIn.sendMfaEmailCode(
   emailAddressId: String? = null
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val emailId =
-    emailAddressId
-      ?: supportedSecondFactors
-        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
-        ?.emailAddressId
-      ?: error("No email address found for email_code MFA strategy")
-  return prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.EmailCode(emailAddressId = emailId))
-}
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (!canPrepareSecondFactor) return@reportingFailures invalidSecondFactorState()
+    val emailId =
+      emailAddressId
+        ?: supportedSecondFactors
+          ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+          ?.emailAddressId
+        ?: return@reportingFailures noSecondFactor(SignIn.PrepareSecondFactorParams.EMAIL_CODE)
+    prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.EmailCode(emailAddressId = emailId))
+  }
 
 /**
  * Attempts to complete the first factor verification process.
