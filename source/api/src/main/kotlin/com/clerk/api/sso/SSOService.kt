@@ -10,6 +10,7 @@ import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
@@ -247,7 +248,7 @@ internal object SSOService {
     // captured deferred and only clears shared state if that flow is still the current one.
     val pendingAuth = currentPendingAuth
     if (pendingAuth == null) {
-      ClerkLog.w("No pending authentication found for redirect: $uri")
+      ClerkLog.w("No pending authentication found for redirect: ${SafeUriLog.describe(uri)}")
       return
     }
     val transferable = currentTransferable
