@@ -15,6 +15,9 @@ import com.clerk.api.network.serialization.ClerkResult
 /**
  * Sends a verification code to the specified email or phone.
  *
+ * When the value differs from the sign-up's current [SignUp.emailAddress] or [SignUp.phoneNumber],
+ * the sign-up is first updated to it, so the code goes to the address the caller named.
+ *
  * @param block Builder block to configure where to send the code.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
@@ -31,20 +34,34 @@ suspend fun SignUp.sendCode(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
   builder.validate()
+  val email = builder.email
+  val phone = builder.phone
 
-  val strategy =
-    if (builder.email != null) {
-      if (isEmailLinkVerificationSupported) {
-        SignUp.PrepareVerificationParams.Strategy.EmailLink()
-      } else {
-        SignUp.PrepareVerificationParams.Strategy.EmailCode()
+  return Clerk.auth.reportingFailures {
+    val target =
+      when {
+        email != null && !email.trim().equals(emailAddress?.trim(), ignoreCase = true) ->
+          update(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
+        email == null && phone != null && phone.digits() != phoneNumber?.digits() ->
+          update(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
+        else -> ClerkResult.success(this)
       }
-    } else {
-      SignUp.PrepareVerificationParams.Strategy.PhoneCode()
+    when (target) {
+      is ClerkResult.Failure -> target
+      is ClerkResult.Success ->
+        target.value.prepareVerification(target.value.sendCodeStrategy(email))
     }
-
-  return prepareVerification(strategy)
+  }
 }
+
+private fun SignUp.sendCodeStrategy(email: String?): SignUp.PrepareVerificationParams.Strategy =
+  when {
+    email == null -> SignUp.PrepareVerificationParams.Strategy.PhoneCode()
+    isEmailLinkVerificationSupported -> SignUp.PrepareVerificationParams.Strategy.EmailLink()
+    else -> SignUp.PrepareVerificationParams.Strategy.EmailCode()
+  }
+
+private fun String.digits(): String = filter(Char::isDigit)
 
 /**
  * Verifies with the provided code and type.
