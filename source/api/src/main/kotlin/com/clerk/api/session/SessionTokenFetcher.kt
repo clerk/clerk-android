@@ -13,6 +13,8 @@ import com.clerk.api.network.serialization.successOrNull
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 @Suppress("TooManyFunctions")
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
@@ -205,12 +207,15 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           tokenTasks.putIfAbsent(context.cacheKey, deferred)
         }
       if (existingTask != null) {
-        // Invalidation can happen after completion but before this waiter resumes.
-        existingTask.await().takeIf { isCurrentRuntime(context) } ?: supersededFailure()
+        awaitSharedTask(context, existingTask)
+          // The owner of the shared request was cancelled, but this caller was not.
+          ?: fetchTokenWithDeduplication(context, options)
       } else {
         try {
           fetchToken(context, options).also { deferred.complete(it) }
         } catch (e: CancellationException) {
+          // Unregister first so a waiter that retries cannot find this cancelled task again.
+          tokenTasks.remove(context.cacheKey, deferred)
           deferred.cancel(e)
           throw e
         } catch (t: Throwable) {
@@ -222,6 +227,32 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       }
     }
   }
+
+  /**
+   * Waits for another caller's request for the same token. Returns null when that caller was
+   * cancelled while this one is still active, after unregistering the cancelled task so the caller
+   * can fetch again. Rethrows when this caller was cancelled itself.
+   */
+  private suspend fun awaitSharedTask(
+    context: FetchContext,
+    task: CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>,
+  ): ClerkResult<TokenResource, ClerkErrorResponse>? {
+    val result =
+      try {
+        task.await()
+      } catch (e: CancellationException) {
+        currentCoroutineContext().ensureActive()
+        ClerkLog.d("Shared token request was cancelled by its owner: ${e.message}")
+        tokenTasks.remove(context.cacheKey, task)
+        return null
+      }
+    return result.supersededIfInvalidatedSince(context)
+  }
+
+  private fun ClerkResult<TokenResource, ClerkErrorResponse>.supersededIfInvalidatedSince(
+    context: FetchContext
+  ): ClerkResult<TokenResource, ClerkErrorResponse> =
+    takeIf { isCurrentRuntime(context) } ?: supersededFailure()
 
   private fun isCurrentRuntime(context: FetchContext): Boolean =
     synchronized(runtimeLock) {
