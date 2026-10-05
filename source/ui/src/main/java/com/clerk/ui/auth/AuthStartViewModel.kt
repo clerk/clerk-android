@@ -14,8 +14,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
@@ -66,11 +65,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       viewModelScope.launch(ioDispatcher, start = CoroutineStart.LAZY) {
         try {
           when (
-            val result =
-              SignIn.create(
-                SignIn.CreateParams.Strategy.Passkey(),
-                preferImmediatelyAvailableCredentials = true,
-              )
+            val result = Clerk.auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
           ) {
             is ClerkResult.Success -> {
               ClerkLog.d("Automatic passkey sign-in succeeded with status ${result.value.status}")
@@ -190,7 +185,8 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
-      SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
+      Clerk.auth
+        .signIn { this.identifier = resolvedIdentifier }
         .onSuccess { signIn -> handleSignInSuccess(signIn, transferable) }
         .onFailure {
           val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
@@ -213,14 +209,15 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
   ) {
     _state.value = AuthState.Loading
     viewModelScope.launch(ioDispatcher) {
-      SignUp.create(
-          signUpParams(
-            isPhoneNumberFieldActive = isPhoneNumberFieldActive,
-            identifier = identifier,
-            phoneNumber = phoneNumber,
-            unsafeMetadata = unsafeMetadata,
-          )
-        )
+      Clerk.auth
+        .signUp {
+          when {
+            isPhoneNumberFieldActive -> phone = phoneNumber
+            identifier.isEmailAddress -> email = identifier
+            else -> username = identifier
+          }
+          this.unsafeMetadata = unsafeMetadata
+        }
         .onSuccess { signUp ->
           withContext(Dispatchers.Main) {
             _state.value = AuthState.Success.SignUpSuccess(signUp = signUp)
@@ -255,7 +252,8 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     unsafeMetadata: Map<String, Any>?,
   ) {
     viewModelScope.launch(ioDispatcher) {
-      SignIn.authenticateWithGoogleOneTap(transferable)
+      Clerk.auth
+        .signInWithGoogleOneTap(transferable)
         .onSuccess {
           withContext(Dispatchers.Main) {
             _state.value =
@@ -300,17 +298,9 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     viewModelScope.launch {
       val result =
         if (startOAuthWithSignUp) {
-          SignUp.authenticateWithRedirect(
-            SignUp.AuthenticateWithRedirectParams.OAuth(
-              provider = provider,
-              unsafeMetadata = unsafeMetadata,
-            )
-          )
+          Clerk.auth.signUpWithOAuth(provider = provider, unsafeMetadata = unsafeMetadata)
         } else {
-          SignIn.authenticateWithRedirect(
-            SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
-            transferable = transferable,
-          )
+          Clerk.auth.signInWithOAuth(provider = provider, transferable = transferable)
         }
 
       result
@@ -340,21 +330,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     }
   }
 
-  private fun signUpParams(
-    isPhoneNumberFieldActive: Boolean,
-    identifier: String,
-    phoneNumber: String,
-    unsafeMetadata: Map<String, Any>?,
-  ): SignUp.CreateParams.Standard {
-    return when {
-      isPhoneNumberFieldActive ->
-        SignUp.CreateParams.Standard(phoneNumber = phoneNumber, unsafeMetadata = unsafeMetadata)
-      identifier.isEmailAddress ->
-        SignUp.CreateParams.Standard(emailAddress = identifier, unsafeMetadata = unsafeMetadata)
-      else -> SignUp.CreateParams.Standard(username = identifier, unsafeMetadata = unsafeMetadata)
-    }
-  }
-
   private suspend fun handleSignInSuccess(signIn: SignIn, transferable: Boolean = true) {
     when {
       signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn, transferable)
@@ -368,16 +343,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
   private suspend fun handleEnterpriseSSO(signIn: SignIn, transferable: Boolean) {
     signIn
-      .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
-      .onSuccess { authenticateWithPreparedRedirect(it, transferable) }
-      .onFailure { throwable ->
-        _state.value = withContext(Dispatchers.Main) { AuthState.Error(throwable.errorMessage) }
-      }
-  }
-
-  private suspend fun authenticateWithPreparedRedirect(signIn: SignIn, transferable: Boolean) {
-    signIn
-      .authenticateWithPreparedRedirect(transferable = transferable)
+      .authenticateWithEnterpriseSso(transferable = transferable)
       .onSuccess {
         withContext(Dispatchers.Main) {
           val successType =

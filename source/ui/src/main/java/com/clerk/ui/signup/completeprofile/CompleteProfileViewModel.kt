@@ -2,6 +2,7 @@ package com.clerk.ui.signup.completeprofile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -54,12 +55,16 @@ internal fun SignUp.completeProfileUpdateParams(
   firstName: String?,
   lastName: String?,
   legalAccepted: Boolean?,
-): SignUp.SignUpUpdateParams.Standard {
-  return SignUp.SignUpUpdateParams.Standard(
-    firstName = firstName.takeIf { supportsField(FIRST_NAME_FIELD) && !it.isNullOrBlank() },
-    lastName = lastName.takeIf { supportsField(LAST_NAME_FIELD) && !it.isNullOrBlank() },
-    legalAccepted = legalAccepted,
-  )
+): SignUpBuilder.() -> Unit {
+  val supportedFirstName = firstName.takeIf {
+    supportsField(FIRST_NAME_FIELD) && !it.isNullOrBlank()
+  }
+  val supportedLastName = lastName.takeIf { supportsField(LAST_NAME_FIELD) && !it.isNullOrBlank() }
+  return {
+    this.firstName = supportedFirstName
+    this.lastName = supportedLastName
+    this.legalAccepted = legalAccepted
+  }
 }
 
 internal fun SignUp.supportsField(field: String): Boolean {
