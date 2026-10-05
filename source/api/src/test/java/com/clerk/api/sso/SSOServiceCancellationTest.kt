@@ -4,7 +4,13 @@ import android.app.Application
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
+import com.clerk.api.auth.AuthEvent
+import com.clerk.api.auth.createSignUp
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.shortErrorMessageOrNull
@@ -14,6 +20,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellationException
@@ -37,6 +44,9 @@ import org.robolectric.RobolectricTestRunner
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SSOServiceCancellationTest {
+
+  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
+  private val auth: Auth = Clerk.auth
 
   @Before
   fun setUp() {
@@ -68,7 +78,7 @@ class SSOServiceCancellationTest {
   @Test
   fun `callback without success marker returns cancellation instead of starting sign up`() =
     runTest {
-      mockkObject(SignUp.Companion)
+      mockkStatic("com.clerk.api.auth.AuthFlowsKt")
       val pendingResult =
         async(start = CoroutineStart.UNDISPATCHED) {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
@@ -78,12 +88,12 @@ class SSOServiceCancellationTest {
 
       val failure = pendingResult.await() as ClerkResult.Failure
       assertTrue(failure.throwable is SSOCancellationException)
-      coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+      coVerify(exactly = 0) { auth.createSignUp(any<SignUp.CreateParams>()) }
     }
 
   @Test
   fun `provider error callback returns cancellation instead of starting sign up`() = runTest {
-    mockkObject(SignUp.Companion)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
@@ -95,13 +105,13 @@ class SSOServiceCancellationTest {
 
     val failure = pendingResult.await() as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
-    coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+    coVerify(exactly = 0) { auth.createSignUp(any<SignUp.CreateParams>()) }
   }
 
   @Test
   fun `external account not found returns readable API error when transfer is disabled`() =
     runTest {
-      mockkObject(SignUp.Companion)
+      mockkStatic("com.clerk.api.auth.AuthFlowsKt")
       val pendingResult =
         async(start = CoroutineStart.UNDISPATCHED) {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, transferable = false)
@@ -119,14 +129,14 @@ class SSOServiceCancellationTest {
       assertEquals("The External Account was not found.", failure.errorMessage)
       assertEquals("The External Account was not found.", failure.shortErrorMessageOrNull())
       assertFalse(SSOService.hasPendingAuthentication())
-      coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+      coVerify(exactly = 0) { auth.createSignUp(any<SignUp.CreateParams>()) }
     }
 
   @Test
   fun `explicit external account not found marker still transfers to sign up`() = runTest {
     val signUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignUp.Companion)
-    coEvery { SignUp.create(SignUp.CreateParams.Transfer) } returns ClerkResult.success(signUp)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } returns ClerkResult.success(signUp)
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
@@ -138,14 +148,41 @@ class SSOServiceCancellationTest {
 
     val result = pendingResult.await() as ClerkResult.Success
     assertSame(signUp, result.value.signUp)
-    coVerify(exactly = 1) { SignUp.create(SignUp.CreateParams.Transfer) }
+    coVerify(exactly = 1) { auth.createSignUp(SignUp.CreateParams.Transfer) }
+  }
+
+  @Test
+  fun `a failing callback leaves error reporting to the awaiting caller`() = runTest {
+    val signUpApi = mockk<SignUpApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.signUp } returns signUpApi
+    coEvery { signUpApi.createSignUp(any()) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(Error(code = "transfer_failed"))))
+    val errors = mutableListOf<AuthEvent.Error>()
+    val collector =
+      launch(start = CoroutineStart.UNDISPATCHED) {
+        Clerk.auth.events.collect { if (it is AuthEvent.Error) errors += it }
+      }
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(
+      Uri.parse("$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found")
+    )
+
+    assertTrue(pendingResult.await() is ClerkResult.Failure)
+    runCurrent()
+    assertTrue(errors.isEmpty())
+    collector.cancel()
   }
 
   @Test
   fun `cancellation thrown while completing redirect propagates and fails pending auth as interrupted`() =
     runTest {
-      mockkObject(SignUp.Companion)
-      coEvery { SignUp.create(SignUp.CreateParams.Transfer) } throws
+      mockkStatic("com.clerk.api.auth.AuthFlowsKt")
+      coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } throws
         CancellationException("caller cancelled")
       val pendingResult =
         async(start = CoroutineStart.UNDISPATCHED) {
@@ -165,9 +202,12 @@ class SSOServiceCancellationTest {
   @Test
   fun `cancelling the completing job mid-request propagates and fails pending auth as interrupted`() =
     runTest {
-      mockkObject(SignUp.Companion)
+      mockkStatic("com.clerk.api.auth.AuthFlowsKt")
       val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-      coEvery { SignUp.create(SignUp.CreateParams.Transfer) } coAnswers { neverCompletes.await() }
+      coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
+        {
+          neverCompletes.await()
+        }
       val pendingResult =
         async(start = CoroutineStart.UNDISPATCHED) {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
@@ -189,9 +229,12 @@ class SSOServiceCancellationTest {
 
   @Test
   fun `stale completion does not clobber a newer redirect flow`() = runTest {
-    mockkObject(SignUp.Companion)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
     val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-    coEvery { SignUp.create(SignUp.CreateParams.Transfer) } coAnswers { neverCompletes.await() }
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
+      {
+        neverCompletes.await()
+      }
     val firstResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)

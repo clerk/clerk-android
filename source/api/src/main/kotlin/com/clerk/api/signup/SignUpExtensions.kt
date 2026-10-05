@@ -2,16 +2,19 @@
 
 package com.clerk.api.signup
 
-import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.Clerk
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 
 /**
  * Sends a verification code to the specified email or phone.
+ *
+ * When the value differs from the sign-up's current [SignUp.emailAddress] or [SignUp.phoneNumber],
+ * the sign-up is first updated to it, so the code goes to the address the caller named.
  *
  * @param block Builder block to configure where to send the code.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
@@ -29,20 +32,34 @@ suspend fun SignUp.sendCode(
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
   builder.validate()
+  val email = builder.email
+  val phone = builder.phone
 
-  val strategy =
-    if (builder.email != null) {
-      if (isEmailLinkVerificationSupported) {
-        SignUp.PrepareVerificationParams.Strategy.EmailLink()
-      } else {
-        SignUp.PrepareVerificationParams.Strategy.EmailCode()
+  return Clerk.auth.reportingFailures {
+    val target =
+      when {
+        email != null && !email.trim().equals(emailAddress?.trim(), ignoreCase = true) ->
+          updateImpl(SignUp.SignUpUpdateParams.Standard(emailAddress = email))
+        email == null && phone != null && phone.digits() != phoneNumber?.digits() ->
+          updateImpl(SignUp.SignUpUpdateParams.Standard(phoneNumber = phone))
+        else -> ClerkResult.success(this)
       }
-    } else {
-      SignUp.PrepareVerificationParams.Strategy.PhoneCode()
+    when (target) {
+      is ClerkResult.Failure -> target
+      is ClerkResult.Success ->
+        target.value.prepareVerificationImpl(target.value.sendCodeStrategy(email))
     }
-
-  return prepareVerification(strategy)
+  }
 }
+
+private fun SignUp.sendCodeStrategy(email: String?): SignUp.PrepareVerificationParams.Strategy =
+  when {
+    email == null -> SignUp.PrepareVerificationParams.Strategy.PhoneCode()
+    isEmailLinkVerificationSupported -> SignUp.PrepareVerificationParams.Strategy.EmailLink()
+    else -> SignUp.PrepareVerificationParams.Strategy.EmailCode()
+  }
+
+private fun String.digits(): String = filter(Char::isDigit)
 
 /**
  * Verifies with the provided code and type.
@@ -65,21 +82,20 @@ suspend fun SignUp.verifyCode(
   code: String,
   type: VerificationType,
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  val strategy =
+  val params =
     when (type) {
-      VerificationType.EMAIL -> AuthStrategy.EMAIL_CODE
-      VerificationType.PHONE -> AuthStrategy.PHONE_CODE
+      VerificationType.EMAIL -> SignUp.AttemptVerificationParams.EmailCode(code = code)
+      VerificationType.PHONE -> SignUp.AttemptVerificationParams.PhoneCode(code = code)
     }
 
-  return ClerkApi.signUp.attemptSignUpVerification(
-    signUpId = this.id,
-    strategy = strategy,
-    code = code,
-  )
+  return attemptVerificationImpl(params)
 }
 
 /**
  * Updates the sign-up with additional information.
+ *
+ * Sending [SignUpBuilder.unsafeMetadata] on update is not supported yet. Setting it here throws
+ * [IllegalArgumentException] instead of silently dropping it.
  *
  * @param block Builder block to configure the update.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
@@ -97,16 +113,17 @@ suspend fun SignUp.update(
   block: SignUpBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
+  require(builder.unsafeMetadata == null) { "update { } cannot change unsafeMetadata" }
 
-  val params = buildMap {
-    builder.email?.let { put("email_address", it) }
-    builder.phone?.let { put("phone_number", it) }
-    builder.password?.let { put("password", it) }
-    builder.firstName?.let { put("first_name", it) }
-    builder.lastName?.let { put("last_name", it) }
-    builder.username?.let { put("username", it) }
-    builder.legalAccepted?.let { put("legal_accepted", it.toString()) }
-  }
-
-  return ClerkApi.signUp.updateSignUp(this.id, params)
+  return updateImpl(
+    SignUp.SignUpUpdateParams.Standard(
+      emailAddress = builder.email,
+      phoneNumber = builder.phone,
+      password = builder.password,
+      firstName = builder.firstName,
+      lastName = builder.lastName,
+      username = builder.username,
+      legalAccepted = builder.legalAccepted,
+    )
+  )
 }

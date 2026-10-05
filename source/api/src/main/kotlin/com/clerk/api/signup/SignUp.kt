@@ -1,9 +1,14 @@
-@file:Suppress("unused")
+// TooManyFunctions: the deprecated old-layer wrappers sit next to their implementations until the
+// next major removes them.
+@file:Suppress("unused", "TooManyFunctions")
 
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.auth.authenticateSignUpWithRedirect
+import com.clerk.api.auth.createSignUp
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.PkceUtil
@@ -16,7 +21,6 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.api.sso.SSOService
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.automap.annotations.MapTransform
@@ -223,8 +227,8 @@ data class SignUp(
    * sealed interface encapsulates the different types of verification attempts, such as email or
    * phone code verification.
    *
-   * Use these parameters when calling [attemptVerification] to complete a verification that was
-   * previously initiated with [prepareVerification].
+   * The deprecated [attemptVerification] takes these parameters. New code should call [verifyCode]
+   * with a [com.clerk.api.auth.types.VerificationType] instead.
    */
   sealed interface AttemptVerificationParams {
     /**
@@ -447,7 +451,8 @@ data class SignUp(
     /**
      * The `SignUp` will be created using a Google One Tap token.
      *
-     * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
+     * Note: obtain the token from Google One Tap, or use `Clerk.auth.signUpWithGoogleOneTap()`,
+     * which runs the whole flow.
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
@@ -493,19 +498,15 @@ data class SignUp(
      * @param params The strategy to use for creating the sign-up.
      * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
+    @Deprecated(
+      message =
+        "Use the Clerk.auth method for your strategy: signUp { }, signUpWithTicket() or " +
+          "signUpWithIdToken(). For CreateParams.Transfer, use transferToSignUp(). " +
+          "This overload will be removed in the next major version.",
+      level = DeprecationLevel.WARNING,
+    )
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
-      val baseMap =
-        when (params) {
-          is CreateParams.None -> emptyMap()
-          is CreateParams.Transfer -> mapOf("transfer" to "true")
-          is CreateParams.Ticket ->
-            mapOf("strategy" to CreateParams.Ticket.STRATEGY, "ticket" to params.ticket)
-          is CreateParams.GoogleOneTap ->
-            mapOf("strategy" to CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
-          else -> params.toMap()
-        }
-      val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
-      return ClerkApi.signUp.createSignUp(paramMap)
+      return Clerk.auth.createSignUp(params)
     }
 
     /**
@@ -516,7 +517,7 @@ data class SignUp(
      *   [ClerkErrorResponse].
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
-      return ClerkApi.signUp.createSignUp(params)
+      return Clerk.auth.reportingFailures { ClerkApi.signUp.createSignUp(params) }
     }
 
     /**
@@ -527,7 +528,7 @@ data class SignUp(
      *   failure.
      */
     suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signUpWithGoogle()
+      return Clerk.auth.reportingFailures { GoogleSignInService().signUpWithGoogle() }
     }
 
     /**
@@ -539,19 +540,7 @@ data class SignUp(
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      val strategy =
-        when (params) {
-          is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
-          is AuthenticateWithRedirectParams.OAuth -> params.provider.strategy
-        }
-      return SSOService.authenticateSignUpWithRedirect(
-        strategy = strategy,
-        redirectUrl = params.redirectUrl,
-        identifier = params.identifier,
-        emailAddress = params.emailAddress,
-        legalAccepted = params.legalAccepted,
-        unsafeMetadata = params.unsafeMetadata,
-      )
+      return Clerk.auth.authenticateSignUpWithRedirect(params)
     }
 
     val fieldPriority: List<String> =
@@ -596,10 +585,23 @@ val SignUp.firstFieldToVerify: String?
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use update { } with the fields to change. This overload will be removed in the next major " +
+      "version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
+): ClerkResult<SignUp, ClerkErrorResponse> = updateImpl(updateParams)
+
+/** Canonical implementation behind both [update] overloads. */
+internal suspend fun SignUp.updateImpl(
+  updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+  }
 }
 
 /**
@@ -612,7 +614,9 @@ suspend fun SignUp.update(
 suspend fun SignUp.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  }
 }
 
 /**
@@ -622,14 +626,27 @@ suspend fun SignUp.get(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use sendEmailCode(), sendPhoneCode() or sendEmailLink(redirectUrl). This method will be " +
+      "removed in the next major version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
-): ClerkResult<SignUp, ClerkErrorResponse> {
-  if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
-    return NativeMagicLinkService.prepareSignUpEmailLink(this.id, prepareVerification)
+): ClerkResult<SignUp, ClerkErrorResponse> = prepareVerificationImpl(prepareVerification)
+
+/** Canonical implementation behind [prepareVerification] and the sign-up `send*` methods. */
+internal suspend fun SignUp.prepareVerificationImpl(
+  prepareVerification: SignUp.PrepareVerificationParams.Strategy
+): ClerkResult<SignUp, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
+      NativeMagicLinkService.prepareSignUpEmailLink(this.id, prepareVerification)
+    } else {
+      ClerkApi.signUp.prepareSignUpVerification(this.id, fields = prepareVerification.toFields())
+    }
   }
-  return ClerkApi.signUp.prepareSignUpVerification(this.id, fields = prepareVerification.toFields())
-}
 
 /**
  * Sends a verification code to the phone number associated with this sign-up.
@@ -641,7 +658,7 @@ suspend fun SignUp.prepareVerification(
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
+  return prepareVerificationImpl(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
 }
 
 /**
@@ -654,18 +671,28 @@ suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+  return prepareVerificationImpl(SignUp.PrepareVerificationParams.Strategy.EmailCode())
 }
 
 /**
  * Sends a verification link to the email address associated with this sign-up.
  *
+ * @param redirectUrl The URL the link opens. Defaults to the SDK's email-link callback. A custom
+ *   value must be handled by the app and forwarded to [com.clerk.api.auth.Auth.handle].
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
-  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
+suspend fun SignUp.sendEmailLink(
+  redirectUrl: String? = null
+): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerificationImpl(
+    SignUp.PrepareVerificationParams.Strategy.EmailLink(redirectUrl = redirectUrl)
+  )
 }
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> =
+  sendEmailLink(redirectUrl = null)
 
 /**
  * Attempts to complete the verification process.
@@ -674,14 +701,27 @@ suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
+@Deprecated(
+  message =
+    "Use verifyCode(code, VerificationType). This method will be removed in the next major " +
+      "version.",
+  level = DeprecationLevel.WARNING,
+)
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
+): ClerkResult<SignUp, ClerkErrorResponse> = attemptVerificationImpl(params)
+
+/** Canonical implementation behind [attemptVerification] and [verifyCode]. */
+internal suspend fun SignUp.attemptVerificationImpl(
+  params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.attemptSignUpVerification(
-    signUpId = this.id,
-    strategy = params.strategy,
-    code = params.code,
-  )
+  return Clerk.auth.reportingFailures {
+    ClerkApi.signUp.attemptSignUpVerification(
+      signUpId = this.id,
+      strategy = params.strategy,
+      code = params.code,
+    )
+  }
 }
 
 // endregion
@@ -695,11 +735,10 @@ val SignUp.emailVerificationStrategy: String
     val activeStrategy = verifications[EMAIL_ADDRESS]?.strategy
     if (!activeStrategy.isNullOrBlank()) return activeStrategy
 
-    val configuredStrategies =
-      runCatching {
-          Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
-        }
-        .getOrDefault(emptyList())
+    val configuredStrategies = runCatching {
+      Clerk.environment?.userSettings?.attributes?.get(EMAIL_ADDRESS)?.verifications.orEmpty()
+    }
+      .getOrDefault(emptyList())
 
     return when {
       configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
@@ -719,16 +758,16 @@ private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, St
       redirectUri
         ?: redirectUrl
         ?: runCatching {
-            val applicationId = Clerk.applicationId
-            if (applicationId.isNullOrBlank()) {
-              null
-            } else {
-              RedirectConfiguration.emailLinkRedirectUrl(
-                applicationId = applicationId,
-                proxyUrl = Clerk.proxyUrl,
-              )
-            }
+          val applicationId = Clerk.applicationId
+          if (applicationId.isNullOrBlank()) {
+            null
+          } else {
+            RedirectConfiguration.emailLinkRedirectUrl(
+              applicationId = applicationId,
+              proxyUrl = Clerk.proxyUrl,
+            )
           }
+        }
           .getOrNull()
     if (!resolvedRedirectUri.isNullOrBlank()) {
       strategyFields[ApiParams.REDIRECT_URI] = resolvedRedirectUri

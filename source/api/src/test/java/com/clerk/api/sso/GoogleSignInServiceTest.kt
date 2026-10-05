@@ -7,6 +7,9 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
+import com.clerk.api.auth.createSignIn
+import com.clerk.api.auth.createSignUp
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -23,6 +26,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
@@ -36,6 +40,9 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GoogleSignInServiceTest {
+
+  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
+  private val auth: Auth = Clerk.auth
 
   private lateinit var mockGoogleCredentialManager: GoogleCredentialManager
   private lateinit var mockGetCredentialResponse: GetCredentialResponse
@@ -67,8 +74,7 @@ class GoogleSignInServiceTest {
     mockkObject(ClerkApi)
     every { ClerkApi.signIn } returns mockk(relaxed = true)
 
-    mockkObject(SignUp.Companion)
-    mockkObject(SignIn.Companion)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
 
     googleSignInService = GoogleSignInService(mockGoogleCredentialManager)
   }
@@ -125,7 +131,7 @@ class GoogleSignInServiceTest {
 
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
-    coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
+    coEvery { auth.createSignUp(any<SignUp.CreateParams.GoogleOneTap>()) } returns
       ClerkResult.success(mockSignUp)
 
     val result = googleSignInService.signInWithGoogle()
@@ -165,9 +171,9 @@ class GoogleSignInServiceTest {
 
       coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
         ClerkResult.apiFailure(errorResponse)
-      coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
+      coEvery { auth.createSignUp(any<SignUp.CreateParams.GoogleOneTap>()) } returns
         ClerkResult.success(transferableSignUp)
-      coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
+      coEvery { auth.createSignIn(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
         ClerkResult.success(mockSignIn)
 
       val result = googleSignInService.signInWithGoogle()
@@ -177,7 +183,9 @@ class GoogleSignInServiceTest {
       assertEquals(mockSignIn, oauthResult.signIn)
       assertEquals(null, oauthResult.signUp)
       assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
-      coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
+      coVerify(exactly = 1) {
+        auth.createSignIn(any<SignIn.CreateParams.Strategy.Transfer>())
+      }
     }
 
   @Test
@@ -287,7 +295,7 @@ class GoogleSignInServiceTest {
 
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
-    coEvery { SignUp.create(capture(createParamsSlot)) } returns ClerkResult.success(mockSignUp)
+    coEvery { auth.createSignUp(capture(createParamsSlot)) } returns ClerkResult.success(mockSignUp)
 
     googleSignInService.signInWithGoogle()
 
@@ -312,9 +320,9 @@ class GoogleSignInServiceTest {
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
-    coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
+    coEvery { auth.createSignUp(any<SignUp.CreateParams.GoogleOneTap>()) } returns
       ClerkResult.success(transferableSignUp)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
+    coEvery { auth.createSignIn(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
       ClerkResult.success(mockSignIn)
 
     val result = googleSignInService.signUpWithGoogle()
@@ -324,7 +332,7 @@ class GoogleSignInServiceTest {
     assertEquals(mockSignIn, oauthResult.signIn)
     assertEquals(null, oauthResult.signUp)
     assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
-    coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
+    coVerify(exactly = 1) { auth.createSignIn(any<SignIn.CreateParams.Strategy.Transfer>()) }
   }
 
   private fun testSignUp(verifications: Map<String, Verification?> = emptyMap()): SignUp {

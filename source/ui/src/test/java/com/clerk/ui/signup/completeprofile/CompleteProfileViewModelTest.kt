@@ -1,5 +1,6 @@
 package com.clerk.ui.signup.completeprofile
 
+import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.signup.SignUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +17,10 @@ class CompleteProfileViewModelTest {
       )
 
     val params =
-      signUp.completeProfileUpdateParams(firstName = "", lastName = "", legalAccepted = true)
+      SignUpBuilder()
+        .apply(
+          signUp.completeProfileUpdateParams(firstName = "", lastName = "", legalAccepted = true)
+        )
 
     assertNull(params.firstName)
     assertNull(params.lastName)
@@ -32,11 +36,14 @@ class CompleteProfileViewModelTest {
       )
 
     val params =
-      signUp.completeProfileUpdateParams(
-        firstName = "Sam",
-        lastName = "McTest",
-        legalAccepted = null,
-      )
+      SignUpBuilder()
+        .apply(
+          signUp.completeProfileUpdateParams(
+            firstName = "Sam",
+            lastName = "McTest",
+            legalAccepted = null,
+          )
+        )
 
     assertEquals("Sam", params.firstName)
     assertEquals("McTest", params.lastName)
@@ -52,11 +59,14 @@ class CompleteProfileViewModelTest {
       )
 
     val params =
-      signUp.completeProfileUpdateParams(
-        firstName = "Sam",
-        lastName = "McTest",
-        legalAccepted = null,
-      )
+      SignUpBuilder()
+        .apply(
+          signUp.completeProfileUpdateParams(
+            firstName = "Sam",
+            lastName = "McTest",
+            legalAccepted = null,
+          )
+        )
 
     assertNull(params.firstName)
     assertNull(params.lastName)

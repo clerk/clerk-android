@@ -20,6 +20,7 @@ import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
@@ -28,6 +29,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
@@ -64,16 +66,17 @@ class AuthTest {
 
   @Test
   fun `signUpWithGoogleOneTap delegates to transferable Google One Tap flow`() = runTest {
-    mockkObject(SignIn.Companion)
+    mockkConstructor(GoogleSignInService::class)
     val signUp = mockk<SignUp>(relaxed = true)
     val oauthResult = OAuthResult(signUp = signUp)
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.success(oauthResult)
+    coEvery { anyConstructed<GoogleSignInService>().signInWithGoogle(true) } returns
+      ClerkResult.success(oauthResult)
 
     val result = Auth().signUpWithGoogleOneTap()
 
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { anyConstructed<GoogleSignInService>().signInWithGoogle(true) }
   }
 
   @Test
@@ -120,6 +123,41 @@ class AuthTest {
   }
 
   @Test
+  fun `signUpWithEnterpriseSso starts a sign-up redirect instead of a sign-in`() = runTest {
+    mockkObject(SSOService)
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result = Auth().signUpWithEnterpriseSso { email = "user@company.com" }
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    }
+    coVerify(exactly = 0) {
+      SSOService.authenticateWithRedirect(any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
   fun `signUp forwards unsafe metadata`() = runTest {
     val signUpApi = mockk<SignUpApi>()
     val createdSignUp = mockk<SignUp>(relaxed = true)
@@ -150,7 +188,7 @@ class AuthTest {
 
   @Test
   fun `signUpWithGoogleOneTap emits auth error event on failure`() = runTest {
-    mockkObject(SignIn.Companion)
+    mockkConstructor(GoogleSignInService::class)
     val error =
       ClerkErrorResponse(
         errors =
@@ -163,7 +201,8 @@ class AuthTest {
           ),
         clerkTraceId = "trace_123",
       )
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.apiFailure(error)
+    coEvery { anyConstructed<GoogleSignInService>().signInWithGoogle(true) } returns
+      ClerkResult.apiFailure(error)
 
     val auth = Auth()
     val events = mutableListOf<AuthEvent>()
@@ -181,7 +220,7 @@ class AuthTest {
       "Account already exists. Use sign in instead.",
       (events.single() as AuthEvent.Error).message,
     )
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { anyConstructed<GoogleSignInService>().signInWithGoogle(true) }
   }
 
   @Test

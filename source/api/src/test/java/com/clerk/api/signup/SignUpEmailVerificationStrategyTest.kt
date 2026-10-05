@@ -1,3 +1,6 @@
+// These tests pin the deprecated entry points until they are removed in the next major.
+@file:Suppress("DEPRECATION")
+
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
@@ -7,6 +10,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.storage.StorageHelper
@@ -169,6 +173,76 @@ class SignUpEmailVerificationStrategyTest {
     assertEquals(Constants.Strategy.PHONE_CODE, fieldsSlot.captured["strategy"])
   }
 
+  @Test
+  fun sendCodeUpdatesTheSignUpFirstWhenTheEmailDiffers() {
+    every { userSettings.attributes } returns
+      mapOf("email_address" to emailAttributeConfig(listOf(Constants.Strategy.EMAIL_CODE)))
+    val signUp = signUp()
+    val updated = signUp.copy(emailAddress = "new@clerk.dev")
+    coEvery { mockSignUpApi.updateSignUp(signUp.id, any()) } returns ClerkResult.success(updated)
+    coEvery { mockSignUpApi.prepareSignUpVerification(signUp.id, any()) } returns
+      ClerkResult.success(updated)
+
+    runBlocking { signUp.sendCode { email = "new@clerk.dev" } }
+
+    coVerify(exactly = 1) {
+      mockSignUpApi.updateSignUp(signUp.id, mapOf("email_address" to "new@clerk.dev"))
+    }
+    coVerify(exactly = 1) {
+      mockSignUpApi.prepareSignUpVerification(signUp.id, match { it["strategy"] == "email_code" })
+    }
+  }
+
+  @Test
+  fun sendCodeDoesNotSendWhenUpdatingTheAddressFails() {
+    every { userSettings.attributes } returns emptyMap()
+    val signUp = signUp()
+    coEvery { mockSignUpApi.updateSignUp(signUp.id, any()) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+
+    val result = runBlocking { signUp.sendCode { phone = "+15555550199" } }
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 0) { mockSignUpApi.prepareSignUpVerification(any(), any()) }
+  }
+
+  @Test
+  fun sendEmailLinkUsesACustomRedirectUrlWhenGiven() {
+    val fieldsSlot = slot<Map<String, String>>()
+    val signUp = signUp()
+    coEvery { mockSignUpApi.prepareSignUpVerification(signUp.id, capture(fieldsSlot)) } returns
+      ClerkResult.success(signUp)
+
+    runBlocking { signUp.sendEmailLink(redirectUrl = "myapp://email-link") }
+
+    assertEquals("myapp://email-link", fieldsSlot.captured["redirect_uri"])
+  }
+
+  @Test
+  fun sendEmailLinkKeepsItsPreviousJvmSignatures() {
+    val signUpMethods = Class.forName("com.clerk.api.signup.SignUpKt").declaredMethods
+    val signInMethods = Class.forName("com.clerk.api.signin.SignInExtensionsKt").declaredMethods
+
+    assertTrue(
+      signUpMethods.any {
+        it.name == "sendEmailLink" &&
+          it.parameterTypes.toList() ==
+            listOf(SignUp::class.java, kotlin.coroutines.Continuation::class.java)
+      }
+    )
+    assertTrue(
+      signInMethods.any {
+        it.name == "sendEmailLink" &&
+          it.parameterTypes.toList() ==
+            listOf(
+              com.clerk.api.signin.SignIn::class.java,
+              String::class.java,
+              kotlin.coroutines.Continuation::class.java,
+            )
+      }
+    )
+  }
+
   private fun emailAttributeConfig(verifications: List<String>): UserSettings.AttributesConfig {
     return UserSettings.AttributesConfig(
       enabled = true,
@@ -192,6 +266,7 @@ class SignUpEmailVerificationStrategyTest {
       unverifiedFields = listOf("email_address"),
       verifications = verifications,
       emailAddress = "sam@clerk.dev",
+      phoneNumber = "+15555550123",
       passwordEnabled = false,
     )
   }

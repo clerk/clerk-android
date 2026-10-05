@@ -2,14 +2,15 @@ package com.clerk.ui.auth
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
+import com.clerk.api.auth.builders.SignInIdentifierBuilder
+import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -38,11 +39,14 @@ import org.junit.Test
 class AuthViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
+  private val auth = mockk<Auth>()
   private lateinit var viewModel: AuthStartViewModel
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
+    mockkObject(Clerk)
+    every { Clerk.auth } returns auth
     viewModel = AuthStartViewModel(ioDispatcher = testDispatcher)
   }
 
@@ -59,9 +63,7 @@ class AuthViewModelTest {
 
   @Test
   fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.apiFailure(null)
+    coEvery { auth.signIn(any()) } returns ClerkResult.apiFailure(null)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -74,15 +76,14 @@ class AuthViewModelTest {
       )
 
       assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      coVerify(timeout = 1_000, exactly = 1) { auth.signIn(any()) }
       cancelAndIgnoreRemainingEvents()
     }
   }
 
   @Test
   fun startAuthWithSignInModeShouldSurfaceApiFailure() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+    coEvery { auth.signIn(any()) } returns
       ClerkResult.apiFailure(
         ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Couldn't find your account.")))
       )
@@ -104,8 +105,7 @@ class AuthViewModelTest {
 
   @Test
   fun startAuthWithSignInModeShouldSurfaceUnknownFailure() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+    coEvery { auth.signIn(any()) } returns
       ClerkResult.unknownFailure(IllegalStateException("Network unavailable"))
 
     viewModel.state.test {
@@ -129,12 +129,8 @@ class AuthViewModelTest {
   @Test
   fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
     val signIn = SignIn(id = "sign_in_123")
-    mockkObject(SignIn.Companion)
     coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
     } returns ClerkResult.success(signIn)
 
     viewModel.state.test {
@@ -144,10 +140,7 @@ class AuthViewModelTest {
 
       assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
       coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
-          preferImmediatelyAvailableCredentials = true,
-        )
+        auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
       }
     }
   }
@@ -158,12 +151,8 @@ class AuthViewModelTest {
       Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoSavedCredential")
         .getDeclaredConstructor()
         .newInstance() as Throwable
-    mockkObject(SignIn.Companion)
     coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
     } returns ClerkResult.unknownFailure(noSavedCredentialException)
 
     viewModel.state.test {
@@ -173,10 +162,7 @@ class AuthViewModelTest {
 
       testDispatcher.scheduler.advanceUntilIdle()
       coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
-          preferImmediatelyAvailableCredentials = true,
-        )
+        auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
       }
       expectNoEvents()
     }
@@ -188,12 +174,8 @@ class AuthViewModelTest {
       Class.forName("com.clerk.api.credentials.CredentialFlowException\$UserCancelled")
         .getDeclaredConstructor()
         .newInstance() as Throwable
-    mockkObject(SignIn.Companion)
     coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
     } returns ClerkResult.unknownFailure(userCancelledException)
 
     viewModel.state.test {
@@ -203,10 +185,7 @@ class AuthViewModelTest {
 
       testDispatcher.scheduler.advanceUntilIdle()
       coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
-          preferImmediatelyAvailableCredentials = true,
-        )
+        auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
       }
       expectNoEvents()
     }
@@ -214,12 +193,8 @@ class AuthViewModelTest {
 
   @Test
   fun automaticPasskeySignInSurfacesApiErrors() = runTest {
-    mockkObject(SignIn.Companion)
     coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
     } returns
       ClerkResult.apiFailure(
         ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Passkey failed")))
@@ -237,8 +212,7 @@ class AuthViewModelTest {
   @Test
   fun oauthRedirectWithSignInResultSetsSignInSuccessState() = runTest {
     val signIn = SignIn(id = "sign_in_oauth")
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = signIn))
 
     viewModel.authenticateWithSocialProvider(
@@ -256,8 +230,7 @@ class AuthViewModelTest {
   @Test
   fun oauthRedirectWithSignUpResultSetsSignUpSuccessState() = runTest {
     val signUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signUp = signUp))
 
     viewModel.authenticateWithSocialProvider(
@@ -275,9 +248,7 @@ class AuthViewModelTest {
   @Test
   fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
     val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(unknownResult)
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns ClerkResult.success(unknownResult)
 
     viewModel.authenticateWithSocialProvider(
       provider = OAuthProvider.GITHUB,
@@ -293,10 +264,9 @@ class AuthViewModelTest {
 
   @Test
   fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
-    val paramsSlot = slot<SignUp.CreateParams>()
+    val paramsSlot = slot<SignUpBuilder.() -> Unit>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignUp.Companion)
-    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
+    coEvery { auth.signUp(any()) } returns ClerkResult.success(mockSignUp)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -313,25 +283,23 @@ class AuthViewModelTest {
       assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
     }
 
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    coVerify(timeout = 1_000, exactly = 1) { auth.signUp(capture(paramsSlot)) }
+    val params = SignUpBuilder().apply(paramsSlot.captured)
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("test@example.com", params.emailAddress)
+    assertEquals("test@example.com", params.email)
     assertEquals("test", unsafeMetadata.getValue("test"))
     assertEquals(mapOf("active" to true), unsafeMetadata.getValue("nested"))
   }
 
   @Test
   fun signInOrUpFallbackPassesUnsafeMetadataToSignUpCreate() = runTest {
-    val paramsSlot = slot<SignUp.CreateParams>()
+    val paramsSlot = slot<SignUpBuilder.() -> Unit>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignIn.Companion)
-    mockkObject(SignUp.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+    coEvery { auth.signIn(any()) } returns
       ClerkResult.apiFailure(
         ClerkErrorResponse(errors = listOf(ClerkError(code = "form_identifier_not_found")))
       )
-    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
+    coEvery { auth.signUp(any()) } returns ClerkResult.success(mockSignUp)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -348,10 +316,10 @@ class AuthViewModelTest {
       assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
     }
 
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    coVerify(timeout = 1_000, exactly = 1) { auth.signUp(capture(paramsSlot)) }
+    val params = SignUpBuilder().apply(paramsSlot.captured)
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("+1234567890", params.phoneNumber)
+    assertEquals("+1234567890", params.phone)
     assertEquals("prebuilt", unsafeMetadata.getValue("source"))
   }
 
@@ -364,10 +332,8 @@ class AuthViewModelTest {
         identifier = "user@example.com",
         supportedFirstFactors = listOf(Factor(strategy = "password")),
       )
-    mockkObject(SignIn.Companion)
-    mockkStatic("com.clerk.api.signin.SignInKt")
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.success(signIn)
+    mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
+    coEvery { auth.signIn(any()) } returns ClerkResult.success(signIn)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -383,14 +349,13 @@ class AuthViewModelTest {
       assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
     }
 
-    coVerify(exactly = 0) { signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams>()) }
+    coVerify(exactly = 0) { signIn.authenticateWithEnterpriseSso(any(), any()) }
   }
 
   @Test
   fun startAuthUsesPhoneNumberAsIdentifierOnlyWhenPhoneFieldIsActive() = runTest {
-    val createdParams = mutableListOf<SignIn.CreateParams.Strategy>()
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(capture(createdParams)) } returns
+    val createdParams = mutableListOf<SignInIdentifierBuilder.() -> Unit>()
+    coEvery { auth.signIn(capture(createdParams)) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "x"))))
 
     viewModel.startAuth(
@@ -409,11 +374,8 @@ class AuthViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     assertEquals(
-      listOf(
-        SignIn.CreateParams.Strategy.Identifier(identifier = "+1234567890"),
-        SignIn.CreateParams.Strategy.Identifier(identifier = "test@example.com"),
-      ),
-      createdParams,
+      listOf("+1234567890", "test@example.com"),
+      createdParams.map { SignInIdentifierBuilder().apply(it).identifier },
     )
   }
 
@@ -450,12 +412,11 @@ class AuthViewModelTest {
 
   @Test
   fun googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred() = runTest {
-    mockkObject(SignIn.Companion)
     val mockSignIn = mockk<SignIn>(relaxed = true)
 
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+    coEvery { auth.signInWithGoogleOneTap(any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockSignIn))
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockSignIn))
 
     viewModel.authenticateWithSocialProvider(
@@ -465,15 +426,14 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 0) { SignIn.authenticateWithGoogleOneTap(any()) }
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+    coVerify(exactly = 0) { auth.signInWithGoogleOneTap(any()) }
+    coVerify(exactly = 1) { auth.signInWithOAuth(any(), true, any()) }
   }
 
   @Test
   fun customSocialAuthPreservesProviderStrategy() = runTest {
-    val paramsSlot = slot<SignIn.AuthenticateWithRedirectParams>()
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    val providerSlot = slot<OAuthProvider>()
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
 
     viewModel.authenticateWithSocialProvider(
@@ -482,9 +442,8 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(capture(paramsSlot), true) }
-    val params = paramsSlot.captured as SignIn.AuthenticateWithRedirectParams.OAuth
-    assertEquals("oauth_custom_patreon", params.provider.strategy)
+    coVerify(exactly = 1) { auth.signInWithOAuth(capture(providerSlot), true, any()) }
+    assertEquals("oauth_custom_patreon", providerSlot.captured.strategy)
   }
 
   @Test
@@ -494,8 +453,7 @@ class AuthViewModelTest {
         .getDeclaredConstructor(String::class.java)
         .apply { isAccessible = true }
         .newInstance("Authentication cancelled") as Throwable
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.unknownFailure(cancellation)
 
     viewModel.authenticateWithSocialProvider(
@@ -523,23 +481,9 @@ class AuthViewModelTest {
         supportedFirstFactors =
           listOf(Factor(strategy = "enterprise_sso", safeIdentifier = "user@example.com")),
       )
-    val preparedSignIn =
-      signIn.copy(
-        firstFactorVerification =
-          Verification(
-            strategy = "enterprise_sso",
-            externalVerificationRedirectUrl = "https://sso.example.com/start",
-          )
-      )
-    mockkObject(SignIn.Companion)
-    mockkStatic("com.clerk.api.signin.SignInKt")
     mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.success(signIn)
-    coEvery {
-      signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams.EnterpriseSSO>())
-    } returns ClerkResult.success(preparedSignIn)
-    coEvery { preparedSignIn.authenticateWithPreparedRedirect(any()) } returns
+    coEvery { auth.signIn(any()) } returns ClerkResult.success(signIn)
+    coEvery { signIn.authenticateWithEnterpriseSso(any(), any()) } returns
       ClerkResult.unknownFailure(cancellation)
 
     viewModel.startAuth(
@@ -550,19 +494,17 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(false) }
+    coVerify(exactly = 1) { signIn.authenticateWithEnterpriseSso(transferable = false, any()) }
     assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
   fun socialOAuthCanStartWithSignUp() = runTest {
-    mockkObject(SignIn.Companion)
-    mockkObject(SignUp.Companion)
     val mockSignUp = mockk<SignUp>(relaxed = true)
 
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
-    coEvery { SignUp.authenticateWithRedirect(any()) } returns
+    coEvery { auth.signUpWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signUp = mockSignUp))
 
     viewModel.authenticateWithSocialProvider(
@@ -573,16 +515,15 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
-    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+    coVerify(exactly = 1) { auth.signUpWithOAuth(any(), any(), any()) }
+    coVerify(exactly = 0) { auth.signInWithOAuth(any(), any(), any()) }
   }
 
   @Test
   fun socialOAuthSignUpPassesUnsafeMetadata() = runTest {
-    val paramsSlot = slot<SignUp.AuthenticateWithRedirectParams>()
+    val metadataSlot = slot<Map<String, Any>>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignUp.Companion)
-    coEvery { SignUp.authenticateWithRedirect(any()) } returns
+    coEvery { auth.signUpWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signUp = mockSignUp))
 
     viewModel.authenticateWithSocialProvider(
@@ -594,22 +535,18 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
-    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("social", unsafeMetadata.getValue("source"))
+    coVerify(exactly = 1) { auth.signUpWithOAuth(any(), any(), capture(metadataSlot)) }
+    assertEquals("social", metadataSlot.captured.getValue("source"))
   }
 
   @Test
   fun googleSocialAuthUsesOneTapWhenPreferredAndEnabled() = runTest {
-    mockkObject(Clerk)
     every { Clerk.isGoogleOneTapEnabled } returns true
-    mockkObject(SignIn.Companion)
     val mockSignIn = mockk<SignIn>(relaxed = true)
 
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+    coEvery { auth.signInWithGoogleOneTap(any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockSignIn))
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockSignIn))
 
     viewModel.authenticateWithSocialProvider(
@@ -619,24 +556,22 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
-    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+    coVerify(exactly = 1) { auth.signInWithGoogleOneTap(true) }
+    coVerify(exactly = 0) { auth.signInWithOAuth(any(), any(), any()) }
   }
 
   @Test
   fun googleSocialAuthFallsBackToBrowserRedirectWhenOneTapHasNoGoogleAccount() = runTest {
-    mockkObject(Clerk)
     every { Clerk.isGoogleOneTapEnabled } returns true
-    mockkObject(SignIn.Companion)
     val mockSignIn = mockk<SignIn>(relaxed = true)
     val noGoogleAccountException =
       Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoGoogleAccount")
         .getDeclaredConstructor()
         .newInstance() as Throwable
 
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+    coEvery { auth.signInWithGoogleOneTap(any()) } returns
       ClerkResult.unknownFailure(noGoogleAccountException)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns
       ClerkResult.success(OAuthResult(signIn = mockSignIn))
 
     viewModel.authenticateWithSocialProvider(
@@ -646,7 +581,7 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+    coVerify(exactly = 1) { auth.signInWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { auth.signInWithOAuth(any(), true, any()) }
   }
 }

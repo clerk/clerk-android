@@ -707,7 +707,7 @@ object Clerk {
    * @return Map where keys are strategy identifiers (e.g., `oauth_google`) and values contain
    *   provider configuration. Returns an empty map if the SDK is not initialized or no social
    *   providers are configured.
-   * @see [SignIn.create] for usage with OAuth authentication.
+   * @see [com.clerk.api.auth.Auth.signInWithOAuth] for usage with OAuth authentication.
    */
   val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = environment?.userSettings?.social ?: emptyMap()

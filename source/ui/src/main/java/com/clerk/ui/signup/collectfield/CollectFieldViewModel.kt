@@ -6,7 +6,6 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.update
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignUp
@@ -32,16 +31,15 @@ internal class CollectFieldViewModel : ViewModel() {
       _state.value = AuthenticationViewState.Loading
 
       viewModelScope.launch(Dispatchers.IO) {
-        val params =
-          when (collectField) {
-            CollectField.Email -> SignUp.SignUpUpdateParams.Standard(emailAddress = email)
-            CollectField.Password -> SignUp.SignUpUpdateParams.Standard(password = password)
-            CollectField.Phone -> SignUp.SignUpUpdateParams.Standard(phoneNumber = phone)
-            CollectField.Username -> SignUp.SignUpUpdateParams.Standard(username = username)
-          }
-
         inProgressSignUp
-          .update(params)
+          .update {
+            when (collectField) {
+              CollectField.Email -> this.email = email
+              CollectField.Password -> this.password = password
+              CollectField.Phone -> this.phone = phone
+              CollectField.Username -> this.username = username
+            }
+          }
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignUp(it)

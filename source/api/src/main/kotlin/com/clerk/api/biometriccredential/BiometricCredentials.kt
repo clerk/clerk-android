@@ -4,6 +4,7 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -41,7 +42,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * }
  * ```
  */
-@Suppress("TooManyFunctions", "ReturnCount")
+@Suppress("TooManyFunctions", "ReturnCount", "LargeClass")
 object BiometricCredentials {
 
   @VisibleForTesting
@@ -296,6 +297,16 @@ object BiometricCredentials {
     identifierHint: String? = null,
     promptTitle: String? = null,
     promptSubtitle: String? = null,
+  ): ClerkResult<SignIn, ClerkErrorResponse> =
+    Clerk.auth.reportingFailures {
+      signInWithLocalCredential(id, identifierHint, promptTitle, promptSubtitle)
+    }
+
+  private suspend fun signInWithLocalCredential(
+    id: String?,
+    identifierHint: String?,
+    promptTitle: String?,
+    promptSubtitle: String?,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val localCredential =
       when (val result = selectedLocalCredential(id, identifierHint, userId = null)) {

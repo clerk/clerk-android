@@ -5,18 +5,21 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.api.auth.createSignUp
+import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.get
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.prepareFirstFactorImpl
+import com.clerk.api.signin.reload
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.get
 import com.clerk.api.signup.toUnsafeMetadataJsonString
@@ -100,7 +103,7 @@ internal object SSOService {
         ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
         when (
           val prepareResult =
-            initialResult.value.prepareFirstFactor(
+            initialResult.value.prepareFirstFactorImpl(
               firstFactorParams(strategy = resolvedStrategy, redirectUrl = redirectUrl)
             )
         ) {
@@ -247,7 +250,7 @@ internal object SSOService {
     // captured deferred and only clears shared state if that flow is still the current one.
     val pendingAuth = currentPendingAuth
     if (pendingAuth == null) {
-      ClerkLog.w("No pending authentication found for redirect: $uri")
+      ClerkLog.w("No pending authentication found for redirect: ${SafeUriLog.describe(uri)}")
       return
     }
     val transferable = currentTransferable
@@ -257,25 +260,28 @@ internal object SSOService {
     try {
       val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
 
-      when (redirectFlow) {
-        RedirectFlow.SIGN_IN -> {
-          if (nonce != null) {
-            handleSignIn(pendingAuth, nonce)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && transferable) {
-            handleSignUpTransfer(pendingAuth)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
-            completeTransferBlocked(pendingAuth)
-          } else {
-            completeCancellation(pendingAuth, uri)
+      // The outcome is reported by the suspended authenticateWithRedirect call that awaits it.
+      withoutAuthErrorReporting {
+        when (redirectFlow) {
+          RedirectFlow.SIGN_IN -> {
+            if (nonce != null) {
+              handleSignIn(pendingAuth, nonce)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && transferable) {
+              handleSignUpTransfer(pendingAuth)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
+              completeTransferBlocked(pendingAuth)
+            } else {
+              completeCancellation(pendingAuth, uri)
+            }
           }
-        }
-        RedirectFlow.SIGN_UP -> {
-          if (nonce != null) {
-            handleSignUp(pendingAuth, signUp, nonce)
-          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
-            handleSignInTransfer(pendingAuth, signUp)
-          } else {
-            completeCancellation(pendingAuth, uri)
+          RedirectFlow.SIGN_UP -> {
+            if (nonce != null) {
+              handleSignUp(pendingAuth, signUp, nonce)
+            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
+              handleSignInTransfer(pendingAuth, signUp)
+            } else {
+              completeCancellation(pendingAuth, uri)
+            }
           }
         }
       }
@@ -307,13 +313,15 @@ internal object SSOService {
 
   private suspend fun handleSignIn(pendingAuth: PendingAuth, nonce: String) {
     val signInResult =
-      requireNotNull(Clerk.auth.currentSignIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
+      requireNotNull(Clerk.auth.currentSignIn)
+        .reload(rotatingTokenNonce = nonce)
+        .signInToOAuthResult()
     finishPendingAuth(pendingAuth, signInResult)
   }
 
   private suspend fun handleSignUpTransfer(pendingAuth: PendingAuth) {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = SignUp.create(SignUp.CreateParams.Transfer).signUpToOAuthResult()
+    val createResult = Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
     finishPendingAuth(pendingAuth, createResult)
   }
 

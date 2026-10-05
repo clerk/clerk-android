@@ -6,7 +6,7 @@ import com.clerk.api.auth.types.IdTokenProvider
  * Builder for sign-in with identifier.
  *
  * Use this builder to specify the identifier for starting a sign-in flow. Only one of [email],
- * [phone], or [username] should be set.
+ * [phone], [username], or [identifier] should be set.
  *
  * ### Example usage:
  * ```kotlin
@@ -28,14 +28,23 @@ class SignInIdentifierBuilder {
   /** The username to sign in with. */
   var username: String? = null
 
+  /**
+   * An identifier of any type, such as text a user typed into a single "email, phone or username"
+   * field. Clerk works out which kind it is.
+   */
+  var identifier: String? = null
+
   internal fun validate() {
-    require(email != null || phone != null || username != null) {
-      "At least one of email, phone, or username must be provided"
+    require(email != null || phone != null || username != null || identifier != null) {
+      "At least one of email, phone, username, or identifier must be provided"
+    }
+    require(identifier == null || (email == null && phone == null && username == null)) {
+      "identifier cannot be combined with email, phone, or username"
     }
   }
 
   internal fun getIdentifier(): String {
-    return email ?: phone ?: username ?: error("No identifier provided")
+    return email ?: phone ?: username ?: identifier ?: error("No identifier provided")
   }
 }
 
