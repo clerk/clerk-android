@@ -23,6 +23,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The main entry point for Google Play Restore Credentials operations.
@@ -74,6 +75,8 @@ object RestoreCredentials {
           } catch (e: CreateCredentialException) {
             ClerkLog.e("Restore credential creation failed: ${e.message}")
             return classifyCreateCredentialFailure(e)
+          } catch (e: CancellationException) {
+            throw e
           } catch (e: Exception) {
             ClerkLog.e("Restore credential creation failed: ${e.message}")
             return ClerkResult.unknownFailure(e)
@@ -134,28 +137,7 @@ object RestoreCredentials {
           )
           .also { clearSignInAttempt(signIn) }
 
-    return try {
-      val request = GetCredentialRequest(listOf(GetRestoreCredentialOption(nonce)))
-      val credential = credentialManager.getCredential(context, request).credential
-      if (credential !is RestoreCredential) {
-        ClerkResult.unknownFailure(
-            IllegalStateException("Credential Manager returned a non-restore credential.")
-          )
-          .also { clearSignInAttempt(signIn) }
-      } else {
-        signIn.attemptFirstFactor(
-          SignIn.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
-        )
-      }
-    } catch (e: GetCredentialException) {
-      ClerkLog.d("Restore credential sign-in is unavailable: ${e.message}")
-      classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY)).also {
-        clearSignInAttempt(signIn)
-      }
-    } catch (e: Exception) {
-      ClerkLog.e("Restore credential sign-in failed: ${e.message}")
-      ClerkResult.unknownFailure(e).also { clearSignInAttempt(signIn) }
-    }
+    return attemptWithRestoreCredential(context, signIn, nonce)
   }
 
   /** Deletes the app's restore credential from this device and its cloud backup. */
@@ -176,6 +158,8 @@ object RestoreCredentials {
     } catch (e: ClearCredentialException) {
       ClerkLog.w("Failed to clear restore credential: ${e.message}")
       ClerkResult.unknownFailure(e)
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       ClerkLog.w("Failed to clear restore credential: ${e.message}")
       ClerkResult.unknownFailure(e)
@@ -207,6 +191,37 @@ object RestoreCredentials {
         context,
         CreateRestoreCredentialRequest(requestJson, isCloudBackupEnabled = false),
       )
+    }
+
+  private suspend fun attemptWithRestoreCredential(
+    context: android.content.Context,
+    signIn: SignIn,
+    nonce: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> =
+    try {
+      val request = GetCredentialRequest(listOf(GetRestoreCredentialOption(nonce)))
+      val credential = credentialManager.getCredential(context, request).credential
+      if (credential !is RestoreCredential) {
+        ClerkResult.unknownFailure(
+            IllegalStateException("Credential Manager returned a non-restore credential.")
+          )
+          .also { clearSignInAttempt(signIn) }
+      } else {
+        signIn.attemptFirstFactor(
+          SignIn.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
+        )
+      }
+    } catch (e: GetCredentialException) {
+      ClerkLog.d("Restore credential sign-in is unavailable: ${e.message}")
+      classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY)).also {
+        clearSignInAttempt(signIn)
+      }
+    } catch (e: CancellationException) {
+      runCatching { clearSignInAttempt(signIn) }.exceptionOrNull()?.let(e::addSuppressed)
+      throw e
+    } catch (e: Exception) {
+      ClerkLog.e("Restore credential sign-in failed: ${e.message}")
+      ClerkResult.unknownFailure(e).also { clearSignInAttempt(signIn) }
     }
 
   private fun clearSignInAttempt(signIn: SignIn) {

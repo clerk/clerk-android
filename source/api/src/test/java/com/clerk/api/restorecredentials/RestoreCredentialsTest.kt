@@ -15,6 +15,7 @@ import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.UserApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.Passkey
@@ -24,11 +25,14 @@ import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -36,6 +40,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -215,6 +220,61 @@ class RestoreCredentialsTest {
   }
 
   @Test
+  fun `create rethrows cancellation instead of reporting a failure`() = runTest {
+    coEvery { userApi.createPasskey(any()) } returns ClerkResult.success(preparedPasskey())
+    coEvery { credentialManager.createCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.create() }
+    coVerify(exactly = 0) { userApi.attemptPasskeyVerification(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun `signIn clears its sign-in attempt and rethrows cancellation`() = runTest {
+    val signIn = pendingSignIn()
+    val client = Client(id = "client_1", signIn = signIn)
+    val updatedClients = mutableListOf<Client>()
+    every { Clerk.activeSession } returns null
+    every { Clerk.session } returns null
+    every { Clerk.user } returns null
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns client
+    every { Clerk.updateClient(capture(updatedClients)) } just runs
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
+    coEvery { credentialManager.getCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.signIn() }
+
+    assertEquals(listOf(client.copy(signIn = null)), updatedClients)
+    coVerify(exactly = 0) { signInApi.attemptFirstFactor(any(), any()) }
+  }
+
+  @Test
+  fun `signIn rethrows cancellation when clearing its sign-in attempt fails`() = runTest {
+    val signIn = pendingSignIn()
+    every { Clerk.activeSession } returns null
+    every { Clerk.session } returns null
+    every { Clerk.user } returns null
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns Client(id = "client_1", signIn = signIn)
+    every { Clerk.updateClient(any()) } throws IllegalStateException("cleanup failed")
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
+    coEvery { credentialManager.getCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.signIn() }
+  }
+
+  @Test
+  fun `clear rethrows cancellation instead of reporting a failure`() = runTest {
+    coEvery { credentialManager.clearCredentialState(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.clear() }
+  }
+
+  @Test
   @Config(sdk = [27])
   fun `create reports restore credentials unavailable before Android 9`() = runTest {
     val result = RestoreCredentials.create()
@@ -238,6 +298,16 @@ class RestoreCredentialsTest {
     assertTrue(result is ClerkResult.Failure)
     assertFalse(result is ClerkResult.Success)
     coVerify(exactly = 0) { userApi.createPasskey(any()) }
+  }
+
+  private suspend fun assertCancels(block: suspend () -> ClerkResult<*, *>) {
+    val result =
+      try {
+        block()
+      } catch (_: CancellationException) {
+        return
+      }
+    fail("Expected CancellationException, got $result")
   }
 
   private fun preparedPasskey(): Passkey {
