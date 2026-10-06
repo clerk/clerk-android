@@ -59,22 +59,33 @@ Never print the key or the reference. [references/instances.md](references/insta
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`, and `down` stops it. If you call `agent-device` yourself, use `node_modules/.bin/agent-device` with `AGENT_DEVICE_STATE_DIR=.verify/agent-device`. Never print `.verify/agent-device/daemon.json`, which holds the daemon's auth token.
 
-When this machine cannot run the emulator, the `backend` line says why, and `up` borrows one on a GitHub Actions runner. The session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. These are the build and device lines of such an `up`:
+When this machine cannot run the emulator, `up` borrows one on a GitHub Actions runner. The session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. This `up` forced the runner with `--backend remote` on a machine that could have run the emulator:
 
 ```console
 $ git commit -am "..." && git push
-$ control-clerk-android up
-backend remote  local is out: there is no /dev/kvm, so this machine has no hardware virtualization for the emulator; the device runs on a CI runner (blacksmith-4vcpu-ubuntu-2404 unless --runner names another), started through verify-remote.yml on clerk/clerk-android
+$ control-clerk-android up --backend remote
+backend remote  forced by --backend remote
+instances throwaway  CLERK_PLATFORM_API_KEY_FILE reaches the verification workspace org_3KHungJxbvIscuSvy8oos5MHAli
+instance creating verify-throwaway-until-20261006t0859z-53b6fa32 in org_3KHungJxbvIscuSvy8oos5MHAli
 build   android-b17728aef656  github-actions  commit <sha>  the session builds it
 device  remote android  starting session <session> on blacksmith-4vcpu-ubuntu-2404 (idle stop 15 min, cap 60 min)
+instance app_<id>  up in 1.1s on standard, 212 settings match src/core/instances/base.json
+clerk   Platform API: 4 requests by this command so far
+clerk   Backend API on api.clerk.com
 device  remote android  run <run> by dispatch  https://github.com/clerk/clerk-android/actions/runs/<run>
-wait    run <run> has waited 33s, now for the tunnel on blacksmith-4vcpu-ubuntu-2404
+wait    run <run> has waited 0s, now for a blacksmith-2vcpu-ubuntu-2404 runner to read its request
+wait    run <run> has waited 9s, now for its request to be read on blacksmith-2vcpu-ubuntu-2404
+wait    run <run> has waited 19s, now for a blacksmith-4vcpu-ubuntu-2404 runner
+wait    run <run> has waited 28s, now for the tunnel on blacksmith-4vcpu-ubuntu-2404
 device  remote android  tunnel up, Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404
 install android-b17728aef656  on Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404
-wait    build <sha> building 115s; device booting; agent-device up
-build   android-b17728aef656  github-actions  <sha> built in 175s on blacksmith-4vcpu-ubuntu-2404
+wait    build <sha> building 23s; device booting; agent-device starting
+wait    build <sha> building 72s; device booting; agent-device up
+build   android-b17728aef656  github-actions  <sha> built in 150s on blacksmith-4vcpu-ubuntu-2404
 device  Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404  remote  leased by this worktree  installed android-b17728aef656
 ```
+
+With no flag, the first line gives the reason instead, such as `backend remote  local is out: there is no /dev/kvm, so this machine has no hardware virtualization for the emulator; the device runs on a CI runner (blacksmith-4vcpu-ubuntu-2404 unless --runner names another), started through verify-remote.yml on clerk/clerk-android`.
 
 A session is billed by the minute, so run `down` as soon as you are done. `--backend local` or `--backend remote` forces the choice, and `--runner <label>` names another runner label. [references/remote.md](references/remote.md) has how the CLI chooses, what a session needs from this machine, the labels, the cost, and what crosses the tunnel.
 
