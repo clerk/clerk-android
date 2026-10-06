@@ -304,17 +304,22 @@ class PhoneInputUtilsTest {
   @Test
   fun `regionToFlagEmoji returns empty string for invalid region codes`() {
     listOf("A", "ABC", "A1", "1A", "", "001").forEach { regionCode ->
-      assertEquals("region code: $regionCode", "", CountryCodeUtils.regionToFlagEmoji(regionCode))
+      assertEquals(
+        "Expected no flag for region code: $regionCode",
+        "",
+        CountryCodeUtils.regionToFlagEmoji(regionCode),
+      )
     }
   }
 
   @Test
-  fun `regionToFlagEmoji uppercases lowercase region codes`() {
-    assertEquals("🇦🇧", CountryCodeUtils.regionToFlagEmoji("ab"))
+  fun `regionToFlagEmoji builds flag for valid region codes regardless of case`() {
+    assertEquals("🇺🇸", CountryCodeUtils.regionToFlagEmoji("US"))
+    assertEquals("🇬🇧", CountryCodeUtils.regionToFlagEmoji("gb"))
   }
 
   @Test
-  fun `getAllCountries prioritizes US for phone code 1`() {
+  fun `getAllCountries includes US among multiple plus one countries`() {
     val realPhoneInputUtils = PhoneInputUtils()
 
     val result = realPhoneInputUtils.getAllCountries()

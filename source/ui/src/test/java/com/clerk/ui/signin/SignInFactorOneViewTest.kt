@@ -142,6 +142,32 @@ class SignInFactorOneViewTest {
   }
 
   @Test
+  fun resolveFirstFactorShouldSwitchToPreparedFactorWhenFallbackIsNoLongerSupported() {
+    val preparedEmailCode =
+      Factor(
+        strategy = StrategyKeys.EMAIL_CODE,
+        emailAddressId = "email_123",
+        safeIdentifier = "sam@clerk.dev",
+      )
+    every { mockAuth.currentSignIn } returns
+      SignIn(
+        id = "sign_in_123",
+        identifier = "sam@clerk.dev",
+        supportedFirstFactors = listOf(Factor(strategy = StrategyKeys.PASSWORD), preparedEmailCode),
+        firstFactorVerification =
+          com.clerk.api.network.model.verification.Verification(
+            status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
+            strategy = StrategyKeys.EMAIL_CODE,
+          ),
+      )
+
+    val resolved =
+      resolveFirstFactor(Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_123"))
+
+    assertEquals(preparedEmailCode, resolved)
+  }
+
+  @Test
   fun resolveFirstFactorShouldKeepResetPasswordEmailCodeWhenEmailLinkIsSupported() {
     val resetFactor =
       Factor(

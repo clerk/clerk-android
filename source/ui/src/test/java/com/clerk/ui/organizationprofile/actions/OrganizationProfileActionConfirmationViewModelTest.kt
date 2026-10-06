@@ -32,6 +32,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
 
   private val dispatcher = StandardTestDispatcher()
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(dispatcher)
+  private var clientRefreshCount = 0
 
   @BeforeTest
   fun setUp() {
@@ -97,6 +98,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
     advanceUntilIdle()
 
     coVerify(exactly = 1) { organization.delete() }
+    assertEquals(1, clientRefreshCount)
     assertTrue(viewModel.state.value.isComplete)
     assertFalse(viewModel.state.value.isLoading)
     assertNull(viewModel.state.value.errorMessage)
@@ -144,6 +146,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
     assertEquals("boom", viewModel.state.value.errorMessage)
     assertFalse(viewModel.state.value.isLoading)
     assertFalse(viewModel.state.value.isComplete)
+    assertEquals(0, clientRefreshCount)
   }
 
   @Test
@@ -160,6 +163,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
       membership = membership(organization),
     )
     advanceUntilIdle()
+    assertEquals("boom", viewModel.state.value.errorMessage)
     viewModel.clearError()
 
     assertEquals("Acme Inc.", viewModel.state.value.confirmationText)
@@ -187,7 +191,10 @@ class OrganizationProfileActionConfirmationViewModelTest {
   private fun viewModel(): OrganizationProfileActionConfirmationViewModel {
     return OrganizationProfileActionConfirmationViewModel(
       dispatcher = dispatcher,
-      refreshClient = { ClerkResult.success(Client()) },
+      refreshClient = {
+        clientRefreshCount++
+        ClerkResult.success(Client())
+      },
     )
   }
 

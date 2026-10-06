@@ -31,7 +31,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -62,8 +61,16 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
-    coEvery { auth.signIn(any()) } returns ClerkResult.apiFailure(null)
+  fun startAuthWithSignInOrUpModeSurfacesNonFallbackSignInErrorsWithoutSignUp() = runTest {
+    val signInParams = slot<SignInIdentifierBuilder.() -> Unit>()
+    coEvery { auth.signIn(capture(signInParams)) } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(
+          errors =
+            listOf(ClerkError(code = "form_param_format_invalid", longMessage = "Invalid email"))
+        )
+      )
+    coEvery { auth.signUp(any()) } returns ClerkResult.success(mockk(relaxed = true))
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -76,9 +83,15 @@ class AuthViewModelTest {
       )
 
       assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      coVerify(timeout = 1_000, exactly = 1) { auth.signIn(any()) }
-      cancelAndIgnoreRemainingEvents()
+      assertEquals(AuthStartViewModel.AuthState.Error("Invalid email"), awaitItem())
     }
+
+    coVerify(exactly = 1) { auth.signIn(any()) }
+    assertEquals(
+      "test@example.com",
+      SignInIdentifierBuilder().apply(signInParams.captured).identifier,
+    )
+    coVerify(exactly = 0) { auth.signUp(any()) }
   }
 
   @Test
@@ -263,6 +276,33 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun startAuthWithSignUpChoosesEmailOrUsernameParamsFromIdentifierFormat() = runTest {
+    val capturedParams = mutableListOf<SignUpBuilder.() -> Unit>()
+    coEvery { auth.signUp(capture(capturedParams)) } returns
+      ClerkResult.success(mockk<SignUp>(relaxed = true))
+    val emailIdentifiers =
+      listOf("test@example.com", "user.name@domain.co.uk", "test123+tag@example.org")
+    val usernameIdentifiers = listOf("testuser", "test@domain", "@example.com", "test@@domain.com")
+
+    (emailIdentifiers + usernameIdentifiers).forEach { identifier ->
+      AuthStartViewModel(ioDispatcher = testDispatcher)
+        .startAuth(
+          authMode = AuthMode.SignUp,
+          isPhoneNumberFieldActive = false,
+          phoneNumber = "",
+          identifier = identifier,
+        )
+    }
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    val params = capturedParams.map { SignUpBuilder().apply(it) }
+    assertEquals(
+      emailIdentifiers.map { it to null } + usernameIdentifiers.map { null to it },
+      params.map { it.email to it.username },
+    )
+  }
+
+  @Test
   fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
     val paramsSlot = slot<SignUpBuilder.() -> Unit>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
@@ -380,34 +420,10 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun authModeEnumShouldHaveCorrectValues() {
-    val signIn = AuthMode.SignIn
-    val signUp = AuthMode.SignUp
-    val signInOrUp = AuthMode.SignInOrUp
-
-    assertEquals("SignIn", signIn.name)
-    assertEquals("SignUp", signUp.name)
-    assertEquals("SignInOrUp", signInOrUp.name)
-  }
-
-  @Test
   fun authModeTransferabilityShouldMatchFlowMode() {
     assertEquals(false, AuthMode.SignIn.transferable)
     assertEquals(true, AuthMode.SignUp.transferable)
     assertEquals(true, AuthMode.SignInOrUp.transferable)
-  }
-
-  @Test
-  fun oauthProviderShouldHaveExpectedValues() {
-    val google = OAuthProvider.GOOGLE
-    val facebook = OAuthProvider.FACEBOOK
-
-    assertEquals("GOOGLE", google.name)
-    assertEquals("FACEBOOK", facebook.name)
-
-    val testProviders = listOf(google, facebook)
-    assertTrue("Should contain Google", testProviders.contains(OAuthProvider.GOOGLE))
-    assertTrue("Should contain Facebook", testProviders.contains(OAuthProvider.FACEBOOK))
   }
 
   @Test
@@ -517,6 +533,10 @@ class AuthViewModelTest {
 
     coVerify(exactly = 1) { auth.signUpWithOAuth(any(), any(), any()) }
     coVerify(exactly = 0) { auth.signInWithOAuth(any(), any(), any()) }
+    assertEquals(
+      AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(mockSignUp),
+      viewModel.state.value,
+    )
   }
 
   @Test

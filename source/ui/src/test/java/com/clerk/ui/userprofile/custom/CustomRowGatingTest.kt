@@ -55,6 +55,12 @@ class CustomRowGatingTest {
         customRows = gated,
       )
 
-    assertTrue(rows.all { it is UserProfileListRow.BuiltIn })
+    assertEquals(
+      listOf(
+        UserProfileListRow.BuiltIn(UserProfileRow.ManageAccount),
+        UserProfileListRow.BuiltIn(UserProfileRow.Security),
+      ),
+      rows,
+    )
   }
 }

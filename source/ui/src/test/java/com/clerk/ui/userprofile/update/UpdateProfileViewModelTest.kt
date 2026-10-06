@@ -14,12 +14,14 @@ import com.clerk.api.user.setProfileImage
 import com.clerk.api.user.update
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
+import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -60,6 +62,8 @@ class UpdateProfileViewModelTest {
       assertEquals(UpdateProfileViewModel.State.Loading, awaitItem())
       assertEquals(UpdateProfileViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) { user.deleteProfileImage() }
+    coVerify(exactly = 1) { user.get() }
   }
 
   @Test
@@ -85,16 +89,19 @@ class UpdateProfileViewModelTest {
   fun uploadProfileImage_success_emitsSuccess() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
+    val imageFile = mockk<File>()
     coEvery { user.setProfileImage(any()) } returns ClerkResult.success(mockk())
     coEvery { user.get() } returns ClerkResult.success(user)
 
     val viewModel = UpdateProfileViewModel()
     viewModel.state.test {
       assertEquals(UpdateProfileViewModel.State.Idle, awaitItem())
-      viewModel.uploadProfileImage(mockk())
+      viewModel.uploadProfileImage(imageFile)
       assertEquals(UpdateProfileViewModel.State.Loading, awaitItem())
       assertEquals(UpdateProfileViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) { user.setProfileImage(imageFile) }
+    coVerify(exactly = 1) { user.get() }
   }
 
   @Test
@@ -111,6 +118,10 @@ class UpdateProfileViewModelTest {
       assertEquals(UpdateProfileViewModel.State.Loading, awaitItem())
       assertEquals(UpdateProfileViewModel.State.Success, awaitItem())
     }
+    coVerify(exactly = 1) {
+      user.update(UpdateParams(firstName = "Jane", lastName = "Doe", username = "jane"))
+    }
+    coVerify(exactly = 1) { user.get() }
   }
 
   @Test
