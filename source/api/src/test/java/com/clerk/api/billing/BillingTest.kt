@@ -474,9 +474,8 @@ class BillingTest {
   @Test
   fun `decodes fractional percent off and int64 money amounts`() {
     val json =
-      MONEY.replace("\"amount\": 1000,", "\"amount\": 3000000000,")
-        .let { money ->
-          """
+      MONEY.replace("\"amount\": 1000,", "\"amount\": 3000000000,").let { money ->
+        """
           {
             "amount": $money,
             "discount_id": "disc_1",
@@ -485,7 +484,7 @@ class BillingTest {
             "percent_off": 12.5
           }
           """
-        }
+      }
     val discount = decode<BillingAppliedDiscount>(json)
 
     assertEquals(3_000_000_000L, discount.amount.amount)
@@ -516,8 +515,24 @@ class BillingTest {
     assertEquals(500L, balance.balance?.amount)
     assertEquals("ledger_1", ledger.id)
     assertEquals("grant", ledger.sourceType)
+    assertEquals(1782223512123L, ledger.createdAt)
     assertEquals("SSO", feature.name)
     assertEquals("sso", feature.slug)
+  }
+
+  @Test
+  fun `decodes credit ledger createdAt from RFC 3339 strings and epoch milliseconds`() {
+    val withoutFraction =
+      decode<BillingCreditLedger>(
+        CREDIT_LEDGER_JSON.replace("\"2026-06-23T14:05:12.123456Z\"", "\"2026-06-23T14:05:12Z\"")
+      )
+    val epochMilliseconds =
+      decode<BillingCreditLedger>(
+        CREDIT_LEDGER_JSON.replace("\"2026-06-23T14:05:12.123456Z\"", "1782223512500")
+      )
+
+    assertEquals(1782223512000L, withoutFraction.createdAt)
+    assertEquals(1782223512500L, epochMilliseconds.createdAt)
   }
 
   @Test
@@ -859,7 +874,7 @@ class BillingTest {
         "amount": $MONEY,
         "source_type": "grant",
         "source_id": "grant_1",
-        "created_at": 1700000000000
+        "created_at": "2026-06-23T14:05:12.123456Z"
       }
       """
 
