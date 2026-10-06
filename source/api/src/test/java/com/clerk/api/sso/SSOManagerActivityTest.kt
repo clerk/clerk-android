@@ -106,7 +106,7 @@ class SSOManagerActivityTest {
     mockkObject(RedirectCoordinator)
     coEvery { RedirectCoordinator.dispatch(any()) } returns CallbackOutcome.Ignored
     val responseUri =
-      Uri.parse("https://example.com/callback?__clerk_error_code=authentication_cancelled")
+      Uri.parse("clerk://com.example.app.callback?__clerk_error_code=authentication_cancelled")
 
     val activity = resumeWithCallback(responseUri)
 
@@ -120,7 +120,7 @@ class SSOManagerActivityTest {
     // A callback for no flow (e.g. delivered through Auth.handle) still cleared the Custom Tab.
     val activity = resumeWithCallback(Uri.parse("clerk://callback?clerk_redirect_state=forged"))
 
-    waitForMainLooper { activity.isFinishing }
+    pumpMainLooperUntil { activity.isFinishing }
     assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
     val failure = runBlocking { pending.result.await() } as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
@@ -133,7 +133,6 @@ class SSOManagerActivityTest {
     val newer = PendingRedirect.Sso("newer", true, PendingRedirect.RedirectFlow.SIGN_IN, null)
     coEvery { RedirectCoordinator.dispatch(any()) } coAnswers
       {
-        // A newer flow starts while this callback is being handled.
         RedirectCoordinator.begin(newer)
         CallbackOutcome.Ignored
       }
@@ -141,7 +140,7 @@ class SSOManagerActivityTest {
 
     val activity = resumeWithCallback(Uri.parse("clerk://callback?clerk_redirect_state=state"))
 
-    waitForMainLooper { activity.isFinishing }
+    pumpMainLooperUntil { activity.isFinishing }
     assertFalse(newer.result.isCompleted)
     assertTrue(RedirectCoordinator.isCurrent(newer))
   }
@@ -221,7 +220,7 @@ class SSOManagerActivityTest {
       )
     }
     runCurrent()
-    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
 
     // The user dismisses the browser: the manager resumes without a callback URI.
     val intent =
@@ -234,7 +233,7 @@ class SSOManagerActivityTest {
     assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
     val failure = withTimeout(5_000L) { pendingResult.await() } as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
   }
 
   @Test
@@ -261,12 +260,12 @@ class SSOManagerActivityTest {
       Uri.parse(
         "$redirectUrl?state=state_123&rotating_token_nonce=nonce_123&created_session_id=sess_123"
       )
-    coEvery { HostedAuthService.complete(responseUri) } returns
+    coEvery { HostedAuthService.complete(any(), any()) } returns
       ClerkResult.success(mockk<Session>(relaxed = true))
 
     val activity = resumeWithCallback(responseUri)
 
-    coVerify(exactly = 1) { HostedAuthService.complete(responseUri) }
+    coVerify(exactly = 1) { HostedAuthService.complete(any(), any()) }
     coVerify(exactly = 0) { SSOService.completeRedirect(any(), any()) }
     assertEquals(Activity.RESULT_OK, Shadows.shadowOf(activity).resultCode)
   }
@@ -374,7 +373,7 @@ class SSOManagerActivityTest {
       withContext(Dispatchers.Default) { withTimeout(5_000L) { pendingResult.await() } }
         as ClerkResult.Success
     assertEquals(signUp, result.value.signUp)
-    waitForMainLooper { controller.get().isFinishing }
+    pumpMainLooperUntil { controller.get().isFinishing }
     assertEquals(Activity.RESULT_OK, Shadows.shadowOf(controller.get()).resultCode)
     coVerify(exactly = 1) { auth.createSignUp(SignUp.CreateParams.Transfer) }
   }
@@ -388,7 +387,7 @@ class SSOManagerActivityTest {
       Uri.parse("clerk://com.clerk.test.oauth?flow_id=flow_123&approval_token=approval_123")
 
     val activity = resumeWithCallback(responseUri, authorizationStarted = true)
-    waitForMainLooper { activity.isFinishing }
+    pumpMainLooperUntil { activity.isFinishing }
 
     assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
   }
@@ -413,8 +412,7 @@ class SSOManagerActivityTest {
       )
       .also(RedirectCoordinator::begin)
 
-  /** Completion runs off the main thread; pump the main looper until [condition] holds. */
-  private fun waitForMainLooper(condition: () -> Boolean) {
+  private fun pumpMainLooperUntil(condition: () -> Boolean) {
     val deadline = System.currentTimeMillis() + 5_000L
     while (!condition() && System.currentTimeMillis() < deadline) {
       Shadows.shadowOf(Looper.getMainLooper()).idle()

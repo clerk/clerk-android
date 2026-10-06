@@ -17,10 +17,6 @@ import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.Session
 import java.security.SecureRandom
 
-/**
- * Hosted (Account Portal) sign-in. The pending flow is a [PendingRedirect.HostedAuth] held by
- * [RedirectCoordinator]; its callback must carry the `state` sent when the flow was created.
- */
 @Suppress("TooManyFunctions")
 internal object HostedAuthService {
   suspend fun start(
@@ -42,7 +38,6 @@ internal object HostedAuthService {
         state = preparation.state,
         codeVerifier = preparation.codeVerifier,
       )
-    // Replaces any pending redirect flow, which completes with its cancellation result.
     RedirectCoordinator.begin(pendingAuth)
     val responseGuard = ResponseGuard { sideEffect ->
       RedirectCoordinator.runIfCurrent(pendingAuth, sideEffect)
@@ -57,53 +52,17 @@ internal object HostedAuthService {
           RedirectCoordinator.launchAndAwait(pendingAuth, preparation.context, result.value)
       }
     } finally {
-      // The slot is taken before the creation request; a caller cancelled (or a request that
-      // threw) before the browser launched must not leave it held.
       if (!pendingAuth.result.isCompleted) {
         RedirectCoordinator.cancelPending(matches = { it === pendingAuth })
       }
     }
   }
 
-  suspend fun complete(uri: Uri): ClerkResult<Session, ClerkErrorResponse>? {
-    val pendingAuth = RedirectCoordinator.current() as? PendingRedirect.HostedAuth
-    if (pendingAuth == null || !uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl)) {
-      return null
-    }
-    val callbackResult =
-      validateHostedAuthCallback(
-        uri = uri,
-        redirectUrl = pendingAuth.redirectUrl,
-        expectedState = pendingAuth.state,
-      )
-    return when (callbackResult) {
-      // An invalid callback (e.g. a forged state fired by another app) must not consume the
-      // single completion slot or fail the pending flow. Report the failure to this caller and
-      // keep waiting so the legitimate callback can still complete the authentication.
-      is ClerkResult.Failure -> callbackResult
-      is ClerkResult.Success ->
-        RedirectCoordinator.complete(pendingAuth) {
-          redeemAndComplete(pendingAuth, callbackResult.value)
-        }
-    }
-  }
-
-  fun canHandle(uri: Uri): Boolean =
-    (RedirectCoordinator.current() as? PendingRedirect.HostedAuth)?.let {
-      uri.matchesHostedAuthRedirectUrl(it.redirectUrl)
-    } == true
-
-  /** True when the URI targets the pending flow's callback but fails validation. */
-  fun isForgedCallback(uri: Uri): Boolean {
-    val pendingAuth = RedirectCoordinator.current() as? PendingRedirect.HostedAuth ?: return false
-    return uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl) &&
-      validateHostedAuthCallback(
-        uri = uri,
-        redirectUrl = pendingAuth.redirectUrl,
-        expectedState = pendingAuth.state,
-      ) is
-        ClerkResult.Failure
-  }
+  suspend fun complete(
+    pendingAuth: PendingRedirect.HostedAuth,
+    validatedCallback: HostedAuthCallback,
+  ): ClerkResult<Session, ClerkErrorResponse> =
+    RedirectCoordinator.complete(pendingAuth) { redeemAndComplete(pendingAuth, validatedCallback) }
 
   private suspend fun redeemAndComplete(
     pendingAuth: PendingRedirect.HostedAuth,
@@ -158,13 +117,6 @@ internal object HostedAuthService {
       finishPendingAuth(pendingAuth, ClerkResult.success(createdSession))
     }
   }
-
-  fun cancelPendingAuthentication(reason: String = AUTHENTICATION_CANCELLED) {
-    RedirectCoordinator.cancelPending(reason) { it is PendingRedirect.HostedAuth }
-  }
-
-  fun hasPendingAuthentication(): Boolean =
-    RedirectCoordinator.current() is PendingRedirect.HostedAuth
 
   private fun finishPendingAuth(
     pendingAuth: PendingRedirect.HostedAuth,
@@ -273,7 +225,6 @@ private fun ClerkResult.Failure<ClerkErrorResponse>.isSignedOutFailure(): Boolea
 
 private const val HTTP_UNAUTHORIZED = 401
 private const val SIGNED_OUT_ERROR_CODE = "signed_out"
-private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
 
 internal const val HOSTED_AUTH_CANCELLED_BY_NEW_FLOW =
   "New authentication started, cancelling previous hosted auth attempt"

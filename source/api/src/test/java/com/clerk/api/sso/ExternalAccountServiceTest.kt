@@ -14,6 +14,7 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.redirect.RedirectState
 import com.clerk.api.session.Session
@@ -67,7 +68,7 @@ class ExternalAccountServiceTest {
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+    RedirectCoordinator.cancelPending()
 
     mockContext = mockk(relaxed = true)
     mockUserApi = mockk(relaxed = true)
@@ -109,9 +110,8 @@ class ExternalAccountServiceTest {
       User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
     )
 
-  /** Waits for the connection to hold the slot and returns the state sent in its redirect URL. */
   private suspend fun awaitPendingState(): String {
-    waitUntil { ExternalAccountService.hasPendingExternalAccountConnection() }
+    waitUntil { (RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection) }
     return requireNotNull(
       Uri.parse(createFields.captured.getValue("redirect_url"))
         .getQueryParameter(RedirectState.QUERY_PARAMETER)
@@ -136,30 +136,11 @@ class ExternalAccountServiceTest {
   }
 
   @Test
-  fun `hasPendingExternalAccountConnection returns false initially`() {
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `cancelPendingExternalAccountConnection clears state`() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
-
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
   fun `callback with nothing pending is ignored`() = runTest {
     val outcome = RedirectCoordinator.dispatch(callback("anything"))
 
     assertEquals(CallbackOutcome.Ignored, outcome)
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `cancelPendingExternalAccountConnection completes with cancellation error`() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
-
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
   }
 
   @Test
@@ -185,7 +166,7 @@ class ExternalAccountServiceTest {
     )
     assertTrue(startedIntent.captured.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
 
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+    RedirectCoordinator.cancelPending()
     pendingResult.await()
   }
 
@@ -206,7 +187,7 @@ class ExternalAccountServiceTest {
 
     val result = withTimeout(TIMEOUT_MS) { pendingResult.await() }
     assertSame(clientFailure, result)
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
   }
 
   @Test
@@ -233,9 +214,9 @@ class ExternalAccountServiceTest {
       RedirectCoordinator.dispatch(Uri.parse("clerk://com.example.app.callback?error=x")),
     )
     assertFalse(pendingResult.isCompleted)
-    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
 
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pendingResult.await() } is ClerkResult.Failure)
     assertTrue(state.isNotBlank())
   }
@@ -261,7 +242,7 @@ class ExternalAccountServiceTest {
 
     val result = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Success
     assertSame(mockExternalAccount, result.value)
-    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
   }
 
   @Test
@@ -286,7 +267,7 @@ class ExternalAccountServiceTest {
       )
     }
     runCurrent()
-    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
 
     val secondResult = async {
       ExternalAccountService.connectExternalAccount(
@@ -297,32 +278,31 @@ class ExternalAccountServiceTest {
 
     val failure = withTimeout(TIMEOUT_MS) { firstResult.await() } as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
-    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
 
-    ExternalAccountService.cancelPendingExternalAccountConnection()
+    RedirectCoordinator.cancelPending()
     withTimeout(TIMEOUT_MS) { secondResult.await() }
   }
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
-  fun `cancelPendingExternalAccountConnection fails waiter with SSOCancellationException`() =
-    runTest {
-      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
-        ClerkResult.success(mockExternalAccount)
-      val pendingResult = async {
-        ExternalAccountService.connectExternalAccount(
-          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-        )
-      }
-      runCurrent()
-
-      ExternalAccountService.cancelPendingExternalAccountConnection()
-
-      val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
-      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
-      assertTrue(failure.throwable is SSOCancellationException)
-      assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+  fun `cancelling the pending connection fails waiter with SSOCancellationException`() = runTest {
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.success(mockExternalAccount)
+    val pendingResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
     }
+    runCurrent()
+
+    RedirectCoordinator.cancelPending()
+
+    val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
+  }
 
   @Test
   fun `connectExternalAccount returns an HTTP failure for a status code of 600 or above`() =

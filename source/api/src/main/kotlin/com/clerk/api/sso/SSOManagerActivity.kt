@@ -22,7 +22,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private var completionAttached = false
   private lateinit var desiredUri: Uri
 
-  /** The callback being completed. Saved so a recreated activity re-attaches to the completion. */
   private var pendingCallbackUri: Uri? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,8 +37,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onResume()
     val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
     if (callbackUri != null) {
-      // The completion runs in RedirectCoordinator's process-wide scope and is idempotent, so a
-      // recreated activity simply attaches to it again.
       if (!completionAttached) {
         authorizationStarted = true
         completionAttached = true
@@ -64,7 +61,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       return
     }
-    // The browser came back without a callback: the user dismissed it.
     authorizationFailed()
     finish()
   }
@@ -98,18 +94,15 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
-      var activityGoingAway = false
-      // The flow whose browser session this activity hosted; a newer flow is not this one's to end.
-      val hostedFlow = RedirectCoordinator.current()
+      var lifecycleScopeCancelled = false
+      val flowThisActivityHosted = RedirectCoordinator.current()
       try {
         val outcome = RedirectCoordinator.dispatch(uri)
         pendingCallbackUri = null
         val succeeded = outcome is CallbackOutcome.Completed && outcome.success
         setResult(if (succeeded) RESULT_OK else RESULT_CANCELED, Intent())
       } catch (cancellation: CancellationException) {
-        // This activity is going away; the completion keeps running and a recreated activity
-        // attaches to it again.
-        activityGoingAway = true
+        lifecycleScopeCancelled = true
         throw cancellation
       } catch (t: Throwable) {
         ClerkLog.e("authorizationComplete failed: ${t.message}")
@@ -117,8 +110,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
       } finally {
         // Delivering the callback cleared the Custom Tab, so a flow this callback did not complete
         // can no longer receive one; fail it rather than leave its caller waiting.
-        if (!activityGoingAway && hostedFlow != null) {
-          RedirectCoordinator.cancelPendingUnlessCompleting(hostedFlow)
+        if (!lifecycleScopeCancelled && flowThisActivityHosted != null) {
+          RedirectCoordinator.cancelPendingUnlessCompleting(flowThisActivityHosted)
         }
         finish()
       }
@@ -131,7 +124,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
   }
 
   internal companion object {
-    internal fun isCallbackUri(uri: Uri): Boolean = RedirectCoordinator.looksLikeCallback(uri)
+    internal fun isCallbackUri(uri: Uri): Boolean = RedirectCoordinator.isCallbackIntentData(uri)
 
     internal fun createResponseHandlingIntent(context: Context, responseUri: Uri?): Intent {
       val intent = createBaseIntent(context)

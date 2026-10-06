@@ -24,10 +24,6 @@ import com.clerk.api.signup.get
 import com.clerk.api.signup.toUnsafeMetadataJsonString
 import com.clerk.api.user.User.CreateExternalAccountParams
 
-/**
- * OAuth and enterprise SSO redirect flows. The pending flow is a [PendingRedirect.Sso] held by
- * [RedirectCoordinator], which also routes the callback back here.
- */
 @Suppress("TooManyFunctions")
 internal object SSOService {
   /**
@@ -87,8 +83,6 @@ internal object SSOService {
       }
       is ClerkResult.Success -> {
         ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
-        // prepareFirstFactorImpl adds the flow's state to the redirect URL and remembers it for the
-        // external URL it returns; authenticateWithPreparedRedirect picks it up from there.
         when (
           val prepareResult =
             initialResult.value.prepareFirstFactorImpl(
@@ -306,16 +300,6 @@ internal object SSOService {
         ?: AUTHENTICATION_CANCELLED
     ClerkLog.d("Redirect authentication cancelled")
     return ClerkResult.unknownFailure(SSOCancellationException(reason))
-  }
-
-  fun cancelPendingAuthentication() {
-    RedirectCoordinator.cancelPending { it is PendingRedirect.Sso }
-  }
-
-  fun hasPendingAuthentication(): Boolean = RedirectCoordinator.current() is PendingRedirect.Sso
-
-  fun hasPendingExternalAccountConnection(): Boolean {
-    return ExternalAccountService.hasPendingExternalAccountConnection()
   }
 
   private fun Uri.isTransferCallbackFor(redirectFlow: RedirectFlow): Boolean {

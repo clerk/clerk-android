@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.hostedauth.HostedAuthCancellationException
+import com.clerk.api.log.ClerkLog
+import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.sso.OAuthResult
@@ -15,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CancellationException
@@ -24,6 +27,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -75,9 +79,9 @@ class RedirectCoordinatorTest {
     val failure = withTimeout(TIMEOUT_MS) { first.await() } as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
     assertFalse(second.isCompleted)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.Sso))
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { second.await() } is ClerkResult.Failure)
   }
 
@@ -115,7 +119,7 @@ class RedirectCoordinatorTest {
   @Test
   fun `a callback after cancellation is ignored`() = runBlocking {
     val pending = startSso(EXTERNAL_URL_A, state = STATE)
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
 
     val outcome = RedirectCoordinator.dispatch(callback(STATE))
@@ -130,13 +134,13 @@ class RedirectCoordinatorTest {
 
     assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(callback("forged")))
     assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(callback(state = null)))
-    assertTrue(RedirectCoordinator.isRejected(callback("forged")))
+    assertEquals(ReceiverDelivery.DROP, RedirectCoordinator.receiverDelivery(callback("forged")))
 
     assertFalse(pending.isCompleted)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.Sso))
     assertEquals(0, completeCalls.get())
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
   }
 
@@ -181,7 +185,6 @@ class RedirectCoordinatorTest {
 
   @Test
   fun `completion survives the dispatching caller being cancelled`() = runBlocking {
-    // The caller is an Activity's lifecycleScope; recreation cancels it mid-completion.
     val pending = startSso(EXTERNAL_URL_A, state = STATE)
     val destroyedActivity =
       launch(Dispatchers.Default) { RedirectCoordinator.dispatch(callback(STATE)) }
@@ -255,7 +258,7 @@ class RedirectCoordinatorTest {
       RedirectCoordinator.receiverDelivery(MAGIC_LINK),
     )
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
   }
 
@@ -301,6 +304,114 @@ class RedirectCoordinatorTest {
   }
 
   @Test
+  fun `the app's own deep link is not handled while a stateful flow is pending`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
+
+    assertEquals(
+      CallbackOutcome.NotHandled,
+      withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(APP_DEEP_LINK) },
+    )
+
+    assertFalse(pending.isCompleted)
+    assertTrue(RedirectCoordinator.current() is PendingRedirect.Sso)
+    assertEquals(0, completeCalls.get())
+    RedirectCoordinator.cancelPending()
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
+  }
+
+  @Test
+  fun `the app's own deep link does not complete a pending flow without state`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = null)
+
+    assertEquals(
+      CallbackOutcome.NotHandled,
+      withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(APP_DEEP_LINK) },
+    )
+
+    assertFalse(pending.isCompleted)
+    assertEquals(0, completeCalls.get())
+    RedirectCoordinator.cancelPending()
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
+  }
+
+  @Test
+  fun `a custom redirect callback carrying the flow state completes the flow`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
+    completionGate.complete(Unit)
+
+    val outcome =
+      RedirectCoordinator.dispatch(
+        Uri.parse("myapp://oauth?rotating_token_nonce=nonce&clerk_redirect_state=$STATE")
+      )
+
+    assertEquals(CallbackOutcome.Completed(success = true), outcome)
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Success)
+  }
+
+  @Test
+  fun `cancelling the awaiting caller mid-completion cancels the completion`() = runBlocking {
+    val completionCancelled = CompletableDeferred<Unit>()
+    coEvery { SSOService.completeRedirect(any(), any()) } coAnswers
+      {
+        completionStarted.complete(Unit)
+        try {
+          awaitCancellation()
+        } finally {
+          completionCancelled.complete(Unit)
+        }
+      }
+    val caller = startSso(EXTERNAL_URL_A, state = STATE)
+    launch(Dispatchers.Default) { RedirectCoordinator.dispatch(callback(STATE)) }
+    withTimeout(TIMEOUT_MS) { completionStarted.await() }
+
+    caller.cancel()
+
+    withTimeout(TIMEOUT_MS) { completionCancelled.await() }
+    assertEquals(null, RedirectCoordinator.current())
+  }
+
+  @Test
+  fun `a background magic link failure is logged and reported as unsuccessful`() = runBlocking {
+    mockkObject(NativeMagicLinkService, ClerkLog)
+    coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(any()) } throws
+      IllegalStateException("storage unavailable")
+
+    val outcome = withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(MAGIC_LINK) }
+
+    assertEquals(CallbackOutcome.Completed(success = false), outcome)
+    verify { ClerkLog.w(match { it.contains("storage unavailable") }) }
+  }
+
+  @Test
+  fun `cancellation thrown by a background magic link is not swallowed`() = runBlocking {
+    mockkObject(NativeMagicLinkService)
+    coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(any()) } throws
+      CancellationException("cancelled")
+
+    val thrown = runCatching {
+      withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(MAGIC_LINK) }
+    }
+
+    assertTrue(thrown.exceptionOrNull() is CancellationException)
+  }
+
+  @Test
+  fun `every dropped callback is logged with its reason`() = runBlocking {
+    mockkObject(ClerkLog)
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
+
+    RedirectCoordinator.dispatch(callback(state = null))
+    RedirectCoordinator.dispatch(callback("forged"))
+    RedirectCoordinator.cancelPending()
+    RedirectCoordinator.dispatch(callback(STATE))
+
+    verify { ClerkLog.w(match { it.contains("missing clerk_redirect_state") }) }
+    verify { ClerkLog.w(match { it.contains("does not match the pending flow") }) }
+    verify { ClerkLog.w(match { it.contains("no pending redirect flow") }) }
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
+  }
+
+  @Test
   fun `withState keeps the existing query and fragment`() {
     assertEquals(
       "clerk://a.callback?clerk_redirect_state=s",
@@ -313,7 +424,6 @@ class RedirectCoordinatorTest {
     assertSame(null, RedirectState.take("never-prepared"))
   }
 
-  /** Starts an SSO flow and returns once it holds the slot. */
   private suspend fun CoroutineScope.startSso(
     externalUrl: String,
     state: String? = STATE,
@@ -346,6 +456,7 @@ class RedirectCoordinatorTest {
     const val EXTERNAL_URL_A = "https://accounts.example.com/oauth/a"
     const val EXTERNAL_URL_B = "https://accounts.example.com/oauth/b"
     const val STATE = "state_123"
+    val APP_DEEP_LINK: Uri = Uri.parse("myapp://payment?error=declined")
     val MAGIC_LINK: Uri = Uri.parse("myapp://email-link?flow_id=flow_123&approval_token=tok")
     const val TIMEOUT_MS = 5_000L
     const val POLL_MS = 5L

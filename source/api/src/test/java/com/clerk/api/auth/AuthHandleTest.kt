@@ -98,11 +98,11 @@ class AuthHandleTest {
     )
     val callbackUri =
       Uri.parse("myapp://hosted?state=s&rotating_token_nonce=n&created_session_id=sess")
-    coEvery { HostedAuthService.complete(callbackUri) } returns ClerkResult.success(session)
+    coEvery { HostedAuthService.complete(any(), any()) } returns ClerkResult.success(session)
 
     assertTrue(auth.handle(callbackUri))
 
-    coVerify(exactly = 1) { HostedAuthService.complete(callbackUri) }
+    coVerify(exactly = 1) { HostedAuthService.complete(any(), any()) }
     coVerify(exactly = 0) { SSOService.completeRedirect(any(), any()) }
   }
 

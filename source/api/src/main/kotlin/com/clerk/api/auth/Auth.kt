@@ -1012,8 +1012,6 @@ public class Auth internal constructor() {
    */
   public suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
-    // Same routing as the SDK's own callback activity, including the pending flow's state check.
-    // A Clerk callback that fails the check is still reported as handled so it is not routed on.
     return RedirectCoordinator.dispatch(callbackUri) != CallbackOutcome.NotHandled
   }
 

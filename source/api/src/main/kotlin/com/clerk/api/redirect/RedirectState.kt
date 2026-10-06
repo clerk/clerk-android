@@ -18,12 +18,10 @@ internal object RedirectState {
 
   private val lock = Any()
 
-  /** States of redirects prepared but not yet launched, keyed by external verification URL. */
   private val prepared = LinkedHashMap<String, String>()
 
   fun generate(): String = generateHostedAuthState()
 
-  /** Appends [state] to [redirectUrl], keeping any query and fragment it already has. */
   fun withState(redirectUrl: String, state: String): String {
     val fragmentStart = redirectUrl.indexOf('#').takeIf { it >= 0 } ?: redirectUrl.length
     val base = redirectUrl.substring(0, fragmentStart)
@@ -36,7 +34,6 @@ internal object RedirectState {
     return "$base$separator$QUERY_PARAMETER=$state${redirectUrl.substring(fragmentStart)}"
   }
 
-  /** Remembers the state of a prepared redirect until the flow for [externalUrl] launches. */
   fun remember(externalUrl: String, state: String) {
     synchronized(lock) {
       prepared.remove(externalUrl)
@@ -47,15 +44,18 @@ internal object RedirectState {
     }
   }
 
-  /** Returns and forgets the state of the redirect prepared for [externalUrl], if any. */
   fun take(externalUrl: String): String? = synchronized(lock) { prepared.remove(externalUrl) }
 
-  /** The state a callback carries, or `null` when it carries none or more than one. */
   fun of(uri: Uri): String? = runCatching {
     uri.getQueryParameters(QUERY_PARAMETER).singleOrNull()
   }
     .getOrNull()
     ?.takeIf { it.isNotBlank() }
+
+  fun isPresentIn(uri: Uri): Boolean = runCatching {
+    uri.getQueryParameter(QUERY_PARAMETER) != null
+  }
+    .getOrDefault(false)
 
   internal fun resetForTests() {
     synchronized(lock) { prepared.clear() }

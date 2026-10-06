@@ -27,8 +27,7 @@ internal class SSOReceiverActivity : Activity() {
         startActivity(SSOManagerActivity.createResponseHandlingIntent(this, callbackUri))
       ReceiverDelivery.COMPLETE_IN_BACKGROUND ->
         RedirectCoordinator.dispatchInBackground(callbackUri)
-      ReceiverDelivery.DROP ->
-        ClerkLog.w("Ignoring redirect callback that does not belong to the pending flow")
+      ReceiverDelivery.DROP -> Unit
     }
     finish()
   }

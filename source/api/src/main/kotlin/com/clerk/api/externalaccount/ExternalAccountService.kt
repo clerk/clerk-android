@@ -16,10 +16,6 @@ import com.clerk.api.redirect.RedirectState
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
 
-/**
- * Connects an OAuth account to the signed-in user through a browser redirect. The pending
- * connection is a [PendingRedirect.ExternalAccountConnection] held by [RedirectCoordinator].
- */
 internal object ExternalAccountService {
   suspend fun connectExternalAccount(
     params: User.CreateExternalAccountParams
@@ -101,13 +97,6 @@ internal object ExternalAccountService {
         }
       }
     RedirectCoordinator.finish(pendingConnection, result)
-  }
-
-  fun hasPendingExternalAccountConnection(): Boolean =
-    RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection
-
-  fun cancelPendingExternalAccountConnection(reason: String? = null) {
-    RedirectCoordinator.cancelPending(reason) { it is PendingRedirect.ExternalAccountConnection }
   }
 
   private fun failure(message: String): ClerkResult<ExternalAccount, ClerkErrorResponse> =

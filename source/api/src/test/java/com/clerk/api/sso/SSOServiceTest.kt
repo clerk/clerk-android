@@ -30,7 +30,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -104,23 +103,6 @@ class SSOServiceTest {
   fun tearDown() {
     Dispatchers.resetMain()
     unmockkAll()
-  }
-
-  @Test
-  fun `hasPendingAuthentication returns false initially`() {
-    assertFalse(SSOService.hasPendingAuthentication())
-  }
-
-  @Test
-  fun `hasPendingExternalAccountConnection returns false initially`() {
-    assertFalse(SSOService.hasPendingExternalAccountConnection())
-  }
-
-  @Test
-  fun `cancelPendingAuthentication clears state`() {
-    SSOService.cancelPendingAuthentication()
-
-    assertFalse(SSOService.hasPendingAuthentication())
   }
 
   @Test

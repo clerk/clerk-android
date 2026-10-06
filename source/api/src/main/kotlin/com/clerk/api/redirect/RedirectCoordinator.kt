@@ -5,6 +5,7 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.externalaccount.ExternalAccountService
+import com.clerk.api.hostedauth.HostedAuthCallback
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.hostedauth.matchesHostedAuthRedirectUrl
 import com.clerk.api.hostedauth.validateHostedAuthCallback
@@ -29,82 +30,51 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Owns the single pending browser redirect (SSO, external account, hosted auth) and routes every
- * callback, from [SSOManagerActivity] or from `Clerk.auth.handle`, through [dispatch].
- *
- * - One slot behind one lock. Starting a flow completes the previous one with its cancellation
- *   result.
- * - A callback must pass the pending flow's state check before it can touch the flow.
- * - Completion runs once per flow in a process-wide scope, so an Activity being recreated never
- *   interrupts it; a duplicate callback joins the running completion.
- * - Every exit (callback, cancellation, newer flow, caller cancelled) completes the caller's result
- *   and frees the slot.
- *
- * Native magic links are routed here too, but their pending flow is not held in the slot: it is
- * persisted by [NativeMagicLinkService] because the email link may be opened after process death,
- * and it is checked by its `flow_id` and PKCE verifier rather than a redirect state.
- */
 @Suppress("TooManyFunctions")
 internal object RedirectCoordinator {
   private val lock = Any()
   private var current: PendingRedirect<*>? = null
 
-  /**
-   * The last flow a callback completed, so a repeat of that callback joins its result. Kept only
-   * for [RECENT_WINDOW_NANOS] and only for a flow with a state, so it cannot keep claiming the
-   * app's own deep links afterwards.
-   */
-  private var recent: PendingRedirect<*>? = null
+  private var recentlyCompletedStatefulFlow: PendingRedirect<*>? = null
   private var recentUntilNanos = 0L
   private var magicLinkCompletion: Pair<String, Deferred<Boolean>>? = null
   private val pending = MutableStateFlow(false)
   private val completionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-  /** Whether a redirect flow is pending. Emits `false` as soon as the slot is freed. */
   val hasPendingRedirect: StateFlow<Boolean> = pending.asStateFlow()
 
   fun current(): PendingRedirect<*>? = synchronized(lock) { current }
 
   fun isCurrent(redirect: PendingRedirect<*>): Boolean = synchronized(lock) { current === redirect }
 
-  /** Makes [redirect] the pending flow. The flow it replaces completes with its cancellation. */
   fun begin(redirect: PendingRedirect<*>) {
     val previous =
       synchronized(lock) {
         current.also {
           current = redirect
-          recent = null
+          recentlyCompletedStatefulFlow = null
           pending.value = true
         }
       }
     previous?.let { cancelDetached(it, it.supersededReason) }
   }
 
-  /** Cancels the pending flow, if any, because a new flow is about to start. */
   fun supersedePending() {
     detach { true }?.let { cancelDetached(it, it.supersededReason) }
   }
 
-  /** Cancels the pending flow when [matches] accepts it. */
   fun cancelPending(reason: String? = null, matches: (PendingRedirect<*>) -> Boolean = { true }) {
     detach(matches)?.let { cancelDetached(it, reason ?: it.cancelledReason) }
   }
 
-  /**
-   * Cancels the pending flow unless a callback is already completing it. Used when the user comes
-   * back from the browser without a callback.
-   */
   fun cancelPendingUnlessCompleting() {
     cancelPending { !it.completionStarted.get() }
   }
 
-  /** Like [cancelPendingUnlessCompleting], but only while [redirect] is still the pending flow. */
   fun cancelPendingUnlessCompleting(redirect: PendingRedirect<*>) {
     cancelPending { it === redirect && !it.completionStarted.get() }
   }
 
-  /** Runs [sideEffect] under the slot lock only while [redirect] is the pending flow. */
   fun runIfCurrent(redirect: PendingRedirect<*>, sideEffect: () -> Unit): Boolean =
     synchronized(lock) {
       if (current === redirect) {
@@ -115,11 +85,6 @@ internal object RedirectCoordinator {
       }
     }
 
-  /**
-   * Completes [redirect] with [result] and frees the slot. Returns `false`, changing nothing, when
-   * [redirect] is no longer the pending flow (it was cancelled or replaced, and already has its
-   * result).
-   */
   fun <T : Any> finish(
     redirect: PendingRedirect<T>,
     result: ClerkResult<T, ClerkErrorResponse>,
@@ -133,10 +98,6 @@ internal object RedirectCoordinator {
       }
     }
 
-  /**
-   * Opens [authorizationUri] in the browser for [redirect] and waits for its result. When the
-   * caller is cancelled the flow is abandoned and the slot freed.
-   */
   suspend fun <T : Any> launchAndAwait(
     redirect: PendingRedirect<T>,
     context: Context,
@@ -146,9 +107,6 @@ internal object RedirectCoordinator {
       SSOManagerActivity.createAuthorizationIntent(context, authorizationUri).apply {
         addFlags(FLAG_ACTIVITY_NEW_TASK)
       }
-    // The launch holds the slot lock so a concurrent cancellation cannot slip in between the
-    // ownership check and the activity start; when the flow is no longer current nothing launches
-    // and its result already carries the cancellation.
     val launchFailure =
       try {
         runIfCurrent(redirect) { context.startActivity(intent) }
@@ -162,7 +120,6 @@ internal object RedirectCoordinator {
     return await(redirect)
   }
 
-  /** Waits for [redirect]'s result, abandoning the flow if the caller is cancelled first. */
   suspend fun <T : Any> await(redirect: PendingRedirect<T>): ClerkResult<T, ClerkErrorResponse> =
     try {
       redirect.result.await()
@@ -172,13 +129,6 @@ internal object RedirectCoordinator {
       }
     }
 
-  /**
-   * Runs [work] for [redirect] once, in the process-wide scope, and waits for the result. A second
-   * call (a duplicate callback, or the Activity re-attaching after recreation) joins the first.
-   * [work] reports its result with [finish]; if it ends without doing so the flow still completes.
-   * Auth calls inside [work] do not emit [com.clerk.api.auth.AuthEvent.Error]: the caller awaiting
-   * the flow's result reports it.
-   */
   @Suppress("TooGenericExceptionCaught")
   suspend fun <T : Any> complete(
     redirect: PendingRedirect<T>,
@@ -188,13 +138,9 @@ internal object RedirectCoordinator {
       val job =
         completionScope.launch(start = CoroutineStart.LAZY) {
           try {
-            // The work runs detached from its caller's coroutine, so it would not see the caller's
-            // error-reporting scope. The awaiting caller reports the outcome; the work must not.
             withoutAuthErrorReporting { work() }
             finish(redirect, ClerkResult.unknownFailure(IllegalStateException(NO_RESULT)))
           } catch (cancellation: CancellationException) {
-            // Cancelled by the coordinator: the flow already has its result. Thrown from inside the
-            // work instead: report an interruption rather than leave the caller waiting.
             finish(
               redirect,
               ClerkResult.unknownFailure(IllegalStateException(INTERRUPTED, cancellation)),
@@ -211,67 +157,64 @@ internal object RedirectCoordinator {
     return redirect.result.await()
   }
 
-  /** Routes a callback URI to the flow it belongs to. */
   suspend fun dispatch(uri: Uri): CallbackOutcome =
     when (val verdict = classify(uri)) {
       CallbackVerdict.MagicLink -> CallbackOutcome.Completed(completeMagicLink(uri))
       is CallbackVerdict.Accepted -> CallbackOutcome.Completed(completeAccepted(verdict, uri))
-      CallbackVerdict.Rejected -> {
-        ClerkLog.w("Ignoring redirect callback with invalid state: ${SafeUriLog.describe(uri)}")
+      is CallbackVerdict.Rejected -> {
+        logDroppedCallback(uri, verdict.reason)
         CallbackOutcome.Ignored
       }
       CallbackVerdict.Unmatched ->
         if (uri.isClerkScheme()) {
-          ClerkLog.w("No pending redirect flow for callback: ${SafeUriLog.describe(uri)}")
+          logDroppedCallback(uri, NO_MATCHING_FLOW)
           CallbackOutcome.Ignored
         } else {
           CallbackOutcome.NotHandled
         }
     }
 
-  /** True when [uri] targets the pending flow but fails its state check. */
-  fun isRejected(uri: Uri): Boolean = classify(uri) == CallbackVerdict.Rejected
-
-  /**
-   * How the exported receiver should deliver [uri]. Starting [SSOManagerActivity] (singleTask)
-   * clears the Custom Tab above it, so while a flow is pending only a callback that passed that
-   * flow's state check may reach it. Anything else would end the browser session and strand the
-   * flow, which is exactly what a forged callback from another app would try to do.
-   */
   fun receiverDelivery(uri: Uri): ReceiverDelivery {
     val hasPending = current() != null
-    return when (classify(uri)) {
+    return when (val verdict = classify(uri)) {
       is CallbackVerdict.Accepted -> ReceiverDelivery.FORWARD
-      CallbackVerdict.Rejected -> ReceiverDelivery.DROP
+      is CallbackVerdict.Rejected -> {
+        logDroppedCallback(uri, verdict.reason)
+        ReceiverDelivery.DROP
+      }
       CallbackVerdict.MagicLink ->
         if (hasPending) ReceiverDelivery.COMPLETE_IN_BACKGROUND else ReceiverDelivery.FORWARD
       CallbackVerdict.Unmatched ->
-        if (hasPending) ReceiverDelivery.DROP else ReceiverDelivery.FORWARD
+        if (hasPending) {
+          logDroppedCallback(uri, NO_MATCHING_FLOW)
+          ReceiverDelivery.DROP
+        } else {
+          ReceiverDelivery.FORWARD
+        }
     }
   }
 
-  /** Dispatches [uri] in the process-wide scope, without any UI. */
   fun dispatchInBackground(uri: Uri) {
     completionScope.launch { dispatch(uri) }
   }
 
-  /** Whether [uri] has the shape of a redirect callback of any flow. */
-  fun looksLikeCallback(uri: Uri): Boolean {
+  fun isCallbackIntentData(uri: Uri): Boolean {
     val hostedAuth = current() as? PendingRedirect.HostedAuth
     return hostedAuth?.let { uri.matchesHostedAuthRedirectUrl(it.redirectUrl) } == true ||
       uri.isClerkScheme() ||
       canHandleNativeMagicLink(uri) ||
-      CALLBACK_PARAMETERS.any { runCatching { uri.getQueryParameter(it) }.getOrNull() != null }
+      RedirectState.isPresentIn(uri)
   }
 
   private fun classify(uri: Uri): CallbackVerdict {
     val (pendingRedirect, recentRedirect) =
-      synchronized(lock) { current to recent?.takeIf { System.nanoTime() - recentUntilNanos < 0 } }
+      synchronized(lock) {
+        current to
+          recentlyCompletedStatefulFlow?.takeIf { System.nanoTime() - recentUntilNanos < 0 }
+      }
     return when {
       canHandleNativeMagicLink(uri) -> CallbackVerdict.MagicLink
       pendingRedirect != null -> classifyFor(pendingRedirect, uri)
-      // A repeat of the callback that completed the last flow (a duplicate delivery, or the
-      // activity re-attaching after recreation once the work already finished) joins its result.
       else ->
         recentRedirect?.let { classifyFor(it, uri) }?.takeIf { it is CallbackVerdict.Accepted }
           ?: CallbackVerdict.Unmatched
@@ -280,29 +223,35 @@ internal object RedirectCoordinator {
 
   private fun classifyFor(redirect: PendingRedirect<*>, uri: Uri): CallbackVerdict =
     when (redirect) {
-      is PendingRedirect.HostedAuth ->
-        when {
-          !uri.matchesHostedAuthRedirectUrl(redirect.redirectUrl) -> CallbackVerdict.Unmatched
-          validateHostedAuthCallback(uri, redirect.redirectUrl, redirect.state) is
-            ClerkResult.Failure -> CallbackVerdict.Rejected
-          else -> CallbackVerdict.Accepted(redirect)
-        }
+      is PendingRedirect.HostedAuth -> classifyHostedAuth(redirect, uri)
       is PendingRedirect.Sso,
       is PendingRedirect.ExternalAccountConnection ->
         when {
-          !looksLikeCallback(uri) -> CallbackVerdict.Unmatched
+          !uri.isClerkScheme() && !RedirectState.isPresentIn(uri) -> CallbackVerdict.Unmatched
           redirect.expectedState == null || RedirectState.of(uri) == redirect.expectedState ->
             CallbackVerdict.Accepted(redirect)
-          else -> CallbackVerdict.Rejected
+          RedirectState.isPresentIn(uri) -> CallbackVerdict.Rejected(STATE_MISMATCH)
+          else -> CallbackVerdict.Rejected(STATE_MISSING)
         }
     }
+
+  private fun classifyHostedAuth(redirect: PendingRedirect.HostedAuth, uri: Uri): CallbackVerdict {
+    if (!uri.matchesHostedAuthRedirectUrl(redirect.redirectUrl)) return CallbackVerdict.Unmatched
+    val callback = validateHostedAuthCallback(uri, redirect.redirectUrl, redirect.state)
+    return when (callback) {
+      is ClerkResult.Failure ->
+        CallbackVerdict.Rejected(callback.throwable?.message ?: HOSTED_AUTH_INVALID)
+      is ClerkResult.Success -> CallbackVerdict.Accepted(redirect, callback.value)
+    }
+  }
 
   private suspend fun completeAccepted(verdict: CallbackVerdict.Accepted, uri: Uri): Boolean {
     val accepted = verdict.redirect
     if (!isCurrent(accepted)) return accepted.result.await() is ClerkResult.Success
     val result =
       when (val redirect = accepted) {
-        is PendingRedirect.HostedAuth -> HostedAuthService.complete(uri)
+        is PendingRedirect.HostedAuth ->
+          HostedAuthService.complete(redirect, requireNotNull(verdict.hostedAuthCallback))
         is PendingRedirect.Sso -> complete(redirect) { SSOService.completeRedirect(redirect, uri) }
         is PendingRedirect.ExternalAccountConnection ->
           complete(redirect) { ExternalAccountService.completeConnection(redirect) }
@@ -310,20 +259,13 @@ internal object RedirectCoordinator {
     return result is ClerkResult.Success
   }
 
-  /**
-   * Completes a native magic link in the process-wide scope. A second delivery of the same link
-   * while the first is running joins it instead of redeeming the approval token twice.
-   */
   private suspend fun completeMagicLink(uri: Uri): Boolean {
     val key = uri.toString()
     val completion =
       synchronized(lock) {
         magicLinkCompletion?.takeIf { it.first == key }?.second
           ?: completionScope
-            .async {
-              runCatching { NativeMagicLinkService.handleMagicLinkDeepLink(uri) }.getOrNull() is
-                ClerkResult.Success
-            }
+            .async { redeemMagicLink(uri) }
             .also { deferred ->
               magicLinkCompletion = key to deferred
               deferred.invokeOnCompletion {
@@ -336,13 +278,30 @@ internal object RedirectCoordinator {
     return completion.await()
   }
 
+  @Suppress("TooGenericExceptionCaught")
+  private suspend fun redeemMagicLink(uri: Uri): Boolean =
+    try {
+      NativeMagicLinkService.handleMagicLinkDeepLink(uri) is ClerkResult.Success
+    } catch (cancellation: CancellationException) {
+      throw cancellation
+    } catch (error: Exception) {
+      ClerkLog.w("Background magic link completion failed: ${error.message}")
+      false
+    }
+
+  private fun logDroppedCallback(uri: Uri, reason: String) {
+    ClerkLog.w("Dropped redirect callback ($reason): ${SafeUriLog.describe(uri)}")
+  }
+
   private fun detach(matches: (PendingRedirect<*>) -> Boolean): PendingRedirect<*>? =
     synchronized(lock) {
       current?.takeIf(matches)?.also { clearSlot() }
     }
 
   private fun clearSlot() {
-    recent = current?.takeIf { it.completionStarted.get() && it.expectedState != null }
+    recentlyCompletedStatefulFlow = current?.takeIf {
+      it.completionStarted.get() && it.expectedState != null
+    }
     recentUntilNanos = System.nanoTime() + RECENT_WINDOW_NANOS
     current = null
     pending.value = false
@@ -359,55 +318,45 @@ internal object RedirectCoordinator {
     cancelPending()
     synchronized(lock) {
       magicLinkCompletion = null
-      recent = null
+      recentlyCompletedStatefulFlow = null
     }
     RedirectState.resetForTests()
   }
 
-  private val CALLBACK_PARAMETERS =
-    listOf(
-      RedirectState.QUERY_PARAMETER,
-      "rotating_token_nonce",
-      "__clerk_status",
-      "__clerk_error_code",
-      "error",
-      "error_description",
-    )
-
   private val RECENT_WINDOW_NANOS = TimeUnit.SECONDS.toNanos(60)
+  private const val NO_MATCHING_FLOW = "no pending redirect flow matches it"
+  private const val STATE_MISSING = "missing ${RedirectState.QUERY_PARAMETER}"
+  private const val STATE_MISMATCH =
+    "${RedirectState.QUERY_PARAMETER} does not match the pending flow"
+  private const val HOSTED_AUTH_INVALID = "hosted auth callback failed validation"
   private const val NO_RESULT = "Redirect completion ended without a result."
   private const val INTERRUPTED =
     "Authentication was interrupted before it could complete. Please try again."
 }
 
 internal enum class ReceiverDelivery {
-  /** Start the manager activity with the callback. */
   FORWARD,
-
-  /** Handle it without starting the manager, so the pending flow's browser session survives. */
   COMPLETE_IN_BACKGROUND,
-
-  /** Do not deliver it. */
   DROP,
 }
 
 internal sealed interface CallbackOutcome {
-  /** Not a Clerk callback; the app should handle it. */
   data object NotHandled : CallbackOutcome
 
-  /** A Clerk callback with no flow to complete, or one that failed the flow's state check. */
   data object Ignored : CallbackOutcome
 
-  /** The callback completed (or joined the completion of) a flow. */
   data class Completed(val success: Boolean) : CallbackOutcome
 }
 
 private sealed interface CallbackVerdict {
   data object MagicLink : CallbackVerdict
 
-  data class Accepted(val redirect: PendingRedirect<*>) : CallbackVerdict
+  data class Accepted(
+    val redirect: PendingRedirect<*>,
+    val hostedAuthCallback: HostedAuthCallback? = null,
+  ) : CallbackVerdict
 
-  data object Rejected : CallbackVerdict
+  data class Rejected(val reason: String) : CallbackVerdict
 
   data object Unmatched : CallbackVerdict
 }

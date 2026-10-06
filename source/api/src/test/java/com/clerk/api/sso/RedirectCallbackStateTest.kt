@@ -11,6 +11,8 @@ import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.signin.SignIn
 import io.mockk.coEvery
 import io.mockk.every
@@ -35,11 +37,6 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 
-/**
- * OAuth callbacks reach the app through the exported [SSOReceiverActivity] or the host app's own
- * deep-link handler, so any app on the device can fire one. A callback must carry the state the SDK
- * put in the redirect URL for the in-flight flow; anything else is ignored and must not end it.
- */
 @RunWith(RobolectricTestRunner::class)
 class RedirectCallbackStateTest {
   private val signInApi = mockk<SignInApi>()
@@ -71,7 +68,7 @@ class RedirectCallbackStateTest {
 
   @After
   fun tearDown() {
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     unmockkAll()
   }
 
@@ -88,16 +85,15 @@ class RedirectCallbackStateTest {
     auth.handle(Uri.parse("$REDIRECT_URL?rotating_token_nonce=forged&clerk_redirect_state="))
 
     assertFalse(pendingResult.isCompleted)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.Sso))
 
-    // The real callback for this flow still completes it.
     val state = Uri.parse(prepareParams.captured.getValue("redirect_url")).redirectState()
     assertNotNull(state)
     assertTrue(auth.handle(Uri.parse("$REDIRECT_URL?error=access_denied&$STATE_PARAM=$state")))
 
     val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
-    assertFalse(SSOService.hasPendingAuthentication())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.Sso))
   }
 
   @Test
@@ -107,7 +103,6 @@ class RedirectCallbackStateTest {
         SSOService.authenticateWithRedirect(strategy = "oauth_google", redirectUrl = REDIRECT_URL)
       }
 
-    // Drop the browser launch the flow itself started.
     Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>())
       .clearNextStartedActivities()
     val forged = createReceiver(Uri.parse("$REDIRECT_URL?error=access_denied&$STATE_PARAM=forged"))
@@ -123,7 +118,7 @@ class RedirectCallbackStateTest {
 
     assertFalse(pendingResult.isCompleted)
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pendingResult.await() } is ClerkResult.Failure)
   }
 

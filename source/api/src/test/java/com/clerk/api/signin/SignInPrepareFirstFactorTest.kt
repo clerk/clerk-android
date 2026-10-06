@@ -57,7 +57,6 @@ class SignInPrepareFirstFactorTest {
     assertSame(preparedSignIn, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) { signInApi.prepareSignInFirstFactor("sign_in_123", any()) }
     assertEquals("oauth_google", fields.captured["strategy"])
-    // The redirect URL carries a per-flow state, remembered for the returned external URL.
     val state =
       fields.captured
         .getValue("redirect_url")

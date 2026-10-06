@@ -5,11 +5,6 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.redirect.RedirectState
 
-/**
- * Prepares an OAuth or enterprise SSO first factor with a per-flow state in its redirect URL, and
- * remembers that state for the external URL the server returns. The redirect launched for that URL
- * then only accepts a callback carrying the same state.
- */
 internal suspend fun SignIn.prepareRedirectFirstFactor(
   fields: Map<String, String>
 ): ClerkResult<SignIn, ClerkErrorResponse> {

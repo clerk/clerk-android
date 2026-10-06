@@ -349,7 +349,6 @@ class AuthFacadeUiGapsTest {
     )
   }
 
-  /** The prepared fields: [REDIRECT] carrying the per-flow `clerk_redirect_state` it was given. */
   private fun MockKMatcherScope.withRedirectState(strategy: String): Map<String, String> = match {
     it.keys == setOf("strategy", "redirect_url") &&
       it["strategy"] == strategy &&
