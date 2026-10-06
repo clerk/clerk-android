@@ -313,8 +313,6 @@ internal class ConfigurationManager(
 
     refreshJob?.cancel()
     refreshJob = scope.launch {
-      // Stop while backgrounded; the foreground callback in launchInitialization restarts the
-      // loop, and its first iteration refreshes immediately.
       while (isActive && !AppLifecycleListener.isInBackground) {
         try {
           val session = Clerk.session

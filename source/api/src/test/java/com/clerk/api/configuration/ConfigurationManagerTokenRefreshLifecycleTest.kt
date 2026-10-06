@@ -58,8 +58,6 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
     every { Environment.serializer() } answers { callOriginal() }
     mockkObject(NetworkConnectivityMonitor)
     every { NetworkConnectivityMonitor.configure(any(), any()) } returns Unit
-    // Drive the real AppLifecycleListener through the real process lifecycle so the order in
-    // which it flips its background flag and invokes the foreground callback is under test.
     processLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
     mockkStatic("com.clerk.api.session.SessionKt")
     coEvery { any<Session>().fetchToken(any()) } coAnswers
@@ -110,7 +108,7 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
   }
 
   @Test
-  fun `foreground callback runs after the background flag is cleared`() {
+  fun `foreground callback already sees the app as foregrounded so a restarted refresh loop keeps running`() {
     val backgroundFlagSeenByCallback = mutableListOf<Boolean>()
     AppLifecycleListener.configure {
       backgroundFlagSeenByCallback += AppLifecycleListener.isInBackground
@@ -120,8 +118,6 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
     assertTrue(AppLifecycleListener.isInBackground)
     processLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
 
-    // The callback restarts the token refresh loop, which exits immediately if it still sees
-    // isInBackground == true.
     assertEquals(listOf(false), backgroundFlagSeenByCallback)
     assertFalse(AppLifecycleListener.isInBackground)
   }

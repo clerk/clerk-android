@@ -23,8 +23,6 @@ internal object AppLifecycleListener {
         if (Clerk.debugMode) {
           ClerkLog.d("AppLifecycleListener, onStart")
         }
-        // Clear the flag before notifying: the callback restarts the token refresh loop, which
-        // exits as soon as it sees isInBackground == true.
         val returningFromBackground = wasBackgrounded
         wasBackgrounded = false
         if (returningFromBackground) {
@@ -42,8 +40,8 @@ internal object AppLifecycleListener {
     }
 
   /**
-   * True between the process lifecycle's ON_STOP and the next ON_START. A process that was launched
-   * without ever reaching the foreground reports false, as before this flag existed.
+   * True between the process lifecycle's ON_STOP and the next ON_START; false until the process has
+   * been stopped at least once.
    */
   val isInBackground: Boolean
     get() = listener.wasBackgrounded
