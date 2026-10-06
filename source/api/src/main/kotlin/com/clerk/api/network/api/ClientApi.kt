@@ -44,7 +44,10 @@ internal interface ClientApi {
     @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
   ): ClerkResult<Client, ClerkErrorResponse>
 
-  @GET(ApiPaths.Client.BASE) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
+  @GET(ApiPaths.Client.BASE)
+  suspend fun get(
+    @Tag manualClientSyncRequest: ManualClientSyncRequest? = null
+  ): ClerkResult<Client, ClerkErrorResponse>
 
   @GET(ApiPaths.Client.BASE)
   suspend fun getSkippingClientId(

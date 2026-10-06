@@ -276,6 +276,40 @@ class ExternalAccountServiceTest {
       assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
     }
 
+  @Test
+  fun `connectExternalAccount returns an HTTP failure for a status code of 600 or above`() =
+    runTest {
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+        ClerkResult.Failure(
+          error = null,
+          code = 600,
+          errorType = ClerkResult.Failure.ErrorType.HTTP,
+        )
+
+      val failure =
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        ) as ClerkResult.Failure
+
+      assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+      assertEquals(600, failure.code)
+      verify(exactly = 0) { mockContext.startActivity(any()) }
+    }
+
+  @Test
+  fun `connectExternalAccount maps an in-range HTTP failure`() = runTest {
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.httpFailure(code = 503)
+
+    val failure =
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      ) as ClerkResult.Failure
+
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(503, failure.code)
+  }
+
   private companion object {
     const val TIMEOUT_MS = 5_000L
   }
