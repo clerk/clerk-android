@@ -152,7 +152,6 @@ sealed class Strategy(val value: String) {
   }
 }
 
-/** Serializes a [Strategy] as its raw string [Strategy.value]; never fails on unknown values. */
 internal object StrategySerializer : KSerializer<Strategy> {
   override val descriptor: SerialDescriptor =
     PrimitiveSerialDescriptor("com.clerk.api.auth.types.Strategy", PrimitiveKind.STRING)

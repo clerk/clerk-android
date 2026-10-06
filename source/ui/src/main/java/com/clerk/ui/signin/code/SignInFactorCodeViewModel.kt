@@ -72,7 +72,8 @@ internal class SignInFactorCodeViewModel(
               _state.value = AuthenticationViewState.Error(it)
             }
 
-          // TOTP has nothing to prepare; other strategies never reach the code view.
+          Strategy.Totp -> Unit
+
           else -> Unit
         }
       }
