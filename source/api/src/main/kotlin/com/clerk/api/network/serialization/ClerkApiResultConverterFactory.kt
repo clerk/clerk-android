@@ -31,10 +31,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       (type as ParameterizedType).actualTypeArguments[0].let {
         if (it is WildcardType) it.upperBounds.single() else it
       }
-    val errorType = type.actualTypeArguments[1]
-
-    val errorResultType: Annotation = createResultType(errorType)
-    val nextAnnotations = annotations.toList() + errorResultType
 
     // For List<Session>, don't wrap in ClientPiggybackedResponse - it comes as plain JSON array
     val isSessionList =
@@ -59,11 +55,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       }
 
     val delegateConverter =
-      retrofit.nextResponseBodyConverter<Any>(
-        this,
-        actualSuccessType,
-        nextAnnotations.toTypedArray(),
-      )
+      retrofit.nextResponseBodyConverter<Any>(this, actualSuccessType, annotations)
 
     return ClerkApiResultConverter(delegateConverter)
   }

@@ -92,6 +92,25 @@ class ClerkApiResultConverterFactoryTest {
     assertSame(sessionListType, requestedDelegateType(clerkResultType))
   }
 
+  @Test
+  fun `responseBodyConverter passes the caller's annotations to the delegate unchanged`() {
+    val clerkResultType =
+      createParameterizedType(
+        ClerkResult::class.java,
+        Environment::class.java,
+        Exception::class.java,
+      )
+    val annotations = arrayOf<Annotation>(Deprecated("marker"))
+    val delegateAnnotations = slot<Array<Annotation>>()
+    every {
+      mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), capture(delegateAnnotations))
+    } returns mockk(relaxed = true)
+
+    converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
+
+    assertEquals(annotations.toList(), delegateAnnotations.captured.toList())
+  }
+
   private fun requestedDelegateType(clerkResultType: Type): Type {
     val requestedType = slot<Type>()
     every {

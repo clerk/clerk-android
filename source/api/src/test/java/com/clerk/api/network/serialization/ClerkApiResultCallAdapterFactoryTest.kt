@@ -116,6 +116,10 @@ class ClerkApiResultCallAdapterFactoryTest {
     @GET("error") suspend fun fetch(): ClerkResult<Unit, ClerkErrorResponse>
   }
 
+  private interface CallShapes {
+    fun unitCall(): Call<ClerkResult<Unit, ClerkErrorResponse>>
+  }
+
   private fun retrofit(
     converterFactory: Converter.Factory,
     client: OkHttpClient = OkHttpClient(),
@@ -129,12 +133,7 @@ class ClerkApiResultCallAdapterFactoryTest {
 
   @Suppress("UNCHECKED_CAST")
   private fun enqueueErrorResponse(retrofit: Retrofit, body: String): ClerkResult<*, *>? {
-    val returnType =
-      ParameterizedTypeImpl(
-        null,
-        Call::class.java,
-        ParameterizedTypeImpl(null, ClerkResult::class.java, Unit::class.java, ERROR_TYPE),
-      )
+    val returnType = CallShapes::class.java.getMethod("unitCall").genericReturnType
     val adapter =
       retrofit.callAdapter(returnType, emptyArray())
         as CallAdapter<ClerkResult<*, *>, Call<ClerkResult<*, *>>>
@@ -174,7 +173,6 @@ class ClerkApiResultCallAdapterFactoryTest {
 
   private companion object {
     val JSON = "application/json".toMediaType()
-    val ERROR_TYPE: Type = ClerkErrorResponse::class.java
     const val SUSPEND_TIMEOUT_MS = 5_000L
   }
 }
