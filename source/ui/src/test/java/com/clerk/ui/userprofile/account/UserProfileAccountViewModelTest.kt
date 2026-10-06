@@ -21,7 +21,6 @@ import kotlinx.coroutines.test.runTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileAccountViewModelTest {
 
-  // Resets Dispatchers.Main after each test so the test dispatcher doesn't leak into other classes.
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(UnconfinedTestDispatcher())
 
   @BeforeTest

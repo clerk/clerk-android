@@ -77,14 +77,13 @@ class UserProfilePasskeyViewModelTest {
   }
 
   @Test
-  fun createPasskey_success_setsSuccessState() = runTest {
+  fun createPasskey_success_goesFromIdleStraightToSuccess() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns ClerkResult.success(mockk())
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      // No explicit Loading for createPasskey: Idle goes straight to Success.
       assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       advanceUntilIdle()
@@ -109,7 +108,7 @@ class UserProfilePasskeyViewModelTest {
   }
 
   @Test
-  fun createPasskey_cancellation_resetsToIdle() = runTest {
+  fun createPasskey_cancellation_runsTheFlowAndStaysIdle() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns
@@ -122,7 +121,6 @@ class UserProfilePasskeyViewModelTest {
       advanceUntilIdle()
       expectNoEvents()
     }
-    // The cancelled flow must have actually run; otherwise "no events" proves nothing.
     coVerify(exactly = 1) { user.createPasskey() }
     assertEquals(UserProfilePasskeyViewModel.State.Idle, viewModel.state.value)
   }

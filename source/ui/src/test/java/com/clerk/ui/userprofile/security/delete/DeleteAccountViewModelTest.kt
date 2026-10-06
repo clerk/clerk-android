@@ -86,7 +86,7 @@ class DeleteAccountViewModelTest {
   }
 
   @Test
-  fun deleteAccount_failure_setsErrorState() = runTest {
+  fun deleteAccount_failure_setsErrorStateAndKeepsLocalBiometricCredentials() = runTest {
     val user = mockk<User>()
     every { user.id } returns "user_1"
     every { Clerk.user } returns user
@@ -102,7 +102,6 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Error("boom"), awaitItem())
     }
-    // The account still exists, so its local biometric credentials must be kept.
     verify(exactly = 0) { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion(any()) }
   }
 }
