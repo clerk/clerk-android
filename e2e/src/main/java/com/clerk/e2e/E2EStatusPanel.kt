@@ -21,9 +21,10 @@ internal fun E2EStatusPanel(
   user: User?,
   session: Session?,
   cleanupStatus: CleanupStatus,
-  totpState: TotpClipboardState,
-  onCopyTotpCode: () -> Unit,
+  totpState: TotpTypingState,
+  onTypeTotpCode: () -> Unit,
   modifier: Modifier = Modifier,
+  showTotpHelper: Boolean = false,
 ) {
   Column(
     modifier = modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp),
@@ -39,12 +40,12 @@ internal fun E2EStatusPanel(
       SessionMarkers(session)
       CleanupMarker(cleanupStatus)
     }
-    if (session?.status == Session.SessionStatus.PENDING) {
+    if (showTotpHelper) {
       OutlinedButton(
-        modifier = Modifier.testTag(E2ETags.TOTP_FROM_CLIPBOARD),
-        onClick = onCopyTotpCode,
+        modifier = Modifier.testTag(E2ETags.TOTP_TYPE_CODE),
+        onClick = onTypeTotpCode,
       ) {
-        Text("Copy TOTP code")
+        Text("Type TOTP code")
       }
     }
     TotpMarker(totpState)
@@ -77,11 +78,11 @@ private fun CleanupMarker(status: CleanupStatus) {
 }
 
 @Composable
-private fun TotpMarker(state: TotpClipboardState) {
+private fun TotpMarker(state: TotpTypingState) {
   when (state) {
-    TotpClipboardState.Idle -> Unit
-    TotpClipboardState.Ready -> Marker("TOTP code copied", E2ETags.TOTP_READY)
-    is TotpClipboardState.Failed -> Marker(state.message, E2ETags.TOTP_FAILED)
+    TotpTypingState.Idle -> Unit
+    TotpTypingState.Typed -> Marker("TOTP code typed", E2ETags.TOTP_TYPED)
+    is TotpTypingState.Failed -> Marker(state.message, E2ETags.TOTP_FAILED)
   }
 }
 

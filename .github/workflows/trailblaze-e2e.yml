@@ -8,13 +8,23 @@ concurrency:
   group: trailblaze-e2e-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   trailblaze-e2e:
+    name: Run Trailblaze E2E on Android (${{ matrix.shard }})
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 35
-
-    permissions:
-      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - custom-flow
+          - auth-email
+          - auth-phone
+          - user-profile
+          - session-task-setup-mfa
 
     env:
       TRAILBLAZE_DEVICE: android/emulator-5554
@@ -39,6 +49,19 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Setup E2E test keys
+        if: matrix.shard != 'custom-flow'
+        env:
+          CLERK_TEST_KEYS_JSON: ${{ secrets.CLERK_TEST_KEYS_JSON }}
+        run: |
+          set +x
+          if [ -z "$CLERK_TEST_KEYS_JSON" ]; then
+            echo "::error::CLERK_TEST_KEYS_JSON is not set. Add the shared mobile e2e .keys.json (the clerk-ios secret) to this repository."
+            exit 1
+          fi
+          printf '%s\n' "$CLERK_TEST_KEYS_JSON" > .keys.json
+          chmod 600 .keys.json
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -50,7 +73,7 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/block/trailblaze/a022ca69b7fecd0ba7659f2c000fb459213c87d6/install.sh | bash
           echo "$HOME/.trailblaze/bin" >> "$GITHUB_PATH"
 
-      - name: Run Trailblaze E2E
+      - name: Run Trailblaze E2E shard
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -58,7 +81,7 @@ jobs:
           arch: x86_64
           profile: pixel_5
           emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
-          script: scripts/run-trailblaze-tests.sh
+          script: scripts/run-e2e-shard.sh ${{ matrix.shard }}
 
       - name: Collect Trailblaze artifacts
         if: always()
@@ -72,7 +95,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: trailblaze-artifacts
+          name: trailblaze-artifacts-${{ matrix.shard }}
           retention-days: 7
           if-no-files-found: warn
           path: |

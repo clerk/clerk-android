@@ -16,7 +16,7 @@ internal object E2ETags {
   const val CLEANUP_IN_PROGRESS = "e2e.auth.cleanupInProgress"
   const val CLEANUP_COMPLETE = "e2e.auth.cleanupComplete"
   const val CLEANUP_FAILED = "e2e.auth.cleanupFailed"
-  const val TOTP_FROM_CLIPBOARD = "e2e.totp.fromClipboard"
-  const val TOTP_READY = "e2e.totp.ready"
+  const val TOTP_TYPE_CODE = "e2e.totp.typeCode"
+  const val TOTP_TYPED = "e2e.totp.typed"
   const val TOTP_FAILED = "e2e.totp.failed"
 }

@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -69,17 +70,19 @@ private fun E2EApp(viewModel: E2EViewModel) {
   val cleanupStatus by E2EAccountCleanup.status.collectAsStateWithLifecycle()
   val customOtpState by viewModel.customOtpState.collectAsStateWithLifecycle()
   var route by rememberSaveable { mutableStateOf(E2ERoute.Home) }
-  var totpState by remember { mutableStateOf<TotpClipboardState>(TotpClipboardState.Idle) }
+  var totpState by remember { mutableStateOf<TotpTypingState>(TotpTypingState.Idle) }
   val context = LocalContext.current
+  val rootView = LocalView.current.rootView
   val scope = rememberCoroutineScope()
-  val statusPanel: @Composable () -> Unit = {
+  val statusPanel: @Composable (Boolean) -> Unit = { showTotpHelper ->
     E2EStatusPanel(
+      showTotpHelper = showTotpHelper,
       user = user,
       session = session,
       cleanupStatus = cleanupStatus,
       totpState = totpState,
-      onCopyTotpCode = {
-        scope.launch { totpState = E2ETotpClipboard.replaceSecretWithCode(context) }
+      onTypeTotpCode = {
+        scope.launch { totpState = E2ETotpTyper.typeCodeFromClipboardSecret(context, rootView) }
       },
     )
   }
@@ -120,7 +123,7 @@ private fun E2ERouteContent(
   onRouteChange: (E2ERoute) -> Unit,
   user: User?,
   viewModel: E2EViewModel,
-  statusPanel: @Composable () -> Unit,
+  statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
   val customOtpState by viewModel.customOtpState.collectAsStateWithLifecycle()
@@ -185,11 +188,11 @@ private fun LoadingScreen() {
 @Composable
 private fun PrebuiltSignUpScreen(
   initialIdentifier: String,
-  statusPanel: @Composable () -> Unit,
+  statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
   onAuthComplete: () -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxSize()) {
-    statusPanel()
+    statusPanel(true)
     AuthView(
       modifier = Modifier.weight(1f),
       initialIdentifier = initialIdentifier,
@@ -202,9 +205,13 @@ private fun PrebuiltSignUpScreen(
 }
 
 @Composable
-private fun HomeScreen(user: User?, statusPanel: @Composable () -> Unit, actions: HomeActions) {
+private fun HomeScreen(
+  user: User?,
+  statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
+  actions: HomeActions,
+) {
   Column(modifier = Modifier.fillMaxSize()) {
-    statusPanel()
+    statusPanel(false)
     Box(modifier = Modifier.weight(1f)) { HomeContent(user = user, actions = actions) }
   }
 }

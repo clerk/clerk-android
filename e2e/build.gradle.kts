@@ -11,7 +11,8 @@ private fun publishableKeyFromKeysFile(keyName: String): String {
   check(keysFile.exists()) {
     "$e2eKeyNameProperty=$keyName requires .keys.json at the repository root."
   }
-  val keys = JsonSlurper().parse(keysFile) as Map<*, *>
+  val keysJson = providers.fileContents(layout.settingsDirectory.file(".keys.json")).asText.get()
+  val keys = JsonSlurper().parseText(keysJson) as Map<*, *>
   val entry = keys[keyName] as? Map<*, *>
   val publishableKey = (entry?.get("pk") as? String)?.trim()
   check(!publishableKey.isNullOrEmpty()) { "Configure '$keyName.pk' in .keys.json." }
