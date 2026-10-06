@@ -9,33 +9,6 @@ import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-/**
- * The single policy for enums decoded from Clerk API responses: a value this SDK version does not
- * recognize decodes to the enum's `UNKNOWN` entry instead of failing the whole response.
- *
- * Every server enum is declared as
- *
- * ```kotlin
- * @OptIn(ExperimentalSerializationApi::class)
- * @KeepGeneratedSerializer
- * @Serializable(with = Status.Serializer::class)
- * enum class Status {
- *   @SerialName("active") ACTIVE,
- *   @SerialName("unknown") UNKNOWN;
- *
- *   internal object Serializer :
- *     UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
- * }
- * ```
- *
- * The wire names come from the plugin-generated serializer, so `@SerialName` stays the only source
- * of truth for each entry. Unlike `coerceInputValues`, the fallback does not depend on the [Json]
- * configuration or on the property having a default, so it also covers nullable properties, lists
- * and maps of enums, and standalone decoding.
- *
- * @param generated The plugin-generated serializer of [E] (from `@KeepGeneratedSerializer`).
- * @param fallback The entry returned for unrecognized values.
- */
 internal open class UnknownFallbackEnumSerializer<E : Enum<E>>(
   private val generated: KSerializer<E>,
   private val fallback: E,

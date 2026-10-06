@@ -35,11 +35,7 @@ class UnknownFallbackEnumSerializerTest {
     val wireNames: Map<E, String>,
   )
 
-  /**
-   * Every enum decoded from Clerk API responses, with the wire name of each entry. Adding a server
-   * enum without registering it here (and without the fallback serializer) is the bug this guards.
-   */
-  private val serverEnums: List<ServerEnum<*>> =
+  private val serverEnumsWithWireNames: List<ServerEnum<*>> =
     listOf(
       ServerEnum(
         SignIn.Status.serializer(),
@@ -258,30 +254,29 @@ class UnknownFallbackEnumSerializerTest {
       ),
     )
 
-  // No coerceInputValues: the fallback must not depend on the Json configuration.
-  private val strictJson = Json
+  private val jsonWithoutCoercion = Json
 
   @Test
   fun `every server enum decodes an unrecognized value to its fallback`() {
-    serverEnums.forEach { assertUnknownFallsBack(it) }
+    serverEnumsWithWireNames.forEach { assertUnknownFallsBack(it) }
   }
 
   @Test
   fun `every server enum round-trips its wire names`() {
-    serverEnums.forEach { assertRoundTrips(it) }
+    serverEnumsWithWireNames.forEach { assertRoundTrips(it) }
   }
 
   @Test
   fun `unknown values inside lists and nullable positions fall back instead of failing`() {
     val list =
-      strictJson.decodeFromString(
+      jsonWithoutCoercion.decodeFromString(
         ListSerializer(SignUp.Status.serializer()),
         """["complete","brand_new_status"]""",
       )
     assertEquals(listOf(SignUp.Status.COMPLETE, SignUp.Status.UNKNOWN), list)
 
     val nullable =
-      strictJson.decodeFromString(
+      jsonWithoutCoercion.decodeFromString(
         BillingDiscountRedemptionStatus.serializer().nullable,
         "\"brand_new_status\"",
       )
@@ -303,7 +298,7 @@ class UnknownFallbackEnumSerializerTest {
   }
 
   private fun <E : Enum<E>> assertUnknownFallsBack(case: ServerEnum<E>) {
-    listOf(strictJson, ClerkApi.json).forEach { json ->
+    listOf(jsonWithoutCoercion, ClerkApi.json).forEach { json ->
       assertEquals(
         case.serializer.descriptor.serialName,
         case.fallback,
@@ -316,7 +311,7 @@ class UnknownFallbackEnumSerializerTest {
     case.wireNames.forEach { (entry, wireName) ->
       val encoded = ClerkApi.json.encodeToString(case.serializer, entry)
       assertEquals("${case.serializer.descriptor.serialName}.$entry", "\"$wireName\"", encoded)
-      assertEquals(entry, strictJson.decodeFromString(case.serializer, encoded))
+      assertEquals(entry, jsonWithoutCoercion.decodeFromString(case.serializer, encoded))
     }
   }
 }
