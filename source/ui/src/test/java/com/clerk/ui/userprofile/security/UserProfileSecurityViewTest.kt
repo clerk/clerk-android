@@ -30,6 +30,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -43,17 +44,19 @@ class UserProfileSecurityViewTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private val hasCredential = AtomicBoolean(false)
+  private val user = mockk<User>()
 
   @Before
   fun setUp() {
     mockkObject(Clerk, BiometricCredentials)
     mockkStatic("com.clerk.api.user.UserKt")
-    val user = mockk<User>()
     every { Clerk.user } returns user
+    every { Clerk.userFlow } returns MutableStateFlow(user)
     every { Clerk.passwordIsEnabled } returns false
     every { Clerk.passkeyIsEnabled } returns false
     every { Clerk.mfaIsEnabled } returns false
     every { Clerk.deleteSelfIsEnabled } returns false
+    every { user.deleteSelfEnabled } returns false
     every { Clerk.biometricSignInIsEnabled } returns true
     coEvery { Clerk.refreshClient() } returns ClerkResult.success(Client())
     coEvery { user.activeSessions() } returns ClerkResult.success(emptyList())
@@ -111,6 +114,24 @@ class UserProfileSecurityViewTest {
     showSecurityScreen()
 
     composeTestRule.onNode(isToggleable()).assertIsOff().assertIsEnabled()
+  }
+
+  @Test
+  fun `delete account follows the user's flag when the instance setting is off`() {
+    every { Clerk.deleteSelfIsEnabled } returns false
+    every { user.deleteSelfEnabled } returns true
+    showSecurityScreen()
+
+    composeTestRule.onNodeWithText("Delete account").assertExists()
+  }
+
+  @Test
+  fun `delete account is hidden when the user's flag is off and the instance setting is on`() {
+    every { Clerk.deleteSelfIsEnabled } returns true
+    every { user.deleteSelfEnabled } returns false
+    showSecurityScreen()
+
+    composeTestRule.onNodeWithText("Delete account").assertDoesNotExist()
   }
 
   private fun showSecurityScreen() {
