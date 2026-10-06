@@ -22,8 +22,12 @@ on:
         default: true
 
 jobs:
+  trailblaze-e2e:
+    uses: ./.github/workflows/trailblaze-e2e.yml
+
   create-release:
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: trailblaze-e2e
     if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -108,8 +112,8 @@ jobs:
 
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: create-release
-    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    needs: [trailblaze-e2e, create-release]
+    if: always() && needs.trailblaze-e2e.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
     outputs:
       tag_name: ${{ steps.release_metadata.outputs.tag_name }}
       release_url: ${{ steps.release_metadata.outputs.release_url }}

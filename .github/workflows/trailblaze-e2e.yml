@@ -1,11 +1,11 @@
 name: Trailblaze E2E
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+  workflow_dispatch:
 
 concurrency:
-  group: trailblaze-e2e-${{ github.ref }}
+  group: trailblaze-e2e-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
