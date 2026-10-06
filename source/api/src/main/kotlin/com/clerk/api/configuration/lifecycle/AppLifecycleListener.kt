@@ -16,17 +16,18 @@ internal object AppLifecycleListener {
 
   private val listener =
     object : DefaultLifecycleObserver {
-      var wasBackgrounded = false
+      @Volatile var wasBackgrounded = false
 
       override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
         if (Clerk.debugMode) {
           ClerkLog.d("AppLifecycleListener, onStart")
         }
-        if (wasBackgrounded) {
+        val returningFromBackground = wasBackgrounded
+        wasBackgrounded = false
+        if (returningFromBackground) {
           callback()
         }
-        wasBackgrounded = false
       }
 
       override fun onStop(owner: LifecycleOwner) {
@@ -37,6 +38,13 @@ internal object AppLifecycleListener {
         wasBackgrounded = true
       }
     }
+
+  /**
+   * True between the process lifecycle's ON_STOP and the next ON_START; false until the process has
+   * been stopped at least once.
+   */
+  val isInBackground: Boolean
+    get() = listener.wasBackgrounded
 
   fun configure(callback: () -> Unit) {
     this.callback = callback

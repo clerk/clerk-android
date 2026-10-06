@@ -313,7 +313,7 @@ internal class ConfigurationManager(
 
     refreshJob?.cancel()
     refreshJob = scope.launch {
-      while (isActive) {
+      while (isActive && !AppLifecycleListener.isInBackground) {
         try {
           val session = Clerk.session
           if (session != null) {
