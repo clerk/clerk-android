@@ -263,8 +263,10 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
                   AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
                 is OAuthResult.Outcome.SignUp ->
                   AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
-                OAuthResult.Outcome.Empty ->
-                  AuthState.OAuthState.Error(GOOGLE_ONE_TAP_EMPTY_RESULT_ERROR)
+                OAuthResult.Outcome.Empty -> {
+                  ClerkLog.e("Google One Tap returned neither a sign-in nor a sign-up")
+                  AuthState.OAuthState.Error(null)
+                }
               }
           }
         }
@@ -308,7 +310,10 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
                 AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
               is OAuthResult.Outcome.SignUp ->
                 AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
-              OAuthResult.Outcome.Empty -> AuthState.OAuthState.Error(OAUTH_EMPTY_RESULT_ERROR)
+              OAuthResult.Outcome.Empty -> {
+                ClerkLog.e("OAuth provider returned neither a sign-in nor a sign-up")
+                AuthState.OAuthState.Error(null)
+              }
             }
         }
         .onFailure {
@@ -399,11 +404,3 @@ internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =
     (throwable as? BiometricCredentialKeyManagerException)?.code ==
       BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
-
-/** Shown when an OAuth flow returns neither a sign-in nor a sign-up. */
-internal const val OAUTH_EMPTY_RESULT_ERROR =
-  "OAuth provider returned neither a sign-in nor a sign-up"
-
-/** Shown when Google One Tap returns neither a sign-in nor a sign-up. */
-internal const val GOOGLE_ONE_TAP_EMPTY_RESULT_ERROR =
-  "Google One Tap returned neither a sign-in nor a sign-up"
