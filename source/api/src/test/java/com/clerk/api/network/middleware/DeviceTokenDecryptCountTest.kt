@@ -13,7 +13,11 @@ import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.storage.StorageCipher
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import com.clerk.api.storage.failCommitsForTesting
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -31,7 +35,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** Pins how often a request decrypts the device token across the real interceptor chain. */
 @RunWith(RobolectricTestRunner::class)
 class DeviceTokenDecryptCountTest {
   private lateinit var context: Context
@@ -55,15 +58,10 @@ class DeviceTokenDecryptCountTest {
 
   @Test
   fun `requests decrypt a persisted device token at most once`() {
-    // Persisted by an earlier process, so nothing is cached in memory yet.
-    context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE).edit(
-      commit = true
-    ) {
-      putString(StorageKey.DEVICE_TOKEN.name, "clerk:v1:${encode("token_1")}")
-    }
+    persistTokenFromEarlierProcess("clerk:v1:${encode("token_1")}")
     val client = client(responseToken = { requestToken -> requestToken })
 
-    repeat(3) { assertEquals("token_1", client.execute()) }
+    repeat(3) { assertEquals("token_1", client.sendReturningAuthorizationHeader()) }
 
     assertEquals(1, tokenDecrypts("token_1"))
   }
@@ -73,7 +71,7 @@ class DeviceTokenDecryptCountTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_1")
     val client = client(responseToken = { "token_2" })
 
-    assertEquals("token_1", client.execute())
+    assertEquals("token_1", client.sendReturningAuthorizationHeader())
     assertEquals("token_2", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
@@ -83,7 +81,6 @@ class DeviceTokenDecryptCountTest {
     StorageHelper.reset(context)
     assertEquals(null, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
-    // Every value above came from the in-memory copy kept in step with each write.
     assertEquals(0, decryptedValues.count { it.startsWith("token_") })
   }
 
@@ -92,7 +89,6 @@ class DeviceTokenDecryptCountTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_1")
     assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
-    // The path Clerk.setDeviceToken() and DeviceTokenSavingMiddleware write through.
     assertTrue(StorageHelper.compareAndSetDeviceToken(expected = "token_1", value = "token_2"))
     assertEquals("token_2", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
@@ -106,18 +102,13 @@ class DeviceTokenDecryptCountTest {
   @Test
   fun `a read before the cipher is ready is not cached`() {
     StorageHelper.resetToUninitializedForTesting()
-    context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE).edit(
-      commit = true
-    ) {
-      putString(StorageKey.DEVICE_TOKEN.name, "clerk:v1:${encode("token_1")}")
-    }
+    persistTokenFromEarlierProcess("clerk:v1:${encode("token_1")}")
     var cipherAvailable = false
     StorageHelper.storageCipherFactoryOverride = {
       check(cipherAvailable) { "keystore not ready" }
       CountingCipher(decryptedValues)
     }
 
-    // Preferences are open but the cipher failed to initialize, so the token can't be read yet.
     StorageHelper.initialize(context)
     assertEquals(null, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
@@ -125,6 +116,65 @@ class DeviceTokenDecryptCountTest {
     StorageHelper.initialize(context)
     assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
+
+  @Test
+  fun `a failed commit drops the cached token`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_1")
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_2")
+    restoreCommits()
+
+    assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(1, tokenDecrypts("token_1"))
+  }
+
+  @Test
+  fun `removing an undecryptable token keeps a token written while it was decrypting`() {
+    val undecryptable = "clerk:v1:undecryptable"
+    val firstDecryptStarted = CountDownLatch(1)
+    val releaseFirstDecrypt = CountDownLatch(1)
+    StorageHelper.storageCipherFactoryOverride = {
+      object : StorageCipher {
+        private val decryptCalls = AtomicInteger()
+
+        override fun encrypt(plaintext: String): String = encode(plaintext)
+
+        override fun decrypt(ciphertext: String): String {
+          if (ciphertext != "undecryptable") {
+            return CountingCipher(decryptedValues).decrypt(ciphertext)
+          }
+          if (decryptCalls.getAndIncrement() == 0) {
+            firstDecryptStarted.countDown()
+            releaseFirstDecrypt.await(5, TimeUnit.SECONDS)
+          }
+          error("bad ciphertext")
+        }
+      }
+    }
+    StorageHelper.resetToUninitializedForTesting()
+    StorageHelper.initialize(context)
+    persistTokenFromEarlierProcess(undecryptable)
+    val reader = Thread { StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) }.apply { start() }
+    assertTrue(firstDecryptStarted.await(5, TimeUnit.SECONDS))
+
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_2")
+    releaseFirstDecrypt.countDown()
+    reader.join(5_000)
+
+    assertEquals("clerk:v1:${encode("token_2")}", storedDeviceToken())
+    assertEquals("token_2", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  private fun preferences() =
+    context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+
+  private fun persistTokenFromEarlierProcess(storedValue: String) {
+    preferences().edit(commit = true) { putString(StorageKey.DEVICE_TOKEN.name, storedValue) }
+  }
+
+  private fun storedDeviceToken(): String? =
+    preferences().getString(StorageKey.DEVICE_TOKEN.name, null)
 
   private fun tokenDecrypts(token: String): Int = decryptedValues.count { it == token }
 
@@ -136,8 +186,7 @@ class DeviceTokenDecryptCountTest {
       .addInterceptor(TerminalInterceptor(responseToken))
       .build()
 
-  /** Returns the Authorization header the request was sent with. */
-  private fun OkHttpClient.execute(): String? =
+  private fun OkHttpClient.sendReturningAuthorizationHeader(): String? =
     newCall(Request.Builder().url("https://example.com/v1/client").build()).execute().use {
       it.request.header(AUTHORIZATION_HEADER)
     }

@@ -123,15 +123,12 @@ internal object StorageHelper {
 
   internal fun loadValue(key: StorageKey): String? =
     if (key == StorageKey.DEVICE_TOKEN) {
-      // Only cache once both prefs and the cipher are ready: a read that races initialization
-      // would otherwise pin "no token" (or an undecryptable one) in memory for the process.
-      DeviceTokenCache.getOrLoad(
-        load = { readValue(key) },
-        canCache = { secureStorage != null && storageCipher != null },
-      )
+      DeviceTokenCache.getOrLoad(load = { readValue(key) }, canCache = ::isEncryptedStorageReady)
     } else {
       readValue(key)
     }
+
+  private fun isEncryptedStorageReady(): Boolean = secureStorage != null && storageCipher != null
 
   private fun readValue(key: StorageKey): String? {
     val prefs = secureStorage
@@ -158,7 +155,7 @@ internal object StorageHelper {
         runCatching { cipher.decrypt(storedValue.removePrefix(ENCRYPTED_VALUE_PREFIX)) }
           .onFailure { error ->
             ClerkLog.w("Failed to decrypt stored value for key ${key.name}: ${error.message}")
-            prefs.edit(commit = true) { remove(key.name) }
+            removeIfStillStored(prefs, key, storedValue)
           }
           .getOrNull()
       }
@@ -190,11 +187,16 @@ internal object StorageHelper {
     return commit(prefs, key, cachedDeviceToken = null) { remove(key.name) }
   }
 
-  /**
-   * Commits [edit] via [commitEdit]. Every device-token write funnels through here (saveValue,
-   * deleteValue and compareAndSetDeviceToken), so the in-memory copy becomes [cachedDeviceToken]
-   * atomically with the disk commit, or is dropped if the commit failed.
-   */
+  private fun removeIfStillStored(prefs: SharedPreferences, key: StorageKey, storedValue: String) {
+    val isStillStored = { prefs.getString(key.name, null) == storedValue }
+    val remove = { commitEdit(prefs, key) { remove(key.name) } }
+    if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.removeIf(isStillStored, remove)
+    } else if (isStillStored()) {
+      remove()
+    }
+  }
+
   private inline fun commit(
     prefs: SharedPreferences,
     key: StorageKey,
@@ -259,12 +261,6 @@ private inline fun commitEdit(
   return committed
 }
 
-/**
- * Plaintext copy of the device token, which several interceptors read on every request. Every write
- * replaces it under [lock] together with the disk commit, so concurrent writers cannot leave it
- * disagreeing with disk; [generation] lets a slow cache-miss read detect that a write overtook it
- * and skip caching the value it decrypted.
- */
 private object DeviceTokenCache {
   private class Entry(val value: String?)
 
@@ -286,9 +282,6 @@ private object DeviceTokenCache {
     return value
   }
 
-  /**
-   * Runs [commit] under the lock; caches [value] if it reached disk, otherwise forgets the entry.
-   */
   fun write(value: String?, commit: () -> Boolean): Boolean =
     synchronized(lock) {
       val committed = commit()
@@ -296,6 +289,9 @@ private object DeviceTokenCache {
       entry = if (committed) Entry(value) else null
       committed
     }
+
+  fun removeIf(condition: () -> Boolean, remove: () -> Boolean): Boolean =
+    synchronized(lock) { condition() && write(value = null, commit = remove) }
 
   fun invalidate() {
     synchronized(lock) {
