@@ -38,4 +38,15 @@ class SSOExtensionsTest {
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, convertedFailure.errorType)
     assertSame(cause, convertedFailure.throwable)
   }
+
+  @Test
+  fun `signInToOAuthResult keeps an HTTP failure with a status code of 600 or above`() {
+    val result: ClerkResult<SignIn, ClerkErrorResponse> =
+      ClerkResult.Failure(error = null, code = 600, errorType = ClerkResult.Failure.ErrorType.HTTP)
+
+    val converted = result.signInToOAuthResult() as ClerkResult.Failure
+
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, converted.errorType)
+    assertEquals(600, converted.code)
+  }
 }

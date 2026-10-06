@@ -79,7 +79,11 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
   public companion object {
     private const val OK = 200
     private val HTTP_SUCCESS_RANGE = OK..299
-    private val HTTP_FAILURE_RANGE = 400..599
+    // Any non-2xx status OkHttp can surface (it parses three-digit codes). The call adapter returns
+    // an HTTP failure for every one of them, and SSO/external-account flows re-wrap those failures
+    // with httpFailure(), so it must accept the same set or those flows throw.
+    private val HTTP_STATUS_RANGE = 100..999
+    private val HTTP_ERROR_BODY_RANGE = 400..599
 
     /** Returns a new [Success] with given [value]. */
     public fun <T : Any> success(value: T): Success<T> = Success(value, emptyMap())
@@ -98,10 +102,12 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     public fun unknownFailure(throwable: Throwable): Failure<Nothing> =
       Failure(null, throwable, null, Failure.ErrorType.UNKNOWN)
 
+    internal fun hasHttpErrorBody(code: Int): Boolean = code in HTTP_ERROR_BODY_RANGE
+
     internal fun checkHttpFailureCode(code: Int) {
       require(code !in HTTP_SUCCESS_RANGE) { "Status code '$code' is a successful HTTP response." }
-      require(code in HTTP_FAILURE_RANGE) {
-        "Status code '$code' is not a HTTP failure response. Must be a 4xx or 5xx code."
+      require(code in HTTP_STATUS_RANGE) {
+        "Status code '$code' is not a HTTP failure response. Must be a non-2xx code in 100..999."
       }
     }
   }
