@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures.ts';
 
-test('an existing test user reaches the email code screen and stays on it', { tags: ['known-bug'] }, async ({ host, screen }) => {
+test('an existing test user reaches the email code screen and stays on it', async ({ host, screen }) => {
   const user = await host.seedUser();
   await host.launch({ screen: 'auth', authMode: 'signIn' });
   await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });
