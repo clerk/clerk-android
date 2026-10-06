@@ -41,10 +41,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Public functions that return [ClerkResult] report invalid input and missing local data as
- * failures instead of throwing.
- */
 class ClerkResultNoThrowTest {
   private val signInApi = mockk<SignInApi>(relaxed = true)
   private val signUpApi = mockk<SignUpApi>(relaxed = true)

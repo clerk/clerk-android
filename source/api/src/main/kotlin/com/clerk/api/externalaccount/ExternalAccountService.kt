@@ -194,13 +194,10 @@ internal object ExternalAccountService {
     when (initialResult.errorType) {
       ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
       ClerkResult.Failure.ErrorType.HTTP ->
-        ClerkResult.Companion.httpFailure(
-          code = initialResult.code ?: -1,
-          error = initialResult.error,
-        )
-
-      ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
+        initialResult.code?.let { code ->
+          ClerkResult.Companion.httpFailure(code = code, error = initialResult.error)
+        } ?: initialResult
+      ClerkResult.Failure.ErrorType.UNKNOWN -> initialResult
     }
 
   private const val EXTERNAL_CONNECTION_CANCELLED = "External account connection cancelled"

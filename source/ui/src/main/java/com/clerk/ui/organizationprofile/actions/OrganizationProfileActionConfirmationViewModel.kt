@@ -50,7 +50,6 @@ internal class OrganizationProfileActionConfirmationViewModel(
     viewModelScope.launch(dispatcher) {
       when (val result = performAction(action, organization, membership)) {
         is ClerkResult.Success -> {
-          // A failed refresh is not fatal: the action already succeeded on the server.
           try {
             refreshClient()
           } catch (e: CancellationException) {

@@ -670,31 +670,6 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `verifySessionWithPasskey returns clear error when prepared verification nonce is missing`() =
-    runTest {
-      val session = testSession()
-      val preparedVerification =
-        SessionVerification(
-          id = "ver_123",
-          status = SessionVerification.Status.NEEDS_FIRST_FACTOR,
-          level = SessionVerification.Level.FIRST_FACTOR,
-        )
-
-      coEvery {
-        ClerkApi.session.prepareFirstFactorVerification("sess_123", mapOf("strategy" to "passkey"))
-      } returns ClerkResult.success(preparedVerification)
-
-      val result = GoogleCredentialAuthenticationService.verifySessionWithPasskey(session)
-
-      assertTrue(result is ClerkResult.Failure)
-      val failure = result as ClerkResult.Failure
-      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
-      assertTrue(failure.throwable is IllegalStateException)
-      assertEquals("Missing nonce in prepared verification", failure.throwable?.message)
-      coVerify(exactly = 0) { mockCredentialManager.getCredential(any(), any()) }
-    }
-
-  @Test
   fun `verifySessionWithPasskey uses second factor endpoints when requested`() = runTest {
     val session = testSession()
     val nonce = """{"challenge":"test-challenge"}"""

@@ -36,10 +36,6 @@ public class SignInIdentifierBuilder {
    */
   public var identifier: String? = null
 
-  /**
-   * Returns the identifier to sign in with, or a failure when none was provided or [identifier] was
-   * combined with a typed field.
-   */
   internal fun resolvedIdentifier(): ClerkResult<String, ClerkErrorResponse> {
     val typed = email ?: phone ?: username
     val identifier = identifier
@@ -75,7 +71,6 @@ public class SignInWithPasswordBuilder {
   /** The password for authentication. */
   public var password: String? = null
 
-  /** Returns the identifier and password, or a failure when either is missing. */
   internal fun credentials(): ClerkResult<PasswordCredentials, ClerkErrorResponse> {
     val identifier = identifier
     val password = password
@@ -110,7 +105,6 @@ public class SignInWithOtpBuilder {
   /** The phone number to send the OTP to. */
   public var phone: String? = null
 
-  /** Returns the channel to send the OTP to, or a failure when zero or two are set. */
   internal fun channel(): ClerkResult<CodeChannel, ClerkErrorResponse> = codeChannel(email, phone)
 }
 
@@ -135,7 +129,6 @@ public class SignInWithIdTokenBuilder {
   /** The identity provider that issued the token. */
   public var provider: IdTokenProvider? = null
 
-  /** Returns the token and its provider, or a failure when either is missing. */
   internal fun idToken(): ClerkResult<IdToken, ClerkErrorResponse> {
     val token = token
     val provider = provider

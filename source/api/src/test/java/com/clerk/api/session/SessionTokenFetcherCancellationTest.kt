@@ -30,7 +30,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Cancellation and failure propagation for deduplicated token requests. */
 @RunWith(RobolectricTestRunner::class)
 class SessionTokenFetcherCancellationTest {
   private val mockSession = mockk<Session>(relaxed = true)
@@ -75,7 +74,7 @@ class SessionTokenFetcherCancellationTest {
       {
         if (calls.incrementAndGet() == 1) {
           ownerRequestStarted.complete(Unit)
-          CompletableDeferred<Unit>().await() // Suspends until the owner is cancelled.
+          CompletableDeferred<Unit>().await()
         }
         ClerkResult.success(mockTokenResource)
       }

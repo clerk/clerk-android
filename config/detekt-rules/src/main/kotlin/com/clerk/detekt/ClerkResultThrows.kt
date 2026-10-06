@@ -53,9 +53,7 @@ class ClerkResultThrows(config: Config = Config.empty) : Rule(config) {
     val body = function.bodyExpression ?: return
     body.accept(
       object : KtTreeVisitorVoid() {
-        override fun visitClassOrObject(classOrObject: KtClassOrObject) {
-          // Members of nested or anonymous classes are checked on their own.
-        }
+        override fun visitClassOrObject(classOrObject: KtClassOrObject) = Unit
 
         override fun visitThrowExpression(expression: KtThrowExpression) {
           super.visitThrowExpression(expression)
@@ -107,7 +105,6 @@ class ClerkResultThrows(config: Config = Config.empty) : Rule(config) {
       hasModifier(KtTokens.INTERNAL_KEYWORD) ||
       hasModifier(KtTokens.PROTECTED_KEYWORD)
 
-  /** True when a `throw` rethrows the parameter of an enclosing `CancellationException` catch. */
   private fun KtThrowExpression.rethrowsCancellation(): Boolean {
     val thrownName = (thrownExpression as? KtNameReferenceExpression)?.getReferencedName()
     return generateSequence(parent) { it.parent }
@@ -120,7 +117,6 @@ class ClerkResultThrows(config: Config = Config.empty) : Rule(config) {
       }
   }
 
-  /** True when the element runs inside a broad `try` block or a catching helper's lambda. */
   private fun PsiElement.isCaught(stopAt: PsiElement): Boolean =
     generateSequence(this) { it.parent }
       .takeWhile { it != stopAt }

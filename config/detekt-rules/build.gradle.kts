@@ -1,4 +1,3 @@
-// Repo-specific detekt rules. Wired into every module through `detektPlugins` in the root build.
 plugins { alias(libs.plugins.jetbrains.kotlin.jvm) }
 
 dependencies {

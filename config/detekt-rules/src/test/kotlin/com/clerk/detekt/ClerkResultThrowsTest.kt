@@ -25,7 +25,6 @@ class ClerkResultThrowsTest {
         }
 
         fun c(): ClerkResult<String, Nothing> {
-          // Local functions run in the caller's frame, so their throws escape too.
           fun local(): Nothing = error("boom")
           return local()
         }
@@ -45,6 +44,23 @@ class ClerkResultThrowsTest {
         internal fun b(): ClerkResult<String, Nothing> = error("boom")
         internal class C { fun c(): ClerkResult<String, Nothing> = error("boom") }
         fun d(): String = error("boom")
+        """
+          .trimIndent()
+      )
+
+    assertEquals(0, findings.size)
+  }
+
+  @Test
+  fun `does not attribute members of nested or anonymous classes to the enclosing function`() {
+    val findings =
+      rule.lint(
+        """
+        fun a(): ClerkResult<String, Nothing> {
+          val task = object : Runnable { override fun run() = error("boom") }
+          class Local { fun b(): String = error("boom") }
+          return ClerkResult.success("ok")
+        }
         """
           .trimIndent()
       )

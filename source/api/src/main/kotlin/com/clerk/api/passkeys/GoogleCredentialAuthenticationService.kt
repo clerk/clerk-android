@@ -22,7 +22,9 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.catchingClerkResult
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.session.attemptFirstFactorVerification
@@ -157,11 +159,15 @@ internal object GoogleCredentialAuthenticationService {
     allowedCredentialIds: List<String>,
     preferImmediatelyAvailableCredentials: Boolean,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val nonce = signIn.firstFactorVerification?.nonce
+    if (nonce == null && SignIn.CredentialType.PASSKEY in credentialTypes) {
+      return missingPreparedVerificationNonceFailure("firstFactorVerification")
+    }
     return try {
       val credential =
         getCredentialFromManager(
           activity = activity,
-          nonce = signIn.firstFactorVerification?.nonce,
+          nonce = nonce,
           allowedCredentialIds = allowedCredentialIds,
           credentialRequestTypes = credentialTypes,
           preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
@@ -367,10 +373,11 @@ internal object GoogleCredentialAuthenticationService {
 
   private fun missingPreparedVerificationNonceFailure(
     verificationField: String
-  ): ClerkResult.Failure<Nothing> {
+  ): ClerkResult.Failure<ClerkErrorResponse> {
     ClerkLog.e("Missing nonce in prepared verification $verificationField")
-    return ClerkResult.unknownFailure(
-      IllegalStateException("Missing nonce in prepared verification")
+    return localFailure(
+      code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+      longMessage = "Prepared passkey verification is missing the nonce",
     )
   }
 

@@ -45,7 +45,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
             "to complete before the session can be activated.",
       )
 
-    /** Returned when sign-out, reinitialization or reverification invalidated the request. */
     private fun supersededFailure(): ClerkResult.Failure<ClerkErrorResponse> =
       localFailure(
         code = TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
@@ -155,11 +154,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     options: GetTokenOptions = GetTokenOptions(),
   ): TokenResource? = getTokenResult(session, options).successOrNull()
 
-  /**
-   * Same as [getToken], but reports why no token is available: the API failure, the exception that
-   * interrupted the request, a pending session, or a request superseded by sign-out,
-   * reinitialization or reverification.
-   */
   suspend fun getTokenResult(
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
@@ -207,14 +201,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           tokenTasks.putIfAbsent(context.cacheKey, deferred)
         }
       if (existingTask != null) {
-        awaitSharedTask(context, existingTask)
-          // The owner of the shared request was cancelled, but this caller was not.
-          ?: fetchTokenWithDeduplication(context, options)
+        awaitSharedTask(context, existingTask) ?: fetchTokenWithDeduplication(context, options)
       } else {
         try {
           fetchToken(context, options).also { deferred.complete(it) }
         } catch (e: CancellationException) {
-          // Unregister first so a waiter that retries cannot find this cancelled task again.
           tokenTasks.remove(context.cacheKey, deferred)
           deferred.cancel(e)
           throw e
@@ -228,11 +219,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     }
   }
 
-  /**
-   * Waits for another caller's request for the same token. Returns null when that caller was
-   * cancelled while this one is still active, after unregistering the cancelled task so the caller
-   * can fetch again. Rethrows when this caller was cancelled itself.
-   */
   private suspend fun awaitSharedTask(
     context: FetchContext,
     task: CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>,

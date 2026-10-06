@@ -35,7 +35,6 @@ public class SendCodeBuilder {
   /** The phone number to send the verification code to. */
   public var phone: String? = null
 
-  /** Returns the channel to send the code to, or a failure when zero or two are set. */
   internal fun channel(): ClerkResult<CodeChannel, ClerkErrorResponse> = codeChannel(email, phone)
 }
 
@@ -62,13 +61,11 @@ public class EnterpriseSsoBuilder {
    */
   public var redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL
 
-  /** Returns the email address, or a failure when it is missing. */
   internal fun emailAddress(): ClerkResult<String, ClerkErrorResponse> =
     email?.let { ClerkResult.success(it) }
       ?: invalidBuilderArguments("Email must be provided for Enterprise SSO")
 }
 
-/** The single channel a verification code goes to. */
 internal sealed interface CodeChannel {
   val value: String
 
@@ -77,7 +74,6 @@ internal sealed interface CodeChannel {
   data class Phone(override val value: String) : CodeChannel
 }
 
-/** Returns the one channel set, or a failure when neither or both of [email] and [phone] are. */
 internal fun codeChannel(
   email: String?,
   phone: String?,
@@ -90,6 +86,5 @@ internal fun codeChannel(
     else -> invalidBuilderArguments("Either email or phone must be provided")
   }
 
-/** Failure returned when a DSL builder block leaves out or conflicts required values. */
 internal fun invalidBuilderArguments(message: String): ClerkResult.Failure<ClerkErrorResponse> =
   localFailure(code = LocalFailureCodes.INVALID_ARGUMENTS, longMessage = message)
