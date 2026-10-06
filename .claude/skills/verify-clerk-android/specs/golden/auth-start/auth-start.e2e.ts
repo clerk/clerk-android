@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures.ts';
 
 test('the home Prebuilt UI Sign In button opens AuthView', async ({ host, screen }) => {
-  const state = await host.launch({ instance: 'with-email-codes', screen: 'home' });
+  const state = await host.launch({ screen: 'home' });
   expect(state.environmentLoaded).toBe(true);
   expect(state.signedIn).toBe(false);
   await host.tap(screen.getByText('Prebuilt UI Sign In'));
@@ -10,7 +10,7 @@ test('the home Prebuilt UI Sign In button opens AuthView', async ({ host, screen
 });
 
 test('verifyScreen auth opens AuthView without a tap', async ({ host, screen }) => {
-  const state = await host.launch({ instance: 'with-email-codes', screen: 'auth' });
+  const state = await host.launch({ screen: 'auth' });
   expect(state.screen).toBe('auth');
   expect(state.lastError).toBeNull();
   await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });

@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures.ts';
 
 test('UserProfileView shows the seeded user', async ({ host, screen }) => {
-  const user = await host.seedUser({ instance: 'with-email-codes' });
+  const user = await host.seedUser();
   const state = await host.launch({ signedInAs: user, screen: 'userProfile' });
   expect(state.userId).toBe(user.id);
   expect(state.sessionStatus).toBe('active');
@@ -12,7 +12,7 @@ test('UserProfileView shows the seeded user', async ({ host, screen }) => {
 });
 
 test('the Add account row opens sign-in for a second account', async ({ host, screen }) => {
-  const user = await host.seedUser({ instance: 'with-email-codes' });
+  const user = await host.seedUser();
   const state = await host.launch({ signedInAs: user, screen: 'userProfile' });
   expect(state.userId).toBe(user.id);
   await host.tap(screen.getByTestId('clerk.userProfile.row.addAccount'));
@@ -21,7 +21,7 @@ test('the Add account row opens sign-in for a second account', async ({ host, sc
 });
 
 test('the home UserButton opens the profile', async ({ host, screen }) => {
-  const user = await host.seedUser({ instance: 'with-email-codes' });
+  const user = await host.seedUser();
   const state = await host.launch({ signedInAs: user, screen: 'home' });
   expect(state.userId).toBe(user.id);
   await host.tap(screen.getByTestId('clerk.userButton.profile'));
@@ -30,7 +30,7 @@ test('the home UserButton opens the profile', async ({ host, screen }) => {
 });
 
 test('the home sign-out button ends the session', async ({ host, screen }) => {
-  const user = await host.seedUser({ instance: 'with-email-codes' });
+  const user = await host.seedUser();
   await host.launch({ signedInAs: user, screen: 'home' });
   await host.tap(screen.getByTestId('verify.signOut'));
   const state = await host.waitForState((s) => !s.signedIn, 10_000);
@@ -39,7 +39,7 @@ test('the home sign-out button ends the session', async ({ host, screen }) => {
 });
 
 test('the profile Sign out row ends the session', async ({ host, screen }) => {
-  const user = await host.seedUser({ instance: 'with-email-codes' });
+  const user = await host.seedUser();
   const state = await host.launch({ signedInAs: user, screen: 'userProfile' });
   expect(state.userId).toBe(user.id);
   await host.tap(screen.getByTestId('clerk.userProfile.row.signOut'));
