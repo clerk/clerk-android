@@ -226,7 +226,6 @@ private constructor(
   }
 }
 
-/** Posts one JSON body. The two public constructors differ only in which transport they build. */
 internal fun interface TelemetryTransport {
   suspend fun post(url: String, jsonBody: String)
 }

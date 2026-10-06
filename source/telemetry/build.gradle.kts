@@ -55,8 +55,6 @@ dependencies {
   implementation(libs.kotlinx.serialization)
   implementation(projects.source.api)
 
-  // Only the deprecated Ktor overloads in TelemetryCollector and TelemetryModule use Ktor, so it
-  // stays off consumers' runtime classpath. Callers of those overloads ship Ktor themselves.
   compileOnly(libs.ktor.client.core)
   compileOnly(libs.ktor.client.negototiation)
   compileOnly(libs.ktor.client.okhttp)
