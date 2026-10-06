@@ -45,13 +45,14 @@ class UserProfileSecurityViewTest {
 
   private val hasCredential = AtomicBoolean(false)
   private val user = mockk<User>()
+  private val userFlow = MutableStateFlow<User?>(user)
 
   @Before
   fun setUp() {
     mockkObject(Clerk, BiometricCredentials)
     mockkStatic("com.clerk.api.user.UserKt")
     every { Clerk.user } returns user
-    every { Clerk.userFlow } returns MutableStateFlow(user)
+    every { Clerk.userFlow } returns userFlow
     every { Clerk.passwordIsEnabled } returns false
     every { Clerk.passkeyIsEnabled } returns false
     every { Clerk.mfaIsEnabled } returns false
@@ -132,6 +133,19 @@ class UserProfileSecurityViewTest {
     showSecurityScreen()
 
     composeTestRule.onNodeWithText("Delete account").assertDoesNotExist()
+  }
+
+  @Test
+  fun `delete account appears when the user's flag turns on after the screen is shown`() {
+    showSecurityScreen()
+    composeTestRule.onNodeWithText("Delete account").assertDoesNotExist()
+
+    val updatedUser = mockk<User>()
+    every { updatedUser.deleteSelfEnabled } returns true
+    coEvery { updatedUser.activeSessions() } returns ClerkResult.success(emptyList())
+    userFlow.value = updatedUser
+
+    composeTestRule.onNodeWithText("Delete account").assertExists()
   }
 
   private fun showSecurityScreen() {
