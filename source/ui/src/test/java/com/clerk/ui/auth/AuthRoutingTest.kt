@@ -295,7 +295,6 @@ class AuthRoutingTest {
     )
   }
 
-  /** Completion cases shared by sign-in and sign-up. */
   private fun postAuthCases(
     input: (createdSessionId: String?, session: Session?) -> AuthRoutingInput
   ) =

@@ -1,4 +1,4 @@
-@file:Suppress("TooManyFunctions") // The routing table is kept in one file on purpose.
+@file:Suppress("TooManyFunctions")
 
 package com.clerk.ui.auth
 
@@ -18,56 +18,33 @@ import com.clerk.api.signup.isEmailLinkVerificationSupported
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.collectfield.CollectField
 
-/**
- * Prebuilt auth routing.
- *
- * Every decision about where the auth flow goes next lives here, as pure functions from auth state
- * to a [AuthNavigationCommand] or [SignInFactorScreen]. [AuthState] applies the command to the back
- * stack; screens only report the [SignIn], [SignUp], or [Session] they ended with.
- *
- * All strategy comparisons used for routing are kept in this file.
- */
 internal sealed interface AuthRoutingInput {
-  /** A sign-in attempt returned by an auth step. */
   data class SignInStep(val signIn: SignIn, val session: Session?) : AuthRoutingInput
 
-  /** A sign-up attempt returned by an auth step. */
   data class SignUpStep(val signUp: SignUp, val session: Session?) : AuthRoutingInput
 
-  /** The session after a session task (or the post-auth enrollment prompt) finished. */
   data class SessionStep(val session: Session?) : AuthRoutingInput
 
-  /** The active session changed while [top] is shown; a new pending task must be surfaced. */
   data class PendingSessionTask(val session: Session?, val top: NavKey?) : AuthRoutingInput
 }
 
-/** Values from outside the attempt itself that routing depends on. */
 internal data class AuthRoutingContext(
   val organizationSelectionIsForced: Boolean = false,
-  /** Identifier typed on the start screen, used when the sign-in does not echo it back. */
   val lastSubmittedIdentifier: String? = null,
   val startingFirstFactor: (SignIn) -> Factor? = { it.startingFirstFactor },
 )
 
 internal sealed interface AuthNavigationCommand {
-  /** Stay where we are. */
   data object None : AuthNavigationCommand
 
-  /** Pop back to the start screen. */
   data object ResetToRoot : AuthNavigationCommand
 
   data class Push(val destination: NavKey) : AuthNavigationCommand
 
-  /** Push a session task screen unless it is already on top. */
   data class ShowSessionTask(val destination: NavKey) : AuthNavigationCommand
 
-  /** Swap the session task screen on top for the next one. */
   data class ReplaceSessionTask(val destination: NavKey) : AuthNavigationCommand
 
-  /**
-   * Authentication is done. When [offerBiometricEnrollment] is set the enrollment prompt may be
-   * shown first.
-   */
   data class CompleteAuth(val offerBiometricEnrollment: Boolean, val afterSignUp: Boolean = false) :
     AuthNavigationCommand
 }
@@ -93,7 +70,6 @@ internal fun authNavigationCommand(
     }
   }
 
-/** The screen for each session task. */
 internal fun sessionTaskDestination(taskKey: SessionTaskKey): NavKey =
   when (taskKey) {
     SessionTaskKey.MFA_REQUIRED -> AuthDestination.SessionTaskMfa
@@ -102,7 +78,6 @@ internal fun sessionTaskDestination(taskKey: SessionTaskKey): NavKey =
     SessionTaskKey.UNKNOWN -> AuthDestination.SignInGetHelp
   }
 
-/** Whether [this] destination already handles the pending [taskKey]. */
 internal fun NavKey?.satisfiesSessionTask(taskKey: SessionTaskKey): Boolean =
   when (taskKey) {
     SessionTaskKey.CHOOSE_ORGANIZATION ->
@@ -214,11 +189,11 @@ private fun postAuthCommand(
   afterSignUp: Boolean,
 ): AuthNavigationCommand {
   val taskKey = session?.pendingTaskKey
+  val createdSessionAwaitsMfaSetup = createdSessionId != null && session == null
   return when {
     taskKey == SessionTaskKey.UNKNOWN -> AuthNavigationCommand.Push(AuthDestination.SignInGetHelp)
     taskKey != null -> AuthNavigationCommand.ShowSessionTask(sessionTaskDestination(taskKey))
-    // The created session has not reached the client yet; it is gated on an MFA setup task.
-    createdSessionId != null && session == null ->
+    createdSessionAwaitsMfaSetup ->
       AuthNavigationCommand.ShowSessionTask(AuthDestination.SessionTaskMfa)
     createdSessionId != null && context.organizationSelectionIsForced ->
       AuthNavigationCommand.ShowSessionTask(AuthDestination.SessionTaskChooseOrganization)
@@ -229,7 +204,6 @@ private fun postAuthCommand(
 private fun pushOrHelp(destination: NavKey?): AuthNavigationCommand =
   AuthNavigationCommand.Push(destination ?: AuthDestination.SignInGetHelp)
 
-/** The screen a sign-in factor is verified with. */
 internal enum class SignInFactorScreen {
   Passkey,
   Password,

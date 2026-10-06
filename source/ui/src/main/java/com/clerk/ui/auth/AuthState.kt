@@ -173,12 +173,10 @@ internal class AuthState(
     route(AuthRoutingInput.SignUpStep(signUp, session), onAuthComplete)
   }
 
-  /** Routes after a session task (or the post-auth enrollment prompt) finished. */
   internal fun handleSessionTaskCompletion(session: Session?, onAuthComplete: () -> Unit) {
     route(AuthRoutingInput.SessionStep(session), onAuthComplete)
   }
 
-  /** Navigates "use another method" from [factor]. */
   fun navigateToAlternativeMethods(factor: Factor, isSecondFactor: Boolean = false) {
     navigateTo(
       if (isSecondFactor) {
