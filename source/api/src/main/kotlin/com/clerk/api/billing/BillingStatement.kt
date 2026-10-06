@@ -1,16 +1,22 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The current status of a billing statement.
- */
-@Serializable
+/** The current status of a billing statement. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingStatementStatus.Serializer::class)
 enum class BillingStatementStatus {
   @SerialName("open") OPEN,
   @SerialName("closed") CLOSED,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingStatementStatus>(generatedSerializer(), UNKNOWN)
 }
 
 /**

@@ -8,6 +8,7 @@ import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.user.currentSessionId
 import java.io.File
@@ -414,13 +415,30 @@ suspend fun Organization.createInvitation(
  *
  * @param limit
  * @param offset
- * @param status
+ * @param status The status to filter by. [OrganizationInvitation.Status.Unknown] only stands for
+ *   statuses this SDK version does not recognize and cannot be sent as a filter, so passing it
+ *   fails without contacting Clerk.
  */
 suspend fun Organization.getInvitations(
   limit: Int = 20,
   offset: Int = 0,
   status: OrganizationInvitation.Status,
 ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+  if (status == OrganizationInvitation.Status.Unknown) {
+    return ClerkResult.apiFailure(
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              message = "is invalid",
+              longMessage =
+                "OrganizationInvitation.Status.Unknown cannot be used as a status filter",
+              code = "invitation_status_invalid",
+            )
+          )
+      )
+    )
+  }
   return ClerkApi.organization.getAllInvitations(
     organizationId = this.id,
     limit = limit,
