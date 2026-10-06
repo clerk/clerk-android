@@ -5,10 +5,10 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.auth.authenticateSignUpWithRedirect
 import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.reportingFailures
+import com.clerk.api.auth.types.Strategy as AuthStrategy
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.PkceUtil
@@ -250,7 +250,7 @@ data class SignUp(
      */
     data class EmailCode(
       override val code: String,
-      override val strategy: String = AuthStrategy.EMAIL_CODE,
+      override val strategy: String = AuthStrategy.EmailCode.value,
     ) : AttemptVerificationParams
 
     /**
@@ -260,7 +260,7 @@ data class SignUp(
      */
     data class PhoneCode(
       override val code: String,
-      override val strategy: String = AuthStrategy.PHONE_CODE,
+      override val strategy: String = AuthStrategy.PhoneCode.value,
     ) : AttemptVerificationParams
   }
 
@@ -324,7 +324,7 @@ data class SignUp(
     @Serializable
     @AutoMap
     data class EnterpriseSSO(
-      val strategy: String = AuthStrategy.ENTERPRISE_SSO,
+      val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
@@ -354,14 +354,14 @@ data class SignUp(
        * Send a text message with a unique token to input. The verification code will be sent via
        * SMS to the provided phone number.
        */
-      data class PhoneCode(override val strategy: String = AuthStrategy.PHONE_CODE) :
+      data class PhoneCode(override val strategy: String = AuthStrategy.PhoneCode.value) :
         PrepareVerificationParams.Strategy
 
       /**
        * Send an email with a unique token to input. The verification code will be sent to the
        * provided email address.
        */
-      data class EmailCode(override val strategy: String = AuthStrategy.EMAIL_CODE) :
+      data class EmailCode(override val strategy: String = AuthStrategy.EmailCode.value) :
         PrepareVerificationParams.Strategy
 
       /**
@@ -374,7 +374,7 @@ data class SignUp(
        * @property codeChallengeMethod PKCE method. Native flows require `S256`.
        */
       data class EmailLink(
-        override val strategy: String = AuthStrategy.EMAIL_LINK,
+        override val strategy: String = AuthStrategy.EmailLink.value,
         @SerialName("redirect_url") val redirectUrl: String? = null,
         @SerialName("redirect_uri") val redirectUri: String? = null,
         @SerialName("code_challenge") val codeChallenge: String? = null,
@@ -442,11 +442,7 @@ data class SignUp(
      *
      * @param ticket The ticket string for sign-up.
      */
-    data class Ticket(val ticket: String) : CreateParams {
-      internal companion object {
-        const val STRATEGY = "ticket"
-      }
-    }
+    data class Ticket(val ticket: String) : CreateParams
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
@@ -456,11 +452,7 @@ data class SignUp(
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    data class GoogleOneTap(val token: String) : CreateParams {
-      internal companion object {
-        const val STRATEGY = "google_one_tap"
-      }
-    }
+    data class GoogleOneTap(val token: String) : CreateParams
   }
 
   sealed interface SignUpUpdateParams {
@@ -741,14 +733,14 @@ val SignUp.emailVerificationStrategy: String
       .getOrDefault(emptyList())
 
     return when {
-      configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
-      configuredStrategies.contains(AuthStrategy.EMAIL_CODE) -> AuthStrategy.EMAIL_CODE
-      else -> AuthStrategy.EMAIL_CODE
+      configuredStrategies.contains(AuthStrategy.EmailLink.value) -> AuthStrategy.EmailLink.value
+      configuredStrategies.contains(AuthStrategy.EmailCode.value) -> AuthStrategy.EmailCode.value
+      else -> AuthStrategy.EmailCode.value
     }
   }
 
 val SignUp.isEmailLinkVerificationSupported: Boolean
-  get() = emailVerificationStrategy == AuthStrategy.EMAIL_LINK
+  get() = AuthStrategy.from(emailVerificationStrategy) == AuthStrategy.EmailLink
 
 private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, String> {
   val strategyFields = mutableMapOf(ApiParams.STRATEGY to strategy)

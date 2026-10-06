@@ -1,5 +1,6 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -23,7 +24,7 @@ internal interface SignInApi {
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithGoogle(
-    @Field(ApiParams.STRATEGY) strategy: String = "google_one_tap",
+    @Field(ApiParams.STRATEGY) strategy: String = Strategy.GoogleOneTap.value,
     @Field("token") token: String,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 

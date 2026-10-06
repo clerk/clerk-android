@@ -1,5 +1,6 @@
 package com.clerk.api.network.model.factor
 
+import com.clerk.api.auth.types.Strategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -38,7 +39,11 @@ data class Factor(
 
   /** Whether the factor is the default second factor. */
   @SerialName("default") val default: Boolean? = null,
-)
+) {
+  /** The typed form of [strategy]. Unrecognized strategies are [Strategy.Unknown]. */
+  val strategyType: Strategy
+    get() = Strategy.from(strategy)
+}
 
 fun Factor.isResetFactor() =
-  (strategy == "reset_password_email_code" || strategy == "reset_password_phone_code")
+  strategyType == Strategy.ResetPasswordEmailCode || strategyType == Strategy.ResetPasswordPhoneCode

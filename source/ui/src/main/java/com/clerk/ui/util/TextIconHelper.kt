@@ -1,14 +1,14 @@
 package com.clerk.ui.util
 
 import android.content.Context
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
-import com.clerk.ui.core.common.StrategyKeys
 
 internal class TextIconHelper {
   fun actionText(factor: Factor, context: Context): String? {
-    return when (factor.strategy) {
-      StrategyKeys.PHONE_CODE -> {
+    return when (factor.strategyType) {
+      Strategy.PhoneCode -> {
         val safeIdentifier = factor.safeIdentifier
         if (safeIdentifier.isNullOrBlank()) {
           context.getString(R.string.send_sms_code)
@@ -19,7 +19,7 @@ internal class TextIconHelper {
           )
         }
       }
-      StrategyKeys.EMAIL_CODE -> {
+      Strategy.EmailCode -> {
         val safeIdentifier = factor.safeIdentifier
         if (safeIdentifier.isNullOrBlank()) {
           context.getString(R.string.email_code)
@@ -27,7 +27,7 @@ internal class TextIconHelper {
           context.getString(R.string.email_code_to_email, safeIdentifier)
         }
       }
-      StrategyKeys.EMAIL_LINK -> {
+      Strategy.EmailLink -> {
         val safeIdentifier = factor.safeIdentifier
         if (safeIdentifier.isNullOrBlank()) {
           context.getString(R.string.send_email_to, context.getString(R.string.email_address))
@@ -35,21 +35,21 @@ internal class TextIconHelper {
           context.getString(R.string.send_email_to, safeIdentifier)
         }
       }
-      StrategyKeys.PASSKEY -> context.getString(R.string.sign_in_with_your_passkey)
-      StrategyKeys.PASSWORD -> context.getString(R.string.sign_in_with_your_password)
-      StrategyKeys.TOTP -> context.getString(R.string.use_your_authenticator_app)
-      StrategyKeys.BACKUP_CODE -> context.getString(R.string.use_a_backup_code)
+      Strategy.Passkey -> context.getString(R.string.sign_in_with_your_passkey)
+      Strategy.Password -> context.getString(R.string.sign_in_with_your_password)
+      Strategy.Totp -> context.getString(R.string.use_your_authenticator_app)
+      Strategy.BackupCode -> context.getString(R.string.use_a_backup_code)
       else -> null
     }
   }
 
   fun iconResource(factor: Factor): Int? {
-    return when (factor.strategy) {
-      StrategyKeys.PHONE_CODE -> R.drawable.ic_sms
-      StrategyKeys.EMAIL_CODE -> R.drawable.ic_email
-      StrategyKeys.EMAIL_LINK -> R.drawable.ic_email
-      StrategyKeys.PASSKEY -> R.drawable.ic_fingerprint
-      StrategyKeys.PASSWORD -> R.drawable.ic_lock
+    return when (factor.strategyType) {
+      Strategy.PhoneCode -> R.drawable.ic_sms
+      Strategy.EmailCode -> R.drawable.ic_email
+      Strategy.EmailLink -> R.drawable.ic_email
+      Strategy.Passkey -> R.drawable.ic_fingerprint
+      Strategy.Password -> R.drawable.ic_lock
       else -> null
     }
   }

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -23,7 +24,6 @@ import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -121,7 +121,7 @@ private fun PreviewSignInFactorTwoBackupCodeView() {
     ClerkMaterialTheme {
       SignInFactorTwoBackupCodeView(
         onAuthComplete = {},
-        factor = Factor(strategy = StrategyKeys.PASSWORD),
+        factor = Factor(strategy = Strategy.Password.value),
       )
     }
   }

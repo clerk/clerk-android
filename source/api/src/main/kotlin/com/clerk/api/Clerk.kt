@@ -14,6 +14,7 @@ import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.billing.Billing
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.configuration.CachedClerkState
@@ -1404,12 +1405,17 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  identifyingFirstFactor(Strategy.from(strategy))
+
+/** Returns the supported first factor for [strategy] that matches this sign-in's identifier. */
+fun SignIn.identifyingFirstFactor(strategy: Strategy): Factor? =
+  supportedFirstFactors?.firstOrNull {
+    it.strategyType == strategy && it.safeIdentifier == identifier
+  }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
-    identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
-      ?: identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_PHONE_CODE)
+    identifyingFirstFactor(Strategy.ResetPasswordEmailCode)
+      ?: identifyingFirstFactor(Strategy.ResetPasswordPhoneCode)
       ?: supportedFirstFactors?.firstOrNull { it.isResetFactor() }

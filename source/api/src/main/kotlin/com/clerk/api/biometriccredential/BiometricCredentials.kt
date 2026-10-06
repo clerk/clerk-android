@@ -3,8 +3,8 @@ package com.clerk.api.biometriccredential
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
 import com.clerk.api.auth.reportingFailures
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -318,7 +318,7 @@ object BiometricCredentials {
     val createResult =
       ClerkApi.signIn.createSignIn(
         mapOf(
-          "strategy" to TRUSTED_DEVICE,
+          "strategy" to Strategy.TrustedDevice.value,
           "trusted_device_id" to localCredential.id,
           "locale" to Clerk.locale.value.orEmpty(),
         )
@@ -358,7 +358,7 @@ object BiometricCredentials {
         id = signIn.id,
         params =
           mapOf(
-            "strategy" to TRUSTED_DEVICE,
+            "strategy" to Strategy.TrustedDevice.value,
             "trusted_device_id" to localCredential.id,
             "client_data" to signature.clientData,
             "signature" to signature.signature,

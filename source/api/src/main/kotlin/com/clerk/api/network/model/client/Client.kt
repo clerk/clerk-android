@@ -1,5 +1,6 @@
 package com.clerk.api.network.model.client
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -41,9 +42,14 @@ data class Client(
   @SerialName("updated_at") val updatedAt: Long? = null,
 ) {
 
+  /** The typed form of [lastAuthenticationStrategy], or null if there is none. */
+  val lastAuthenticationStrategyType: Strategy?
+    get() = lastAuthenticationStrategy?.let(Strategy::from)
+
   /** Current active sessions. */
-  fun activeSessions(): List<Session> =
-    sessions.filter { it.status == Session.SessionStatus.ACTIVE }
+  fun activeSessions(): List<Session> = sessions.filter {
+    it.status == Session.SessionStatus.ACTIVE
+  }
 
   companion object {
     /** Fetches the current client object from the Clerk API. */

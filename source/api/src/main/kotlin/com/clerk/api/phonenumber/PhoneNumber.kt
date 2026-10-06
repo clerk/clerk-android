@@ -1,7 +1,7 @@
 package com.clerk.api.phonenumber
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.PHONE_CODE
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -109,7 +109,7 @@ suspend fun PhoneNumber.attemptVerification(
 suspend fun PhoneNumber.prepareVerification(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.preparePhoneNumberVerification(
     phoneNumberId = this.id,
-    strategy = PHONE_CODE,
+    strategy = Strategy.PhoneCode.value,
   )
 }
 

@@ -5,20 +5,92 @@ import com.clerk.sdk.BuildConfig
 /** Consolidated constants used throughout the Clerk SDK */
 object Constants {
 
-  /** Authentication and verification strategies */
+  /**
+   * Authentication and verification strategy strings.
+   *
+   * Superseded by the typed [com.clerk.api.auth.types.Strategy]; use `Strategy.X.value` where a raw
+   * string is required.
+   */
   object Strategy {
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.PhoneCode instead, or " +
+        "Strategy.PhoneCode.value for the raw string. Note that Strategy.PhoneCode.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val PHONE_CODE = "phone_code"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.EmailCode instead, or " +
+        "Strategy.EmailCode.value for the raw string. Note that Strategy.EmailCode.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val EMAIL_CODE = "email_code"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.EmailLink instead, or " +
+        "Strategy.EmailLink.value for the raw string. Note that Strategy.EmailLink.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val EMAIL_LINK = "email_link"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Totp instead, or " +
+        "Strategy.Totp.value for the raw string. Note that Strategy.Totp.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val TOTP = "totp"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.BackupCode instead, or " +
+        "Strategy.BackupCode.value for the raw string. Note that Strategy.BackupCode.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val BACKUP_CODE = "backup_code"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Password instead, or " +
+        "Strategy.Password.value for the raw string. Note that Strategy.Password.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val PASSWORD = "password"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Passkey instead, or " +
+        "Strategy.Passkey.value for the raw string. Note that Strategy.Passkey.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val PASSKEY = "passkey"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.ResetPasswordEmailCode instead, or " +
+        "Strategy.ResetPasswordEmailCode.value for the raw string. Note that " +
+        "Strategy.ResetPasswordEmailCode.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.ResetPasswordPhoneCode instead, or " +
+        "Strategy.ResetPasswordPhoneCode.value for the raw string. Note that " +
+        "Strategy.ResetPasswordPhoneCode.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Ticket instead, or " +
+        "Strategy.Ticket.value for the raw string. Note that Strategy.Ticket.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val TICKET = "ticket"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Transfer instead, or " +
+        "Strategy.Transfer.value for the raw string. Note that Strategy.Transfer.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val TRANSFER = "transfer"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.EnterpriseSso instead, or " +
+        "Strategy.EnterpriseSso.value for the raw string. Note that Strategy.EnterpriseSso.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val ENTERPRISE_SSO = "enterprise_sso"
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.TrustedDevice instead, or " +
+        "Strategy.TrustedDevice.value for the raw string. Note that Strategy.TrustedDevice.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val TRUSTED_DEVICE = "trusted_device"
   }
 
@@ -69,6 +141,11 @@ object Constants {
 
   /** Passkey related constants */
   object Passkey {
+    @Deprecated(
+      "Use the typed com.clerk.api.auth.types.Strategy.Passkey instead, or " +
+        "Strategy.Passkey.value for the raw string. Note that Strategy.Passkey.value " +
+        "is not a compile-time constant, so it cannot be used in const contexts."
+    )
     const val PASSKEY_STRATEGY_VALUE = "passkey"
   }
 

@@ -10,6 +10,7 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
@@ -641,7 +642,7 @@ class Auth internal constructor() {
 
     val strategy =
       when (provider) {
-        IdTokenProvider.GOOGLE -> "google_one_tap"
+        IdTokenProvider.GOOGLE -> Strategy.GoogleOneTap.value
       }
 
     return postSignUp(

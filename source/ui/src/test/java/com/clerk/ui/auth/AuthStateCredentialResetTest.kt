@@ -2,7 +2,7 @@ package com.clerk.ui.auth
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.clerk.api.Constants
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ class AuthStateCredentialResetTest {
 
   @Test
   fun navigatingBackToAuthStartClearsSignInCredentials() {
-    val factor = Factor(strategy = Constants.Strategy.PASSWORD)
+    val factor = Factor(strategy = Strategy.Password.value)
     val backStack =
       NavBackStack<NavKey>(AuthDestination.AuthStart, AuthDestination.SignInFactorOne(factor))
     val authState =
