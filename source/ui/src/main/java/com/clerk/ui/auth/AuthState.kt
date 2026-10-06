@@ -439,9 +439,11 @@ internal class AuthState(
     persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
   }
 
+  // SharedPreferences.apply() updates the in-memory map immediately and the framework flushes the
+  // queued disk write when the activity stops; commit() would block the main thread on disk I/O.
   private fun persistStoredValue(key: String, value: String) {
     if (!persistIdentifiers) return
-    sharedPreferences.edit().putString(key, value).commit()
+    sharedPreferences.edit().putString(key, value).apply()
   }
 
   private fun clearStoredIdentifiers() {
@@ -449,7 +451,7 @@ internal class AuthState(
       .edit()
       .remove(AUTH_START_IDENTIFIER_STORAGE_KEY)
       .remove(AUTH_START_PHONE_NUMBER_STORAGE_KEY)
-      .commit()
+      .apply()
   }
 }
 
