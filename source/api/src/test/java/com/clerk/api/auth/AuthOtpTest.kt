@@ -15,6 +15,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -50,7 +51,7 @@ class AuthOtpTest {
 
     val result = auth.signInWithOtp { email = "user@example.com" }
 
-    assertTrue(result is ClerkResult.Success)
+    assertSame(createdSignIn, (result as ClerkResult.Success).value)
     assertTrue(createParams.captured["identifier"] == "user@example.com")
     assertTrue(createParams.captured["locale"] == "en")
     assertTrue(createParams.captured["strategy"] == "email_code")

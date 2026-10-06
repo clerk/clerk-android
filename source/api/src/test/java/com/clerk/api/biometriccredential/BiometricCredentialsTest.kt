@@ -25,12 +25,17 @@ import io.mockk.unmockkAll
 import java.io.File
 import java.io.IOException
 import java.util.Locale
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -50,11 +55,13 @@ class BiometricCredentialsTest {
   private lateinit var credentialStore: InMemoryCredentialStore
   private lateinit var keyManager: FakeKeyManager
   private lateinit var previousLocale: Locale
+  private lateinit var previousStorageDispatcher: CoroutineDispatcher
 
   @Before
   fun setUp() {
     previousCredentialStore = BiometricCredentials.credentialStore
     previousKeyManager = BiometricCredentials.keyManager
+    previousStorageDispatcher = BiometricCredentials.storageDispatcher
     previousLocale = Locale.getDefault()
     credentialStore = InMemoryCredentialStore()
     keyManager = FakeKeyManager()
@@ -71,6 +78,7 @@ class BiometricCredentialsTest {
   fun tearDown() {
     BiometricCredentials.credentialStore = previousCredentialStore
     BiometricCredentials.keyManager = previousKeyManager
+    BiometricCredentials.storageDispatcher = previousStorageDispatcher
     Clerk.applicationId = null
     Clerk.environment = null
     Clerk.updateClient(com.clerk.api.network.model.client.Client())
@@ -123,16 +131,43 @@ class BiometricCredentialsTest {
 
   @Test
   fun `enrollment cancelled while saving rolls back the credential, record and key`() = runTest {
-    credentialStore.cancelAfterSave = true
     val api = mockEnrollment()
-    coEvery { api.revoke(any(), any()) } returns ClerkResult.success(biometricCredential("td_1"))
+    var revokeCompleted = false
+    coEvery { api.revoke(any(), any()) } coAnswers
+      {
+        suspendLikeANetworkCall()
+        revokeCompleted = true
+        ClerkResult.success(biometricCredential("td_1"))
+      }
 
-    assertFailsWith<CancellationException> { BiometricCredentials.enroll() }
+    val job = launchEnrollmentCancelledDuringSave()
 
+    assertTrue(job.isCancelled)
     coVerify(exactly = 1) { api.revoke("td_1", any()) }
-    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+    assertTrue(revokeCompleted, "revoke must run to completion despite cancellation")
+    assertEquals(listOf("td_1"), credentialStore.deletedIds)
     assertTrue(credentialStore.credentials.isEmpty())
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
   }
+
+  @Test
+  fun `enrollment cancelled while saving still removes the record and key when revoke fails`() =
+    runTest {
+      val api = mockEnrollment()
+      coEvery { api.revoke(any(), any()) } coAnswers
+        {
+          yield()
+          throw IOException("revoke failed")
+        }
+
+      val job = launchEnrollmentCancelledDuringSave()
+
+      assertTrue(job.isCancelled)
+      coVerify(exactly = 1) { api.revoke("td_1", any()) }
+      assertEquals(listOf("td_1"), credentialStore.deletedIds)
+      assertTrue(credentialStore.credentials.isEmpty())
+      assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+    }
 
   @Test
   fun `default enrollment availability requires strong biometrics`() {
@@ -229,7 +264,7 @@ class BiometricCredentialsTest {
     val result = BiometricCredentials.signIn()
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(LocaleProvider.locale.value.orEmpty(), createParams.captured["locale"])
+    assertEquals("fr-CA", createParams.captured["locale"])
     assertEquals(
       listOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE),
       keyManager.signingPolicies,
@@ -248,6 +283,17 @@ class BiometricCredentialsTest {
     assertEquals(listOf(expectedPolicy), keyManager.creationPolicies)
     assertEquals(listOf(expectedPolicy), keyManager.signingPolicies)
     assertEquals(expectedPolicy, credentialStore.credentials.single().policy)
+  }
+
+  private suspend fun suspendLikeANetworkCall() = yield()
+
+  private suspend fun TestScope.launchEnrollmentCancelledDuringSave(): Job {
+    BiometricCredentials.storageDispatcher = StandardTestDispatcher(testScheduler)
+    lateinit var job: Job
+    credentialStore.onSave = { job.cancel() }
+    job = launch { BiometricCredentials.enroll() }
+    job.join()
+    return job
   }
 
   private fun mockEnrollment(): BiometricCredentialApi {
@@ -303,7 +349,8 @@ class BiometricCredentialsTest {
     val credentials = mutableListOf<BiometricCredentialLocalRecord>()
     var deleteFails = false
     var saveFails = false
-    var cancelAfterSave = false
+    val deletedIds = mutableListOf<String>()
+    var onSave: (() -> Unit)? = null
 
     override fun all(): List<BiometricCredentialLocalRecord> = credentials.toList()
 
@@ -311,12 +358,13 @@ class BiometricCredentialsTest {
       if (saveFails) throw IOException("save failed")
       credentials.removeAll { it.id == credential.id }
       credentials += credential
-      if (cancelAfterSave) throw CancellationException("cancelled")
+      onSave?.invoke()
     }
 
     override fun delete(id: String) {
       check(!deleteFails) { "delete failed" }
       credentials.removeAll { it.id == id }
+      deletedIds += id
     }
   }
 

@@ -69,9 +69,15 @@ class SessionTokenFetcherTest {
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
     every { Clerk.clearSessionAndUserState() } returns Unit
+    isolateFromGlobalClerkState()
 
     SessionTokensCache.clear()
     mockkObject(SessionTokensCache)
+  }
+
+  private fun isolateFromGlobalClerkState() {
+    every { Clerk.environment } returns null
+    every { Clerk.clientFlow } returns MutableStateFlow(null)
   }
 
   @After
@@ -160,19 +166,21 @@ class SessionTokenFetcherTest {
   fun `getToken bypasses cached result when skipCache is true`() = runTest {
     val options = GetTokenOptions(skipCache = true)
     val cacheKey = "session_123-organization-"
+    val freshToken = mockk<TokenResource>(relaxed = true)
 
-    coEvery { SessionTokensCache.getToken(cacheKey) } returns null
-    coEvery { mockClerkApiService.tokens("session_123") } returns
-      ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
-      SessionTokensCache.StoreResult(mockTokenResource, true)
+    val stillValidCachedToken = mockTokenResource
+    every { stillValidCachedToken.jwt } returns "valid.jwt.token"
+    every { mockJWT.expiresAt } returns Date(System.currentTimeMillis() + 120000)
+    coEvery { SessionTokensCache.getToken(cacheKey) } returns stillValidCachedToken
+    coEvery { mockClerkApiService.tokens("session_123") } returns ClerkResult.success(freshToken)
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) } returns
+      SessionTokensCache.StoreResult(freshToken, true)
 
     val result = sessionTokenFetcher.getToken(mockSession, options)
 
-    assertEquals(mockTokenResource, result)
-    coVerify { SessionTokensCache.getToken(cacheKey) }
-    coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) }
+    assertSame(freshToken, result)
+    coVerify(exactly = 1) { mockClerkApiService.tokens("session_123") }
+    coVerify { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) }
   }
 
   @Test

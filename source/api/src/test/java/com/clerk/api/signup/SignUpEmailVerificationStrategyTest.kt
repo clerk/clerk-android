@@ -54,7 +54,7 @@ class SignUpEmailVerificationStrategyTest {
 
   @After
   fun tearDown() {
-    previousEnvironment?.let { Clerk.environment = it }
+    Clerk.environment = previousEnvironment
     Clerk.applicationId = previousApplicationId
     NativeMagicLinkService.resetForTests()
     StorageHelper.reset(RuntimeEnvironment.getApplication())

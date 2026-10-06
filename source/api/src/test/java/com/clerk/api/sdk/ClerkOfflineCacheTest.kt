@@ -124,7 +124,7 @@ class ClerkOfflineCacheTest {
 
     initialize()
     coVerify(timeout = 5_000) { Environment.get() }
-    delay(50)
+    awaitInitializationRetryScheduled()
 
     assertTrue(Clerk.isInitialized.value)
     assertNull(Clerk.initializationError.value)
@@ -218,6 +218,22 @@ class ClerkOfflineCacheTest {
   private fun loadCachedState(): CachedClerkState? {
     val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE) ?: return null
     return ClerkApi.json.decodeFromString(CachedClerkState.serializer(), cachedJson)
+  }
+
+  private suspend fun awaitInitializationRetryScheduled() = waitUntil {
+    initializationRetryJob() != null
+  }
+
+  private fun initializationRetryJob(): Any? {
+    val configurationManager =
+      Clerk::class.java.getDeclaredField("configurationManager").let {
+        it.isAccessible = true
+        it.get(Clerk)
+      }
+    return configurationManager.javaClass.getDeclaredField("initializationRetryJob").let {
+      it.isAccessible = true
+      it.get(configurationManager)
+    }
   }
 
   private suspend fun waitUntil(condition: () -> Boolean) {

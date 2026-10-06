@@ -32,6 +32,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -210,13 +211,43 @@ class GoogleSignInServiceTest {
 
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
+    coEvery { auth.createSignUp(any()) } returns ClerkResult.apiFailure(errorResponse)
 
     val result = googleSignInService.signInWithGoogle()
 
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(errorResponse, failure.error)
+    coVerify(exactly = 0) { auth.createSignUp(any()) }
   }
+
+  @Test
+  fun `signInWithGoogle does not create sign-up for missing account when not transferable`() =
+    runTest {
+      val idToken = "test_id_token"
+      val errorResponse =
+        ClerkErrorResponse(
+          errors = listOf(Error(code = "external_account_not_found", message = "Account not found"))
+        )
+
+      every { mockGetCredentialResponse.credential } returns mockCustomCredential
+      every { mockCustomCredential.type } returns
+        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+      every { mockCustomCredential.data } returns mockBundle
+      coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+        mockGetCredentialResponse
+      every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
+      coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
+        ClerkResult.apiFailure(errorResponse)
+      coEvery { auth.createSignUp(any()) } returns ClerkResult.apiFailure(errorResponse)
+
+      val result = googleSignInService.signInWithGoogle(transferable = false)
+
+      val failure = result as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+      assertEquals(errorResponse, failure.error)
+      coVerify(exactly = 0) { auth.createSignUp(any()) }
+    }
 
   @Test
   fun `signInWithGoogle returns error when credential type is unsupported`() = runTest {
@@ -246,6 +277,7 @@ class GoogleSignInServiceTest {
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertSame(exception, failure.throwable)
   }
 
   @Test

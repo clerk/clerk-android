@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -296,7 +295,12 @@ class RestoreCredentialsTest {
     val result = RestoreCredentials.create()
 
     assertTrue(result is ClerkResult.Failure)
-    assertFalse(result is ClerkResult.Success)
+    val throwable = (result as ClerkResult.Failure).throwable
+    assertTrue(throwable is IllegalStateException)
+    assertEquals(
+      "A signed-in user is required to create a restore credential.",
+      throwable?.message,
+    )
     coVerify(exactly = 0) { userApi.createPasskey(any()) }
   }
 

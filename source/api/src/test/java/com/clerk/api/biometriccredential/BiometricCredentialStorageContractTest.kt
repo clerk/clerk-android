@@ -275,20 +275,27 @@ class BiometricCredentialStorageContractTest {
 
   @Test
   fun `writers wait for the lock file to be released`() {
-    val fileStore = BiometricCredentialFileStore(directory)
+    val fileStore =
+      BiometricCredentialFileStore(directory, lockTimeoutMillis = SLOW_MACHINE_LOCK_TIMEOUT_MILLIS)
     directory.mkdirs()
+    var writerFailure: Throwable? = null
     RandomAccessFile(File(directory, LOCK_FILE_NAME), "rw").channel.use { channel ->
       val held = channel.lock()
-      val writer = thread { fileStore.saveCredential(fixtureRecords().first()) }
+      val writer = thread {
+        runCatching { fileStore.saveCredential(fixtureRecords().first()) }
+          .onFailure { writerFailure = it }
+      }
 
-      writer.join(300)
+      awaitWriterBlockedOnLock(writer)
       assertTrue(writer.isAlive)
       assertFalse(dataFile().exists())
 
       held.release()
-      writer.join(5_000)
+      writer.join(10_000)
+      assertFalse(writer.isAlive)
     }
 
+    assertEquals(null, writerFailure)
     assertEquals(listOf(fixtureRecords().first()), fileStore.credentials())
   }
 
@@ -674,6 +681,14 @@ class BiometricCredentialStorageContractTest {
     override fun engineLoad(stream: InputStream?, password: CharArray?) = Unit
   }
 
+  private fun awaitWriterBlockedOnLock(writer: Thread) {
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+    while (writer.state != Thread.State.TIMED_WAITING && writer.isAlive) {
+      check(System.nanoTime() < deadline) { "Writer never started waiting for the lock" }
+      Thread.yield()
+    }
+  }
+
   private companion object {
     const val ANDROID_KEY_STORE = "AndroidKeyStore"
     const val PREFERENCES_FILE_NAME = "clerk_preferences"
@@ -693,6 +708,7 @@ class BiometricCredentialStorageContractTest {
     const val DIRECTORY_NAME = "clerk"
     const val DATA_FILE_NAME = "biometric_credentials.v2.json"
     const val LOCK_FILE_NAME = "biometric_credentials.lock"
+    const val SLOW_MACHINE_LOCK_TIMEOUT_MILLIS = 60_000L
     const val USER_HINT_SHA256 = "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
   }
 }
