@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["bin/control-clerk-android", "src/**/*.ts", "specs/**/*.ts", "test/**/*.ts", "testing/**/*.ts", "e2e.config.ts"]
+  "include": ["src/**/*.ts", "specs/**/*.ts", "test/**/*.ts", "testing/**/*.ts", "e2e.config.ts"]
 }

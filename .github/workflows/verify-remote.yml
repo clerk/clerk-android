@@ -171,7 +171,7 @@ jobs:
         run: |
           set -uo pipefail
           while [ ! -f "$VERIFY_SESSION_WORK/ended" ]; do
-            pgrep -f 'session-agent.ts serve' > /dev/null || { echo "::error::the session agent died"; tail -30 "$VERIFY_SESSION_WORK/agent.log"; exit 1; }
+            pgrep -f 'session-agent.ts serve' > /dev/null || [ -f "$VERIFY_SESSION_WORK/ended" ] || { echo "::error::the session agent died"; tail -30 "$VERIFY_SESSION_WORK/agent.log"; exit 1; }
             sleep 3
           done
           echo "session ended: $(cat "$VERIFY_SESSION_WORK/ended")"
