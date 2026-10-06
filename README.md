@@ -101,9 +101,9 @@ formats and checks staged files. Re-run it when `config/git/hooks/pre-commit` ch
 CI runs these on every pull request, and the release workflow runs them before publishing:
 
 ```bash
-./gradlew :source:api:testDebugUnitTest :source:ui:testDebugUnitTest :source:telemetry:testAndroidHostTest
+./gradlew :source:api:testDebugUnitTest :source:ui:testDebugUnitTest :source:telemetry:testDebugUnitTest
 ./gradlew spotlessCheck   # ./gradlew spotlessApply to fix
-./gradlew detekt :source:api:detektDebug :source:ui:detektDebug :source:telemetry:detektMainAndroid
+./gradlew detekt :source:api:detektDebug :source:ui:detektDebug :source:telemetry:detektDebug
 ./gradlew :source:api:lint :source:ui:lint :source:telemetry:lint
 ./gradlew verifyPublishedArtifacts
 ```

@@ -161,7 +161,7 @@ private fun List<Factor>.emailLinkFactorForIdentifier(identifier: String?): Fact
 
   return when {
     !isEmailIdentifier -> null
-    matchingEmailFactor == null -> filter { it.strategyType == Strategy.EmailLink }.singleOrNull()
+    matchingEmailFactor == null -> singleOrNull { it.strategyType == Strategy.EmailLink }
     else ->
       firstOrNull {
         it.strategyType == Strategy.EmailLink && it.hasSameIdentityAs(matchingEmailFactor)
@@ -304,7 +304,8 @@ suspend fun SignIn.sendCode(
         factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(Strategy.EmailCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
     } else {
-      val factor = firstFactorFor(listOf(Strategy.PhoneCode), checkNotNull(builder.phone), ::normalizePhone)
+      val factor =
+        firstFactorFor(listOf(Strategy.PhoneCode), checkNotNull(builder.phone), ::normalizePhone)
       val phoneNumberId =
         factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(Strategy.PhoneCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))

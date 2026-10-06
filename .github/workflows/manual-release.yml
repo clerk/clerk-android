@@ -49,12 +49,12 @@ jobs:
           ./gradlew
           :source:api:testDebugUnitTest
           :source:ui:testDebugUnitTest
-          :source:telemetry:testAndroidHostTest
+          :source:telemetry:testDebugUnitTest
           spotlessCheck
           detekt
           :source:api:detektDebug
           :source:ui:detektDebug
-          :source:telemetry:detektMainAndroid
+          :source:telemetry:detektDebug
           :source:api:lint
           :source:ui:lint
           :source:telemetry:lint

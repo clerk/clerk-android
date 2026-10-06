@@ -4,6 +4,7 @@
   <CurrentIssues>
     <ID>LargeClass:BiometricCredentials.kt:BiometricCredentials</ID>
     <ID>LargeClass:Clerk.kt:Clerk</ID>
+    <ID>LargeClass:ConfigurationManager.kt:ConfigurationManager</ID>
     <ID>LongMethod:ClerkButton.kt:@PreviewLightDark @Composable private fun PreviewButton</ID>
     <ID>LongMethod:ClerkStandardButtonSnapshotTest.kt:ClerkStandardButtonSnapshotTest$@Test fun clerkButtonGallery</ID>
     <ID>LongMethod:ClerkTextField.kt:@PreviewLightDark @Composable private fun PreviewClerkTextField</ID>

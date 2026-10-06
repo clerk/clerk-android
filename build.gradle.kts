@@ -23,8 +23,8 @@ val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
 val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
 
-val typeResolvedDetektTasks = setOf("detektDebug", "detektMainAndroid")
-val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug", "detektBaselineMainAndroid")
+val typeResolvedDetektTasks = setOf("detektDebug")
+val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug")
 
 allprojects {
   apply(plugin = "com.diffplug.spotless")

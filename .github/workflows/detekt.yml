@@ -38,5 +38,5 @@ jobs:
           ./gradlew detekt
           :source:api:detektDebug
           :source:ui:detektDebug
-          :source:telemetry:detektMainAndroid
+          :source:telemetry:detektDebug
           --build-cache --parallel --continue

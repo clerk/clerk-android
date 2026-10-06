@@ -22,11 +22,10 @@ jobs:
             path: "source/ui"
             label: "source-ui"
             task: "testDebugUnitTest"
-          # Kotlin Multiplatform module: its Android unit tests are the androidHostTest compilation.
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
-            task: "testAndroidHostTest"
+            task: "testDebugUnitTest"
     steps:
       - uses: actions/checkout@v7
       - name: set up JDK 21
