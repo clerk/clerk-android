@@ -23,8 +23,6 @@ val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
 val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
 
-// Type-resolved detekt tasks: detektDebug for the Android library modules, detektMainAndroid for
-// the Kotlin Multiplatform telemetry module.
 val typeResolvedDetektTasks = setOf("detektDebug", "detektMainAndroid")
 val typeResolvedDetektBaselineTasks = setOf("detektBaselineDebug", "detektBaselineMainAndroid")
 

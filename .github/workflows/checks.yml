@@ -26,10 +26,6 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # spotlessCheck: ktfmt and misc formatting for every module (the pre-commit hook is opt-in).
-      # lint: Android lint for the SDK modules, with existing findings in each module's baseline.
-      # verifyPublishedArtifacts: consumer rules and POM/module metadata must not leak forbidden
-      # entries (see build.gradle.kts).
       - name: Run checks
         run: >-
           ./gradlew spotlessCheck

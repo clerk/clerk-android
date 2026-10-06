@@ -24,15 +24,12 @@ android {
     debug { isMinifyEnabled = false }
     release { isMinifyEnabled = false }
   }
-  // compileOptions come from the root build (jvmTarget in the version catalog).
   kotlin { jvmToolchain(libs.versions.jdk.get().toInt()) }
 
   buildFeatures { compose = true }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
 
-  // Pre-existing findings; new ones fail `./gradlew :source:ui:lint`. Regenerate with
-  // `./gradlew :source:ui:updateLintBaseline` only when you mean to accept them.
   lint { baseline = file("lint-baseline.xml") }
 }
 

@@ -25,8 +25,6 @@ jobs:
   trailblaze-e2e:
     uses: ./.github/workflows/trailblaze-e2e.yml
 
-  # Runs the same gates as pull requests on the commit being released. Nothing is tagged or
-  # published unless this passes.
   verify:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:

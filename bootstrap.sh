@@ -1,5 +1,4 @@
 #!/bin/sh
-# Installs the repository's pre-commit hook. Re-run after config/git/hooks/pre-commit changes.
 set -eu
 
 repo_root="$(git rev-parse --show-toplevel)"
