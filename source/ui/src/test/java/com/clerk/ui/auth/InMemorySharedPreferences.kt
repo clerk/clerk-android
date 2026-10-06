@@ -5,11 +5,7 @@ import android.content.SharedPreferences
 internal class InMemorySharedPreferences : SharedPreferences {
   private val values = mutableMapOf<String, Any?>()
 
-  /** Number of synchronous, disk-blocking [SharedPreferences.Editor.commit] calls. */
   var commitCount = 0
-    private set
-
-  var applyCount = 0
     private set
 
   override fun getAll(): MutableMap<String, *> = values.toMutableMap()
@@ -76,7 +72,6 @@ internal class InMemorySharedPreferences : SharedPreferences {
     }
 
     override fun apply() {
-      applyCount++
       write()
     }
 

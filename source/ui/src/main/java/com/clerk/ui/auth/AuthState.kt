@@ -439,9 +439,8 @@ internal class AuthState(
     persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
   }
 
-  // These run on the main thread (every identifier keystroke for persistStoredValue), so use
-  // apply(): the in-memory prefs update immediately for any later read in this process, and the
-  // disk write is queued and flushed by the framework when the activity stops.
+  // SharedPreferences.apply() updates the in-memory map immediately and the framework flushes the
+  // queued disk write when the activity stops; commit() would block the main thread on disk I/O.
   private fun persistStoredValue(key: String, value: String) {
     if (!persistIdentifiers) return
     sharedPreferences.edit().putString(key, value).apply()
