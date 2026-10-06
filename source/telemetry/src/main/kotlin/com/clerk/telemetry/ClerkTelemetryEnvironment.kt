@@ -2,6 +2,8 @@ package com.clerk.telemetry
 
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonPrimitive
 
 private const val CLERK_ANDROID = "clerk-android"
 
@@ -18,9 +20,12 @@ class ClerkTelemetryEnvironment(
     this(
       sdkVersion = Clerk.version,
       instanceTypeProvider = {
-        InstanceEnvironmentType.serializer()
-          .descriptor
-          .getElementName(Clerk.instanceEnvironmentType.ordinal)
+        Json.encodeToJsonElement(
+            InstanceEnvironmentType.serializer(),
+            Clerk.instanceEnvironmentType,
+          )
+          .jsonPrimitive
+          .content
       },
       telemetryEnabledProvider = { Clerk.telemetryEnabled },
       debugModeEnabledProvider = { Clerk.debugMode },
