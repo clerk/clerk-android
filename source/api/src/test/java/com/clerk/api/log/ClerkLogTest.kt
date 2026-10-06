@@ -8,7 +8,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** The deprecated public [ClerkLog] keeps working for consumers until it is hidden. */
 @Suppress("DEPRECATION")
 class ClerkLogTest {
   @After
