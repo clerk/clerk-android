@@ -3,9 +3,9 @@
 ## Verbs and flags
 
 ```console
-control-clerk-android doctor [--live]
-control-clerk-android up [--wait <seconds>]
-control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--skip form-entry] [--include known-bug] [--grep <regex>] [--no-video] [--wait <seconds>]
+control-clerk-android doctor [--backend auto|local|remote] [--runner <label>] [--live]
+control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
+control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--skip form-entry] [--include known-bug] [--grep <regex>] [--no-video] [--wait <seconds>]
 control-clerk-android screen [--png]
 control-clerk-android attach <run-id> --pr <n> [--screenshot <label>]...
 control-clerk-android down [--stale] [--dry-run]
@@ -13,12 +13,15 @@ control-clerk-android down [--stale] [--dry-run]
 
 Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes are 0 for ok, 1 for a failed or interrupted spec, 2 for a usage error, and 3 for a failed precondition. Every error carries a `fix`.
 
+`--backend auto` is the default and leaves the choice to the CLI. `--runner` names the runner label of a remote session.
+
 ## `--wait`
 
 - `--wait` bounds the wait for a free lane in the machine-wide pool, and separately the wait for another verb in this worktree that is driving the device. Each wait gets the full budget. The default is 0, so a full pool fails at once.
 - It does not bound the wait for an `up` already running in this worktree. `run` waits for that `up` with no limit and prints that it is waiting.
 - Waiters get no turn order. When a lane frees, any waiting worktree can take it.
 - When the budget runs out, the verb exits 3 with `POOL_FULL` or `DEVICE_BUSY`.
+- A remote session has no lane pool, so there `--wait` only bounds the wait for another verb in this worktree.
 
 While it waits, the CLI prints a `wait` line naming each lane and the worktree that holds it, prints it again when that changes, and prints `still waiting after <n>s` every minute otherwise.
 

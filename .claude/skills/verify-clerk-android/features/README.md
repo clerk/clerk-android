@@ -5,9 +5,10 @@ This directory is the maintained source for verifying the user-facing behavior o
 ## Baseline preconditions
 
 - Run `npm ci --prefix .claude/skills/verify-clerk-android` once per worktree, then `control-clerk-android doctor`. Before the first `control-clerk-android up`, `build` is its one failing check. `lane-ports` also fails while an emulator that is not a lane of this CLI sits on 5560 or 5562.
-- The build needs Java 21. With `JAVA_HOME` unset the CLI uses Android Studio's JBR. With `JAVA_HOME` on anything older than 21, an `up` that has to build refuses, and `doctor`'s `jdk` check fails with the same fix.
+- The build needs Java 21. With `JAVA_HOME` unset the CLI uses Android Studio's JBR. With `JAVA_HOME` on anything older than 21, an `up` that has to build refuses, and `doctor`'s `jdk` check fails with the same fix. On Linux, set `JAVA_HOME` to a Java 21 JDK.
 - Specs run on the standard test instance, in one Clerk application that `up` creates for this worktree and `down` deletes. A spec names no instance, and a spec file that needs other settings declares them. `references/instances.md` has the declaration and the Platform API key the CLI needs. Never print a key.
 - The CLI drives only its own lane emulator, `verify-android-<n>` (`emulator-5560` or `emulator-5562`), booted `-read-only` from the `Clerk_Verify_Pixel` AVD. Never drive another emulator, the AVD you use in Android Studio, or a physical device.
+- On a machine that cannot run the emulator, the CLI drives the same lane on a CI runner, and every recipe here is unchanged. Commit and push before `up` or `run`, because the session builds the pushed commit, and run `down` as soon as you are done, because the session is billed by the minute. `references/remote.md` has the rest.
 - Every launch gets a new storage scope, and the host clears Clerk's stored client when the scope changes, so no spec inherits a session from another spec.
 
 ## Test users and sign-in

@@ -1,11 +1,11 @@
 ---
 name: verify-clerk-android
-description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on a lane Android emulator, against a real Clerk development instance that the session creates and deletes, and capture video, screenshots, and host state as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
+description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on a lane Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the session creates and deletes, and capture video, screenshots, and host state as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
 ---
 
 # verify-clerk-android
 
-`bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e) and `@e2e-dev/mobile`. It builds the `:e2e` debug APK, boots a lane emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence.
+`bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e) and `@e2e-dev/mobile`. It builds the `:e2e` debug APK, boots a lane emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence. The emulator runs on this machine when this machine can run it, and on a CI runner when it cannot. The CLI chooses and says which, and every verb, spec, and evidence file is the same either way.
 
 The rule: no change to clerk-android UI or auth behavior is done until a `run` on the real host shows the changed behavior.
 
@@ -22,10 +22,13 @@ A machine needs these once:
 
 The first `up` writes the `Clerk_Verify_Pixel` AVD when the machine has none. An AVD you already have is never changed.
 
+A machine that cannot run the emulator, such as one with no SDK or a Linux machine with no KVM, needs only Node 24, the credential, and access to GitHub. The CLI then borrows an emulator on a CI runner, as the end of this section describes.
+
 ```console
 $ npm ci --prefix .claude/skills/verify-clerk-android   # once per worktree
 $ control-clerk-android doctor
 $ control-clerk-android up
+backend local  this Mac runs the emulator itself, from the SDK at /Users/you/Library/Android/sdk
 instances throwaway  CLERK_PLATFORM_API_KEY_FILE reaches the verification workspace org_3KHungJxbvIscuSvy8oos5MHAli
 instance creating verify-throwaway-until-20261006t0848z-3aa89b5c in org_3KHungJxbvIscuSvy8oos5MHAli
 build   android-cba5fdb5c161  local  building...
@@ -38,7 +41,7 @@ install android-cba5fdb5c161  on verify-android-1 (emulator-5560)
 device  verify-android-1 (emulator-5560)  local  leased by this worktree  installed android-cba5fdb5c161
 ```
 
-The lane is ready when `up` prints its last line. `up` is idempotent. It reuses a build whose key matches the current tree (a hash of `source/`, `e2e/`, `gradle/`, and the root Gradle files, minus Markdown files and `docs/` directories), and a lease and an application this worktree already holds. `run` calls `up` itself, so `up` exists to start the slow part early.
+The lane is ready when `up` prints its last line. The `backend` line says where the emulator runs and why. `up` is idempotent. It reuses a build whose key matches the current tree (a hash of `source/`, `e2e/`, `gradle/`, and the root Gradle files, minus Markdown files and `docs/` directories), and a lease and an application this worktree already holds. `run` calls `up` itself, so `up` exists to start the slow part early.
 
 The build runs `./gradlew :e2e:assembleDebug` with Java 21, because the Gradle plugins refuse a Java 17 JVM. With `JAVA_HOME` unset it uses Android Studio's JBR at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`. With `JAVA_HOME` on Java 21 or newer it uses that. With `JAVA_HOME` on anything older, an `up` that has to build fails with `NOT_READY` and the fix, and does not fall back to a JDK you did not ask for.
 
@@ -56,6 +59,25 @@ Never print the key or the reference. [references/instances.md](references/insta
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`, and `down` stops it. If you call `agent-device` yourself, use `node_modules/.bin/agent-device` with `AGENT_DEVICE_STATE_DIR=.verify/agent-device`. Never print `.verify/agent-device/daemon.json`, which holds the daemon's auth token.
 
+When this machine cannot run the emulator, the `backend` line says why, and `up` borrows one on a GitHub Actions runner. The session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. These are the build and device lines of such an `up`:
+
+```console
+$ git commit -am "..." && git push
+$ control-clerk-android up
+backend remote  local is out: there is no /dev/kvm, so this machine has no hardware virtualization for the emulator; the device runs on a CI runner (blacksmith-4vcpu-ubuntu-2404 unless --runner names another), started through verify-remote.yml on clerk/clerk-android
+build   android-b17728aef656  github-actions  commit <sha>  the session builds it
+device  remote android  starting session <session> on blacksmith-4vcpu-ubuntu-2404 (idle stop 15 min, cap 60 min)
+device  remote android  run <run> by dispatch  https://github.com/clerk/clerk-android/actions/runs/<run>
+wait    run <run> has waited 33s, now for the tunnel on blacksmith-4vcpu-ubuntu-2404
+device  remote android  tunnel up, Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404
+install android-b17728aef656  on Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404
+wait    build <sha> building 115s; device booting; agent-device up
+build   android-b17728aef656  github-actions  <sha> built in 175s on blacksmith-4vcpu-ubuntu-2404
+device  Clerk_Verify_Pixel on blacksmith-4vcpu-ubuntu-2404  remote  leased by this worktree  installed android-b17728aef656
+```
+
+A session is billed by the minute, so run `down` as soon as you are done. `--backend local` or `--backend remote` forces the choice, and `--runner <label>` names another runner label. [references/remote.md](references/remote.md) has how the CLI chooses, what a session needs from this machine, the labels, the cost, and what crosses the tunnel.
+
 ## Doctor
 
 ```console
@@ -66,6 +88,7 @@ Run it first, and again whenever anything looks off. It only reads: it creates n
 
 | Check | What it tells you |
 | --- | --- |
+| `backend` | Where the emulator will run, and why |
 | `node`, `e2e-pins` | Node 24, and the pinned `e2e` and `@e2e-dev/mobile` versions |
 | `jdk` | The JDK the build will use, by the same rule as `up` |
 | `template` | Whether the `Clerk_Verify_Pixel` AVD exists yet. The first `up` writes it |
@@ -79,6 +102,10 @@ Run it first, and again whenever anything looks off. It only reads: it creates n
 Before the first `up`, `build` is the one failing check, and its fix is `control-clerk-android up`.
 
 `doctor --live` also proves the instance path end to end. It creates one application, configures it, compares it with the standard file, and deletes it, unless this worktree already holds one.
+
+With the remote backend, `jdk`, `template`, and `lane-ports` do not apply, and `build` says whether the held session has built the current tree. `doctor` then checks GitHub with git and REST reads only: a fetch and a dry-run push, that HEAD is not behind or off its branch on the remote (`git-head`), that GitHub has HEAD (`remote-commit`), that `*.trycloudflare.com` and `api.clerk.com` are reachable, and whether a session of this checkout is still running (`remote-sessions`). It starts no workflow run and pushes nothing, and says that `--live` proves the rest.
+
+`doctor --live` with the remote backend also starts one short probe run and one short session on a free runner with no emulator. `--live --runner <label>` boots the emulator on that label too, with no build, which is how to check a new label. If this machine may not dispatch the workflow, the probe pushes a `verify-remote/...` branch holding HEAD, which the run deletes.
 
 ## Drive
 
@@ -94,6 +121,8 @@ $ control-clerk-android screen --png                       # plus a screenshot i
 ```
 
 `run` also takes `--grep <regex>`, `--no-video`, `--include known-bug`, and `--wait <seconds>`. [references/cli.md](references/cli.md) has every flag, the `--json` output, and the exit codes.
+
+With a remote session, an edit to the app reaches the emulator only through a pushed commit: commit and push, then `run` again, and the same session builds it. A commit that only touches specs needs no push, because specs run from this machine.
 
 ```ts
 import { test, expect } from '../../fixtures.ts';
@@ -179,6 +208,8 @@ Proof standards: drive the real user path, capture the action and the resulting 
 
 After a run, sealing searches the run directory for every secret the run used (the Platform API key, secret keys, tickets). A hit marks the file tainted in `run.json`, and a tainted run cannot be attached.
 
+A remote run is laid out the same. Its `run.json` also has `remote`, with `provider`, `runner`, and `builtSha`, and its video is recorded on the runner's emulator and then fetched.
+
 ```console
 $ control-clerk-android attach <run-id> --pr <n>                       # video and every screenshot
 $ control-clerk-android attach <run-id> --pr <n> --screenshot profile  # video and one screenshot
@@ -192,11 +223,13 @@ Attach the focused run, not the regression run. Run your new or changed spec on 
 
 ```console
 $ control-clerk-android down --dry-run   # what it would release, delete, and stop
-$ control-clerk-android down             # kill the lane emulator, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
+$ control-clerk-android down             # kill the lane emulator or end the remote session, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
 $ control-clerk-android down --stale     # also finish cleanup left by a crashed run in this worktree
 ```
 
 `down` deletes only what this worktree created. It needs the same credential `up` used, releases the emulator first, and if Clerk refuses a delete it fails with the fix `down` again, which finishes what is left. Run it after a failed iteration too, so no emulator is stranded.
+
+With a remote session `down` ends the runner job and deletes `.verify/remote/<session>/`. No other checkout ends it. A session that nobody ends stops itself after 15 idle minutes, and always after 60.
 
 It never deletes `.verify/runs/`, and it prints how many runs it kept (`--json` lists their ids). Evidence lives inside the worktree, so `git worktree remove` deletes it. Copy the runs you need out first.
 
@@ -208,6 +241,7 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 - `specs/fixtures.ts` is the `host` fixture. `e2e.config.ts` composes the e2e config from the CLI's run context.
 - `src/core/` is a byte copy of the same directory in the clerk-ios skill, and `src/core/MANIFEST` pins it. Change it there first, then copy it here.
 - `src/platform/android/` boots and owns lanes. The Expo skill in clerk/javascript holds copies of its files, so a change here goes there too. `src/host.ts` is this repo's own: the Gradle build, the screens, and the feature list.
+- `src/core/remote/` is the remote backend: the session agent that runs on the runner, the GitHub Actions provider, and the tunnel. `.github/workflows/verify-remote.yml` is the session's workflow. `src/platform/android/session-device.ts` is what a session builds, records, and logs with, and `session-lane.ts` boots the runner's emulator through the local backend.
 - `npm test` runs the CLI's unit tests with no network, keys, or emulator, and `npm run typecheck` runs `tsc`. The repo's unit test workflow runs both on a pull request that changes the skill. It runs no device spec.
 - `features/` is the Feature Map. Start with `features/README.md`.
-- `references/cli.md` and `references/instances.md` hold what a reader rarely needs.
+- `references/cli.md`, `references/instances.md`, and `references/remote.md` hold what a reader rarely needs.
