@@ -145,7 +145,7 @@ class SignInFactorOneViewTest {
   fun resolveFirstFactorShouldSwitchToPreparedFactorWhenFallbackIsNoLongerSupported() {
     val preparedEmailCode =
       Factor(
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         emailAddressId = "email_123",
         safeIdentifier = "sam@clerk.dev",
       )
@@ -153,16 +153,17 @@ class SignInFactorOneViewTest {
       SignIn(
         id = "sign_in_123",
         identifier = "sam@clerk.dev",
-        supportedFirstFactors = listOf(Factor(strategy = StrategyKeys.PASSWORD), preparedEmailCode),
+        supportedFirstFactors =
+          listOf(Factor(strategy = Strategy.Password.value), preparedEmailCode),
         firstFactorVerification =
           com.clerk.api.network.model.verification.Verification(
             status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
-            strategy = StrategyKeys.EMAIL_CODE,
+            strategy = Strategy.EmailCode.value,
           ),
       )
 
     val resolved =
-      resolveFirstFactor(Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_123"))
+      resolveFirstFactor(Factor(strategy = Strategy.PhoneCode.value, phoneNumberId = "phone_123"))
 
     assertEquals(preparedEmailCode, resolved)
   }
