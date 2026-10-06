@@ -217,7 +217,7 @@ object RestoreCredentials {
         clearSignInAttempt(signIn)
       }
     } catch (e: CancellationException) {
-      clearSignInAttempt(signIn)
+      runCatching { clearSignInAttempt(signIn) }.exceptionOrNull()?.let(e::addSuppressed)
       throw e
     } catch (e: Exception) {
       ClerkLog.e("Restore credential sign-in failed: ${e.message}")

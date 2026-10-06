@@ -251,6 +251,22 @@ class RestoreCredentialsTest {
   }
 
   @Test
+  fun `signIn rethrows cancellation when clearing its sign-in attempt fails`() = runTest {
+    val signIn = pendingSignIn()
+    every { Clerk.activeSession } returns null
+    every { Clerk.session } returns null
+    every { Clerk.user } returns null
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns Client(id = "client_1", signIn = signIn)
+    every { Clerk.updateClient(any()) } throws IllegalStateException("cleanup failed")
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
+    coEvery { credentialManager.getCredential(eq(context), any()) } throws
+      CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.signIn() }
+  }
+
+  @Test
   fun `clear rethrows cancellation instead of reporting a failure`() = runTest {
     coEvery { credentialManager.clearCredentialState(eq(context), any()) } throws
       CancellationException("cancelled")
