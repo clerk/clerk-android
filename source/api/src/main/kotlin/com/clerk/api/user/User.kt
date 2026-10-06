@@ -6,6 +6,7 @@ import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.account.EnterpriseAccount
 import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.network.model.client.Client
@@ -408,50 +409,28 @@ data class User(
 suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.getUser()
 
 /**
- * Reloads the user by fetching a fresh [Client] and returning the updated [User] embedded in the
- * active session.
- *
- * This intentionally "piggybacks" on `Client.get()` so that the SDK's global state (e.g.
- * [Clerk.client], [Clerk.sessionFlow], [Clerk.userFlow]) can be updated via the normal client-sync
- * mechanism.
+ * Reloads the user by fetching a fresh [Client], applying it to [Clerk.client], [Clerk.sessionFlow]
+ * and [Clerk.userFlow], and returning this user from the fetched client.
  */
 suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
-  return when (val clientResult = Client.get()) {
+  val manualClientSyncRequest = ManualClientSyncRequest()
+  return when (
+    val clientResult = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
+  ) {
     is ClerkResult.Success -> {
       val client = clientResult.value
+      manualClientSyncRequest.runIfResponseCurrent { Clerk.updateClient(client) }
 
-      // Prefer the same "active session" selection strategy used by Clerk itself, but never
-      // accept a user whose id doesn't match the receiver (important for multi-session apps).
-      val userFromActiveSession =
-        client
-          .activeSessions()
-          .firstOrNull { it.id == client.lastActiveSessionId && it.user?.id == this.id }
-          ?.user ?: client.activeSessions().firstOrNull { it.user?.id == this.id }?.user
-
-      // If the active session user doesn't match this receiver (or is absent), fall back to any
-      // session carrying this user's id (multi-session apps).
-      val userFromAnySession = client.sessions.firstOrNull { it.user?.id == this.id }?.user
-
-      // If the middleware already synced Clerk.client, prefer the freshly-derived Clerk.user.
-      val userFromClerk = Clerk.user?.takeIf { it.id == this.id }
-
-      val updated = userFromClerk ?: userFromAnySession ?: userFromActiveSession
+      val updated =
+        client.sessions
+          .firstOrNull { it.id == client.lastActiveSessionId && it.user?.id == id }
+          ?.user ?: client.sessions.firstOrNull { it.user?.id == id }?.user
       if (updated != null) {
         ClerkResult.success(updated)
       } else {
         // Extremely defensive: if the backend doesn't include `session.user` in the client payload.
         // In that case, fall back to the dedicated "me" endpoint.
-        when (val meResult = ClerkApi.user.getUser()) {
-          is ClerkResult.Success -> meResult
-          is ClerkResult.Failure ->
-            ClerkResult.Failure(
-              error = meResult.error,
-              throwable = meResult.throwable,
-              code = meResult.code,
-              errorType = meResult.errorType,
-              tags = meResult.tags,
-            )
-        }
+        reloadFromMe()
       }
     }
     is ClerkResult.Failure ->
@@ -464,6 +443,30 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
       )
   }
 }
+
+/**
+ * `/me` resolves the active session's user, which may not be the receiver when several sessions are
+ * signed in, so a different user is reported as a failure instead of being returned.
+ */
+private suspend fun User.reloadFromMe(): ClerkResult<User, ClerkErrorResponse> =
+  when (val meResult = ClerkApi.user.getUser()) {
+    is ClerkResult.Success ->
+      if (meResult.value.id == id) {
+        meResult
+      } else {
+        ClerkResult.unknownFailure(
+          IllegalStateException("User $id is not part of the reloaded client")
+        )
+      }
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = meResult.error,
+        throwable = meResult.throwable,
+        code = meResult.code,
+        errorType = meResult.errorType,
+        tags = meResult.tags,
+      )
+  }
 
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
@@ -924,18 +927,17 @@ suspend fun User.getPaymentMethods(
 }
 
 internal fun currentSessionId(): String? {
-  val clientSessionId =
-    runCatching {
-        val client = Clerk.client
-        val pendingChooseOrganizationSession =
-          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-        val lastActiveSession =
-          client.lastActiveSessionId?.let { lastActiveSessionId ->
-            client.sessions.firstOrNull { it.id == lastActiveSessionId }
-          }
-        pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  val clientSessionId = runCatching {
+    val client = Clerk.client
+    val pendingChooseOrganizationSession =
+      client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+    val lastActiveSession =
+      client.lastActiveSessionId?.let { lastActiveSessionId ->
+        client.sessions.firstOrNull { it.id == lastActiveSessionId }
       }
-      .getOrNull()
+    pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+  }
+    .getOrNull()
 
   return clientSessionId ?: Clerk.session?.id
 }
