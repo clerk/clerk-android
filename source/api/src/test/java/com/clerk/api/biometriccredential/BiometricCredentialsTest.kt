@@ -135,9 +135,7 @@ class BiometricCredentialsTest {
     var revokeCompleted = false
     coEvery { api.revoke(any(), any()) } coAnswers
       {
-        // Suspends like a real network call, so it only completes if the rollback is shielded
-        // from the cancellation that interrupted enrollment.
-        yield()
+        suspendLikeANetworkCall()
         revokeCompleted = true
         ClerkResult.success(biometricCredential("td_1"))
       }
@@ -287,11 +285,8 @@ class BiometricCredentialsTest {
     assertEquals(expectedPolicy, credentialStore.credentials.single().policy)
   }
 
-  /**
-   * Starts an enrollment whose job is genuinely cancelled while the local record is being saved.
-   * Storage runs on a separate test dispatcher, so the save's `withContext` hop observes the
-   * cancellation when it returns, as it would on `Dispatchers.IO`.
-   */
+  private suspend fun suspendLikeANetworkCall() = yield()
+
   private suspend fun TestScope.launchEnrollmentCancelledDuringSave(): Job {
     BiometricCredentials.storageDispatcher = StandardTestDispatcher(testScheduler)
     lateinit var job: Job

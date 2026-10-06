@@ -211,13 +211,14 @@ class GoogleSignInServiceTest {
 
     coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
+    coEvery { auth.createSignUp(any()) } returns ClerkResult.apiFailure(errorResponse)
 
     val result = googleSignInService.signInWithGoogle()
 
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(errorResponse, failure.error)
-    coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+    coVerify(exactly = 0) { auth.createSignUp(any()) }
   }
 
   @Test
@@ -238,15 +239,14 @@ class GoogleSignInServiceTest {
       every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
       coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
         ClerkResult.apiFailure(errorResponse)
-      coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
-        ClerkResult.success(mockSignUp)
+      coEvery { auth.createSignUp(any()) } returns ClerkResult.apiFailure(errorResponse)
 
       val result = googleSignInService.signInWithGoogle(transferable = false)
 
       val failure = result as ClerkResult.Failure
       assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
       assertEquals(errorResponse, failure.error)
-      coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+      coVerify(exactly = 0) { auth.createSignUp(any()) }
     }
 
   @Test

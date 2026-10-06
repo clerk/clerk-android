@@ -254,8 +254,8 @@ class SignOutServiceTest {
   fun `signOut refreshes client after local sign-out cleanup`() = runTest {
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
-    // Server responds with the still-signed-in client so only local cleanup can clear it.
-    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(mockClient)
+    val stillSignedInClient = mockClient
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(stillSignedInClient)
     var deviceTokenAtRefresh: String? = "not-refreshed"
     var sessionAtRefresh: Session? = mockSession
     val refreshedClient = Client(id = "refreshed_client_id")

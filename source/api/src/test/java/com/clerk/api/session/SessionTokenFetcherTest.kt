@@ -69,13 +69,15 @@ class SessionTokenFetcherTest {
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
     every { Clerk.clearSessionAndUserState() } returns Unit
-    // Keep session lookup and session-minter behavior independent of global Clerk state that other
-    // tests may leave behind.
-    every { Clerk.environment } returns null
-    every { Clerk.clientFlow } returns MutableStateFlow(null)
+    isolateFromGlobalClerkState()
 
     SessionTokensCache.clear()
     mockkObject(SessionTokensCache)
+  }
+
+  private fun isolateFromGlobalClerkState() {
+    every { Clerk.environment } returns null
+    every { Clerk.clientFlow } returns MutableStateFlow(null)
   }
 
   @After
@@ -166,10 +168,10 @@ class SessionTokenFetcherTest {
     val cacheKey = "session_123-organization-"
     val freshToken = mockk<TokenResource>(relaxed = true)
 
-    // A still-valid cached token that would be returned if the cache were consulted.
-    every { mockTokenResource.jwt } returns "valid.jwt.token"
+    val stillValidCachedToken = mockTokenResource
+    every { stillValidCachedToken.jwt } returns "valid.jwt.token"
     every { mockJWT.expiresAt } returns Date(System.currentTimeMillis() + 120000)
-    coEvery { SessionTokensCache.getToken(cacheKey) } returns mockTokenResource
+    coEvery { SessionTokensCache.getToken(cacheKey) } returns stillValidCachedToken
     coEvery { mockClerkApiService.tokens("session_123") } returns ClerkResult.success(freshToken)
     coEvery { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) } returns
       SessionTokensCache.StoreResult(freshToken, true)

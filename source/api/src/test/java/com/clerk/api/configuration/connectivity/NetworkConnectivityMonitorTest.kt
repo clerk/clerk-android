@@ -121,7 +121,7 @@ class NetworkConnectivityMonitorTest {
   }
 
   @Test
-  fun `stop unregisters network callback and cleans up resources`() {
+  fun `stop unregisters the callback, drops the restore listener and allows configuring again`() {
     val mockContext = mockk<Context>(relaxed = true)
     val mockAppContext = mockk<Context>(relaxed = true)
     val restoredCount = AtomicInteger(0)
@@ -148,14 +148,9 @@ class NetworkConnectivityMonitorTest {
 
     verify(exactly = 1) { mockConnectivityManager.unregisterNetworkCallback(registeredCallback) }
 
-    // The restore listener is dropped, so a stale callback delivery must not invoke it.
-    val offline = mockk<NetworkCapabilities>()
-    every { offline.hasCapability(any()) } returns false
-    registeredCallback.onCapabilitiesChanged(mockNetwork, offline)
-    registeredCallback.onAvailable(mockNetwork)
+    loseAndRestoreConnectivity(registeredCallback)
     assertEquals(0, restoredCount.get())
 
-    // Monitoring state is cleared, so configuring again registers a fresh callback.
     NetworkConnectivityMonitor.configure(mockContext)
     verify(exactly = 2) {
       mockConnectivityManager.registerNetworkCallback(
@@ -276,10 +271,7 @@ class NetworkConnectivityMonitorTest {
       )
     }
 
-    val offline = mockk<NetworkCapabilities>()
-    every { offline.hasCapability(any()) } returns false
-    networkCallbackSlot.captured.onCapabilitiesChanged(mockNetwork, offline)
-    networkCallbackSlot.captured.onAvailable(mockNetwork)
+    loseAndRestoreConnectivity(networkCallbackSlot.captured)
 
     assertTrue("Latest callback should be invoked on restore", secondCallback.get())
     assertFalse("Replaced callback should not be invoked", firstCallback.get())
@@ -342,5 +334,12 @@ class NetworkConnectivityMonitorTest {
       "Should be disconnected when capabilities indicate no internet",
       NetworkConnectivityMonitor.isConnected.value,
     )
+  }
+
+  private fun loseAndRestoreConnectivity(callback: ConnectivityManager.NetworkCallback) {
+    val offline = mockk<NetworkCapabilities>()
+    every { offline.hasCapability(any()) } returns false
+    callback.onCapabilitiesChanged(mockNetwork, offline)
+    callback.onAvailable(mockNetwork)
   }
 }

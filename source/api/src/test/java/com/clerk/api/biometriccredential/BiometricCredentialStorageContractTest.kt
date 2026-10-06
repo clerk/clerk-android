@@ -275,9 +275,8 @@ class BiometricCredentialStorageContractTest {
 
   @Test
   fun `writers wait for the lock file to be released`() {
-    // A long store timeout keeps the writer from giving up on a slow machine while the lock is
-    // held.
-    val fileStore = BiometricCredentialFileStore(directory, lockTimeoutMillis = 60_000)
+    val fileStore =
+      BiometricCredentialFileStore(directory, lockTimeoutMillis = SLOW_MACHINE_LOCK_TIMEOUT_MILLIS)
     directory.mkdirs()
     var writerFailure: Throwable? = null
     RandomAccessFile(File(directory, LOCK_FILE_NAME), "rw").channel.use { channel ->
@@ -287,12 +286,7 @@ class BiometricCredentialStorageContractTest {
           .onFailure { writerFailure = it }
       }
 
-      // Wait until the writer is backing off on the held lock rather than guessing with a sleep.
-      val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
-      while (writer.state != Thread.State.TIMED_WAITING && writer.isAlive) {
-        check(System.nanoTime() < deadline) { "Writer never started waiting for the lock" }
-        Thread.yield()
-      }
+      awaitWriterBlockedOnLock(writer)
       assertTrue(writer.isAlive)
       assertFalse(dataFile().exists())
 
@@ -687,6 +681,14 @@ class BiometricCredentialStorageContractTest {
     override fun engineLoad(stream: InputStream?, password: CharArray?) = Unit
   }
 
+  private fun awaitWriterBlockedOnLock(writer: Thread) {
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+    while (writer.state != Thread.State.TIMED_WAITING && writer.isAlive) {
+      check(System.nanoTime() < deadline) { "Writer never started waiting for the lock" }
+      Thread.yield()
+    }
+  }
+
   private companion object {
     const val ANDROID_KEY_STORE = "AndroidKeyStore"
     const val PREFERENCES_FILE_NAME = "clerk_preferences"
@@ -706,6 +708,7 @@ class BiometricCredentialStorageContractTest {
     const val DIRECTORY_NAME = "clerk"
     const val DATA_FILE_NAME = "biometric_credentials.v2.json"
     const val LOCK_FILE_NAME = "biometric_credentials.lock"
+    const val SLOW_MACHINE_LOCK_TIMEOUT_MILLIS = 60_000L
     const val USER_HINT_SHA256 = "b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514"
   }
 }

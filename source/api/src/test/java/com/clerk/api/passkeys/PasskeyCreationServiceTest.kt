@@ -135,43 +135,45 @@ class PasskeyCreationServiceTest {
   }
 
   @Test
-  fun `parsePasskeyDataDirectFromBundle processes bundle correctly`() = runTest {
-    val publicKeyCredentialSlot = slot<String>()
-    stubRegistrationResponse(REGISTRATION_JSON)
-    coEvery { mockUserApi.createPasskey(any()) } returns ClerkResult.success(passkey)
-    coEvery { mockCredentialManager.createCredential(any(), any()) } returns
-      mockCreateCredentialResponse
-    coEvery {
-      mockUserApi.attemptPasskeyVerification(
-        passkeyId = any(),
-        strategy = any(),
-        publicKeyCredential = capture(publicKeyCredentialSlot),
-        sessionId = any(),
+  fun `createPasskey submits the registration response with the raw ID value but no pinned raw ID key`() =
+    runTest {
+      val publicKeyCredentialSlot = slot<String>()
+      stubRegistrationResponse(REGISTRATION_JSON)
+      coEvery { mockUserApi.createPasskey(any()) } returns ClerkResult.success(passkey)
+      coEvery { mockCredentialManager.createCredential(any(), any()) } returns
+        mockCreateCredentialResponse
+      coEvery {
+        mockUserApi.attemptPasskeyVerification(
+          passkeyId = any(),
+          strategy = any(),
+          publicKeyCredential = capture(publicKeyCredentialSlot),
+          sessionId = any(),
+        )
+      } returns ClerkResult.success(passkey)
+
+      val result = PasskeyCreationService.createPasskey()
+
+      assertTrue(result is ClerkResult.Success)
+      val submitted = Json.parseToJsonElement(publicKeyCredentialSlot.captured).jsonObject
+      assertEquals(4, submitted.size)
+      assertEquals("test-credential-id", submitted.getValue("id").jsonPrimitive.content)
+      assertTrue(
+        submitted.values.any { value ->
+          value is JsonPrimitive && value.isString && value.content == "test-raw-credential-id"
+        }
       )
-    } returns ClerkResult.success(passkey)
-
-    val result = PasskeyCreationService.createPasskey()
-
-    assertTrue(result is ClerkResult.Success)
-    val submitted = Json.parseToJsonElement(publicKeyCredentialSlot.captured).jsonObject
-    assertEquals(4, submitted.size)
-    assertEquals("test-credential-id", submitted.getValue("id").jsonPrimitive.content)
-    // The raw ID key goes through ClerkApi.json's snake_case naming strategy, so only its value
-    // is pinned here.
-    assertTrue(
-      submitted.values.any { value ->
-        value is JsonPrimitive && value.isString && value.content == "test-raw-credential-id"
-      }
-    )
-    assertEquals("public-key", submitted.getValue("type").jsonPrimitive.content)
-    val response = submitted.getValue("response").jsonObject
-    assertEquals(setOf("attestationObject", "clientDataJSON"), response.keys)
-    assertEquals(
-      "test-attestation-object",
-      response.getValue("attestationObject").jsonPrimitive.content,
-    )
-    assertEquals("test-client-data-json", response.getValue("clientDataJSON").jsonPrimitive.content)
-  }
+      assertEquals("public-key", submitted.getValue("type").jsonPrimitive.content)
+      val response = submitted.getValue("response").jsonObject
+      assertEquals(setOf("attestationObject", "clientDataJSON"), response.keys)
+      assertEquals(
+        "test-attestation-object",
+        response.getValue("attestationObject").jsonPrimitive.content,
+      )
+      assertEquals(
+        "test-client-data-json",
+        response.getValue("clientDataJSON").jsonPrimitive.content,
+      )
+    }
 
   @Test
   fun `createPasskey handles cancellation without surfacing unknown failure`() = runTest {

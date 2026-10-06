@@ -124,9 +124,7 @@ class ClerkOfflineCacheTest {
 
     initialize()
     coVerify(timeout = 5_000) { Environment.get() }
-    // The failure handler schedules a retry only after it has decided readiness, so wait for that
-    // instead of sleeping and hoping the handler already ran.
-    waitUntil { initializationRetryJob() != null }
+    awaitInitializationRetryScheduled()
 
     assertTrue(Clerk.isInitialized.value)
     assertNull(Clerk.initializationError.value)
@@ -220,6 +218,10 @@ class ClerkOfflineCacheTest {
   private fun loadCachedState(): CachedClerkState? {
     val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE) ?: return null
     return ClerkApi.json.decodeFromString(CachedClerkState.serializer(), cachedJson)
+  }
+
+  private suspend fun awaitInitializationRetryScheduled() = waitUntil {
+    initializationRetryJob() != null
   }
 
   private fun initializationRetryJob(): Any? {

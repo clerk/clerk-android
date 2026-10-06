@@ -113,8 +113,7 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
-  fun `getHashedClientId generates correct SHA-256 hash`() {
-    // Known SHA-256 test vectors; "abc" contains bytes below 0x10 so zero-padding is exercised.
+  fun `getHashedClientId matches the SHA-256 test vectors, including bytes that need zero-padding`() {
     assertEquals(
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
       DeviceAttestationHelper.getHashedClientId("abc"),
