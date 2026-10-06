@@ -86,7 +86,13 @@ internal object EpochMillisecondsSerializer : KSerializer<Long> {
   }
 
   private val UTC: TimeZone = TimeZone.getTimeZone("UTC")
-  private val ISO_8601_PATTERNS = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSX", "yyyy-MM-dd'T'HH:mm:ssX")
+  private val ISO_8601_PATTERNS =
+    listOf(
+      "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+      "yyyy-MM-dd'T'HH:mm:ssX",
+      "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+      "yyyy-MM-dd'T'HH:mm:ssXXX",
+    )
 
   private const val DECIMAL_SEPARATOR = '.'
   private const val INDEX_NOT_FOUND = -1
