@@ -16,7 +16,7 @@ A new user enters a test email, sets a password, enters the emailed code, and la
 
 Preconditions:
 
-- The spec reserves an email with `host.newEmail('with-email-codes')` and launches `screen: 'auth'`, `authMode: 'signUp'`. `.claude/skills/verify-clerk-android/bin/control-clerk-android down` deletes the user the form creates.
+- The spec reserves an email with `host.newEmail()` and launches `screen: 'auth'`, `authMode: 'signUp'`. `.claude/skills/verify-clerk-android/bin/control-clerk-android down` deletes the user the form creates.
 
 - **Password step.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run sign-up/password-step`. It fills `clerk.auth.start.identifier`, taps `clerk.auth.start.continue`, expects `clerk.auth.signUp.password` and `clerk.auth.signUp.continue`, and waits for `signUpStatus` `missing_requirements`. Screenshot `signup-password`.
 - **Request code.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run sign-up/request-code`. It is tagged `form-entry` because it types the run password. It fills `clerk.auth.signUp.password` with `Verify-<runId>-Pw1!`, taps `clerk.auth.signUp.continue`, and expects `clerk.auth.signUp.code`. Screenshot `signup-code`.

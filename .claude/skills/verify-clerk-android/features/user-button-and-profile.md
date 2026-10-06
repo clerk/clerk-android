@@ -20,7 +20,7 @@ A signed-in user opens their profile from UserButton or from a profile screen, s
 
 Preconditions:
 
-- Each test seeds a `+clerk_test` user on `with-email-codes` and signs in with a ticket (`host.launch({ signedInAs })`).
+- Each test seeds a `+clerk_test` user on the standard instance and signs in with a ticket (`host.launch({ signedInAs })`).
 
 - **Profile.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run user-button-and-profile`. The first test launches `screen: 'userProfile'`, checks `userId` and `sessionStatus` `active`, expects `Edit profile`, taps `clerk.userProfile.row.manageAccount`, and expects the user's email. Screenshot `profile`.
 - **Add account.** The second test taps `clerk.userProfile.row.addAccount` and expects `clerk.auth.start.continue`. Screenshot `add-account`.

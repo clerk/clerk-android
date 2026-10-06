@@ -16,7 +16,7 @@ A signed-out user opens AuthView and sees the start screen, where they enter an 
 
 Preconditions:
 
-- No user. The spec launches `with-email-codes` signed out.
+- No user. The spec declares no settings, so it launches on the standard instance, signed out.
 
 - **Home button.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run auth-start`. The first test launches `screen: 'home'`, checks `environmentLoaded` and `signedIn` false, taps `Prebuilt UI Sign In`, and expects `clerk.auth.start.continue`. Screenshot `auth-start`.
 - **Direct launch.** The second test launches `screen: 'auth'`, checks `state.screen` is `auth` with no `lastError`, and expects `clerk.auth.start.identifier` and `clerk.auth.start.continue`. Screenshot `auth-start-identifier`, which shows the identifier field.

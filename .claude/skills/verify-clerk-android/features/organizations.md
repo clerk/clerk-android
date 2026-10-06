@@ -14,10 +14,10 @@ A signed-in user creates an organization from OrganizationSwitcher and it become
 
 Preconditions:
 
-- The spec seeds a `+clerk_test` user on `with-email-codes` and launches `screen: 'orgSwitcher'` with a ticket.
+- The spec seeds a `+clerk_test` user on the standard instance and launches `screen: 'orgSwitcher'` with a ticket.
 
 - **Create.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run organizations`. It checks `orgId` null, taps `clerk.organizationSwitcher.trigger` and `clerk.organization.accountList.createOrganization`, fills `clerk.organization.profileForm.name` with `Verify <runId>`, taps `clerk.organization.profileForm.submit`, closes the invite sheet, waits up to 30 seconds for a non-null `orgId`, and expects the name on the switcher. Screenshot `org-created`.
-- **Proof.** `create-from-switcher.e2e.ts` passes, and `state.json` holds the new `orgId` with the seeded `userId`. `.claude/skills/verify-clerk-android/bin/control-clerk-android down` deletes the organization with its owner.
+- **Proof.** `create-from-switcher.e2e.ts` passes, and `state.json` holds the new `orgId` with the seeded `userId`. `.claude/skills/verify-clerk-android/bin/control-clerk-android down` deletes the worktree's application, and the organization and its owner go with it.
 
 ## Gotchas
 

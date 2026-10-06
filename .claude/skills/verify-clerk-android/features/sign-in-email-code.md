@@ -9,13 +9,13 @@ An existing user enters their email, asks for a one-time code instead of the ema
 
 ## How to get to it (user POV)
 
-- Open sign-in, type the email, tap Continue. On `with-email-codes` the email-link screen ("Check your email") opens first. Tap `Use another method`, then `Email code to <email>`.
+- Open sign-in, type the email, tap Continue. On the standard instance the email-link screen ("Check your email") opens first. Tap `Use another method`, then `Email code to <email>`.
 
 ## Driving it with verify
 
 Preconditions:
 
-- The spec seeds a `+clerk_test` user on `with-email-codes` and launches `screen: 'auth'`, `authMode: 'signIn'`.
+- The spec seeds a `+clerk_test` user on the standard instance and launches `screen: 'auth'`, `authMode: 'signIn'`.
 
 - **Request code.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run sign-in-email-code/request-code --include known-bug`. It fills `clerk.auth.start.identifier`, taps `clerk.auth.start.continue`, waits for `signInStatus` `needs_first_factor`, taps `clerk.auth.signIn.useAnotherMethod` and `clerk.auth.signIn.alternativeMethod.email_code`, expects `clerk.auth.signIn.code`, and expects it still on screen 3 seconds later. Screenshot `code-screen`.
 - **Complete.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run sign-in-email-code/complete --include known-bug`. It is tagged `form-entry` and `known-bug`. After the code screen it fills `CLERK_TEST_CODE` and waits for `signedIn` with `sessionStatus` `active` and the seeded `userId`. Screenshots `code-screen` and `signed-in`.
