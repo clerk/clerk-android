@@ -414,12 +414,15 @@ suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.ge
  */
 suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
   val manualClientSyncRequest = ManualClientSyncRequest()
+  val clientUpdateCountAtStart = Clerk.clientUpdateCount
   return when (
     val clientResult = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
   ) {
     is ClerkResult.Success -> {
       val client = clientResult.value
-      manualClientSyncRequest.runIfResponseCurrent { Clerk.updateClient(client) }
+      manualClientSyncRequest.runIfResponseCurrent {
+        Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
+      }
 
       val updated =
         client.sessions

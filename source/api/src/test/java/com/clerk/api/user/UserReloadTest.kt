@@ -35,6 +35,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 @RunWith(RobolectricTestRunner::class)
 class UserReloadTest {
   private lateinit var fetchedClient: Client
+  private var whileRequestInFlight: () -> Unit = {}
 
   @Before
   fun setup() {
@@ -42,6 +43,7 @@ class UserReloadTest {
       OkHttpClient.Builder()
         .addInterceptor(ClientSyncingMiddleware(ClerkApi.json))
         .addInterceptor { chain ->
+          whileRequestInFlight()
           val response = ClerkApi.json.encodeToString(Client.serializer(), fetchedClient)
           val body = """{"response":$response,"client":null}"""
           Response.Builder()
@@ -95,6 +97,21 @@ class UserReloadTest {
     stale.reload()
 
     assertEquals("Stale", Clerk.user?.firstName)
+  }
+
+  @Test
+  fun `reload does not overwrite a client updated while the request was in flight`() = runTest {
+    val stale = user(firstName = "Stale")
+    Clerk.updateClient(clientWith(session("sess_1", stale)))
+    fetchedClient = clientWith(session("sess_1", user(firstName = "Fetched")))
+    whileRequestInFlight = {
+      Clerk.updateClient(clientWith(session("sess_1", user(firstName = "Concurrent"))))
+    }
+
+    val result = stale.reload()
+
+    assertEquals("Concurrent", Clerk.user?.firstName)
+    assertEquals("Fetched", (result as ClerkResult.Success).value.firstName)
   }
 
   @Test

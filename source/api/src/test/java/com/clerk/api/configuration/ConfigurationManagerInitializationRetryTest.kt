@@ -19,6 +19,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
@@ -227,6 +228,23 @@ class ConfigurationManagerInitializationRetryTest {
 
     assertNull(manager.initializationError.value)
     coVerify(exactly = 1) { Environment.get() }
+  }
+
+  @Test
+  fun `refresh does not overwrite a client adopted while environment was in flight`() = runTest {
+    val environmentResponse = CompletableDeferred<ClerkResult.Success<Environment>>()
+    coEvery { Client.get() } returns ClerkResult.success(Client(id = "client_refresh"))
+    coEvery { Environment.get() } coAnswers { environmentResponse.await() }
+    initialize()
+    runCurrent()
+
+    Clerk.updateClient(Client(id = "client_signed_in"))
+    environmentResponse.complete(ClerkResult.success(testEnvironment()))
+    runCurrent()
+
+    assertTrue(manager.isInitialized.value)
+    assertEquals("client_signed_in", Clerk.client.id)
+    assertEquals("Recovered App", Clerk.applicationName)
   }
 
   private fun TestScope.initialize() {
