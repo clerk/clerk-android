@@ -11,13 +11,12 @@ import { takeSlot } from '../src/core/claims.ts';
 import { selectBackend } from '../src/core/devices.ts';
 import { answer } from '../src/core/remote/recipe.ts';
 import { host } from '../src/host.ts';
-import { LANE_BOOTED, LANE_FAILED, LOG_FILTER, RECORD_SIZE, emulatorArgs, logFilter, logcatSince } from '../src/platform/android/emulator.ts';
+import { LANE_READY, LANE_FAILED, LOG_FILTER, RECORD_SIZE, emulatorArgs, logFilter, logcatSince } from '../src/platform/android/emulator.ts';
 import { lanePort, localAndroidBackend, laneSerial, parseAdbDevices, startScreenrecord } from '../src/platform/android/local.ts';
 import sessionDevice from '../src/platform/android/session-device.ts';
 import { ensureLaneAvd, jdkCheck, localAvailability, resolveJavaHome, sdkRoot, systemImage, type Machine } from '../src/platform/android/sdk.ts';
 
-/** A machine whose home is a scratch directory, so no test reads or writes this machine's own SDK or AVDs. */
-function machineIn(dir: string, overrides: Partial<Machine> = {}): Machine {
+function machineHomedInScratch(dir: string, overrides: Partial<Machine> = {}): Machine {
   return { os: 'darwin', arch: 'arm64', home: dir, env: {}, kvm: join(dir, 'kvm'), ...overrides };
 }
 
@@ -53,6 +52,15 @@ describe('android lanes', () => {
   it('adds a host log predicate before the final silence spec', () => {
     assert.deepEqual(logFilter('Expo:V  ReactNative:W').slice(-3), ['Expo:V', 'ReactNative:W', '*:S']);
     assert.deepEqual(logFilter(), LOG_FILTER);
+  });
+
+  it('boots with no -prop, which the emulator refuses outside qemu.* and never shows in getprop, so the lane is marked after boot', () => {
+    for (const os of ['darwin', 'linux'] as const) assert.equal(emulatorArgs(5560, os).includes('-prop'), false, os);
+  });
+
+  it('records at the panel\'s aspect ratio, because the codec refuses 1280x2856 and screenrecord then falls back to 720x1280', () => {
+    const [width, height] = RECORD_SIZE.split('x').map(Number) as [number, number];
+    assert.ok(Math.abs(width / height - 1280 / 2856) < 0.001, RECORD_SIZE);
   });
 
   it('encodes launch inputs as am start string extras', () => {
@@ -95,7 +103,7 @@ describe('android JDK', () => {
 });
 
 describe('android screenrecord', () => {
-  it('stops on the device, waits for pidof to empty, and only then pulls', async () => {
+  it('stops on the device, waits for pidof to empty, and only then pulls, because a recording stopped from the host has no moov atom', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
     const log = join(dir, 'adb.log');
     const adb = join(dir, 'adb');
@@ -176,7 +184,7 @@ describe('android lane ownership', () => {
     const emulatorBin = fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']);
     const lease: LocalLease = { backend: 'local', platform: 'android', slot: 1, deviceName: 'verify-android-1', deviceId: 'emulator-5560', claimNonce: claim.nonce, acquiredAt: '', installedBuild: null };
     const calls = () => readFileSync(join(dir, 'calls.log'), 'utf8');
-    return { backend: localAndroidBackend({ claimsDir, adbBin, emulatorBin, machine: machineIn(dir) }), lease, dir, calls };
+    return { backend: localAndroidBackend({ claimsDir, adbBin, emulatorBin, machine: machineHomedInScratch(dir) }), lease, dir, calls };
   }
 
   it('never kills another AVD that sits on a lane port, and frees the claim', async () => {
@@ -244,7 +252,7 @@ describe('android lanes verify spawned', () => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     const record = pidRecord(claim.nonce);
     if (record !== null) writeFileSync(join(emulatorsDir, 'android-1.pid'), JSON.stringify({ ...emulator, ...record }));
-    const backend = localAndroidBackend({ claimsDir, adbBin, emulatorBin, emulatorsDir, machine: machineIn(dir) });
+    const backend = localAndroidBackend({ claimsDir, adbBin, emulatorBin, emulatorsDir, machine: machineHomedInScratch(dir) });
     return { backend, emulator, emulatorsDir, worktree };
   }
 
@@ -287,7 +295,7 @@ describe('android lanes verify spawned', () => {
     const emulator = fakeEmulatorProcess(5560);
     await new Promise((resolve) => setTimeout(resolve, 300));
     writeFileSync(join(emulatorsDir, 'android-1.pid'), JSON.stringify({ ...emulator, nonce: claim.nonce }));
-    const backend = localAndroidBackend({ claimsDir: join(dir, 'claims'), adbBin, emulatorBin: fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']), emulatorsDir, machine: machineIn(dir) });
+    const backend = localAndroidBackend({ claimsDir: join(dir, 'claims'), adbBin, emulatorBin: fakeTool(dir, 'emulator', ['echo Clerk_Verify_Pixel']), emulatorsDir, machine: machineHomedInScratch(dir) });
     assert.equal((await backend.doctorChecks(doctorOptions)).device.find((c) => c.id === 'lane-ports')?.ok, true);
     process.kill(-emulator.pid, 'SIGKILL');
   });
@@ -302,8 +310,7 @@ describe('android lanes verify spawned', () => {
 });
 
 describe('whether this machine can run the emulator', () => {
-  /** An SDK under `dir` with the tools and, unless told otherwise, the system image for the machine's CPU. */
-  function sdk(dir: string, machine: Machine, options: { readonly image?: boolean } = {}): string {
+  function fakeSdk(dir: string, machine: Machine, options: { readonly image?: boolean } = {}): string {
     const root = join(dir, 'sdk');
     for (const tool of [join('emulator', 'emulator'), join('platform-tools', 'adb')]) {
       mkdirSync(join(root, tool, '..'), { recursive: true });
@@ -320,33 +327,33 @@ describe('whether this machine can run the emulator', () => {
 
   it('says yes on a Mac that has the SDK and the system image, lane AVD or not', () => {
     const dir = scratch();
-    const mac = machineIn(dir);
-    const root = sdk(dir, mac);
+    const mac = machineHomedInScratch(dir);
+    const root = fakeSdk(dir, mac);
     const found = localAvailability({ ...mac, env: { ANDROID_HOME: root } });
     assert.deepEqual(found, { usable: true, why: `this Mac runs the emulator itself, from the SDK at ${root}` });
   });
 
   it('finds an SDK in the OS default place and through the tools on PATH', () => {
     const dir = scratch();
-    const linux = machineIn(dir, { os: 'linux', arch: 'x64' });
-    const root = sdk(dir, linux);
+    const linux = machineHomedInScratch(dir, { os: 'linux', arch: 'x64' });
+    const root = fakeSdk(dir, linux);
     assert.equal(sdkRoot({ ...linux, env: { PATH: `/usr/bin:${join(root, 'platform-tools')}` } }), root);
     const home = scratch();
     mkdirSync(join(home, 'Android'), { recursive: true });
-    assert.equal(sdkRoot(machineIn(home, { os: 'linux' })), join(home, 'Android', 'Sdk'));
-    assert.equal(sdkRoot(machineIn(home, { os: 'darwin' })), join(home, 'Library', 'Android', 'sdk'));
+    assert.equal(sdkRoot(machineHomedInScratch(home, { os: 'linux' })), join(home, 'Android', 'Sdk'));
+    assert.equal(sdkRoot(machineHomedInScratch(home, { os: 'darwin' })), join(home, 'Library', 'Android', 'sdk'));
   });
 
   it('says no, with what is missing and how to get it, when there is no SDK or no system image', () => {
     const dir = scratch();
-    const none = localAvailability(machineIn(dir));
+    const none = localAvailability(machineHomedInScratch(dir));
     assert.equal(none.usable, false);
     assert.match(none.why, /^no Android SDK with an emulator and adb \(looked in .*Library\/Android\/sdk\)$/);
     assert.match(none.fix ?? '', /ANDROID_HOME/);
 
-    const linux = machineIn(dir, { os: 'linux', arch: 'x64' });
+    const linux = machineHomedInScratch(dir, { os: 'linux', arch: 'x64' });
     writeFileSync(linux.kvm, '');
-    const root = sdk(dir, linux, { image: false });
+    const root = fakeSdk(dir, linux, { image: false });
     const noImage = localAvailability({ ...linux, env: { ANDROID_HOME: root } });
     assert.equal(noImage.why, `the SDK at ${root} has no system image system-images;android-36;google_apis;x86_64`);
     assert.match(noImage.fix ?? '', /^sdkmanager "system-images;android-36;google_apis;x86_64"/);
@@ -354,8 +361,8 @@ describe('whether this machine can run the emulator', () => {
 
   it('on Linux needs a /dev/kvm this user can open for reading and writing', () => {
     const dir = scratch();
-    const linux = machineIn(dir, { os: 'linux', arch: 'x64' });
-    const withSdk = { ...linux, env: { ANDROID_HOME: sdk(dir, linux) } };
+    const linux = machineHomedInScratch(dir, { os: 'linux', arch: 'x64' });
+    const withSdk = { ...linux, env: { ANDROID_HOME: fakeSdk(dir, linux) } };
 
     const missing = { usable: false, why: `there is no ${linux.kvm}, so this machine has no hardware virtualization for the emulator` };
     assert.deepEqual(localAvailability(withSdk), missing);
@@ -363,8 +370,8 @@ describe('whether this machine can run the emulator', () => {
 
     writeFileSync(linux.kvm, '');
     chmodSync(linux.kvm, 0o000);
-    // Root opens any file, so the refusal can only be seen as an ordinary user.
-    if (process.getuid?.() !== 0) {
+    const rootOpensAnyFile = process.getuid?.() === 0;
+    if (!rootOpensAnyFile) {
       const closed = localAvailability(withSdk);
       assert.equal(closed.usable, false);
       assert.match(closed.why, /^this user cannot open .*kvm for reading and writing/);
@@ -378,12 +385,12 @@ describe('whether this machine can run the emulator', () => {
   });
 
   it('says no on an OS the lanes do not run on', () => {
-    assert.deepEqual(localAvailability(machineIn(scratch(), { os: 'win32' })), { usable: false, why: 'the lane emulator runs on macOS and Linux, and this machine runs win32' });
+    assert.deepEqual(localAvailability(machineHomedInScratch(scratch(), { os: 'win32' })), { usable: false, why: 'the lane emulator runs on macOS and Linux, and this machine runs win32' });
   });
 
   it('writes the lane AVD once, on this machine\'s system image, and never touches one that exists', () => {
     const dir = scratch();
-    const linux = machineIn(dir, { os: 'linux', arch: 'x64' });
+    const linux = machineHomedInScratch(dir, { os: 'linux', arch: 'x64' });
     assert.equal(ensureLaneAvd(linux), 'created');
     const config = readFileSync(join(dir, '.android', 'avd', 'Clerk_Verify_Pixel.avd', 'config.ini'), 'utf8');
     for (const line of ['image.sysdir.1=system-images/android-36/google_apis/x86_64/', 'hw.lcd.width=1280', 'hw.lcd.height=2856', 'hw.lcd.density=480', 'abi.type=x86_64']) assert.ok(config.includes(`${line}\n`), line);
@@ -396,8 +403,8 @@ describe('whether this machine can run the emulator', () => {
 
   it('finds an AVD that lives where its pointer file says, and leaves both files alone', () => {
     const dir = scratch();
-    const mac = machineIn(dir);
-    const root = sdk(dir, mac);
+    const mac = machineHomedInScratch(dir);
+    const root = fakeSdk(dir, mac);
     const elsewhere = join(dir, 'other-volume', 'Clerk_Verify_Pixel.avd');
     mkdirSync(elsewhere, { recursive: true });
     mkdirSync(join(dir, '.android', 'avd'), { recursive: true });
@@ -412,8 +419,8 @@ describe('whether this machine can run the emulator', () => {
 
   it('uses the ARM image on a Mac whose Node reports an Intel CPU, as it does under Rosetta', () => {
     const dir = scratch();
-    const root = sdk(dir, machineIn(dir));
-    const rosetta = machineIn(dir, { arch: 'x64', env: { ANDROID_HOME: root } });
+    const root = fakeSdk(dir, machineHomedInScratch(dir));
+    const rosetta = machineHomedInScratch(dir, { arch: 'x64', env: { ANDROID_HOME: root } });
     assert.equal(systemImage(rosetta), 'system-images;android-36;google_apis;arm64-v8a');
     assert.equal(localAvailability(rosetta).usable, true);
     ensureLaneAvd(rosetta);
@@ -422,8 +429,8 @@ describe('whether this machine can run the emulator', () => {
 
   it('checks the system image an existing lane AVD names, not the default one', () => {
     const dir = scratch();
-    const mac = machineIn(dir);
-    const root = sdk(dir, mac);
+    const mac = machineHomedInScratch(dir);
+    const root = fakeSdk(dir, mac);
     mkdirSync(join(dir, '.android', 'avd', 'Clerk_Verify_Pixel.avd'), { recursive: true });
     writeFileSync(join(dir, '.android', 'avd', 'Clerk_Verify_Pixel.ini'), '');
     writeFileSync(join(dir, '.android', 'avd', 'Clerk_Verify_Pixel.avd', 'config.ini'), 'image.sysdir.1=system-images/android-35/google_apis_playstore/arm64-v8a/\n');
@@ -437,7 +444,7 @@ describe('whether this machine can run the emulator', () => {
     const dir = scratch();
     const written = (env: Record<string, string>) => {
       const home = mkdtempSync(join(dir, 'home-'));
-      ensureLaneAvd(machineIn(home, { env }));
+      ensureLaneAvd(machineHomedInScratch(home, { env }));
       return { home, at: (root: string) => existsSync(join(root, 'Clerk_Verify_Pixel.ini')) };
     };
     assert.ok(written({ ANDROID_AVD_HOME: join(dir, 'avds') }).at(join(dir, 'avds')));
@@ -454,17 +461,17 @@ describe('the clerk-android host', () => {
     assert.deepEqual(host.backends.map((b) => `${b.platform} ${b.kind}`), ['android local', 'android remote']);
     const runner = 'the device runs on a CI runner \\(blacksmith-4vcpu-ubuntu-2404 unless --runner names another\\), started through verify-remote\\.yml on clerk\\/clerk-android$';
     const choose = (machine: Machine) => selectBackend({ ...host, backends: [localAndroidBackend({ machine }), host.backends[1]!] }, 'android', undefined, null);
-    const noKvm = choose(machineIn(dir, { os: 'linux', arch: 'x64' }));
+    const noKvm = choose(machineHomedInScratch(dir, { os: 'linux', arch: 'x64' }));
     assert.equal(noKvm.backend.kind, 'remote');
     assert.match(noKvm.why, new RegExp(`^local is out: there is no .*kvm, so this machine has no hardware virtualization for the emulator; ${runner}`));
-    const noSdk = choose(machineIn(dir));
+    const noSdk = choose(machineHomedInScratch(dir));
     assert.match(noSdk.why, new RegExp(`^local is out: no Android SDK with an emulator and adb .*\\(to run it here: .*ANDROID_HOME.*\\); ${runner}`));
   });
 
   it('gives the session workflow the image and the boot files this code uses', () => {
     const workflow = readFileSync(join(import.meta.dirname, '..', '..', '..', '..', '.github', 'workflows', 'verify-remote.yml'), 'utf8');
-    assert.ok(workflow.includes(`IMAGE="${systemImage(machineIn(dir, { os: 'linux', arch: 'x64' }))}"`), 'the runner installs the image the lane AVD names');
-    for (const file of [LANE_BOOTED, LANE_FAILED]) assert.ok(workflow.includes(`$VERIFY_SESSION_WORK/${file}`), file);
+    assert.ok(workflow.includes(`IMAGE="${systemImage(machineHomedInScratch(dir, { os: 'linux', arch: 'x64' }))}"`), 'the runner installs the image the lane AVD names');
+    for (const file of [LANE_READY, LANE_FAILED]) assert.ok(workflow.includes(`$VERIFY_SESSION_WORK/${file}`), file);
     assert.ok(workflow.includes('src/platform/android/session-lane.ts" boot "$VERIFY_SESSION_WORK"'));
   });
 
@@ -489,7 +496,7 @@ describe('a remote session\'s device recipe', () => {
     const [, wait] = answer(device, { op: 'build', work }) as readonly { command: string; args: readonly string[] }[];
     const waiting = run(wait!.command, wait!.args);
     await new Promise((resolve) => setTimeout(resolve, 300));
-    writeFileSync(join(work, LANE_BOOTED), 'emulator-5560\n');
+    writeFileSync(join(work, LANE_READY), 'emulator-5560\n');
     assert.equal((await waiting).code, 0);
 
     const failed = mkdtempSync(join(tmpdir(), 'verify-recipe-'));

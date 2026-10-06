@@ -1,5 +1,5 @@
 import type { SessionDeviceFactory } from '../../core/remote/protocol.ts';
-import { APK, LANE_BOOTED, LANE_FAILED, assembleHost, installArgs, logcatArgs, recordingOnDevice, screenrecordArgs } from './emulator.ts';
+import { APK, LANE_READY, LANE_FAILED, assembleHost, installArgs, logcatArgs, recordingOnDevice, screenrecordArgs } from './emulator.ts';
 
 const RECORDING = recordingOnDevice('session');
 
@@ -8,8 +8,7 @@ const sessionDevice: SessionDeviceFactory = ({ id: serial }) => {
   return {
     build: (work) => [
       assembleHost(),
-      // Booted is not enough: the lane boot may still restart zygote for the locale, and an install then fails.
-      { command: 'sh', args: ['-c', `until [ -f "$0/${LANE_BOOTED}" ]; do if [ -f "$0/${LANE_FAILED}" ]; then echo "the emulator did not boot: $(cat "$0/${LANE_FAILED}")"; exit 1; fi; sleep 1; done`, work] },
+      { command: 'sh', args: ['-c', `until [ -f "$0/${LANE_READY}" ]; do if [ -f "$0/${LANE_FAILED}" ]; then echo "the emulator did not boot: $(cat "$0/${LANE_FAILED}")"; exit 1; fi; sleep 1; done`, work] },
       adb(installArgs(APK)),
     ],
     record: {

@@ -10,13 +10,11 @@ const MIN_JAVA = 21;
 
 type Env = Readonly<Record<string, string | undefined>>;
 
-/** What the local backend reads to decide whether this machine can run the emulator. A test passes another machine. */
 export interface Machine {
   readonly os: NodeJS.Platform;
   readonly arch: string;
   readonly home: string;
   readonly env: Env;
-  /** The KVM device node. The emulator needs to open it for reading and writing on Linux. */
   readonly kvm: string;
 }
 
@@ -34,7 +32,6 @@ function sdkCandidates(machine: Machine): readonly string[] {
   return [...new Set([machine.env.ANDROID_HOME, machine.env.ANDROID_SDK_ROOT, byDefault, ...fromPath].filter((root): root is string => root !== undefined && root !== ''))];
 }
 
-/** When no candidate holds the tools, the first one still names where a message or Gradle should point. */
 export function sdkRoot(machine: Machine = thisMachine()): string {
   const candidates = sdkCandidates(machine);
   return candidates.find((root) => existsSync(emulatorIn(root)) && existsSync(adbIn(root))) ?? candidates[0]!;
@@ -48,10 +45,6 @@ export function sdkTool(tool: 'adb' | 'emulator', machine: Machine = thisMachine
 const imageOf = (abi: string): string => `system-images;android-${IMAGE_API};${IMAGE_TAG};${abi}`;
 const dirOf = (image: string): string => `${image.split(';').join('/')}/`;
 
-/**
- * The ABI of the lane's system image. A Mac is asked for both, its own first: Node under Rosetta reports an Intel CPU
- * on an ARM Mac, whose SDK holds the ARM image.
- */
 function abiOf(machine: Machine): string {
   const own = machine.arch === 'arm64' ? 'arm64-v8a' : 'x86_64';
   const other = own === 'x86_64' ? 'arm64-v8a' : 'x86_64';
@@ -59,15 +52,12 @@ function abiOf(machine: Machine): string {
   return installed ?? own;
 }
 
-/** The `sdkmanager` package the lane AVD boots on this machine. */
 export const systemImage = (machine: Machine = thisMachine()): string => imageOf(abiOf(machine));
 
-/** The emulator's own order: ANDROID_AVD_HOME, then `avd` under ANDROID_USER_HOME, then under `~/.android`. An empty value counts as unset. */
 const avdHome = (machine: Machine): string => machine.env.ANDROID_AVD_HOME || join(machine.env.ANDROID_USER_HOME || join(machine.home, '.android'), 'avd');
 const avdPointer = (machine: Machine): string => join(avdHome(machine), `${AVD_NAME}.ini`);
 
-/** Relative to the SDK root. The AVD is where its pointer file says, which need not be the AVD home. */
-function laneAvdImage(machine: Machine): string | null {
+function laneAvdImageDirInSdk(machine: Machine): string | null {
   try {
     const dir = /^path\s*=\s*(.+)$/m.exec(readFileSync(avdPointer(machine), 'utf8'))?.[1]?.trim() ?? join(avdHome(machine), `${AVD_NAME}.avd`);
     return /^image\.sysdir\.1\s*=\s*(.+)$/m.exec(readFileSync(join(dir, 'config.ini'), 'utf8'))?.[1]?.trim() ?? null;
@@ -76,10 +66,6 @@ function laneAvdImage(machine: Machine): string | null {
   }
 }
 
-/**
- * Writes the lane AVD when the machine has none: the same panel as the AVD the specs were written against, on this
- * machine's system image. A lane boots it `-read-only`, so nothing a run does is kept. An existing AVD is left alone.
- */
 export function ensureLaneAvd(machine: Machine = thisMachine()): 'exists' | 'created' {
   if (existsSync(avdPointer(machine))) return 'exists';
   const dir = join(avdHome(machine), `${AVD_NAME}.avd`);
@@ -121,13 +107,8 @@ function opensReadWrite(path: string): boolean {
 
 const KVM_RULE = `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules && sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm`;
 
-/**
- * Whether this machine can run a lane emulator. It asks about what cannot be fixed in a moment (the SDK, a system
- * image, hardware acceleration) and not about the lane AVD, which `ensureLaneAvd` writes. It reads files only.
- */
 export function localAvailability(machine: Machine = thisMachine()): Availability {
   if (machine.os !== 'darwin' && machine.os !== 'linux') return { usable: false, why: `the lane emulator runs on macOS and Linux, and this machine runs ${machine.os}` };
-  // First, because it is the one thing here no install fixes: a fix for the SDK would send someone to do work that cannot help.
   if (machine.os === 'linux' && !existsSync(machine.kvm)) return { usable: false, why: `there is no ${machine.kvm}, so this machine has no hardware virtualization for the emulator` };
   const root = sdkRoot(machine);
   if (!existsSync(emulatorIn(root)) || !existsSync(adbIn(root))) {
@@ -137,7 +118,7 @@ export function localAvailability(machine: Machine = thisMachine()): Availabilit
       fix: 'install the Android SDK emulator and platform-tools and set ANDROID_HOME to the SDK',
     };
   }
-  const named = laneAvdImage(machine);
+  const named = laneAvdImageDirInSdk(machine);
   const image = named ?? dirOf(systemImage(machine));
   if (!existsSync(join(root, image, 'system.img'))) {
     const wanted = image.replace(/\/$/, '').split('/').join(';');
@@ -161,8 +142,7 @@ function javaMajor(home: string): number | null {
   }
 }
 
-/** Android Studio's bundled JDK, where this OS has a fixed place for it. */
-export const STUDIO_JBR = process.platform === 'darwin' ? '/Applications/Android Studio.app/Contents/jbr/Contents/Home' : null;
+const STUDIO_JBR = process.platform === 'darwin' ? '/Applications/Android Studio.app/Contents/jbr/Contents/Home' : null;
 
 export type JavaHome = { readonly ok: true; readonly home: string; readonly detail: string } | { readonly ok: false; readonly detail: string; readonly fix: string };
 

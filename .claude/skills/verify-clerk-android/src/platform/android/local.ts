@@ -16,14 +16,10 @@ import {
 import { emulatorArgs, installArgs, logcatArgs, recordingOnDevice, screenrecordArgs } from './emulator.ts';
 import { AVD_NAME, ensureLaneAvd, jdkCheck, localAvailability, sdkTool, thisMachine, type Machine } from './sdk.ts';
 
-export const LOCALE = 'en-US';
+const LOCALE = 'en-US';
 const BOOT_TIMEOUT_MS = 240_000;
 const STILL_WAITING_MS = 60_000;
-/**
- * Names the claim a lane was booted for, so verify only ever kills or drives its own lanes. Set with `setprop` after
- * boot: emulator 36.3 drops `-prop` names outside `qemu.*`, and its `qemu.*` names never reach getprop.
- */
-export const LANE_PROPERTY = 'debug.verify.lane';
+const LANE_PROPERTY = 'debug.verify.lane';
 
 export const lanePort = (slot: number): number => 5558 + 2 * slot;
 export const laneSerial = (slot: number): string => `emulator-${lanePort(slot)}`;
@@ -49,8 +45,7 @@ export interface LocalAndroidOptions {
   readonly machine?: Machine;
 }
 
-/** The emulator process verify spawned for a claim, written before boot so an interrupted or wedged boot can still be reclaimed. */
-interface LaneProcess extends ProcessRef {
+interface SpawnedEmulator extends ProcessRef {
   readonly nonce: string;
 }
 
@@ -90,8 +85,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     return result.code === 0 ? (result.stdout.split('\n')[0]?.trim() ?? null) : null;
   }
 
-  /** Our lane: the template AVD, booted for this claim. Anything else on a lane port belongs to someone else. */
-  async function isLane(serial: string, nonce: string): Promise<boolean> {
+  async function isOwnLane(serial: string, nonce: string): Promise<boolean> {
     return (await avdName(serial)) === AVD_NAME && (await shell(serial, `getprop ${LANE_PROPERTY}`)) === nonce;
   }
 
@@ -101,11 +95,10 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
 
   const pidFile = (slot: number) => join(emulatorLogDir, `android-${slot}.pid`);
 
-  /** The process this claim spawned, still alive with the same start time and still an emulator of this AVD on this lane's port. */
-  function ownedProcess(slot: number, nonce: string): LaneProcess | null {
-    let recorded: LaneProcess;
+  function ownedProcess(slot: number, nonce: string): SpawnedEmulator | null {
+    let recorded: SpawnedEmulator;
     try {
-      recorded = JSON.parse(readFileSync(pidFile(slot), 'utf8')) as LaneProcess;
+      recorded = JSON.parse(readFileSync(pidFile(slot), 'utf8')) as SpawnedEmulator;
     } catch {
       return null;
     }
@@ -116,16 +109,15 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
 
   function forgetProcess(slot: number, nonce: string): void {
     try {
-      if ((JSON.parse(readFileSync(pidFile(slot), 'utf8')) as LaneProcess).nonce === nonce) rmSync(pidFile(slot), { force: true });
+      if ((JSON.parse(readFileSync(pidFile(slot), 'utf8')) as SpawnedEmulator).nonce === nonce) rmSync(pidFile(slot), { force: true });
     } catch {
       return;
     }
   }
 
-  /** Kills the lane only when it carries this claim's marker or is the process this claim spawned. Never anything else on the port. */
   async function killEmulator(slot: number, nonce: string): Promise<void> {
     const serial = laneSerial(slot);
-    const marked = (await devices()).has(serial) && (await isLane(serial, nonce));
+    const marked = (await devices()).has(serial) && (await isOwnLane(serial, nonce));
     const owned = ownedProcess(slot, nonce);
     if (marked) await adb(serial, ['emu', 'kill']);
     else if (owned !== null) process.kill(-owned.pid, 'SIGTERM');
@@ -177,7 +169,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
       if (!running.has(serial)) continue;
       const claim = live.find((c) => c.slot === slot);
       const booting = claim !== undefined && ownedProcess(slot, claim.nonce) !== null;
-      if (claim === undefined || (!booting && !(await isLane(serial, claim.nonce)))) foreign.push(serial);
+      if (claim === undefined || (!booting && !(await isOwnLane(serial, claim.nonce)))) foreign.push(serial);
     }
     if (foreign.length === 0) return { id: 'lane-ports', ok: true, detail: `ports ${lanePort(1)} to ${lanePort(LOCAL_POOL.android)} hold only verify lanes` };
     return {
@@ -244,7 +236,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     const child = spawn(emulatorBin, [...emulatorArgs(lanePort(slot), machine.os)], { detached: true, stdio: ['ignore', out, out] });
     closeSync(out);
     if (child.pid !== undefined) {
-      const spawned: LaneProcess = { nonce, pid: child.pid, startedAt: Date.now() };
+      const spawned: SpawnedEmulator = { nonce, pid: child.pid, startedAt: Date.now() };
       writeFileSync(pidFile(slot), JSON.stringify(spawned));
     }
     let exit: string | null = null;
@@ -301,7 +293,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
           throw new VerifyFailure('NOT_READY', `the ${AVD_NAME} emulator verify started exited (${died}), so ${serial} is someone else's`, retryFix(request));
         }
         await shell(serial, `setprop ${LANE_PROPERTY} ${claim.nonce}`);
-        if (!(await isLane(serial, claim.nonce))) {
+        if (!(await isOwnLane(serial, claim.nonce))) {
           const marker = (await shell(serial, 'getprop')).split('\n').filter((line) => line.includes('verify.lane')).join(' ') || 'no verify.lane property';
           throw new VerifyFailure('NOT_READY', `${serial} is not the ${AVD_NAME} lane this claim booted (${marker})`, retryFix(request));
         }
@@ -329,7 +321,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     async check(lease) {
       if (readClaim(claimsDir, 'android', lease.slot).claim?.nonce !== lease.claimNonce) return 'lost';
       if ((await devices()).get(lease.deviceId) !== 'device') return 'lost';
-      if (!(await isLane(lease.deviceId, lease.claimNonce))) return 'lost';
+      if (!(await isOwnLane(lease.deviceId, lease.claimNonce))) return 'lost';
       return (await shell(lease.deviceId, 'getprop sys.boot_completed')) === '1' ? 'held' : 'lost';
     },
 
@@ -398,10 +390,6 @@ interface ScreenrecordOptions {
   readonly exec: Runner;
 }
 
-/**
- * Stops screenrecord on the device with SIGINT and waits for `pidof` to come back empty before pulling: killing the
- * host-side adb instead leaves an mp4 with no moov atom that no player opens.
- */
 export async function startScreenrecord(options: ScreenrecordOptions): Promise<Recording> {
   const { adbBin, serial, into, exec } = options;
   const shell = async (command: string) => (await exec(adbBin, ['-s', serial, 'shell', command])).stdout.trim();

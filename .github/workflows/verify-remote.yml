@@ -1,13 +1,11 @@
 name: verify-remote
 run-name: verify-remote ${{ inputs.owner && format('{0}/{1}', inputs.owner, inputs.session) || github.ref_name }}
 
-# A remote device session for the verify-clerk-android skill: an emulator on a runner, reached through a tunnel.
-# `control-clerk-android up --backend remote` starts it and `down` ends it. See .claude/skills/verify-clerk-android/SKILL.md.
 on:
   workflow_dispatch:
     inputs:
       owner:
-        description: Worktree id of the driver, so it can find and reap its own sessions
+        description: Random id of the driver's checkout, so it can find and end its own sessions
         required: true
       session:
         description: Session id the driver chose
@@ -19,7 +17,6 @@ on:
         description: Runner label for the short job that reads the request
         required: false
         default: ubuntu-latest
-  # The fallback trigger for a driver that may not dispatch: it pushes a commit whose message is the request.
   push:
     branches: ['verify-remote/**']
 
@@ -35,7 +32,6 @@ env:
 
 jobs:
   plan:
-    # The driver names this label, so a session on a billed runner does not first wait in the free runners' queue.
     runs-on: ${{ inputs.plan_runner || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
@@ -51,7 +47,7 @@ jobs:
         with:
           sparse-checkout: .claude/skills/verify-clerk-android/src/core
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - name: Read the request
@@ -71,7 +67,6 @@ jobs:
     env:
       VERIFY_SESSION_REQUEST: ${{ needs.plan.outputs.request }}
       # agent-device reaps its daemon and its device lease after five idle minutes by default.
-      # The session agent owns idle and cap for the whole session instead.
       AGENT_DEVICE_DAEMON_IDLE_TIMEOUT_MS: "0"
       AGENT_DEVICE_LEASE_TTL_MS: "21600000"
       AGENT_DEVICE_LEASE_MAX_TTL_MS: "21600000"
@@ -80,7 +75,7 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - uses: actions/setup-java@v6
@@ -112,18 +107,13 @@ jobs:
           VERIFY_SESSION_DEVICE_NAME: ${{ needs.plan.outputs.device }}
           VERIFY_SESSION_DEVICE_MODULE: .claude/skills/verify-clerk-android/src/platform/android/session-device.ts
           CLOUDFLARED_VERSION: "2026.9.3"
+          CLOUDFLARED_SHA256: 77e26d8d900e0b8469f416239d14b5f296525fdf79fee6f511ef55609e3fbac2
         run: |
           set -euo pipefail
           WORK="$VERIFY_SESSION_WORK"
-          case "$(uname -s)-$(uname -m)" in
-            Darwin-arm64) ASSET=cloudflared-darwin-arm64.tgz; SUM=587c2cfb1c230fe36c7fa7727da78be459dae028cabe8c001291999350f07095 ;;
-            Linux-x86_64) ASSET=cloudflared-linux-amd64; SUM=77e26d8d900e0b8469f416239d14b5f296525fdf79fee6f511ef55609e3fbac2 ;;
-            Linux-aarch64) ASSET=cloudflared-linux-arm64; SUM=aaeb2d7d0da3614634c7e03ab13487a1522c2e79165ed2929cfe23d5e95b326d ;;
-            *) echo "::error::no cloudflared build for $(uname -s)-$(uname -m)"; exit 1 ;;
-          esac
-          curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors -o "$WORK/$ASSET" "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/$ASSET"
-          echo "$SUM  $WORK/$ASSET" | shasum -a 256 -c -
-          if [ "${ASSET%.tgz}" != "$ASSET" ]; then tar -xzf "$WORK/$ASSET" -C "$WORK"; else mv "$WORK/$ASSET" "$WORK/cloudflared"; fi
+          [ "$(uname -s)-$(uname -m)" = Linux-x86_64 ] || { echo "::error::a session needs a Linux x64 runner, and this one is $(uname -s)-$(uname -m)"; exit 1; }
+          curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors -o "$WORK/cloudflared" "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/cloudflared-linux-amd64"
+          echo "$CLOUDFLARED_SHA256  $WORK/cloudflared" | shasum -a 256 -c -
           chmod +x "$WORK/cloudflared"
           VERIFY_SESSION_CLOUDFLARED="$WORK/cloudflared" \
             nohup node "$SKILL/src/core/remote/session-agent.ts" serve > "$WORK/agent.log" 2>&1 &
@@ -135,12 +125,9 @@ jobs:
           [ -s "$WORK/tunnel" ] || { echo "::error::no tunnel came up"; tail -20 "$WORK/agent.log" "$WORK/tunnel.log" || true; exit 1; }
           echo "host=$(cat "$WORK/tunnel")" >> "$GITHUB_OUTPUT"
 
-      # The driver reads the tunnel host from this step's name through the jobs API while the job runs.
       - name: verify-remote tunnel ${{ steps.tunnel.outputs.host }}
         run: "true"
 
-      # The agent is already building by now, so the system image download and the boot overlap the Gradle build.
-      # The runner boots a lane the way a developer's machine does, through the skill's local backend.
       - name: Start the emulator
         if: steps.device.outputs.serial != ''
         run: |
@@ -167,7 +154,7 @@ jobs:
         if: steps.device.outputs.serial != ''
         timeout-minutes: 6
         run: |
-          until [ -f "$VERIFY_SESSION_WORK/lane-booted" ]; do
+          until [ -f "$VERIFY_SESSION_WORK/lane-ready" ]; do
             if [ -f "$VERIFY_SESSION_WORK/lane-failed" ]; then
               echo "::error::the emulator did not boot: $(cat "$VERIFY_SESSION_WORK/lane-failed")"
               tail -20 "$HOME/.verify/emulators/android-1.log" || true

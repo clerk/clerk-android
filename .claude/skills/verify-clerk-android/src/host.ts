@@ -11,15 +11,19 @@ import { AVD_NAME, resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
 const SKILL_DIR = fileURLToPath(new URL('../', import.meta.url));
 const GITHUB_REPO = 'clerk/clerk-android';
 
-function pinnedAgentDevice(): string {
+function readPinnedAgentDevice(): string | undefined {
   try {
     const mobile = JSON.parse(readFileSync(join(SKILL_DIR, 'node_modules', '@e2e-dev', 'mobile', 'package.json'), 'utf8')) as { dependencies?: Record<string, string> };
-    const version = mobile.dependencies?.['agent-device'];
-    if (version !== undefined) return version;
+    return mobile.dependencies?.['agent-device'];
   } catch {
-    // Falls through to the fix below.
+    return undefined;
   }
-  throw new VerifyFailure('NOT_READY', 'the pinned @e2e-dev/mobile is not installed, so the agent-device version a session needs is unknown', `npm ci --prefix ${SKILL_DIR}`);
+}
+
+function pinnedAgentDevice(): string {
+  const version = readPinnedAgentDevice();
+  if (version === undefined) throw new VerifyFailure('NOT_READY', 'the pinned @e2e-dev/mobile is not installed, so the agent-device version a session needs is unknown', `npm ci --prefix ${SKILL_DIR}`);
+  return version;
 }
 
 function gradle(args: readonly string[], cwd: string, javaHome: string): Promise<{ code: number; tail: string }> {
