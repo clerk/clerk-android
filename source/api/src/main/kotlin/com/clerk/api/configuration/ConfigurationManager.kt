@@ -808,10 +808,6 @@ internal class ConfigurationManager(
     clientUpdateCountAtStart: Long,
     environment: Environment,
   ) {
-    // ClientSyncingMiddleware does not apply the GET /client response (its body carries a null
-    // piggyback client), so this is where the refreshed client is adopted. Any client update made
-    // after the refresh began (e.g. an auth flow completing while the requests were in flight) is
-    // newer than this snapshot, so only apply it when nothing has touched the client since then.
     Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
     Clerk.updateEnvironment(environment)
 

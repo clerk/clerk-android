@@ -233,14 +233,11 @@ class ConfigurationManagerInitializationRetryTest {
   @Test
   fun `refresh does not overwrite a client adopted while environment was in flight`() = runTest {
     val environmentResponse = CompletableDeferred<ClerkResult.Success<Environment>>()
-    // The GET /client response is not applied by ClientSyncingMiddleware (its body has a null
-    // piggyback client), so the refresh result is only adopted once both requests complete.
     coEvery { Client.get() } returns ClerkResult.success(Client(id = "client_refresh"))
     coEvery { Environment.get() } coAnswers { environmentResponse.await() }
     initialize()
     runCurrent()
 
-    // An auth flow completes and adopts a newer client before Environment returns.
     Clerk.updateClient(Client(id = "client_signed_in"))
     environmentResponse.complete(ClerkResult.success(testEnvironment()))
     runCurrent()
