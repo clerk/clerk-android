@@ -66,10 +66,19 @@ adb_for_device() {
   fi
 }
 
-cleanup_test_account() {
-  if ! command -v adb >/dev/null 2>&1; then
-    return
+device_is_connected() {
+  command -v adb >/dev/null 2>&1 || return 1
+  local serial
+  serial="$(adb_serial)"
+  if [[ -n "$serial" ]]; then
+    [[ "$(adb -s "$serial" get-state 2>/dev/null)" == "device" ]]
+  else
+    adb get-state >/dev/null 2>&1
   fi
+}
+
+cleanup_test_account() {
+  device_is_connected || return 0
 
   echo "Deleting any test account left signed in on the e2e app."
   local output
@@ -92,12 +101,14 @@ run_shard() {
   started_at="$(date +%s)"
   echo "E2E shard $shard: key=${key_name:-default} trails=$trail_dir"
 
+  # `run_shard || ...` in the `all` loop disables errexit here, so each failure returns explicitly.
   if [[ -n "$key_name" ]]; then
     if [[ "${E2E_SKIP_PREFLIGHT:-0}" != "1" ]]; then
-      python3 scripts/e2e/e2e_instances.py validate "$key_name"
+      python3 scripts/e2e/e2e_instances.py validate "$key_name" || return 1
     fi
     if [[ "$shard" == "auth-phone" ]]; then
-      python3 scripts/e2e/e2e_instances.py delete-phone-users "$key_name" "$SIGN_UP_PHONE_NUMBER"
+      python3 scripts/e2e/e2e_instances.py delete-phone-users "$key_name" "$SIGN_UP_PHONE_NUMBER" ||
+        return 1
     fi
   fi
 
@@ -126,6 +137,11 @@ run_shard() {
   fi
   return "$status"
 }
+
+if ! device_is_connected; then
+  echo "No Android device is connected for ${TRAILBLAZE_DEVICE:-android}. Start an emulator first." >&2
+  exit 1
+fi
 
 if [[ "$shard" == "all" ]]; then
   failures=()
