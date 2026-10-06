@@ -22,7 +22,7 @@ Preconditions:
 
 - Each test seeds a `+clerk_test` user on the standard instance and signs in with a ticket (`host.launch({ signedInAs })`).
 
-- **Profile.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run user-button-and-profile`. The first test launches `screen: 'userProfile'`, checks `userId` and `sessionStatus` `active`, expects `Edit profile`, taps `clerk.userProfile.row.manageAccount`, and expects the user's email. Screenshot `profile`.
+- **Profile.** Run `control-clerk-android run user-button-and-profile`. The first test launches `screen: 'userProfile'`, checks `userId` and `sessionStatus` `active`, expects `Edit profile`, taps `clerk.userProfile.row.manageAccount`, and expects the user's email. Screenshot `profile`.
 - **Add account.** The second test taps `clerk.userProfile.row.addAccount` and expects `clerk.auth.start.continue`. Screenshot `add-account`.
 - **User button.** The third test launches `screen: 'home'`, taps `clerk.userButton.profile`, and expects `clerk.userProfile.row.manageAccount`. Screenshot `user-button-profile`.
 - **Sign out.** The fourth test taps `verify.signOut` and waits up to 10 seconds for `signedIn` false, then expects `Prebuilt UI Sign In`.
@@ -32,6 +32,6 @@ Preconditions:
 ## Gotchas
 
 - `Edit profile` and the home `Prebuilt UI Sign In` button have no test tags, so those two checks use text.
-- The Security row opens a list of active devices with this Mac's public IP address and city. Do not screenshot it, and keep it out of videos you attach to a public PR.
+- The Security row opens a list of active devices with the public IP address and city of the machine that runs the emulator. Do not screenshot it, and keep it out of videos you attach to a public PR.
 - `verify.signOut` is a tagged Compose Material `Button`. Tap it with `host.tap`; `locator.tap()` can refuse because the tagged node's `android.widget.Button` child is not clickable.
 - Ticket sign-in is a shortcut, not the feature. It is fine here because this feature is not about authentication.

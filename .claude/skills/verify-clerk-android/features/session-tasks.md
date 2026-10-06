@@ -18,11 +18,11 @@ Preconditions:
 
 - `setup-mfa.e2e.ts` declares `config: { auth_multi_factor: { required_for_sign_up: true } }` and `environment: { 'user_settings.sign_up.mfa.required': true }`.
 - `choose-organization.e2e.ts` declares `config: { organization_settings: { force_organization_selection: true } }` and `environment: { 'organization_settings.force_organization_selection': true }`.
-- `run` puts the worktree's application on the declared settings before the test in each file starts. `SKILL.md` under Test instances describes the declaration.
+- `run` puts the worktree's application on the declared settings before the test in each file starts. `references/instances.md` describes the declaration.
 - Each spec seeds a user and signs in with a ticket on `screen: 'auth'`.
 
-- **Setup MFA.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run session-tasks/setup-mfa`. It checks `ticket` `succeeded`, the seeded `userId`, `sessionStatus` `pending`, and `pendingTasks` containing `setup-mfa`, then expects `clerk.auth.sessionTask.setupMfa.authenticatorApp` and `clerk.auth.sessionTask.setupMfa.smsCode`. Screenshot `session-task`.
-- **Choose organization.** Run `.claude/skills/verify-clerk-android/bin/control-clerk-android run session-tasks/choose-organization`. It checks `sessionStatus` `pending` and `pendingTasks` containing `choose-organization`, then expects `clerk.organization.profileForm.name`. Screenshot `choose-organization-task`.
+- **Setup MFA.** Run `control-clerk-android run session-tasks/setup-mfa`. It checks `ticket` `succeeded`, the seeded `userId`, `sessionStatus` `pending`, and `pendingTasks` containing `setup-mfa`, then expects `clerk.auth.sessionTask.setupMfa.authenticatorApp` and `clerk.auth.sessionTask.setupMfa.smsCode`. Screenshot `session-task`.
+- **Choose organization.** Run `control-clerk-android run session-tasks/choose-organization`. It checks `sessionStatus` `pending` and `pendingTasks` containing `choose-organization`, then expects `clerk.organization.profileForm.name`. Screenshot `choose-organization-task`.
 - **Proof.** Both specs pass, and `states.jsonl` shows `sessionStatus` `pending` with the task in `pendingTasks`.
 
 ## Gotchas
