@@ -31,3 +31,6 @@ local.properties
 /docs/
 .trailblaze/
 .keys.json
+.claude/skills/verify-clerk-android/node_modules/
+.claude/skills/verify-clerk-android/specs/explored/
+.verify/
