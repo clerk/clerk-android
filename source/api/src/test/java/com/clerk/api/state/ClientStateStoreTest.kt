@@ -70,7 +70,6 @@ class ClientStateStoreTest {
   @Test
   fun `responses sharing a server second are ordered by arrival when applied out of order`() {
     val store = store()
-    // Both responses carry the same one-second Date; the sign-in response arrived second.
     val refreshOrder = store.observeResponse(serverDateMillis = 1_000)
     val signInOrder = store.observeResponse(serverDateMillis = 1_000)
 
@@ -84,10 +83,8 @@ class ClientStateStoreTest {
   fun `awaited fetch is dropped when a same-second response committed while it was in flight`() {
     val store = store()
     store.applyClientResponse(Client(id = "client_123"), serverDateMillis = 1_000)
-    // A refresh captures the revision, then its GET /client is answered at 1_000.
     val revisionAtStart = store.revision
     store.observeResponse(serverDateMillis = 1_000)
-    // A sign-in response with the identical Date lands before the refresh result is applied.
     store.applyClientResponse(clientWithSession("sess_new"), serverDateMillis = 1_000)
 
     assertFalse(store.applyClientIfUnchangedSince(revisionAtStart, Client(id = "client_123")))
@@ -145,8 +142,8 @@ class ClientStateStoreTest {
   fun `local mutations always apply and never advance the server watermark`() {
     val store = store()
     store.applyClientResponse(Client(id = "client_server"), serverDateMillis = 1_000)
-    // A device clock far ahead of the server must not make later responses look stale.
-    now = 9_999_999
+    val deviceClockFarAheadOfServer = 9_999_999L
+    now = deviceClockFarAheadOfServer
 
     store.applyClient(Client(id = "client_local"))
     assertEquals(9_999_999L, store.serverFetchAtMillis)
@@ -178,12 +175,64 @@ class ClientStateStoreTest {
   }
 
   @Test
+  fun `cache restore applies only while the client is unset`() {
+    val store = store()
+
+    assertTrue(store.replaceClientIfUnset(Client(id = "client_cached"), serverFetchAtMillis = 100))
+    store.applyClient(Client(id = "client_live"))
+    assertFalse(store.replaceClientIfUnset(Client(id = "client_cached"), serverFetchAtMillis = 100))
+
+    assertEquals("client_live", store.client?.id)
+  }
+
+  @Test
+  fun `cache restore applies after reset cleared the client`() {
+    val store = store()
+    store.applyClient(Client(id = "client_live"))
+    store.reset()
+
+    assertTrue(store.replaceClientIfUnset(Client(id = "client_cached"), serverFetchAtMillis = 100))
+
+    assertEquals("client_cached", store.clientFlow.value?.id)
+  }
+
+  @Test
+  fun `environment restore applies only while the environment is unset`() {
+    val store = store()
+    val live = testEnvironment()
+    store.applyEnvironment(live)
+
+    assertFalse(
+      store.applyEnvironmentIfUnset(
+        testEnvironment().copy(authConfig = AuthConfig(singleSessionMode = true))
+      )
+    )
+
+    assertSame(live, store.environment)
+  }
+
+  @Test
+  fun `awaited fetch with a response order drops older responses applied after it`() {
+    val store = store()
+    val revisionAtStart = store.revision
+    val olderPiggyback = store.observeResponse(serverDateMillis = 1_000)
+    val refresh = store.observeResponse(serverDateMillis = 2_000)
+
+    assertTrue(
+      store.applyClientIfUnchangedSince(revisionAtStart, Client(id = "client_ref"), refresh)
+    )
+    assertFalse(store.applyClientResponse(Client(id = "client_older"), olderPiggyback))
+
+    assertEquals("client_ref", store.client?.id)
+  }
+
+  @Test
   fun `concurrent writers settle on the newest response with consistent flows`() {
     val store = store()
     val committedRevisions = Collections.synchronizedList(mutableListOf<Long>())
     store.listener =
       object : ClientStateStore.Listener {
-        override fun onClientCommitted(commit: ClientStateStore.ClientCommit) {
+        override fun onClientCommittedAfterWriteLock(commit: ClientStateStore.ClientCommit) {
           committedRevisions += commit.revision
         }
       }
@@ -197,10 +246,9 @@ class ClientStateStoreTest {
       executor.execute {
         start.await()
         repeat(writesPerThread) { write ->
-          // Unique, interleaved server dates so arrival order differs from fetch order.
-          val date = (write * threads + thread).toLong()
+          val uniqueInterleavedDate = (write * threads + thread).toLong()
+          val date = uniqueInterleavedDate
           store.applyClientResponse(clientWithSession("sess_$date", clientId = "c_$date"), date)
-          // Interleave local read-modify-write mutations; they must not resurrect older clients.
           if (thread % 2 == 0) store.mutateClient { it.copy(signIn = null) }
         }
         done.countDown()
@@ -292,7 +340,7 @@ class ClientStateStoreTest {
     val transitions = mutableListOf<Pair<String?, String?>>()
     store.listener =
       object : ClientStateStore.Listener {
-        override fun onSessionStateCommitted(previous: Session?, current: Session?) {
+        override fun onSessionStateCommittedUnderWriteLock(previous: Session?, current: Session?) {
           transitions += previous?.id to current?.id
         }
       }

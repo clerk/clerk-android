@@ -3,6 +3,7 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.serialization.ClerkResult
 import io.mockk.every
 import io.mockk.mockk
 import okhttp3.Interceptor
@@ -15,17 +16,16 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Ordering of client responses applied by [ClientSyncingMiddleware] and by awaiting callers. */
 @RunWith(RobolectricTestRunner::class)
 class ClientSyncingMiddlewareOrderingTest {
 
   @After
   fun tearDown() {
-    // Drops the server-time watermark so dated responses in other tests are not stale.
     Clerk.stateStore.reset()
   }
 
@@ -36,7 +36,6 @@ class ClientSyncingMiddlewareOrderingTest {
     middleware.intercept(
       chainFor(piggybackedClientResponse("client_newer", date = "Mon, 13 Jul 2026 18:00:05 GMT"))
     )
-    // A slower request that the server answered earlier arrives last.
     middleware.intercept(
       chainFor(piggybackedClientResponse("client_older", date = "Mon, 13 Jul 2026 18:00:00 GMT"))
     )
@@ -51,7 +50,6 @@ class ClientSyncingMiddlewareOrderingTest {
     val updateCountAtStart = Clerk.clientUpdateCount
     val clientFetch = Request.Builder().url("https://api.clerk.com/v1/client").build()
     val fetchedClientJson = """{"object": "client", "id": "client_refreshed", "sessions": []}"""
-    // GET /client leaves the wrapped client for its caller (e.g. a foreground refresh).
     middleware.intercept(
       chainFor(
         Response.Builder()
@@ -67,8 +65,6 @@ class ClientSyncingMiddlewareOrderingTest {
           .build()
       )
     )
-    // A sign-in response with the identical Date lands while the refresh result is still on its
-    // way to the caller.
     middleware.intercept(
       chainFor(
         piggybackedClientResponse("client_signed_in", date = "Mon, 13 Jul 2026 18:00:00 GMT")
@@ -83,6 +79,39 @@ class ClientSyncingMiddlewareOrderingTest {
     )
     assertEquals("client_signed_in", Clerk.client.id)
   }
+
+  @Test
+  fun `older piggybacked response arriving after an applied refresh is dropped`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val updateCountAtStart = Clerk.clientUpdateCount
+    val refreshResponse =
+      middleware.intercept(
+        chainFor(clientFetchResponse("client_refreshed", date = "Mon, 13 Jul 2026 18:00:05 GMT"))
+      )
+    val refreshResult =
+      ClerkResult.success(Client(id = "client_refreshed"))
+        .withTags(mapOf(Response::class to refreshResponse))
+
+    assertTrue(Clerk.updateClientIfUnchangedSince(updateCountAtStart, refreshResult))
+    middleware.intercept(
+      chainFor(piggybackedClientResponse("client_older", date = "Mon, 13 Jul 2026 18:00:00 GMT"))
+    )
+
+    assertEquals("client_refreshed", Clerk.client.id)
+  }
+
+  private fun clientFetchResponse(clientId: String, date: String): Response =
+    Response.Builder()
+      .request(Request.Builder().url("https://api.clerk.com/v1/client").build())
+      .protocol(Protocol.HTTP_1_1)
+      .code(200)
+      .message("OK")
+      .header("Date", date)
+      .body(
+        """{"response": {"object": "client", "id": "$clientId", "sessions": []}, "client": null}"""
+          .toResponseBody("application/json".toMediaType())
+      )
+      .build()
 
   private fun piggybackedClientResponse(clientId: String, date: String): Response {
     val request =

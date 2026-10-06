@@ -69,7 +69,6 @@ class ClerkOfflineCacheTest {
 
     Clerk.updateClient(client = client, serverFetchAtMillis = SERVER_FETCH_AT_MILLIS)
     Clerk.updateEnvironment(environment)
-    // Persistence is coalesced off the calling thread; flush to observe it deterministically.
     Clerk.stateStore.flushPersistence()
 
     val cachedState = loadCachedState()
@@ -114,7 +113,6 @@ class ClerkOfflineCacheTest {
 
     Clerk.updateClient(Client(id = "client_123"))
 
-    // No flush: the sign-out write itself must have replaced the signed-in snapshot.
     assertEquals(emptyList<Session>(), loadCachedState()?.client?.sessions)
   }
 

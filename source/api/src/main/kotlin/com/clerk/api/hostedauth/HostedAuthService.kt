@@ -381,7 +381,7 @@ private suspend fun refreshSignedOutClient(responseGuard: ResponseGuard): Boolea
   responseGuard.runIfAllowed {
     flowIsCurrent = true
     manualClientSyncRequest.runIfResponseCurrent {
-      Clerk.updateClientIfUnchangedSince(updateCountAtStart, result.value)
+      Clerk.updateClientIfUnchangedSince(updateCountAtStart, result)
     }
   }
   return flowIsCurrent

@@ -403,7 +403,6 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    // Seed the real state store instead of stubbing Clerk's getters and writer.
     Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
@@ -431,7 +430,6 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    // Seed the real state store instead of stubbing Clerk's getters and writer.
     Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
@@ -459,7 +457,6 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    // Seed the real state store instead of stubbing Clerk's getters and writer.
     Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
@@ -485,7 +482,6 @@ class PasskeyAuthenticationServiceTest {
     every { mockSignIn.id } returns "sign_in_123"
     every { mockSignIn.firstFactorVerification } returns mockVerification
     every { mockVerification.nonce } returns nonce
-    // Seed the real state store instead of stubbing Clerk's getters and writer.
     Clerk.updateClient(client)
 
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)

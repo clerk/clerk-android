@@ -34,7 +34,6 @@ internal constructor(
   private val stateLock = Any()
   private var localSnapshot: SharedSessionSyncSnapshot? = null
   private var isApplyingSharedStorage = false
-  /** Newest client-store revision handled; guarded by [stateLock]. */
   private var lastHandledClientRevision = Long.MIN_VALUE
   private val storageListener = { key: StorageKey, previous: String?, value: String? ->
     if (key == StorageKey.DEVICE_TOKEN) {
@@ -57,13 +56,6 @@ internal constructor(
 
   suspend fun reloadFromSharedStorage(): Boolean = withContext(Dispatchers.IO) { reloadBlocking() }
 
-  /**
-   * Publishes a committed client change to sibling apps.
-   *
-   * The state store notifies after releasing its write lock, so notifications from concurrent
-   * commits can arrive out of order; [revision] lets an older commit's late notification be ignored
-   * instead of overwriting the newer snapshot. `null` skips that check.
-   */
   fun handleClientChange(client: Client, serverFetchAtMillis: Long, revision: Long? = null) {
     synchronized(stateLock) {
       if (revision != null) {

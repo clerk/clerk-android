@@ -772,11 +772,14 @@ public class Auth internal constructor() {
       is ClerkResult.Success ->
         Clerk.updateClientIfUnchangedSince(
           expectedUpdateCount = updateCountAtStart,
-          client =
-            clientResult.value.withActiveSessionFallback(
-              activeSessionFallbackId = activeSessionFallbackId,
-              fallbackClient = fallbackClient,
-            ),
+          fetched =
+            ClerkResult.success(
+                clientResult.value.withActiveSessionFallback(
+                  activeSessionFallbackId = activeSessionFallbackId,
+                  fallbackClient = fallbackClient,
+                )
+              )
+              .withTags(clientResult.tags),
         )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
@@ -892,16 +895,14 @@ public class Auth internal constructor() {
     activeOrganizationId: String? = null,
   ) {
     Clerk.mutateClient { current ->
-      // Prefer the current client; fall back to the pre-request client when a response cleared the
-      // target session from it.
-      val client =
-        if (sourceClient == null || current.sessions.any { it.id == sessionId }) current
-        else sourceClient
+      val client = current.takeIf { it.hasSession(sessionId) } ?: sourceClient ?: current
       val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
       if (sessions.none { it.id == sessionId }) null
       else client.copy(sessions = sessions, lastActiveSessionId = sessionId)
     }
   }
+
+  private fun Client.hasSession(sessionId: String): Boolean = sessions.any { it.id == sessionId }
 
   private fun List<Session>.withUpdatedSession(
     activeSession: Session?,

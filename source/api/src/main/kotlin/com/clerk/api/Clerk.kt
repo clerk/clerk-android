@@ -22,6 +22,7 @@ import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
 import com.clerk.api.network.model.environment.Environment
@@ -70,10 +71,6 @@ public object Clerk {
 
   private val configurationManager = ConfigurationManager()
 
-  /**
-   * The only writer of client, session, user, and environment state. Clerk's state properties and
-   * flows are read-only views of it.
-   */
   internal val stateStore: ClientStateStore =
     ClientStateStore(cacheConfiguration = ::cachedStateConfiguration).also { store ->
       store.listener = StateStoreListener
@@ -155,22 +152,14 @@ public object Clerk {
    */
   public val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = stateStore.multiSessionModeIsEnabledFlow
 
-  /**
-   * The current environment. Assigning it sets the value without side effects; use
-   * [updateEnvironment] to also refresh derived flows, shared-session sync, and the offline cache.
-   */
   internal var environment: Environment?
     get() = stateStore.environment
-    set(value) = stateStore.overwriteEnvironment(value)
+    set(value) = stateStore.overwriteEnvironmentWithoutSideEffects(value)
 
   /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
   internal val lastClientServerFetchAtMillis: Long?
     get() = stateStore.serverFetchAtMillis
 
-  /**
-   * Increments with every client commit. Capture it before fetching a client that will be applied
-   * after the fetch returns, and apply through [updateClientIfUnchangedSince].
-   */
   internal val clientUpdateCount: Long
     get() = stateStore.revision
 
@@ -878,7 +867,6 @@ public object Clerk {
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
-    // Clears client, session, user, and environment state and the persisted offline cache.
     stateStore.reset()
     resetAuthFlowState()
     SessionTokenFetcher.shared.reset()
@@ -918,12 +906,21 @@ public object Clerk {
   }
 
   /**
-   * Refreshes the current client and updates Clerk's reactive auth state. The fetched client is not
-   * applied if another update (for example a sign-in completing) landed while it was in flight,
-   * since that state is newer.
+   * Refreshes the current client and updates Clerk's reactive auth state.
+   *
+   * If another client update (for example a sign-in completing) landed while the request was in
+   * flight, that newer state is kept and the fetched client is discarded. On success the returned
+   * client is always the one [client] holds when this function returns.
    */
-  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> = fetchAndApplyClient {
-    Client.get()
+  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+    val updateCountAtStart = clientUpdateCount
+    return when (val result = Client.get()) {
+      is ClerkResult.Success -> {
+        updateClientIfUnchangedSince(updateCountAtStart, result)
+        ClerkResult.success(client).withTags(result.tags)
+      }
+      is ClerkResult.Failure -> result
+    }
   }
 
   /**
@@ -1069,11 +1066,6 @@ public object Clerk {
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
 
-  /**
-   * Applies a client supplied by SDK code: a local mutation, or a mutation response its caller
-   * applies itself. Always applies. A fetched client that was awaited while other writes could land
-   * must go through [updateClientIfUnchangedSince] instead.
-   */
   internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
     if (completedAuthFlow != null) {
       holdAuthFlowCompletion(completedAuthFlow)
@@ -1081,40 +1073,37 @@ public object Clerk {
     stateStore.applyClient(client)
   }
 
-  /**
-   * Applies [client] only if no client update happened since [clientUpdateCount] returned
-   * [expectedUpdateCount]. The check and the write happen atomically.
-   *
-   * @return true if the client was applied.
-   */
   internal fun updateClientIfUnchangedSince(expectedUpdateCount: Long, client: Client): Boolean =
     stateStore.applyClientIfUnchangedSince(expectedUpdateCount, client)
 
-  /**
-   * Fetches a client with [fetch] and applies it if nothing else updated the client while the fetch
-   * was in flight. Returns the fetch result either way.
-   */
+  internal fun updateClientIfUnchangedSince(
+    expectedUpdateCount: Long,
+    fetched: ClerkResult.Success<Client>,
+  ): Boolean =
+    stateStore.applyClientIfUnchangedSince(
+      expectedRevision = expectedUpdateCount,
+      client = fetched.value,
+      order = fetched.responseOrder(),
+    )
+
   internal suspend fun <E : Any> fetchAndApplyClient(
     fetch: suspend () -> ClerkResult<Client, E>
   ): ClerkResult<Client, E> {
     val updateCountAtStart = clientUpdateCount
     val result = fetch()
-    if (result is ClerkResult.Success)
-      updateClientIfUnchangedSince(updateCountAtStart, result.value)
+    if (result is ClerkResult.Success) updateClientIfUnchangedSince(updateCountAtStart, result)
     return result
   }
 
-  /**
-   * Atomically derives a new client from the current one; see [ClientStateStore.mutateClient]. Use
-   * this instead of reading [client] and writing a copy, which can overwrite a concurrent commit.
-   */
-  internal fun mutateClient(transform: (Client) -> Client?): Boolean =
-    stateStore.mutateClient(transform)
+  internal fun mutateClient(transformUnderWriteLock: (Client) -> Client?): Boolean =
+    stateStore.mutateClient(transformUnderWriteLock)
 
-  /**
-   * Replaces the client with an explicit server fetch time, without response ordering. Used by
-   * authoritative sources that do their own ordering (cached-state hydration, shared-session sync).
-   */
+  internal fun restoreCachedClient(client: Client, serverFetchAtMillis: Long): Boolean =
+    stateStore.replaceClientIfUnset(client, serverFetchAtMillis)
+
+  internal fun restoreCachedEnvironment(environment: Environment): Boolean =
+    stateStore.applyEnvironmentIfUnset(environment)
+
   internal fun updateClient(
     client: Client,
     serverFetchAtMillis: Long,
@@ -1126,10 +1115,6 @@ public object Clerk {
     stateStore.replaceClient(client, serverFetchAtMillis)
   }
 
-  /**
-   * Applies a client that the network layer decoded from a response, ordered by the response's
-   * `Date` header and arrival. A response ordered before already-applied state is dropped.
-   */
   internal fun applyClientResponse(
     client: Client,
     order: ClientStateStore.ResponseOrder?,
@@ -1142,7 +1127,7 @@ public object Clerk {
   }
 
   private object StateStoreListener : ClientStateStore.Listener {
-    override fun onSessionStateCommitted(previous: Session?, current: Session?) {
+    override fun onSessionStateCommittedUnderWriteLock(previous: Session?, current: Session?) {
       updateIsAuthFlowComplete()
 
       if (previous != current) {
@@ -1158,7 +1143,7 @@ public object Clerk {
       }
     }
 
-    override fun onClientCommitted(commit: ClientStateStore.ClientCommit) {
+    override fun onClientCommittedAfterWriteLock(commit: ClientStateStore.ClientCommit) {
       sharedSessionSyncCoordinator?.handleClientChange(
         client = commit.client,
         serverFetchAtMillis = commit.serverFetchAtMillis,
@@ -1166,7 +1151,10 @@ public object Clerk {
       )
     }
 
-    override fun onEnvironmentCommitted(previous: Environment?, current: Environment) {
+    override fun onEnvironmentCommittedAfterWriteLock(
+      previous: Environment?,
+      current: Environment,
+    ) {
       sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
     }
   }
@@ -1207,16 +1195,16 @@ public object Clerk {
   }
 
   /**
-   * Re-derives the session, sessions, and user flows from the current client.
+   * Internal method to update session and user state flows.
    *
-   * The flows track [Client.lastActiveSessionId] across all sessions regardless of status, so users
-   * with pending sessions keep a "signed in" experience.
+   * Should be called whenever the client state changes that might affect the current session or
+   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
+   * allowing users with pending sessions to maintain a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
     stateStore.recomputeSessionState()
   }
 
-  /** Clears the session, sessions, and user flows without changing the client. */
   internal fun clearSessionAndUserState() {
     stateStore.clearSessionState()
   }

@@ -8,6 +8,7 @@ import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.state.ClientStateStore
@@ -35,6 +36,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
+    val orderAtArrival = Clerk.stateStore.observeResponse(response.serverDateMillis())
     val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
     manualClientSyncRequest?.recordResponse(
       requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
@@ -49,16 +51,19 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         ClerkLog.d("Client sync skipped for a response using a stale shared device token")
         response
       }
-      manualClientSyncRequest != null -> response
-      else -> syncResponse(request = request, response = response)
+      manualClientSyncRequest != null -> response.withResponseOrder(orderAtArrival)
+      else ->
+        syncResponse(request = request, response = response, order = orderAtArrival)
+          .withResponseOrder(orderAtArrival)
     }
   }
 
   @Suppress("NestedBlockDepth")
-  private fun syncResponse(request: Request, response: Response): Response {
-    // Taken on arrival, before the body is read, so responses sharing a Date second keep the order
-    // in which the server answered them.
-    val order = Clerk.stateStore.observeResponse(response.serverDateMillis())
+  private fun syncResponse(
+    request: Request,
+    response: Response,
+    order: ClientStateStore.ResponseOrder?,
+  ): Response {
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
@@ -272,7 +277,15 @@ private fun syncClerkClient(
   )
 }
 
-/** The response's `Date` header, or `null` if it is missing or unparsable. */
+internal fun ClerkResult.Success<*>.responseOrder(): ClientStateStore.ResponseOrder? =
+  (tags[Response::class] as? Response)?.request?.tag(ClientStateStore.ResponseOrder::class.java)
+
+private fun Response.withResponseOrder(order: ClientStateStore.ResponseOrder?): Response {
+  order ?: return this
+  val taggedRequest = request.newBuilder().tag(ClientStateStore.ResponseOrder::class.java, order)
+  return newBuilder().request(taggedRequest.build()).build()
+}
+
 private fun Response.serverDateMillis(): Long? {
   val serverDate = header(SERVER_DATE_HEADER) ?: return null
   return try {
