@@ -8,12 +8,16 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecoratorDefaults
@@ -28,27 +32,25 @@ private const val COMPONENT_STORES_KEY = "com.clerk.ui.navigation.ClerkComponent
  * Gives a prebuilt Clerk component its own [ViewModelStore].
  *
  * Without this, every `viewModel()` call inside a component resolves against the host Activity's
- * store, so ViewModels outlive the component and leak state into the next time it is shown. The
- * store provided here survives configuration changes (it is held by a ViewModel in the parent
- * store) and is cleared when the component leaves composition for good.
+ * store, which is only cleared when the Activity finishes. The store provided here survives
+ * configuration changes (it is held by a ViewModel in the parent store) and is cleared when the
+ * component leaves composition.
  *
- * Leaving composition is not always for good: host navigation (a `NavHost` destination the user
- * navigates away from, a bottom-nav tab saved with `saveState`, a Navigation 3 entry that is no
- * longer on top) disposes the component but saves its state, including the scope key and the
- * component's inner back stack, and restores both when it comes back. Clearing then would hand the
- * restored back stack fresh ViewModels and drop in-flight work. So the store is only cleared on
- * dispose when the surrounding [androidx.compose.runtime.saveable.SaveableStateRegistry] did not
- * save the scope key as part of the disposal. A saved scope's store instead lives until the host
- * clears the parent store (the host entry is popped, or the Activity finishes).
+ * Host navigation (a `NavHost` destination, a Navigation 3 entry with a per-entry ViewModel store,
+ * a tab saved with `saveState`) disposes a destination that is no longer shown but saves its state
+ * through a `SaveableStateHolder` and restores it when the destination comes back. When the parent
+ * owner is such a per-destination store, a scope that is saved as it is disposed keeps its store
+ * until that parent is cleared. When the parent owner is the view tree's owner (the Activity or
+ * Fragment), nothing would ever clear a kept store, so the scope is cleared on dispose regardless.
  */
 @Composable
 internal fun ClerkViewModelStoreScope(content: @Composable () -> Unit) {
   val parent = LocalViewModelStoreOwner.current
   if (parent == null) {
-    // Previews and some snapshot hosts have no owner; nothing to scope against.
     content()
     return
   }
+  val parentClearsKeptStore = parent !== LocalView.current.findViewTreeViewModelStoreOwner()
   val saveTracker = remember { ScopeKeySaveTracker() }
   val scopeKey = rememberSaveable(saver = saveTracker.saver) { UUID.randomUUID().toString() }
   val stores: ComponentViewModelStores =
@@ -60,9 +62,8 @@ internal fun ClerkViewModelStoreScope(content: @Composable () -> Unit) {
     }
   DisposableEffect(stores, scopeKey) {
     onDispose {
-      // A host that saves this scope as it disposes it (navigation, saved tabs) can restore the
-      // same key later, so its ViewModels must survive until the host clears the parent store.
-      if (!saveTracker.savedDuringCurrentMessage && shouldClearOnDispose()) {
+      val hostMayRestoreScope = saveTracker.savedDuringCurrentMessage && parentClearsKeptStore
+      if (!hostMayRestoreScope && shouldClearOnDispose()) {
         stores.clear(scopeKey)
       }
     }
@@ -70,10 +71,6 @@ internal fun ClerkViewModelStoreScope(content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalViewModelStoreOwner provides owner, content = content)
 }
 
-/**
- * Entry decorators for Clerk's [androidx.navigation3.ui.NavDisplay]s: saveable state plus a
- * [ViewModelStore] per back stack entry, so a screen's ViewModels are cleared when it is popped.
- */
 @Composable
 internal fun <T : Any> rememberClerkNavEntryDecorators(): List<NavEntryDecorator<T>> {
   val saveableStateDecorator = rememberSaveableStateHolderNavEntryDecorator<T>()
@@ -98,12 +95,16 @@ internal class ComponentViewModelStores : ViewModel() {
 
 /**
  * Records whether the scope key was just saved by a
- * [androidx.compose.runtime.saveable. SaveableStateRegistry].
+ * [androidx.compose.runtime.saveable.SaveableStateRegistry].
  *
  * A `SaveableStateHolder` saves an entry's state in its own dispose callback, which runs before the
  * dispose callbacks of the entry's content, all within one main-thread message. The flag is reset
- * on the next message, so a save from an earlier `onSaveInstanceState` (or from registration) is
- * never mistaken for a save that accompanies the current disposal.
+ * on the next message, so a save from an earlier `onSaveInstanceState` is not mistaken for a save
+ * that accompanies a later disposal.
+ *
+ * Before API 28 the platform calls `onSaveInstanceState` in the same message as `onStop`, so a
+ * disposal that runs synchronously inside `onStop` still sees that save. Such a scope is kept,
+ * which only happens under a per-destination parent, and is cleared when that parent is cleared.
  */
 private class ScopeKeySaveTracker {
   private val mainHandler = Handler(Looper.getMainLooper())
@@ -135,6 +136,9 @@ private class ScopedViewModelStoreOwner(
 
   override val defaultViewModelCreationExtras: CreationExtras
     get() =
-      (parent as? HasDefaultViewModelProviderFactory)?.defaultViewModelCreationExtras
-        ?: CreationExtras.Empty
+      MutableCreationExtras(
+          (parent as? HasDefaultViewModelProviderFactory)?.defaultViewModelCreationExtras
+            ?: CreationExtras.Empty
+        )
+        .apply { set(VIEW_MODEL_STORE_OWNER_KEY, this@ScopedViewModelStoreOwner) }
 }

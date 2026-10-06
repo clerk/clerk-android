@@ -37,27 +37,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * Regression test for the sign-up code screen being pushed twice: preparing the code (on entry or
- * on resend) returned the still-unverified sign-up as a success state, which the screen routed,
- * pushing a second copy of itself.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SignUpCodeDoublePushTest {
 
   private val testDispatcher = StandardTestDispatcher()
+  private val client = mockk<Client>(relaxed = true)
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
     mockkStatic("com.clerk.api.signup.SignUpKt")
-    val client = mockk<Client>(relaxed = true)
     every { Clerk.client } returns client
-    every { client.signUp } returns unverifiedSignUp()
-    coEvery { any<SignUp>().sendEmailCode() } returns ClerkResult.success(unverifiedSignUp())
-    coEvery { any<SignUp>().sendPhoneCode() } returns ClerkResult.success(unverifiedSignUp())
   }
 
   @After
@@ -68,12 +60,18 @@ class SignUpCodeDoublePushTest {
 
   @Test
   fun preparingAnEmailCodeDoesNotPushTheCodeScreenAgain() = runTest {
+    every { client.signUp } returns emailUnverifiedSignUp()
+    coEvery { any<SignUp>().sendEmailCode() } returns ClerkResult.success(emailUnverifiedSignUp())
+
     assertPrepareKeepsBackStack(SignUpCodeField.Email("sam@clerk.dev"))
     coVerify(exactly = 1) { any<SignUp>().sendEmailCode() }
   }
 
   @Test
   fun preparingAPhoneCodeDoesNotPushTheCodeScreenAgain() = runTest {
+    every { client.signUp } returns phoneUnverifiedSignUp()
+    coEvery { any<SignUp>().sendPhoneCode() } returns ClerkResult.success(phoneUnverifiedSignUp())
+
     assertPrepareKeepsBackStack(SignUpCodeField.Phone("+15555550100"))
     coVerify(exactly = 1) { any<SignUp>().sendPhoneCode() }
   }
@@ -87,10 +85,7 @@ class SignUpCodeDoublePushTest {
     viewModel.prepare(field)
     advanceUntilIdle()
 
-    // Mirrors AuthStateEffects, which routes every sign-up success state.
-    (viewModel.state.value as? AuthenticationViewState.Success.SignUp)?.let {
-      authState.setToStepForStatus(it.signUp, session = null) {}
-    }
+    routeSignUpSuccess(viewModel.state.value, authState)
 
     assertEquals(
       listOf(AuthDestination.AuthStart, AuthDestination.SignUpCode(field)),
@@ -98,7 +93,13 @@ class SignUpCodeDoublePushTest {
     )
   }
 
-  private fun unverifiedSignUp() =
+  private fun routeSignUpSuccess(state: AuthenticationViewState, authState: AuthState) {
+    (state as? AuthenticationViewState.Success.SignUp)?.let {
+      authState.setToStepForStatus(it.signUp, session = null) {}
+    }
+  }
+
+  private fun emailUnverifiedSignUp() =
     SignUp(
       id = "sign_up_123",
       status = SignUp.Status.MISSING_REQUIREMENTS,
@@ -116,6 +117,26 @@ class SignUpCodeDoublePushTest {
             )
         ),
       emailAddress = "sam@clerk.dev",
+    )
+
+  private fun phoneUnverifiedSignUp() =
+    SignUp(
+      id = "sign_up_123",
+      status = SignUp.Status.MISSING_REQUIREMENTS,
+      requiredFields = listOf("phone_number"),
+      optionalFields = emptyList(),
+      missingFields = emptyList(),
+      passwordEnabled = false,
+      unverifiedFields = listOf("phone_number"),
+      verifications =
+        mapOf(
+          "phone_number" to
+            Verification(
+              status = Verification.Status.UNVERIFIED,
+              strategy = Constants.Strategy.PHONE_CODE,
+            )
+        ),
+      phoneNumber = "+15555550100",
     )
 
   private fun preferences() =

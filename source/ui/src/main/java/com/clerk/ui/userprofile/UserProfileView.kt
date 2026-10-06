@@ -92,6 +92,11 @@ internal fun UserProfileStateProvider(
  * provides a back-navigation header above custom destination content, using the matching custom
  * row's title. Routes without a matching row display only the back button.
  *
+ * When your own navigation shows another destination over this view, its in-progress state is kept
+ * only if the destination has its own `ViewModelStoreOwner`, as Navigation Compose destinations do
+ * and Navigation 3 entries do with `rememberViewModelStoreNavEntryDecorator()`. Otherwise the view
+ * starts fresh when it comes back.
+ *
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param customRows Custom rows to display on the profile account screen.
  * @param customDestination Composable that renders the destination for a given route key. The route

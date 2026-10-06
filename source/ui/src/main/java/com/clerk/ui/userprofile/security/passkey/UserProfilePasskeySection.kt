@@ -79,7 +79,6 @@ private fun UserProfilePasskeySectionImpl(
                 )
               )
             },
-            // Rows share the section's ViewModel so the section reports their errors once.
             viewModel = viewModel,
           )
           if (index < passkeys.lastIndex) {

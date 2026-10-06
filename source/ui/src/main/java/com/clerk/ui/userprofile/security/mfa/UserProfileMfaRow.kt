@@ -175,7 +175,6 @@ internal sealed interface Style {
   data object BackupCodes : Style
 }
 
-/** Each MFA row owns its ViewModel, so one row's result is not handled by every row. */
 internal fun Style.viewModelKey(): String =
   when (this) {
     Style.AuthenticatorApp -> "user-profile-mfa-row-totp"

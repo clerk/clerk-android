@@ -30,8 +30,7 @@ class UserProfileEmailRowViewModelTest {
   @Before
   fun setUp() {
     mockkObject(Clerk)
-    // An immutable email makes setAsPrimary fail synchronously, without touching the network.
-    every { Clerk.isEmailImmutable } returns true
+    makeEmailActionsFailWithoutNetwork()
   }
 
   @After
@@ -80,9 +79,12 @@ class UserProfileEmailRowViewModelTest {
     composeTestRule.runOnIdle { firstRowViewModel.setAsPrimary(first) }
     composeTestRule.waitForIdle()
 
-    // Only the row whose action failed reports the error.
     assertEquals(1, firstRowErrors.size)
     assertEquals(0, secondRowErrors.size)
+  }
+
+  private fun makeEmailActionsFailWithoutNetwork() {
+    every { Clerk.isEmailImmutable } returns true
   }
 
   private fun emailAddress(id: String, address: String) =

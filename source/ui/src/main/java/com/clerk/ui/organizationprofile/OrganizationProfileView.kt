@@ -60,6 +60,11 @@ import kotlinx.serialization.Serializable
  * matching [customDestination] composable is rendered. Custom destinations participate in the
  * navigation back stack and survive activity recreation.
  *
+ * When your own navigation shows another destination over this view, its in-progress state is kept
+ * only if the destination has its own `ViewModelStoreOwner`, as Navigation Compose destinations do
+ * and Navigation 3 entries do with `rememberViewModelStoreNavEntryDecorator()`. Otherwise the view
+ * starts fresh when it comes back.
+ *
  * @param clerkTheme Optional theme customization for the organization profile UI.
  * @param isDismissible Whether to show a top-level back affordance that calls [onDismiss].
  * @param customRows Custom rows to display on the profile root screen.

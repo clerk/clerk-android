@@ -69,6 +69,11 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  * can become active while post-auth steps — session tasks or the biometric credential enrollment
  * prompt — still need to be shown.
  *
+ * When your own navigation shows another destination over this view, its in-progress state is kept
+ * only if the destination has its own `ViewModelStoreOwner`, as Navigation Compose destinations do
+ * and Navigation 3 entries do with `rememberViewModelStoreNavEntryDecorator()`. Otherwise the view
+ * starts fresh when it comes back.
+ *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
  * @param initialFirstName Optional initial value for the first name field during sign-up.

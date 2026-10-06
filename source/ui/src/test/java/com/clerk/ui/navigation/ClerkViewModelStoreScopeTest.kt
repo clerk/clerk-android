@@ -4,9 +4,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
+import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -132,7 +135,6 @@ class ClerkViewModelStoreScopeTest {
     val component = created.getValue("component")
     val detail = created.getValue("detail")
 
-    // The host app navigates forward, then back.
     composeTestRule.runOnIdle { hostBackStack.add("elsewhere") }
     composeTestRule.waitForIdle()
     assertFalse(component.cleared)
@@ -145,7 +147,6 @@ class ClerkViewModelStoreScopeTest {
     assertFalse(component.cleared)
     assertFalse(detail.cleared)
 
-    // Popping the host entry that holds the component does clear it.
     composeTestRule.runOnIdle {
       hostBackStack.add("elsewhere")
       hostBackStack.removeAt(0)
@@ -182,6 +183,71 @@ class ClerkViewModelStoreScopeTest {
     assertSame(first, created.last())
     assertFalse(first.cleared)
   }
+
+  @Test
+  fun componentUnderTheActivityIsClearedWhenADefaultNavDisplayPopsItsEntry() {
+    val backStack = mutableStateListOf<String>("root", "component")
+    var component: TrackingViewModel? = null
+
+    composeTestRule.setContent {
+      NavDisplay(
+        backStack = backStack,
+        entryProvider = { key ->
+          NavEntry(key) {
+            if (key == "component") {
+              ClerkViewModelStoreScope { component = viewModel() }
+            }
+          }
+        },
+      )
+    }
+    composeTestRule.waitForIdle()
+    val pushed = checkNotNull(component)
+
+    composeTestRule.runOnIdle { backStack.removeAt(backStack.lastIndex) }
+    composeTestRule.waitForIdle()
+
+    assertTrue(pushed.cleared)
+  }
+
+  @Test
+  fun aSaveThatDoesNotAccompanyDisposalDoesNotKeepTheScope() {
+    var showComponent by mutableStateOf(true)
+    var registry: SaveableStateRegistry? = null
+    val created = mutableListOf<TrackingViewModel>()
+
+    composeTestRule.setContent {
+      registry = LocalSaveableStateRegistry.current
+      CompositionLocalProvider(LocalViewModelStoreOwner provides hostOwner) {
+        if (showComponent) {
+          ClerkViewModelStoreScope { created += viewModel<TrackingViewModel>() }
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    composeTestRule.runOnIdle { checkNotNull(registry).performSave() }
+    composeTestRule.waitForIdle()
+
+    composeTestRule.runOnIdle { showComponent = false }
+    composeTestRule.waitForIdle()
+
+    assertTrue(created.last().cleared)
+  }
+
+  @Test
+  fun siblingComponentsGetSeparateSavedStateHandles() {
+    val created = mutableListOf<HandleViewModel>()
+
+    composeTestRule.setContent {
+      ClerkViewModelStoreScope { created += viewModel<HandleViewModel>() }
+      ClerkViewModelStoreScope { created += viewModel<HandleViewModel>() }
+    }
+    composeTestRule.waitForIdle()
+
+    assertNotSame(created[0].handle, created[1].handle)
+  }
+
+  class HandleViewModel(val handle: SavedStateHandle) : ViewModel()
 
   class TrackingViewModel : ViewModel() {
     var cleared = false
