@@ -76,7 +76,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Fails when the public ABI differs from the checked-in api/*.api dumps.
-      # Run ./gradlew apiDump locally and commit the result for intentional API changes.
       - name: Check public ABI
         run: ./gradlew apiCheck --build-cache --parallel

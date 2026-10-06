@@ -208,10 +208,8 @@ tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
 val buildJdk = libs.versions.jdk.map(JavaLanguageVersion::of)
 val bytecodeTarget = JavaVersion.toVersion(libs.versions.jvmTarget.get())
 
-// Public ABI of the published Android libraries, checked against api/<module>.api.
 // Neither KGP's abiValidation nor the BCV plugin registers tasks for Android libraries built
 // with AGP 9 built-in Kotlin, so we register BCV's task types against the release compilation.
-// After an intentional API change run `./gradlew apiDump` and commit the updated .api files.
 val abiTrackedAndroidLibraries = setOf(":source:api", ":source:ui", ":source:telemetry")
 
 subprojects {
@@ -252,7 +250,6 @@ subprojects {
     extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
       if (name == "release") {
         val release = this
-        // Kotlin classes only: the sole Java class in these modules is the generated BuildConfig.
         apiBuild.configure {
           inputClassesDirs.from(
             release.compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory }
