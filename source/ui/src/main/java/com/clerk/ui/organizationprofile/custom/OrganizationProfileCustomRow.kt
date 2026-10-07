@@ -6,27 +6,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Icon for a custom organization profile row. */
 @Immutable
-sealed interface OrganizationProfileRowIcon {
+public sealed interface OrganizationProfileRowIcon {
   /**
    * A drawable resource icon.
    *
    * @param resId Drawable resource ID to render for the row.
    */
-  data class Resource(@DrawableRes val resId: Int) : OrganizationProfileRowIcon
+  public data class Resource(@DrawableRes val resId: Int) : OrganizationProfileRowIcon
 
   /**
    * A Compose [ImageVector] icon.
    *
    * @param imageVector Vector image to render for the row.
    */
-  data class Vector(val imageVector: ImageVector) : OrganizationProfileRowIcon
+  public data class Vector(val imageVector: ImageVector) : OrganizationProfileRowIcon
 }
 
 /**
  * Built-in rows in [com.clerk.ui.organizationprofile.OrganizationProfileView] that can be used as
  * placement anchors.
  */
-enum class OrganizationProfileRow {
+public enum class OrganizationProfileRow {
   /** Opens the organization members, invitations, and membership requests view. */
   Members,
 
@@ -41,7 +41,7 @@ enum class OrganizationProfileRow {
 }
 
 /** Root-level sections in [com.clerk.ui.organizationprofile.OrganizationProfileView]. */
-enum class OrganizationProfileSection {
+public enum class OrganizationProfileSection {
   /** Contains organization management rows such as members and verified domains. */
   Profile,
 
@@ -51,13 +51,13 @@ enum class OrganizationProfileSection {
 
 /** Where to insert a custom row relative to built-in organization profile rows. */
 @Immutable
-sealed interface OrganizationProfileCustomRowPlacement {
+public sealed interface OrganizationProfileCustomRowPlacement {
   /**
    * Inserts the row before every built-in row in [section].
    *
    * @param section Section where the row should be inserted.
    */
-  data class SectionStart(val section: OrganizationProfileSection) :
+  public data class SectionStart(val section: OrganizationProfileSection) :
     OrganizationProfileCustomRowPlacement
 
   /**
@@ -65,7 +65,7 @@ sealed interface OrganizationProfileCustomRowPlacement {
    *
    * @param section Section where the row should be inserted.
    */
-  data class SectionEnd(val section: OrganizationProfileSection) :
+  public data class SectionEnd(val section: OrganizationProfileSection) :
     OrganizationProfileCustomRowPlacement
 
   /**
@@ -73,14 +73,14 @@ sealed interface OrganizationProfileCustomRowPlacement {
    *
    * @param row Built-in row used as the placement anchor.
    */
-  data class Before(val row: OrganizationProfileRow) : OrganizationProfileCustomRowPlacement
+  public data class Before(val row: OrganizationProfileRow) : OrganizationProfileCustomRowPlacement
 
   /**
    * Inserts the row immediately after [row] when that built-in row is visible.
    *
    * @param row Built-in row used as the placement anchor.
    */
-  data class After(val row: OrganizationProfileRow) : OrganizationProfileCustomRowPlacement
+  public data class After(val row: OrganizationProfileRow) : OrganizationProfileCustomRowPlacement
 }
 
 /**
@@ -94,7 +94,7 @@ sealed interface OrganizationProfileCustomRowPlacement {
  *   section.
  */
 @Immutable
-data class OrganizationProfileCustomRow(
+public data class OrganizationProfileCustomRow(
   val routeKey: String,
   val title: String,
   val icon: OrganizationProfileRowIcon,

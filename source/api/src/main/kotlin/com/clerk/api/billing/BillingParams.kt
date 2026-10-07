@@ -7,7 +7,7 @@ internal const val DEFAULT_BILLING_LIMIT = 20
 
 /** The payer type of a Billing Plan. */
 @Serializable
-enum class ForPayerType {
+public enum class ForPayerType {
   @SerialName("organization") ORGANIZATION,
   @SerialName("user") USER,
 }

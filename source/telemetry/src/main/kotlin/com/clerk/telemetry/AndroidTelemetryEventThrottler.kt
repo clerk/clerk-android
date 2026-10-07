@@ -11,7 +11,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
-class AndroidTelemetryEventThrottler(
+public class AndroidTelemetryEventThrottler(
   context: Context,
   private val json: Json = Json {
     encodeDefaults = true
@@ -97,7 +97,7 @@ class AndroidTelemetryEventThrottler(
     }
   }
 
-  companion object {
+  public companion object {
     private const val PREFS_NAME = "clerk_telemetry"
     private const val KEY_STORAGE = "clerk_telemetry_throttler"
   }

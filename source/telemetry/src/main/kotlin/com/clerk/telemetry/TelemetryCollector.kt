@@ -25,7 +25,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 private const val DEFAULT_ENDPOINT_BASE_URL = "https://clerk-telemetry.com"
 
-class TelemetryCollector
+public class TelemetryCollector
 private constructor(
   options: TelemetryCollectorOptions,
   private val transport: TelemetryTransport,
@@ -39,7 +39,7 @@ private constructor(
    * Creates a collector that posts events with [client]. When [client] is null, the collector
    * builds its own OkHttpClient off the main thread on the first flush.
    */
-  constructor(
+  public constructor(
     options: TelemetryCollectorOptions = TelemetryCollectorOptions(),
     environment: TelemetryEnvironment,
     throttler: TelemetryEventThrottler,
@@ -68,7 +68,7 @@ private constructor(
       "okhttp3.OkHttpClient",
     ),
   )
-  constructor(
+  public constructor(
     options: TelemetryCollectorOptions = TelemetryCollectorOptions(),
     client: HttpClient,
     environment: TelemetryEnvironment,
@@ -109,7 +109,7 @@ private constructor(
     startPeriodicFlushing()
   }
 
-  suspend fun record(raw: TelemetryEventRaw) {
+  public suspend fun record(raw: TelemetryEventRaw) {
     val prepared = preparePayload(raw.event, raw.payload)
     val recordResult = shouldRecord(prepared, raw.eventSamplingRate)
 
@@ -201,7 +201,7 @@ private constructor(
     }
   }
 
-  suspend fun flush() {
+  public suspend fun flush() {
     val events = mutex.withLock {
       if (buffer.isEmpty()) return
       val copy = buffer.toList()

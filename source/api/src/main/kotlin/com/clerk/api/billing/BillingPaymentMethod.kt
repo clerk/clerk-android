@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = BillingPaymentMethodStatus.Serializer::class)
-enum class BillingPaymentMethodStatus {
+public enum class BillingPaymentMethodStatus {
   @SerialName("active") ACTIVE,
   @SerialName("expired") EXPIRED,
   @SerialName("disconnected") DISCONNECTED,
@@ -38,7 +38,7 @@ enum class BillingPaymentMethodStatus {
  * @property updatedAt The date the payment method was last updated, as Unix milliseconds.
  */
 @Serializable
-data class BillingPaymentMethod(
+public data class BillingPaymentMethod(
   val id: String,
   val last4: String? = null,
   val paymentType: String? = null,

@@ -329,7 +329,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
  * @property skipCache Whether to bypass the token cache and always fetch from network
  * @property expirationBuffer Buffer time in seconds before token expiration to consider it invalid
  */
-data class GetTokenOptions(
+public data class GetTokenOptions(
   /** Optional template name for custom token generation */
   val template: String? = null,
 

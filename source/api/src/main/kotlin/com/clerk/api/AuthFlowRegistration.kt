@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** Keeps an SDK-owned authentication flow registered until the owning UI is disposed. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class AuthFlowRegistration internal constructor(private val unregister: () -> Unit) :
+public class AuthFlowRegistration internal constructor(private val unregister: () -> Unit) :
   AutoCloseable {
   private val isClosed = AtomicBoolean(false)
 

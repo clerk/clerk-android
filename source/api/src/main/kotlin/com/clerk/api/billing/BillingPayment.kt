@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = BillingPaymentChargeType.Serializer::class)
-enum class BillingPaymentChargeType {
+public enum class BillingPaymentChargeType {
   @SerialName("checkout") CHECKOUT,
   @SerialName("recurring") RECURRING,
   @SerialName("price_transition") PRICE_TRANSITION,
@@ -24,7 +24,7 @@ enum class BillingPaymentChargeType {
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = BillingPaymentStatus.Serializer::class)
-enum class BillingPaymentStatus {
+public enum class BillingPaymentStatus {
   @SerialName("pending") PENDING,
   @SerialName("paid") PAID,
   @SerialName("failed") FAILED,
@@ -47,7 +47,7 @@ enum class BillingPaymentStatus {
  *   `null` when no discounts apply.
  */
 @Serializable
-data class BillingPaymentTotals(
+public data class BillingPaymentTotals(
   val subtotal: BillingMoneyAmount,
   val grandTotal: BillingMoneyAmount,
   val taxTotal: BillingMoneyAmount,
@@ -73,7 +73,7 @@ data class BillingPaymentTotals(
  *   older responses.
  */
 @Serializable
-data class BillingPayment(
+public data class BillingPayment(
   val id: String,
   val amount: BillingMoneyAmount,
   val paidAt: Long? = null,

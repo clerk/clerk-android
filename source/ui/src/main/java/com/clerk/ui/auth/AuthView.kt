@@ -92,7 +92,7 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  *   instead.
  */
 @Composable
-fun AuthView(
+public fun AuthView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   logo: (@Composable () -> Unit)? = null,

@@ -5,7 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 
 /** Starts an in-session reverification flow. */
-suspend fun Session.startVerification(
+public suspend fun Session.startVerification(
   level: SessionVerification.Level
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.startVerification(

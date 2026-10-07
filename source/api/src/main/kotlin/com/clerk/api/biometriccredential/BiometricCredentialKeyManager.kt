@@ -46,12 +46,12 @@ internal data class BiometricCredentialKeySignature(
  *
  * Check [code] to distinguish user cancellation from real failures.
  */
-class BiometricCredentialKeyManagerException
-internal constructor(val code: Code, message: String, cause: Throwable? = null) :
+public class BiometricCredentialKeyManagerException
+internal constructor(public val code: Code, message: String, cause: Throwable? = null) :
   Exception(message, cause) {
 
   /** The category of biometric-credential key management error. */
-  enum class Code {
+  public enum class Code {
     /** Biometric sign-in requires Android 9 (API 28) or later. */
     UNSUPPORTED_PLATFORM,
 

@@ -52,7 +52,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * ```
  */
 @Composable
-fun SignInFactorCodeView(
+public fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
@@ -210,29 +210,29 @@ private const val VERIFICATION_CODE_LENGTH = 6
  * - [Success]: Code verification succeeded
  * - [Error]: Code verification failed
  */
-sealed interface VerificationState {
+public sealed interface VerificationState {
 
   /**
    * Default state indicating the component is ready for user input. Typically shows normal input
    * styling without any status indicators.
    */
-  data object Default : VerificationState
+  public data object Default : VerificationState
 
   /**
    * Verifying state indicating code submission is in progress. Usually displays loading indicators
    * and disables input.
    */
-  data object Verifying : VerificationState
+  public data object Verifying : VerificationState
 
   /**
    * Success state indicating the code was successfully verified. Often shows success indicators and
    * may trigger navigation.
    */
-  data object Success : VerificationState
+  public data object Success : VerificationState
 
   /**
    * Error state indicating code verification failed. Typically displays error styling and allows
    * retry.
    */
-  data object Error : VerificationState
+  public data object Error : VerificationState
 }

@@ -30,7 +30,7 @@ import kotlinx.serialization.Serializable
  * @property publicOrganizationData The data's public organization.
  */
 @Serializable
-data class OrganizationDomain(
+public data class OrganizationDomain(
   val id: String,
   val name: String,
   val organizationId: String,
@@ -44,17 +44,17 @@ data class OrganizationDomain(
   val totalPendingSuggestions: Int,
 ) {
   /** The typed enrollment mode for new users joining an organization through this domain. */
-  sealed class EnrollmentMode(val value: String) {
-    data object ManualInvitation : EnrollmentMode("manual_invitation")
+  public sealed class EnrollmentMode(public val value: String) {
+    public data object ManualInvitation : EnrollmentMode("manual_invitation")
 
-    data object AutomaticInvitation : EnrollmentMode("automatic_invitation")
+    public data object AutomaticInvitation : EnrollmentMode("automatic_invitation")
 
-    data object AutomaticSuggestion : EnrollmentMode("automatic_suggestion")
+    public data object AutomaticSuggestion : EnrollmentMode("automatic_suggestion")
 
-    data class Unknown(val rawValue: String) : EnrollmentMode(rawValue)
+    public data class Unknown(val rawValue: String) : EnrollmentMode(rawValue)
 
-    companion object {
-      fun fromValue(value: String): EnrollmentMode =
+    public companion object {
+      public fun fromValue(value: String): EnrollmentMode =
         when (value) {
           ManualInvitation.value -> ManualInvitation
           AutomaticInvitation.value -> AutomaticInvitation
@@ -80,7 +80,7 @@ data class OrganizationDomain(
    *   milliseconds), null if no expiration
    */
   @Serializable
-  data class Verification(
+  public data class Verification(
     val status: String,
     val strategy: String,
     val attempts: Int,
@@ -96,7 +96,7 @@ private val organizationApi by lazy { ClerkApi.organization }
  * @return A [ClerkResult] containing either a [DeletedObject] on success or a [ClerkErrorResponse]
  *   on failure
  */
-suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return organizationApi.deleteOrganizationDomain(
     organizationId = this.organizationId,
     domainId = this.id,
@@ -111,7 +111,7 @@ suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, ClerkErrorRe
  * @return A [ClerkResult] containing either the updated [OrganizationDomain] on success or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun OrganizationDomain.prepareAffiliationVerification(
+public suspend fun OrganizationDomain.prepareAffiliationVerification(
   affiliationEmailAddress: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return organizationApi.prepareAffiliationVerification(
@@ -133,7 +133,7 @@ suspend fun OrganizationDomain.prepareAffiliationVerification(
  * @return A [ClerkResult] containing either the updated [OrganizationDomain] on success or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun OrganizationDomain.attemptAffiliationVerification(
+public suspend fun OrganizationDomain.attemptAffiliationVerification(
   code: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return organizationApi.attemptAffiliationVerification(
@@ -144,7 +144,7 @@ suspend fun OrganizationDomain.attemptAffiliationVerification(
   )
 }
 
-suspend fun OrganizationDomain.updateEnrollmentMode(
+public suspend fun OrganizationDomain.updateEnrollmentMode(
   enrollmentMode: String,
   deletePending: Boolean? = null,
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
@@ -157,7 +157,7 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
   )
 }
 
-suspend fun OrganizationDomain.updateEnrollmentMode(
+public suspend fun OrganizationDomain.updateEnrollmentMode(
   enrollmentMode: OrganizationDomain.EnrollmentMode,
   deletePending: Boolean? = null,
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
@@ -175,7 +175,7 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
  * @return A [ClerkResult] containing the updated [OrganizationDomain] on success or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun OrganizationDomain.sendEmailCode(
+public suspend fun OrganizationDomain.sendEmailCode(
   affiliationEmailAddress: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return prepareAffiliationVerification(affiliationEmailAddress)
@@ -191,7 +191,7 @@ suspend fun OrganizationDomain.sendEmailCode(
  * @return A [ClerkResult] containing the updated [OrganizationDomain] on success or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun OrganizationDomain.verifyCode(
+public suspend fun OrganizationDomain.verifyCode(
   code: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return attemptAffiliationVerification(code)

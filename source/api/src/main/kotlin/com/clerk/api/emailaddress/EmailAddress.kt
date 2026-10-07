@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
  *   milliseconds.
  */
 @Serializable
-data class EmailAddress(
+public data class EmailAddress(
   /** The unique identifier for the email address. */
   val id: String,
 
@@ -40,26 +40,26 @@ data class EmailAddress(
   @SerialName("created_at") val createdAt: Long? = null,
 ) {
 
-  @Serializable data class LinkedEntity(val id: String, val type: String)
+  @Serializable public data class LinkedEntity(val id: String, val type: String)
 
-  sealed interface PrepareVerificationParams {
-    val strategy: String
+  public sealed interface PrepareVerificationParams {
+    public val strategy: String
 
     @AutoMap
     @Serializable
-    data class EmailCode(override val strategy: String = Strategy.EmailCode.value) :
+    public data class EmailCode(override val strategy: String = Strategy.EmailCode.value) :
       PrepareVerificationParams
 
     @AutoMap
     @Serializable
-    data class EnterpriseSSO(
+    public data class EnterpriseSSO(
       override val strategy: String = Strategy.EnterpriseSso.value,
       val redirectUrl: String? = null,
       @SerialName("action_complete_redirect_url") val actionCompleteRedirectUrl: String? = null,
     ) : PrepareVerificationParams
   }
 
-  companion object {
+  public companion object {
     /**
      * Creates a new email address for the current user or the user with the given session ID.
      *
@@ -70,7 +70,7 @@ data class EmailAddress(
      * @return A [ClerkResult] containing the created [EmailAddress] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun create(email: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+    public suspend fun create(email: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
       return ClerkApi.user.createEmailAddress(emailAddress = email)
     }
   }
@@ -83,7 +83,7 @@ data class EmailAddress(
  * @return A [ClerkResult] containing the updated [EmailAddress] if the verification was successful,
  *   or a [ClerkErrorResponse] if the verification failed.
  */
-suspend fun EmailAddress.attemptVerification(
+public suspend fun EmailAddress.attemptVerification(
   code: String
 ): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.attemptEmailAddressVerification(emailAddressId = this.id, code = code)
@@ -97,7 +97,7 @@ suspend fun EmailAddress.attemptVerification(
  *   or a [ClerkErrorResponse] if the verification failed.
  * @see EmailAddress.PrepareVerificationParams
  */
-suspend fun EmailAddress.prepareVerification(
+public suspend fun EmailAddress.prepareVerification(
   params: EmailAddress.PrepareVerificationParams
 ): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.prepareEmailAddressVerification(
@@ -112,7 +112,7 @@ suspend fun EmailAddress.prepareVerification(
  * @return A [ClerkResult] containing the [EmailAddress] if the request was successful, or a
  *   [ClerkErrorResponse] if the request failed.
  */
-suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
+public suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.getEmailAddress(emailAddressId = this.id)
 }
 
@@ -122,7 +122,7 @@ suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the deleted [EmailAddress] if the request was successful, or a
  *   [ClerkErrorResponse] if the request failed.
  */
-suspend fun EmailAddress.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun EmailAddress.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteEmailAddress(emailAddressId = this.id)
 }
 
@@ -136,7 +136,7 @@ suspend fun EmailAddress.delete(): ClerkResult<DeletedObject, ClerkErrorResponse
  * @return A [ClerkResult] containing the updated [EmailAddress] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun EmailAddress.sendCode(): ClerkResult<EmailAddress, ClerkErrorResponse> {
+public suspend fun EmailAddress.sendCode(): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode())
 }
 
@@ -150,6 +150,8 @@ suspend fun EmailAddress.sendCode(): ClerkResult<EmailAddress, ClerkErrorRespons
  * @return A [ClerkResult] containing the updated [EmailAddress] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun EmailAddress.verifyCode(code: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+public suspend fun EmailAddress.verifyCode(
+  code: String
+): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return attemptVerification(code)
 }

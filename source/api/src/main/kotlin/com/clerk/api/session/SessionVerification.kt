@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 /** Represents the state of an in-session reverification (step-up) flow. */
 @Serializable
-data class SessionVerification(
+public data class SessionVerification(
   /** The unique identifier for the verification attempt. */
   val id: String? = null,
 
@@ -39,7 +39,7 @@ data class SessionVerification(
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = Status.Serializer::class)
-  enum class Status {
+  public enum class Status {
     @SerialName("needs_first_factor") NEEDS_FIRST_FACTOR,
     @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR,
     @SerialName("complete") COMPLETE,
@@ -53,7 +53,7 @@ data class SessionVerification(
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = Level.Serializer::class)
-  enum class Level(val value: String) {
+  public enum class Level(public val value: String) {
     @SerialName("first_factor") FIRST_FACTOR("first_factor"),
     @SerialName("second_factor") SECOND_FACTOR("second_factor"),
     @SerialName("multi_factor") MULTI_FACTOR("multi_factor"),

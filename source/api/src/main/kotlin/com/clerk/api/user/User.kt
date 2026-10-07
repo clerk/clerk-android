@@ -65,7 +65,7 @@ import kotlinx.serialization.json.JsonObject
  * information and authentication status.
  */
 @Serializable
-data class User(
+public data class User(
   /** A boolean indicating whether the user has enabled Backup codes. */
   @SerialName("backup_code_enabled") val backupCodeEnabled: Boolean? = null,
 
@@ -187,7 +187,7 @@ data class User(
    */
   @AutoMap
   @Serializable
-  data class UpdateParams(
+  public data class UpdateParams(
     /** The user's first name. */
     @SerialName("first_name") val firstName: String? = null,
     /** The user's last name. */
@@ -245,7 +245,7 @@ data class User(
    */
   @AutoMap
   @Serializable
-  data class UpdateMetadataParams(
+  public data class UpdateMetadataParams(
     /**
      * JSON string containing the unsafe metadata patch to merge into the current `unsafeMetadata`.
      * Use `null` keys to remove existing entries.
@@ -263,7 +263,7 @@ data class User(
    */
   @AutoMap
   @Serializable
-  data class UpdatePasswordParams(
+  public data class UpdatePasswordParams(
     /** The user's current password for verification. */
     @SerialName("current_password") val currentPassword: String? = null,
     /** The new password to set for the user. */
@@ -285,7 +285,7 @@ data class User(
    */
   @AutoMap
   @Serializable
-  data class CreateExternalAccountParams(
+  public data class CreateExternalAccountParams(
     /** The strategy corresponding to the OAuth provider. For example: `oauth_google` */
     @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
     /**
@@ -300,7 +300,7 @@ data class User(
     @SerialName("oidc_login_hint") val oidcLoginHint: String? = null,
   )
 
-  companion object {
+  public companion object {
     /**
      * Retrieves organization invitations for the current user.
      *
@@ -318,7 +318,7 @@ data class User(
      * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [UserOrganizationInvitation]
      *   objects on success, or a [ClerkErrorResponse] on failure
      */
-    suspend fun getOrganizationInvitations(
+    public suspend fun getOrganizationInvitations(
       limit: Int = 20,
       offset: Int = 0,
       status: String? = null,
@@ -348,7 +348,7 @@ data class User(
      * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion]
      *   objects on success, or a [ClerkErrorResponse] on failure
      */
-    suspend fun getOrganizationSuggestions(
+    public suspend fun getOrganizationSuggestions(
       limit: Int = 20,
       offset: Int = 0,
       status: String? = null,
@@ -372,7 +372,7 @@ data class User(
      * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion]
      *   objects on success, or a [ClerkErrorResponse] on failure
      */
-    suspend fun getOrganizationSuggestions(
+    public suspend fun getOrganizationSuggestions(
       limit: Int = 20,
       offset: Int = 0,
       statuses: List<String>,
@@ -395,7 +395,7 @@ data class User(
    * full [EmailAddress] object from the [emailAddresses] list that matches the
    * [primaryEmailAddressId]. Returns null if no primary email address is set or found.
    */
-  val primaryEmailAddress = emailAddresses?.find { it.id == primaryEmailAddressId }
+  val primaryEmailAddress: EmailAddress? = emailAddresses?.find { it.id == primaryEmailAddressId }
 }
 
 /**
@@ -406,13 +406,13 @@ data class User(
  * @return A [ClerkResult] containing the [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.getUser()
+public suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.getUser()
 
 /**
  * Reloads the user by fetching a fresh [Client], applying it to [Clerk.client], [Clerk.sessionFlow]
  * and [Clerk.userFlow], and returning this user from the fetched client.
  */
-suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
+public suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
   val manualClientSyncRequest = ManualClientSyncRequest()
   val clientUpdateCountAtStart = Clerk.clientUpdateCount
   return when (
@@ -492,7 +492,7 @@ private suspend fun User.reloadFromMe(): ClerkResult<User, ClerkErrorResponse> =
  *   [ClerkErrorResponse] if it failed.
  */
 @Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
-suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> =
+public suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> =
   params.unsafeMetadata?.let { rawMetadata ->
     updateWithDeprecatedUnsafeMetadata(params, rawMetadata)
   } ?: ClerkApi.user.updateUser(fields = params.toMap())
@@ -580,7 +580,7 @@ private suspend fun updateMetadataAfterProfileUpdate(
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-suspend fun User.updateMetadata(
+public suspend fun User.updateMetadata(
   params: UpdateMetadataParams
 ): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.updateUserMetadata(fields = params.toMap())
@@ -596,12 +596,14 @@ suspend fun User.updateMetadata(
  *   failure.
  * @see updateMetadata
  */
-suspend fun User.updateMetadata(unsafeMetadata: JsonObject): ClerkResult<User, ClerkErrorResponse> {
+public suspend fun User.updateMetadata(
+  unsafeMetadata: JsonObject
+): ClerkResult<User, ClerkErrorResponse> {
   return updateMetadata(UpdateMetadataParams(unsafeMetadata = unsafeMetadata.toString()))
 }
 
 /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
-suspend fun User.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> =
+public suspend fun User.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> =
   ClerkApi.user.deleteUser()
 
 /**
@@ -612,7 +614,9 @@ suspend fun User.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> =
  * @return A [ClerkResult] containing the [ImageResource] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-suspend fun User.setProfileImage(file: File): ClerkResult<ImageResource, ClerkErrorResponse> {
+public suspend fun User.setProfileImage(
+  file: File
+): ClerkResult<ImageResource, ClerkErrorResponse> {
   return UserService.setProfilePhoto(file)
 }
 
@@ -623,7 +627,7 @@ suspend fun User.setProfileImage(file: File): ClerkResult<ImageResource, ClerkEr
  * @return A [ClerkResult] containing the [DeletedObject] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-suspend fun User.deleteProfileImage(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun User.deleteProfileImage(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteProfileImage()
 }
 
@@ -636,7 +640,7 @@ suspend fun User.deleteProfileImage(): ClerkResult<DeletedObject, ClerkErrorResp
  *
  * **See:** [UpdatePasswordParams] for the available parameters.
  */
-suspend fun User.updatePassword(
+public suspend fun User.updatePassword(
   params: UpdatePasswordParams
 ): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.updatePassword(params.toMap())
@@ -650,7 +654,9 @@ suspend fun User.updatePassword(
  * @return A [ClerkResult] containing the [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-suspend fun User.deletePassword(currentPassword: String): ClerkResult<User, ClerkErrorResponse> {
+public suspend fun User.deletePassword(
+  currentPassword: String
+): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.deletePassword(currentPassword)
 }
 
@@ -663,7 +669,7 @@ suspend fun User.deletePassword(currentPassword: String): ClerkResult<User, Cler
  * @return A [ClerkResult] containing a list of active [Session] objects on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.activeSessions(): ClerkResult<List<Session>, ClerkErrorResponse> {
+public suspend fun User.activeSessions(): ClerkResult<List<Session>, ClerkErrorResponse> {
   return ClerkApi.user.getActiveSessions()
 }
 
@@ -676,7 +682,7 @@ suspend fun User.activeSessions(): ClerkResult<List<Session>, ClerkErrorResponse
  * @return A [ClerkResult] containing a list of all [Session] objects on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.allSessions(): ClerkResult<List<Session>, ClerkErrorResponse> {
+public suspend fun User.allSessions(): ClerkResult<List<Session>, ClerkErrorResponse> {
   return ClerkApi.user.getSessions()
 }
 
@@ -689,7 +695,7 @@ suspend fun User.allSessions(): ClerkResult<List<Session>, ClerkErrorResponse> {
  * @return A [ClerkResult] containing a list of [EmailAddress] objects on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.emailAddresses(): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
+public suspend fun User.emailAddresses(): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
   return ClerkApi.user.getEmailAddresses()
 }
 
@@ -703,7 +709,9 @@ suspend fun User.emailAddresses(): ClerkResult<List<EmailAddress>, ClerkErrorRes
  * @return A [ClerkResult] containing the created [EmailAddress] object on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.createEmailAddress(email: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+public suspend fun User.createEmailAddress(
+  email: String
+): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.createEmailAddress(emailAddress = email)
 }
 
@@ -716,7 +724,7 @@ suspend fun User.createEmailAddress(email: String): ClerkResult<EmailAddress, Cl
  * @return A [ClerkResult] containing a list of [PhoneNumber] objects on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.phoneNumbers(): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
+public suspend fun User.phoneNumbers(): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
   return ClerkApi.user.getPhoneNumbers()
 }
 
@@ -731,7 +739,7 @@ suspend fun User.phoneNumbers(): ClerkResult<List<PhoneNumber>, ClerkErrorRespon
  * @return A [ClerkResult] containing the created [PhoneNumber] object on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.createPhoneNumber(
+public suspend fun User.createPhoneNumber(
   phoneNumber: String
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.createPhoneNumber(phoneNumber)
@@ -747,7 +755,7 @@ suspend fun User.createPhoneNumber(
  * @return A [ClerkResult] containing the created [Passkey] object on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
+public suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
   return PasskeyService.createPasskey()
 }
 
@@ -759,7 +767,7 @@ suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
  *
  * @param isCloudBackupEnabled Whether to back up the restore credential to encrypted cloud backup.
  */
-suspend fun User.createRestoreCredential(
+public suspend fun User.createRestoreCredential(
   isCloudBackupEnabled: Boolean = true
 ): ClerkResult<Unit, ClerkErrorResponse> {
   return RestoreCredentials.create(isCloudBackupEnabled)
@@ -788,7 +796,7 @@ suspend fun User.createRestoreCredential(
  *   present to the user. To learn more about the properties available on verification, see the
  *   verification reference.
  */
-suspend fun User.createExternalAccount(
+public suspend fun User.createExternalAccount(
   params: CreateExternalAccountParams
 ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
   return SSOService.connectExternalAccount(params)
@@ -807,7 +815,7 @@ suspend fun User.createExternalAccount(
  * @return A [ClerkResult] containing the [TOTPResource] with setup information on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.createTotp(): ClerkResult<TOTPResource, ClerkErrorResponse> {
+public suspend fun User.createTotp(): ClerkResult<TOTPResource, ClerkErrorResponse> {
   return ClerkApi.user.createTOTP()
 }
 
@@ -821,7 +829,7 @@ suspend fun User.createTotp(): ClerkResult<TOTPResource, ClerkErrorResponse> {
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun User.disableTotp(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun User.disableTotp(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteTOTP()
 }
 
@@ -836,7 +844,7 @@ suspend fun User.disableTotp(): ClerkResult<DeletedObject, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the verified [TOTPResource] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun User.attemptTotpVerification(
+public suspend fun User.attemptTotpVerification(
   code: String
 ): ClerkResult<TOTPResource, ClerkErrorResponse> {
   return ClerkApi.user.attemptTOTPVerification(code)
@@ -852,7 +860,7 @@ suspend fun User.attemptTotpVerification(
  * @return A [ClerkResult] containing the [BackupCodeResource] with the generated backup codes on
  *   success, or a [ClerkErrorResponse] on failure
  */
-suspend fun User.createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse> {
+public suspend fun User.createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse> {
   return ClerkApi.user.createBackupCodes()
 }
 
@@ -870,7 +878,7 @@ suspend fun User.createBackupCodes(): ClerkResult<BackupCodeResource, ClerkError
  * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationMembership] objects
  *   on success, or a [ClerkErrorResponse] on failure
  */
-suspend fun User.getOrganizationMemberships(
+public suspend fun User.getOrganizationMemberships(
   limit: Int = 20,
   offset: Int = 0,
 ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse> {
@@ -881,7 +889,7 @@ suspend fun User.getOrganizationMemberships(
   )
 }
 
-suspend fun User.getOrganizationInvitations(
+public suspend fun User.getOrganizationInvitations(
   limit: Int = 20,
   offset: Int = 0,
   status: String? = null,
@@ -894,7 +902,7 @@ suspend fun User.getOrganizationInvitations(
   )
 }
 
-suspend fun User.getOrganizationSuggestions(
+public suspend fun User.getOrganizationSuggestions(
   limit: Int = 20,
   offset: Int = 0,
   statuses: List<String> = emptyList(),
@@ -907,7 +915,7 @@ suspend fun User.getOrganizationSuggestions(
   )
 }
 
-suspend fun User.getOrganizationCreationDefaults():
+public suspend fun User.getOrganizationCreationDefaults():
   ClerkResult<OrganizationCreationDefaults, ClerkErrorResponse> {
   return ClerkApi.user.getOrganizationCreationDefaults(sessionId = currentSessionId())
 }
@@ -918,7 +926,7 @@ suspend fun User.getOrganizationCreationDefaults():
  * @param limit The maximum number of payment methods to return.
  * @param offset The number of payment methods to skip.
  */
-suspend fun User.getPaymentMethods(
+public suspend fun User.getPaymentMethods(
   limit: Int = 20,
   offset: Int = 0,
 ): ClerkResult<ClerkPaginatedResponse<BillingPaymentMethod>, ClerkErrorResponse> {
@@ -953,7 +961,7 @@ internal fun currentSessionId(): String? {
  * that still leave at least one other first-factor identification (username, verified email, or
  * another verified non-reserved phone).
  */
-fun User.phoneNumbersAvailableForMfa(): List<PhoneNumber> {
+public fun User.phoneNumbersAvailableForMfa(): List<PhoneNumber> {
   return phoneNumbers.filter { phone ->
     phone.verification?.status == Verification.Status.VERIFIED &&
       !phone.reservedForSecondFactor &&
@@ -975,7 +983,7 @@ private fun User.hasAlternativeFirstFactorIdentification(excludingPhoneId: Strin
   return hasUsername || hasVerifiedEmail || hasAnotherVerifiedNonReservedPhone
 }
 
-fun User.phoneNumbersReservedForMfa(): List<PhoneNumber> {
+public fun User.phoneNumbersReservedForMfa(): List<PhoneNumber> {
   return phoneNumbers.filter {
     it.verification?.status == Verification.Status.VERIFIED && it.reservedForSecondFactor
   }

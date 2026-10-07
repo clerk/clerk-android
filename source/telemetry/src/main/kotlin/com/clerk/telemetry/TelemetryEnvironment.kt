@@ -1,14 +1,14 @@
 package com.clerk.telemetry
 
-interface TelemetryEnvironment {
-  val sdkName: String
-  val sdkVersion: String
+public interface TelemetryEnvironment {
+  public val sdkName: String
+  public val sdkVersion: String
 
-  suspend fun instanceTypeString(): String
+  public suspend fun instanceTypeString(): String
 
-  suspend fun isTelemetryEnabled(): Boolean
+  public suspend fun isTelemetryEnabled(): Boolean
 
-  suspend fun isDebugModeEnabled(): Boolean
+  public suspend fun isDebugModeEnabled(): Boolean
 
-  suspend fun publishableKey(): String?
+  public suspend fun publishableKey(): String?
 }

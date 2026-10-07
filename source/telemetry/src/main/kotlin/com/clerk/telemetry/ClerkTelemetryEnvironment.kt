@@ -8,7 +8,7 @@ import kotlinx.serialization.json.jsonPrimitive
 private const val CLERK_ANDROID = "clerk-android"
 
 /** A [TelemetryEnvironment] implementation that reads values from injected providers. */
-class ClerkTelemetryEnvironment(
+public class ClerkTelemetryEnvironment(
   override val sdkVersion: String,
   private val instanceTypeProvider: suspend () -> String,
   private val telemetryEnabledProvider: suspend () -> Boolean,
@@ -16,7 +16,7 @@ class ClerkTelemetryEnvironment(
   private val publishableKeyProvider: suspend () -> String?,
 ) : TelemetryEnvironment {
 
-  constructor() :
+  public constructor() :
     this(
       sdkVersion = Clerk.version,
       instanceTypeProvider = {

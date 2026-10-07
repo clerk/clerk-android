@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = InstanceEnvironmentType.Serializer::class)
-enum class InstanceEnvironmentType {
+public enum class InstanceEnvironmentType {
 
   /** Represents a production environment. */
   @SerialName("production") PRODUCTION,

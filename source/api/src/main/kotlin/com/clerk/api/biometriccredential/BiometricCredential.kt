@@ -31,7 +31,7 @@ import kotlinx.serialization.encoding.Encoder
  */
 @Serializable(with = BiometricCredentialSerializer::class)
 @ConsistentCopyVisibility
-data class BiometricCredential
+public data class BiometricCredential
 private constructor(
   /** The unique identifier of the biometric credential. */
   val id: String,
@@ -70,7 +70,7 @@ private constructor(
   val statusRawValue: String,
 ) {
 
-  constructor(
+  public constructor(
     id: String,
     platform: Platform = Platform.UNKNOWN,
     appIdentifier: String,
@@ -96,7 +96,7 @@ private constructor(
     statusRawValue = status.serializedValue,
   )
 
-  fun copy(
+  public fun copy(
     id: String = this.id,
     platform: Platform = this.platform,
     appIdentifier: String = this.appIdentifier,
@@ -128,7 +128,7 @@ private constructor(
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = Platform.Serializer::class)
-  enum class Platform(internal val serializedValue: String) {
+  public enum class Platform(internal val serializedValue: String) {
     @SerialName("ios") IOS("ios"),
     @SerialName("android") ANDROID("android"),
     @SerialName("unknown") UNKNOWN("unknown");
@@ -148,7 +148,7 @@ private constructor(
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = Status.Serializer::class)
-  enum class Status(internal val serializedValue: String) {
+  public enum class Status(internal val serializedValue: String) {
     @SerialName("active") ACTIVE("active"),
     @SerialName("revoked") REVOKED("revoked"),
     @SerialName("unknown") UNKNOWN("unknown");
@@ -164,9 +164,9 @@ private constructor(
     }
   }
 
-  companion object {
+  public companion object {
     /** The signature algorithm used by biometric credentials on Android. */
-    const val ES256_ALGORITHM: String = "ES256"
+    public const val ES256_ALGORITHM: String = "ES256"
 
     internal fun fromPayload(payload: BiometricCredentialPayload): BiometricCredential =
       BiometricCredential(

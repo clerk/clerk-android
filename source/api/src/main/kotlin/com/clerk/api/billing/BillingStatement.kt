@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = BillingStatementStatus.Serializer::class)
-enum class BillingStatementStatus {
+public enum class BillingStatementStatus {
   @SerialName("open") OPEN,
   @SerialName("closed") CLOSED,
   @SerialName("unknown") UNKNOWN;
@@ -28,7 +28,7 @@ enum class BillingStatementStatus {
  * @property taxTotal The amount of tax included in the statement.
  */
 @Serializable
-data class BillingStatementTotals(
+public data class BillingStatementTotals(
   val subtotal: BillingMoneyAmount,
   val grandTotal: BillingMoneyAmount,
   val taxTotal: BillingMoneyAmount,
@@ -43,7 +43,7 @@ data class BillingStatementTotals(
  * @property items Payment resources that belong to this group.
  */
 @Serializable
-data class BillingStatementGroup(
+public data class BillingStatementGroup(
   val id: String? = null,
   val timestamp: Long,
   val items: List<BillingPayment> = emptyList(),
@@ -63,7 +63,7 @@ data class BillingStatementGroup(
  *   timestamp.
  */
 @Serializable
-data class BillingStatement(
+public data class BillingStatement(
   val id: String,
   val totals: BillingStatementTotals,
   val status: BillingStatementStatus = BillingStatementStatus.UNKNOWN,
