@@ -33,6 +33,7 @@
     <string name="set_new_password">Задать новый пароль</string>
     <string name="reset_password">Сбросить пароль</string>
     <string name="confirm_password">Подтвердите пароль</string>
+    <string name="passwords_dont_match">Пароли не совпадают</string>
     <string name="new_password">Новый пароль</string>
     <string name="account_requires_new_password_before_continue">Для продолжения вашей учетной записи требуется новый пароль</string>
     <string name="sign_out_of_all_other_devices">Выйти на всех других устройствах</string>
@@ -108,6 +109,7 @@
     <string name="email_code">Код по электронной почте</string>
     <string name="or">или</string>
     <string name="continue_to">Продолжить в %1$s</string>
+    <string name="continue_with">Продолжить с %1$s</string>
     <string name="create_your_account">Создайте учетную запись</string>
     <string name="welcome_sign_in_to_continue">Добро пожаловать! Войдите, чтобы продолжить.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">Добро пожаловать! Заполните данные, чтобы начать.</string>

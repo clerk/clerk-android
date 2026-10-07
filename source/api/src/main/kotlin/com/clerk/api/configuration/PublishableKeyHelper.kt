@@ -8,9 +8,7 @@ import com.clerk.api.Constants.Prefixes.URL_SSL_PREFIX
 internal class PublishableKeyHelper {
   internal fun extractApiUrl(publishableKey: String): String {
     val prefixRemoved =
-      publishableKey
-        .removePrefix(TOKEN_PREFIX_TEST)
-        .removePrefix(TOKEN_PREFIX_LIVE)
+      publishableKey.removePrefix(TOKEN_PREFIX_TEST).removePrefix(TOKEN_PREFIX_LIVE)
 
     val decodedBytes = Base64.decode(prefixRemoved, Base64.DEFAULT)
     val decodedString = String(decodedBytes)

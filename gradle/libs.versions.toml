@@ -6,7 +6,10 @@ automap = "0.1.3"
 composeBom = "2026.06.01"
 core = "1.7.0"
 coreKtxVersion = "1.7.0"
-detekt = "1.23.8"
+# detekt 1.23.x embeds the Kotlin 2.0 compiler, which cannot read Kotlin 2.4 metadata, so type
+# resolution (InjectDispatcher and friends) only works on the 2.x line. Keep the pre-commit
+# checksum in config/bin/tool-checksums.sha256 in sync when bumping.
+detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 dokka = "2.2.0"
 firebase-appDistrubution = "5.3.0"
@@ -30,7 +33,8 @@ kotlinTest = "2.4.20"
 paparazziPlugin = "2.0.0-alpha05.1"
 
 # Build Versions -- Do not delete
-jdk = "17"
+# JDK the build and unit tests run on (Robolectric and Paparazzi need 21). Bytecode targets jvmTarget.
+jdk = "21"
 jvmTarget = "17"
 kotlin = "2.4.20"
 minSdk = "24"
@@ -105,7 +109,7 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
 google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }

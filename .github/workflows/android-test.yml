@@ -17,9 +17,15 @@ jobs:
           - module: ":source:api"
             path: "source/api"
             label: "source-api"   # <— safe artifact label (no /)
+            task: "testDebugUnitTest"
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui"
+            task: "testDebugUnitTest"
+          - module: ":source:telemetry"
+            path: "source/telemetry"
+            label: "source-telemetry"
+            task: "testDebugUnitTest"
     steps:
       - uses: actions/checkout@v7
       - name: set up JDK 21
@@ -36,7 +42,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests for ${{ matrix.module }}
-        run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
+        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} --build-cache --parallel
 
       - name: Upload test results (${{ matrix.label }})
         if: always()

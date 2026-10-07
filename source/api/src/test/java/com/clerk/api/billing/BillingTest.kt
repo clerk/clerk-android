@@ -474,9 +474,8 @@ class BillingTest {
   @Test
   fun `decodes fractional percent off and int64 money amounts`() {
     val json =
-      MONEY.replace("\"amount\": 1000,", "\"amount\": 3000000000,")
-        .let { money ->
-          """
+      MONEY.replace("\"amount\": 1000,", "\"amount\": 3000000000,").let { money ->
+        """
           {
             "amount": $money,
             "discount_id": "disc_1",
@@ -485,7 +484,7 @@ class BillingTest {
             "percent_off": 12.5
           }
           """
-        }
+      }
     val discount = decode<BillingAppliedDiscount>(json)
 
     assertEquals(3_000_000_000L, discount.amount.amount)

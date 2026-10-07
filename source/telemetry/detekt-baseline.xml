@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>DoubleMutabilityForCollection:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$private var memoryCache: MutableMap&lt;String, Long>? = null</ID>
+    <ID>InjectDispatcher:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$IO</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$1000L</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$24L</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$60L</ID>
+    <ID>UnsafeCallOnNullableType:AndroidTelemetryEventThrottler.kt:AndroidTelemetryEventThrottler$memoryCache!!</ID>
+    <ID>UnusedPrivateProperty:TelemetryCollector.kt:TelemetryCollector$private val json: Json = Json { encodeDefaults = true ignoreUnknownKeys = true }</ID>
+  </CurrentIssues>
+</SmellBaseline>

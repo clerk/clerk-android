@@ -6,7 +6,7 @@ REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 . "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"
 
 version="$(catalog_version detekt)" || exit 1
-jar="$(tool_jar "io/gitlab/arturbosch/detekt/detekt-cli/$version" "detekt-cli-$version-all.jar")" || exit 1
+jar="$(tool_jar "dev/detekt/detekt-cli/$version" "detekt-cli-$version-all.jar")" || exit 1
 java="$(java_cmd)" || exit 1
 
 exec "$java" -jar "$jar" "$@"
