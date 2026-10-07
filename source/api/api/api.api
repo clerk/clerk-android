@@ -126,6 +126,7 @@ public final class com/clerk/api/ClerkConfigurationOptions {
 
 public final class com/clerk/api/ClerkKt {
 	public static final fun getResetPasswordFactor (Lcom/clerk/api/signin/SignIn;)Lcom/clerk/api/network/model/factor/Factor;
+	public static final fun identifyingFirstFactor (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/auth/types/Strategy;)Lcom/clerk/api/network/model/factor/Factor;
 	public static final fun identifyingFirstFactor (Lcom/clerk/api/signin/SignIn;Ljava/lang/String;)Lcom/clerk/api/network/model/factor/Factor;
 	public static final fun toOAuthProvidersList (Ljava/util/Map;)Ljava/util/List;
 }
@@ -502,6 +503,111 @@ public final class com/clerk/api/auth/types/MfaType : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/api/auth/types/MfaType;
 	public static fun values ()[Lcom/clerk/api/auth/types/MfaType;
+}
+
+public abstract class com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/auth/types/Strategy$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun equals (Ljava/lang/Object;)Z
+	public static final fun from (Ljava/lang/String;)Lcom/clerk/api/auth/types/Strategy;
+	public final fun getValue ()Ljava/lang/String;
+	public final fun hashCode ()I
+	public final fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/auth/types/Strategy$BackupCode : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$BackupCode;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Companion {
+	public final fun from (Ljava/lang/String;)Lcom/clerk/api/auth/types/Strategy;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/auth/types/Strategy$EmailCode : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$EmailCode;
+}
+
+public final class com/clerk/api/auth/types/Strategy$EmailLink : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$EmailLink;
+}
+
+public final class com/clerk/api/auth/types/Strategy$EnterpriseSso : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$EnterpriseSso;
+}
+
+public final class com/clerk/api/auth/types/Strategy$GoogleOneTap : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$GoogleOneTap;
+}
+
+public final class com/clerk/api/auth/types/Strategy$OAuth : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public final fun getProvider ()Lcom/clerk/api/sso/OAuthProvider;
+}
+
+public final class com/clerk/api/auth/types/Strategy$OAuthToken : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+}
+
+public final class com/clerk/api/auth/types/Strategy$Passkey : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Passkey;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Password : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Password;
+}
+
+public final class com/clerk/api/auth/types/Strategy$PhoneCode : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$PhoneCode;
+}
+
+public final class com/clerk/api/auth/types/Strategy$ResetPasswordEmailCode : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$ResetPasswordEmailCode;
+}
+
+public final class com/clerk/api/auth/types/Strategy$ResetPasswordPhoneCode : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$ResetPasswordPhoneCode;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Saml : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Saml;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Ticket : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Ticket;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Totp : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Totp;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Transfer : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$Transfer;
+}
+
+public final class com/clerk/api/auth/types/Strategy$TrustedDevice : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/auth/types/Strategy$TrustedDevice;
+}
+
+public final class com/clerk/api/auth/types/Strategy$Unknown : com/clerk/api/auth/types/Strategy {
+	public static final field $stable I
+	public final fun getRaw ()Ljava/lang/String;
 }
 
 public final class com/clerk/api/auth/types/VerificationType : java/lang/Enum {
@@ -2730,6 +2836,7 @@ public final class com/clerk/api/network/model/client/Client {
 	public final fun getId ()Ljava/lang/String;
 	public final fun getLastActiveSessionId ()Ljava/lang/String;
 	public final fun getLastAuthenticationStrategy ()Ljava/lang/String;
+	public final fun getLastAuthenticationStrategyType ()Lcom/clerk/api/auth/types/Strategy;
 	public final fun getSessions ()Ljava/util/List;
 	public final fun getSignIn ()Lcom/clerk/api/signin/SignIn;
 	public final fun getSignUp ()Lcom/clerk/api/signup/SignUp;
@@ -3230,6 +3337,7 @@ public final class com/clerk/api/network/model/factor/Factor {
 	public final fun getPrimary ()Ljava/lang/Boolean;
 	public final fun getSafeIdentifier ()Ljava/lang/String;
 	public final fun getStrategy ()Ljava/lang/String;
+	public final fun getStrategyType ()Lcom/clerk/api/auth/types/Strategy;
 	public final fun getWeb3WalletId ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -3431,6 +3539,7 @@ public final class com/clerk/api/network/model/verification/Verification {
 	public final fun getNonce ()Ljava/lang/String;
 	public final fun getStatus ()Lcom/clerk/api/network/model/verification/Verification$Status;
 	public final fun getStrategy ()Ljava/lang/String;
+	public final fun getStrategyType ()Lcom/clerk/api/auth/types/Strategy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3882,13 +3991,19 @@ public final class com/clerk/api/organizations/OrganizationInvitation$Companion 
 
 public final class com/clerk/api/organizations/OrganizationInvitation$Status : java/lang/Enum {
 	public static final field Accepted Lcom/clerk/api/organizations/OrganizationInvitation$Status;
+	public static final field Companion Lcom/clerk/api/organizations/OrganizationInvitation$Status$Companion;
 	public static final field Completed Lcom/clerk/api/organizations/OrganizationInvitation$Status;
 	public static final field Invalid Lcom/clerk/api/organizations/OrganizationInvitation$Status;
 	public static final field Pending Lcom/clerk/api/organizations/OrganizationInvitation$Status;
 	public static final field Revoked Lcom/clerk/api/organizations/OrganizationInvitation$Status;
+	public static final field Unknown Lcom/clerk/api/organizations/OrganizationInvitation$Status;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/api/organizations/OrganizationInvitation$Status;
 	public static fun values ()[Lcom/clerk/api/organizations/OrganizationInvitation$Status;
+}
+
+public final class com/clerk/api/organizations/OrganizationInvitation$Status$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/organizations/OrganizationInvitationKt {
@@ -6275,7 +6390,6 @@ public abstract interface class com/clerk/api/signup/SignUp$CreateParams {
 
 public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
-	public static final field STRATEGY Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;
@@ -6338,7 +6452,6 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Standard$Companion {
 
 public final class com/clerk/api/signup/SignUp$CreateParams$Ticket : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
-	public static final field STRATEGY Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;
@@ -6590,6 +6703,7 @@ public final class com/clerk/api/sso/OAuthResult {
 	public final fun copy (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/signup/SignUp;)Lcom/clerk/api/sso/OAuthResult;
 	public static synthetic fun copy$default (Lcom/clerk/api/sso/OAuthResult;Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/signup/SignUp;ILjava/lang/Object;)Lcom/clerk/api/sso/OAuthResult;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOutcome ()Lcom/clerk/api/sso/OAuthResult$Outcome;
 	public final fun getResultType ()Lcom/clerk/api/sso/ResultType;
 	public final fun getSignIn ()Lcom/clerk/api/signin/SignIn;
 	public final fun getSignUp ()Lcom/clerk/api/signup/SignUp;
@@ -6611,6 +6725,41 @@ public final synthetic class com/clerk/api/sso/OAuthResult$$serializer : kotlinx
 
 public final class com/clerk/api/sso/OAuthResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class com/clerk/api/sso/OAuthResult$Outcome {
+}
+
+public final class com/clerk/api/sso/OAuthResult$Outcome$Empty : com/clerk/api/sso/OAuthResult$Outcome {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/sso/OAuthResult$Outcome$Empty;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/sso/OAuthResult$Outcome$SignIn : com/clerk/api/sso/OAuthResult$Outcome {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/api/signin/SignIn;)V
+	public final fun component1 ()Lcom/clerk/api/signin/SignIn;
+	public final fun copy (Lcom/clerk/api/signin/SignIn;)Lcom/clerk/api/sso/OAuthResult$Outcome$SignIn;
+	public static synthetic fun copy$default (Lcom/clerk/api/sso/OAuthResult$Outcome$SignIn;Lcom/clerk/api/signin/SignIn;ILjava/lang/Object;)Lcom/clerk/api/sso/OAuthResult$Outcome$SignIn;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignIn ()Lcom/clerk/api/signin/SignIn;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/sso/OAuthResult$Outcome$SignUp : com/clerk/api/sso/OAuthResult$Outcome {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/api/signup/SignUp;)V
+	public final fun component1 ()Lcom/clerk/api/signup/SignUp;
+	public final fun copy (Lcom/clerk/api/signup/SignUp;)Lcom/clerk/api/sso/OAuthResult$Outcome$SignUp;
+	public static synthetic fun copy$default (Lcom/clerk/api/sso/OAuthResult$Outcome$SignUp;Lcom/clerk/api/signup/SignUp;ILjava/lang/Object;)Lcom/clerk/api/sso/OAuthResult$Outcome$SignUp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignUp ()Lcom/clerk/api/signup/SignUp;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/clerk/api/sso/ResultType : java/lang/Enum {

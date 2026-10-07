@@ -20,6 +20,10 @@ public final class com/clerk/telemetry/ClerkTelemetryEnvironment : com/clerk/tel
 }
 
 public final class com/clerk/telemetry/TelemetryCollector {
+	public static final field DEVELOPMENT_INSTANCE_TYPE Ljava/lang/String;
+	public static final field PERCENTAGE_MULTIPLIER I
+	public fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;Lokhttp3/OkHttpClient;)V
+	public synthetic fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;Lokhttp3/OkHttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lio/ktor/client/HttpClient;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;)V
 	public synthetic fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lio/ktor/client/HttpClient;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun flush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
