@@ -9,36 +9,36 @@ internal data class CheckAuthorizationParams(
 )
 
 /**
- * How recently the user must have verified their identity. Use a preset, or [Custom] for a
- * specific level and time window.
+ * How recently the user must have verified their identity. Use a preset, or [Custom] for a specific
+ * level and time window.
  */
-sealed class ReverificationConfig {
+public sealed class ReverificationConfig {
   /**
    * Multi-factor verification within the last 10 minutes. Falls back to first-factor verification
    * when the user has no second factor enrolled.
    */
-  data object StrictMfa : ReverificationConfig()
+  public data object StrictMfa : ReverificationConfig()
 
   /**
    * Second-factor verification within the last 10 minutes. Falls back to first-factor verification
    * when the user has no second factor enrolled.
    */
-  data object Strict : ReverificationConfig()
+  public data object Strict : ReverificationConfig()
 
   /**
    * Second-factor verification within the last hour. Falls back to first-factor verification when
    * the user has no second factor enrolled.
    */
-  data object Moderate : ReverificationConfig()
+  public data object Moderate : ReverificationConfig()
 
   /**
    * Second-factor verification within the last day. Falls back to first-factor verification when
    * the user has no second factor enrolled.
    */
-  data object Lax : ReverificationConfig()
+  public data object Lax : ReverificationConfig()
 
   /** Verification at [level] within the last [afterMinutes] minutes. */
-  data class Custom(val level: SessionVerification.Level, val afterMinutes: Int) :
+  public data class Custom(val level: SessionVerification.Level, val afterMinutes: Int) :
     ReverificationConfig()
 }
 

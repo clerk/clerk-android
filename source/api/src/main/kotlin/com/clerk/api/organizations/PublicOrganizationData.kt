@@ -3,7 +3,7 @@ package com.clerk.api.organizations
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PublicOrganizationData(
+public data class PublicOrganizationData(
   val id: String,
   /** Whether the organization has an image */
   val hasImage: Boolean,

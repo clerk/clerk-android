@@ -1,0 +1,139 @@
+public final class com/clerk/telemetry/AndroidTelemetryEventThrottler : com/clerk/telemetry/TelemetryEventThrottler {
+	public static final field Companion Lcom/clerk/telemetry/AndroidTelemetryEventThrottler$Companion;
+	public fun <init> (Landroid/content/Context;Lkotlinx/serialization/json/Json;J)V
+	public synthetic fun <init> (Landroid/content/Context;Lkotlinx/serialization/json/Json;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun isEventThrottled (Lcom/clerk/telemetry/TelemetryEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/telemetry/AndroidTelemetryEventThrottler$Companion {
+}
+
+public final class com/clerk/telemetry/ClerkTelemetryEnvironment : com/clerk/telemetry/TelemetryEnvironment {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public fun getSdkName ()Ljava/lang/String;
+	public fun getSdkVersion ()Ljava/lang/String;
+	public fun instanceTypeString (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isDebugModeEnabled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isTelemetryEnabled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun publishableKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/telemetry/TelemetryCollector {
+	public static final field DEVELOPMENT_INSTANCE_TYPE Ljava/lang/String;
+	public static final field PERCENTAGE_MULTIPLIER I
+	public fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;Lokhttp3/OkHttpClient;)V
+	public synthetic fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;Lokhttp3/OkHttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lio/ktor/client/HttpClient;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;)V
+	public synthetic fun <init> (Lcom/clerk/telemetry/TelemetryCollectorOptions;Lio/ktor/client/HttpClient;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryEventThrottler;Lkotlinx/serialization/json/Json;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun flush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun record (Lcom/clerk/telemetry/TelemetryEventRaw;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/telemetry/TelemetryCollectorOptions {
+	public fun <init> ()V
+	public fun <init> (DIJZ)V
+	public synthetic fun <init> (DIJZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()Z
+	public final fun copy (DIJZ)Lcom/clerk/telemetry/TelemetryCollectorOptions;
+	public static synthetic fun copy$default (Lcom/clerk/telemetry/TelemetryCollectorOptions;DIJZILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryCollectorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisableThrottling ()Z
+	public final fun getFlushIntervalSeconds ()J
+	public final fun getMaxBufferSize ()I
+	public final fun getNormalizedFlushIntervalSeconds ()J
+	public final fun getNormalizedMaxBufferSize ()I
+	public final fun getSamplingRate ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/clerk/telemetry/TelemetryEnvironment {
+	public abstract fun getSdkName ()Ljava/lang/String;
+	public abstract fun getSdkVersion ()Ljava/lang/String;
+	public abstract fun instanceTypeString (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isDebugModeEnabled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isTelemetryEnabled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun publishableKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/telemetry/TelemetryEvent {
+	public static final field Companion Lcom/clerk/telemetry/TelemetryEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/clerk/telemetry/TelemetryEvent;
+	public static synthetic fun copy$default (Lcom/clerk/telemetry/TelemetryEvent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvent ()Ljava/lang/String;
+	public final fun getInstanceType ()Ljava/lang/String;
+	public final fun getPayload ()Ljava/util/Map;
+	public final fun getPublishableKey ()Ljava/lang/String;
+	public final fun getSdkName ()Ljava/lang/String;
+	public final fun getSdkVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/telemetry/TelemetryEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/clerk/telemetry/TelemetryEvent$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/telemetry/TelemetryEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/telemetry/TelemetryEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/telemetry/TelemetryEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/telemetry/TelemetryEventRaw {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)Lcom/clerk/telemetry/TelemetryEventRaw;
+	public static synthetic fun copy$default (Lcom/clerk/telemetry/TelemetryEventRaw;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;ILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryEventRaw;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvent ()Ljava/lang/String;
+	public final fun getEventSamplingRate ()Ljava/lang/Double;
+	public final fun getPayload ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/clerk/telemetry/TelemetryEventThrottler {
+	public abstract fun isEventThrottled (Lcom/clerk/telemetry/TelemetryEvent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/telemetry/TelemetryEvents {
+	public static final field INSTANCE Lcom/clerk/telemetry/TelemetryEvents;
+	public final fun methodInvoked (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)Lcom/clerk/telemetry/TelemetryEventRaw;
+	public static synthetic fun methodInvoked$default (Lcom/clerk/telemetry/TelemetryEvents;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;ILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryEventRaw;
+	public final fun viewDidAppear (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)Lcom/clerk/telemetry/TelemetryEventRaw;
+	public static synthetic fun viewDidAppear$default (Lcom/clerk/telemetry/TelemetryEvents;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;ILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryEventRaw;
+}
+
+public final class com/clerk/telemetry/TelemetryEventsKt {
+	public static final fun telemetryPayload ([Lkotlin/Pair;)Ljava/util/Map;
+}
+
+public final class com/clerk/telemetry/TelemetryModule {
+	public static final field INSTANCE Lcom/clerk/telemetry/TelemetryModule;
+	public final fun createCollector (Landroid/content/Context;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryCollectorOptions;)Lcom/clerk/telemetry/TelemetryCollector;
+	public static synthetic fun createCollector$default (Lcom/clerk/telemetry/TelemetryModule;Landroid/content/Context;Lcom/clerk/telemetry/TelemetryEnvironment;Lcom/clerk/telemetry/TelemetryCollectorOptions;ILjava/lang/Object;)Lcom/clerk/telemetry/TelemetryCollector;
+	public final fun httpClient ()Lio/ktor/client/HttpClient;
+}
+

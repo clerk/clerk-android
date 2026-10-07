@@ -35,7 +35,7 @@ private const val SOCIAL_BUTTON_BLOCK_THRESHOLD = 2
  *   button with text. Defaults to `true`.
  */
 @Composable
-fun ClerkSocialRow(
+public fun ClerkSocialRow(
   providers: ImmutableList<OAuthProvider>,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

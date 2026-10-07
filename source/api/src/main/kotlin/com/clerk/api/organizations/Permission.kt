@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * @property updatedAt Epoch timestamp of the last update to the permission.
  */
 @Serializable
-data class Permission(
+public data class Permission(
   /** Unique identifier */
   val id: String,
   /** Name of the permission */

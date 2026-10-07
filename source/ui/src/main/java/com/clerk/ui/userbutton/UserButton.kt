@@ -92,7 +92,7 @@ import kotlinx.coroutines.launch
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
-fun UserButton(
+public fun UserButton(
   clerkTheme: ClerkTheme? = null,
   treatPendingAsSignedOut: Boolean = false,
   routeToAuthWhenForcedMfa: Boolean = true,

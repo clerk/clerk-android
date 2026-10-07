@@ -1,5 +1,8 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,43 +16,52 @@ import kotlinx.serialization.Serializable
  * @property currencySymbol The symbol for the currency. For example, `$`.
  */
 @Serializable
-data class BillingMoneyAmount(
+public data class BillingMoneyAmount(
   val amount: Long,
   val amountFormatted: String,
   val currency: String,
   val currencySymbol: String,
 )
 
-/**
- * Whether a catalog discount subtracts a percentage or a fixed amount.
- */
-@Serializable
-enum class BillingDiscountEffect {
+/** Whether a catalog discount subtracts a percentage or a fixed amount. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountEffect.Serializer::class)
+public enum class BillingDiscountEffect {
   @SerialName("percentage") PERCENTAGE,
   @SerialName("fixed_amount") FIXED_AMOUNT,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountEffect>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * How a discount was applied to a subscription item.
- */
-@Serializable
-enum class BillingDiscountSource {
+/** How a discount was applied to a subscription item. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountSource.Serializer::class)
+public enum class BillingDiscountSource {
   @SerialName("promotion") PROMOTION,
   @SerialName("manual") MANUAL,
   @SerialName("promo_code") PROMO_CODE,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountSource>(generatedSerializer(), UNKNOWN)
 }
 
-/**
- * The current status of a discount redemption.
- */
-@Serializable
-enum class BillingDiscountRedemptionStatus {
+/** The current status of a discount redemption. */
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingDiscountRedemptionStatus.Serializer::class)
+public enum class BillingDiscountRedemptionStatus {
   @SerialName("active") ACTIVE,
   @SerialName("exhausted") EXHAUSTED,
   @SerialName("removed") REMOVED,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingDiscountRedemptionStatus>(generatedSerializer(), UNKNOWN)
 }
 
 /**
@@ -60,7 +72,7 @@ enum class BillingDiscountRedemptionStatus {
  * @property total The total billed amount for this tier.
  */
 @Serializable
-data class BillingPerUnitTotalTier(
+public data class BillingPerUnitTotalTier(
   val quantity: Int? = null,
   val feePerBlock: BillingMoneyAmount,
   val total: BillingMoneyAmount,
@@ -74,7 +86,7 @@ data class BillingPerUnitTotalTier(
  * @property tiers The tier breakdown for this unit total.
  */
 @Serializable
-data class BillingPerUnitTotal(
+public data class BillingPerUnitTotal(
   val name: String,
   val blockSize: Int,
   val tiers: List<BillingPerUnitTotalTier> = emptyList(),
@@ -89,7 +101,7 @@ data class BillingPerUnitTotal(
  * @property cycleRemainingPercent The percentage of the billing cycle that remains.
  */
 @Serializable
-data class BillingProrationCreditDetail(
+public data class BillingProrationCreditDetail(
   val amount: BillingMoneyAmount,
   val cycleDaysRemaining: Int,
   val cycleDaysTotal: Int,
@@ -103,7 +115,7 @@ data class BillingProrationCreditDetail(
  * @property appliedAmount The amount of payer credit applied to the transaction.
  */
 @Serializable
-data class BillingPayerCredit(
+public data class BillingPayerCredit(
   val remainingBalance: BillingMoneyAmount,
   val appliedAmount: BillingMoneyAmount,
 )
@@ -117,7 +129,7 @@ data class BillingPayerCredit(
  * @property total The total monetary value of all credits applied to the transaction.
  */
 @Serializable
-data class BillingCredits(
+public data class BillingCredits(
   val proration: BillingProrationCreditDetail? = null,
   val payer: BillingPayerCredit? = null,
   val total: BillingMoneyAmount,
@@ -132,7 +144,7 @@ data class BillingCredits(
  * @property cyclePassedPercent The percentage of the billing cycle that has passed.
  */
 @Serializable
-data class BillingProrationDiscount(
+public data class BillingProrationDiscount(
   val amount: BillingMoneyAmount,
   val cycleDaysPassed: Int,
   val cycleDaysTotal: Int,
@@ -156,7 +168,7 @@ data class BillingProrationDiscount(
  *   discount does not expire after a fixed number of cycles.
  */
 @Serializable
-data class BillingAppliedDiscount(
+public data class BillingAppliedDiscount(
   val amount: BillingMoneyAmount,
   val discountId: String,
   val name: String,
@@ -193,7 +205,7 @@ data class BillingAppliedDiscount(
  *   recorded.
  */
 @Serializable
-data class BillingDiscountRedemption(
+public data class BillingDiscountRedemption(
   val id: String,
   val subscriptionItemId: String,
   val discountId: String,
@@ -222,7 +234,7 @@ data class BillingDiscountRedemption(
  * @property total The total of all discounts applied.
  */
 @Serializable
-data class BillingDiscounts(
+public data class BillingDiscounts(
   val proration: BillingProrationDiscount? = null,
   val discount: BillingAppliedDiscount? = null,
   val total: BillingMoneyAmount,
@@ -238,7 +250,7 @@ data class BillingDiscounts(
  * @property perUnitTotals Per-unit cost breakdown for the renewal period.
  */
 @Serializable
-data class BillingPeriodTotals(
+public data class BillingPeriodTotals(
   val subtotal: BillingMoneyAmount,
   val baseFee: BillingMoneyAmount,
   val taxTotal: BillingMoneyAmount,
@@ -265,7 +277,7 @@ data class BillingPeriodTotals(
  * @property totalDuePerPeriod The expected total payment for each future billing period.
  */
 @Serializable
-data class BillingTotals(
+public data class BillingTotals(
   val subtotal: BillingMoneyAmount,
   val baseFee: BillingMoneyAmount? = null,
   val taxTotal: BillingMoneyAmount,

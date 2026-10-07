@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * progress, tracking the sign in or sign up progress.
  */
 @Serializable
-data class Client(
+public data class Client(
   /** Unique identifier for this client. */
   val id: String? = null,
 
@@ -47,16 +47,16 @@ data class Client(
     get() = lastAuthenticationStrategy?.let(Strategy::from)
 
   /** Current active sessions. */
-  fun activeSessions(): List<Session> = sessions.filter {
+  public fun activeSessions(): List<Session> = sessions.filter {
     it.status == Session.SessionStatus.ACTIVE
   }
 
-  companion object {
+  public companion object {
     /** Fetches the current client object from the Clerk API. */
-    suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.client.get()
+    public suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.client.get()
 
     /** Fetches the current client without sending the current in-memory client id header. */
-    suspend fun getSkippingClientId(): ClerkResult<Client, ClerkErrorResponse> =
+    public suspend fun getSkippingClientId(): ClerkResult<Client, ClerkErrorResponse> =
       ClerkApi.client.getSkippingClientId()
   }
 }

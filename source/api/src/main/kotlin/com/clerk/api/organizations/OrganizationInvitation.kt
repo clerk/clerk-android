@@ -3,13 +3,16 @@ package com.clerk.api.organizations
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.user.currentSessionId
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class OrganizationInvitation(
+public data class OrganizationInvitation(
   /** The unique identifier for this organization invitation. */
   val id: String,
   /** The email address the invitation has been sent to. */
@@ -36,16 +39,29 @@ data class OrganizationInvitation(
   val updatedAt: Long,
   val publicOrganizationData: PublicOrganizationData? = null,
 ) {
-  enum class Status {
+  /** The status of an organization invitation. */
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
+  public enum class Status {
     @SerialName("pending") Pending,
     @SerialName("accepted") Accepted,
     @SerialName("revoked") Revoked,
     @SerialName("invalid") Invalid,
     @SerialName("completed") Completed,
+
+    /**
+     * A status this SDK version does not recognize. Only produced when decoding; it cannot be used
+     * as a filter in [Organization.getInvitations].
+     */
+    @SerialName("unknown") Unknown;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), Unknown)
   }
 }
 
-suspend fun OrganizationInvitation.revoke():
+public suspend fun OrganizationInvitation.revoke():
   ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
   return ClerkApi.organization.revokeOrganizationInvitation(
     organizationId = this.organizationId!!,

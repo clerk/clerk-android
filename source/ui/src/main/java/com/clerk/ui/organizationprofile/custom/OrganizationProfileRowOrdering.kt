@@ -29,10 +29,12 @@ internal fun buildOrganizationProfileRenderedRows(
   customRows: List<OrganizationProfileCustomRow>,
 ): List<OrganizationProfileListRow> {
   val sectionCustomRows = customRows.filter { it.placement.section == section }
-  val sectionStartRows =
-    sectionCustomRows.filter { it.placement is OrganizationProfileCustomRowPlacement.SectionStart }
-  val sectionEndRows =
-    sectionCustomRows.filter { it.placement is OrganizationProfileCustomRowPlacement.SectionEnd }
+  val sectionStartRows = sectionCustomRows.filter {
+    it.placement is OrganizationProfileCustomRowPlacement.SectionStart
+  }
+  val sectionEndRows = sectionCustomRows.filter {
+    it.placement is OrganizationProfileCustomRowPlacement.SectionEnd
+  }
   val beforeMap =
     sectionCustomRows
       .filter { it.placement is OrganizationProfileCustomRowPlacement.Before }

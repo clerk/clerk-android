@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * @property avatarUrl The URL of the Feature's avatar image, or `null` if not set.
  */
 @Serializable
-data class Feature(
+public data class Feature(
   val id: String,
   val name: String,
   val description: String? = null,

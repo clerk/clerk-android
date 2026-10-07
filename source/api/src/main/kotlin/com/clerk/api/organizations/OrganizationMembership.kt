@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonElement
 
 /** Clerk-provided organization system permission keys. */
 @Serializable
-enum class OrganizationSystemPermission(val value: String) {
+public enum class OrganizationSystemPermission(public val value: String) {
   @SerialName("org:sys_profile:manage") MANAGE_PROFILE("org:sys_profile:manage"),
   @SerialName("org:sys_profile:delete") DELETE_PROFILE("org:sys_profile:delete"),
   @SerialName("org:sys_memberships:read") READ_MEMBERSHIPS("org:sys_memberships:read"),
@@ -24,7 +24,7 @@ enum class OrganizationSystemPermission(val value: String) {
   @SerialName("org:sys_api_keys:read") READ_API_KEYS("org:sys_api_keys:read"),
   @SerialName("org:sys_api_keys:manage") MANAGE_API_KEYS("org:sys_api_keys:manage");
 
-  val key: String
+  public val key: String
     get() = value
 }
 
@@ -33,7 +33,7 @@ enum class OrganizationSystemPermission(val value: String) {
  * describes the relationship between users and organizations.
  */
 @Serializable
-data class OrganizationMembership(
+public data class OrganizationMembership(
   /** The unique identifier for this organization membership */
   val id: String,
   /**
@@ -57,12 +57,12 @@ data class OrganizationMembership(
   val updatedAt: Long,
 ) {
   /** Returns whether this membership includes the provided organization system permission. */
-  fun hasPermission(permission: OrganizationSystemPermission): Boolean {
+  public fun hasPermission(permission: OrganizationSystemPermission): Boolean {
     return hasPermission(permission.value)
   }
 
   /** Returns whether this membership includes the provided organization permission key. */
-  fun hasPermission(permission: String): Boolean {
+  public fun hasPermission(permission: String): Boolean {
     return permissions?.contains(permission) == true
   }
 
@@ -105,7 +105,7 @@ data class OrganizationMembership(
  * @return A [ClerkResult] containing the updated [OrganizationMembership] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun OrganizationMembership.updateMembership(
+public suspend fun OrganizationMembership.updateMembership(
   userId: String,
   role: String,
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
@@ -123,6 +123,6 @@ suspend fun OrganizationMembership.updateMembership(
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun OrganizationMembership.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun OrganizationMembership.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteMembership(this.organization.id, sessionId = currentSessionId())
 }

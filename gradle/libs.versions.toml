@@ -2,11 +2,16 @@
 activityKtx = "1.13.0"
 agp = "9.4.1"
 appcompat = "1.8.0"
+asm = "9.8"
 automap = "0.1.3"
+binaryCompatibilityValidator = "0.18.1"
 composeBom = "2026.06.01"
 core = "1.7.0"
 coreKtxVersion = "1.7.0"
-detekt = "1.23.8"
+# detekt 1.23.x embeds the Kotlin 2.0 compiler, which cannot read Kotlin 2.4 metadata, so type
+# resolution (InjectDispatcher and friends) only works on the 2.x line. Keep the pre-commit
+# checksum in config/bin/tool-checksums.sha256 in sync when bumping.
+detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 dokka = "2.2.0"
 firebase-appDistrubution = "5.3.0"
@@ -21,7 +26,6 @@ navigationCompose = "2.10.2"
 okhttp = "5.4.0"
 retrofit = "3.0.0"
 robolectric = "4.17"
-runner = "1.7.0"
 sortDependencies = "0.21.0"
 spotless = "8.10.3"
 turbineVersion = "1.2.1"
@@ -31,7 +35,8 @@ kotlinTest = "2.4.20"
 paparazziPlugin = "2.0.0-alpha05.1"
 
 # Build Versions -- Do not delete
-jdk = "17"
+# JDK the build and unit tests run on (Robolectric and Paparazzi need 21). Bytecode targets jvmTarget.
+jdk = "21"
 jvmTarget = "17"
 kotlin = "2.4.20"
 minSdk = "24"
@@ -39,6 +44,9 @@ compileSdk = "36"
 
 
 [libraries]
+abi-asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
+abi-asmTree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+abi-kotlinMetadataJvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
@@ -57,7 +65,6 @@ androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-c
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.6.0"
-androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
@@ -106,17 +113,15 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-android-lint = { id = "com.android.lint", version.ref = "agp" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
 google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

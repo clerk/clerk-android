@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.factor.Factor
@@ -14,7 +15,6 @@ import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,6 +23,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -259,9 +260,10 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthRedirectWithUnknownResultSetsErrorState() = runTest {
-    val unknownResult = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
-    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns ClerkResult.success(unknownResult)
+  fun oauthRedirectWithEmptyResultShowsGenericErrorAndLogsDetail() = runTest {
+    mockkObject(ClerkLog)
+    every { ClerkLog.e(any()) } returns 0
+    coEvery { auth.signInWithOAuth(any(), any(), any()) } returns ClerkResult.success(OAuthResult())
 
     viewModel.authenticateWithSocialProvider(
       provider = OAuthProvider.GITHUB,
@@ -269,10 +271,26 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    assertEquals(
-      AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider"),
-      viewModel.state.value,
+    assertEquals(AuthStartViewModel.AuthState.OAuthState.Error(null), viewModel.state.value)
+    verify(exactly = 1) { ClerkLog.e(match { it.startsWith("OAuth provider") }) }
+  }
+
+  @Test
+  fun googleOneTapWithEmptyResultShowsGenericErrorAndLogsDetail() = runTest {
+    mockkObject(ClerkLog)
+    every { ClerkLog.e(any()) } returns 0
+    every { Clerk.isGoogleOneTapEnabled } returns true
+    coEvery { auth.signInWithGoogleOneTap(any()) } returns ClerkResult.success(OAuthResult())
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      preferGoogleOneTap = true,
     )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    assertEquals(AuthStartViewModel.AuthState.OAuthState.Error(null), viewModel.state.value)
+    verify(exactly = 1) { ClerkLog.e(match { it.startsWith("Google One Tap") }) }
+    coVerify(exactly = 0) { auth.signInWithOAuth(any(), any(), any()) }
   }
 
   @Test

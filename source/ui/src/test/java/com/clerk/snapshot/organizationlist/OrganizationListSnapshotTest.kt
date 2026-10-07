@@ -52,7 +52,8 @@ class OrganizationListSnapshotTest : BaseSnapshotTest() {
           header =
             OrganizationAccountListHeader(
               title = stringResource(R.string.choose_an_account),
-              subtitle = stringResource(R.string.select_the_account_with_which_you_wish_to_continue),
+              subtitle =
+                stringResource(R.string.select_the_account_with_which_you_wish_to_continue),
             ),
           showPersonalAccount = true,
           showSelectedAccessory = true,

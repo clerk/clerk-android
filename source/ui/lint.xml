@@ -1,3 +1,6 @@
-<issue id="ComposeCompositionLocalUsage">
-    <option name="allowed-composition-locals" value="LocalClerkTheme, LocalClerkDesign" />
-</issue>
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="ComposeCompositionLocalUsage">
+        <option name="allowed-composition-locals" value="LocalClerkTheme, LocalClerkDesign" />
+    </issue>
+</lint>

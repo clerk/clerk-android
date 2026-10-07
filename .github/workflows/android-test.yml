@@ -17,9 +17,15 @@ jobs:
           - module: ":source:api"
             path: "source/api"
             label: "source-api"   # <— safe artifact label (no /)
+            task: "testDebugUnitTest"
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui"
+            task: "testDebugUnitTest"
+          - module: ":source:telemetry"
+            path: "source/telemetry"
+            label: "source-telemetry"
+            task: "testDebugUnitTest"
     steps:
       - uses: actions/checkout@v7
       - name: set up JDK 21
@@ -36,7 +42,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests for ${{ matrix.module }}
-        run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
+        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} --build-cache --parallel
 
       - name: Upload test results (${{ matrix.label }})
         if: always()
@@ -47,3 +53,28 @@ jobs:
             ${{ matrix.path }}/build/test-results/**
             ${{ matrix.path }}/build/reports/tests/**
           if-no-files-found: warn
+
+  api-check:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Check public ABI
+        run: ./gradlew apiCheck --build-cache --parallel

@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * @property updatedAt Timestamp of the last update to the role (epoch milliseconds).
  */
 @Serializable
-data class Role(
+public data class Role(
   val id: String,
   val key: String,
   val name: String,

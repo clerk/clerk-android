@@ -46,98 +46,98 @@ import kotlinx.serialization.encoding.Encoder
  */
 @kotlinx.serialization.Serializable(with = OAuthProviderSerializer::class)
 @ConsistentCopyVisibility
-data class OAuthProvider private constructor(val strategy: String) {
-  companion object {
+public data class OAuthProvider private constructor(val strategy: String) {
+  public companion object {
     /** Facebook OAuth authentication provider. */
-    @JvmField val FACEBOOK = OAuthProvider("oauth_facebook")
+    @JvmField public val FACEBOOK: OAuthProvider = OAuthProvider("oauth_facebook")
 
     /** Google OAuth authentication provider. */
-    @JvmField val GOOGLE = OAuthProvider("oauth_google")
+    @JvmField public val GOOGLE: OAuthProvider = OAuthProvider("oauth_google")
 
     /** HubSpot OAuth authentication provider. */
-    @JvmField val HUBSPOT = OAuthProvider("oauth_hubspot")
+    @JvmField public val HUBSPOT: OAuthProvider = OAuthProvider("oauth_hubspot")
 
     /** GitHub OAuth authentication provider. */
-    @JvmField val GITHUB = OAuthProvider("oauth_github")
+    @JvmField public val GITHUB: OAuthProvider = OAuthProvider("oauth_github")
 
     /** TikTok OAuth authentication provider. */
-    @JvmField val TIKTOK = OAuthProvider("oauth_tiktok")
+    @JvmField public val TIKTOK: OAuthProvider = OAuthProvider("oauth_tiktok")
 
     /** GitLab OAuth authentication provider. */
-    @JvmField val GITLAB = OAuthProvider("oauth_gitlab")
+    @JvmField public val GITLAB: OAuthProvider = OAuthProvider("oauth_gitlab")
 
     /** Discord OAuth authentication provider. */
-    @JvmField val DISCORD = OAuthProvider("oauth_discord")
+    @JvmField public val DISCORD: OAuthProvider = OAuthProvider("oauth_discord")
 
     /** Twitter OAuth authentication provider. */
-    @JvmField val TWITTER = OAuthProvider("oauth_twitter")
+    @JvmField public val TWITTER: OAuthProvider = OAuthProvider("oauth_twitter")
 
     /** Twitch OAuth authentication provider. */
-    @JvmField val TWITCH = OAuthProvider("oauth_twitch")
+    @JvmField public val TWITCH: OAuthProvider = OAuthProvider("oauth_twitch")
 
     /** LinkedIn OAuth authentication provider (legacy). */
-    @JvmField val LINKEDIN = OAuthProvider("oauth_linkedin")
+    @JvmField public val LINKEDIN: OAuthProvider = OAuthProvider("oauth_linkedin")
 
     /** LinkedIn OpenID Connect authentication provider. */
-    @JvmField val LINKEDIN_OIDC = OAuthProvider("oauth_linkedin_oidc")
+    @JvmField public val LINKEDIN_OIDC: OAuthProvider = OAuthProvider("oauth_linkedin_oidc")
 
     /** Dropbox OAuth authentication provider. */
-    @JvmField val DROPBOX = OAuthProvider("oauth_dropbox")
+    @JvmField public val DROPBOX: OAuthProvider = OAuthProvider("oauth_dropbox")
 
     /** Atlassian OAuth authentication provider. */
-    @JvmField val ATLASSIAN = OAuthProvider("oauth_atlassian")
+    @JvmField public val ATLASSIAN: OAuthProvider = OAuthProvider("oauth_atlassian")
 
     /** Bitbucket OAuth authentication provider. */
-    @JvmField val BITBUCKET = OAuthProvider("oauth_bitbucket")
+    @JvmField public val BITBUCKET: OAuthProvider = OAuthProvider("oauth_bitbucket")
 
     /** Microsoft OAuth authentication provider. */
-    @JvmField val MICROSOFT = OAuthProvider("oauth_microsoft")
+    @JvmField public val MICROSOFT: OAuthProvider = OAuthProvider("oauth_microsoft")
 
     /** Notion OAuth authentication provider. */
-    @JvmField val NOTION = OAuthProvider("oauth_notion")
+    @JvmField public val NOTION: OAuthProvider = OAuthProvider("oauth_notion")
 
     /** Apple OAuth authentication provider. */
-    @JvmField val APPLE = OAuthProvider("oauth_apple")
+    @JvmField public val APPLE: OAuthProvider = OAuthProvider("oauth_apple")
 
     /** LINE OAuth authentication provider. */
-    @JvmField val LINE = OAuthProvider("oauth_line")
+    @JvmField public val LINE: OAuthProvider = OAuthProvider("oauth_line")
 
     /** Instagram OAuth authentication provider. */
-    @JvmField val INSTAGRAM = OAuthProvider("oauth_instagram")
+    @JvmField public val INSTAGRAM: OAuthProvider = OAuthProvider("oauth_instagram")
 
     /** Coinbase OAuth authentication provider. */
-    @JvmField val COINBASE = OAuthProvider("oauth_coinbase")
+    @JvmField public val COINBASE: OAuthProvider = OAuthProvider("oauth_coinbase")
 
     /** Spotify OAuth authentication provider. */
-    @JvmField val SPOTIFY = OAuthProvider("oauth_spotify")
+    @JvmField public val SPOTIFY: OAuthProvider = OAuthProvider("oauth_spotify")
 
     /** Xero OAuth authentication provider. */
-    @JvmField val XERO = OAuthProvider("oauth_xero")
+    @JvmField public val XERO: OAuthProvider = OAuthProvider("oauth_xero")
 
     /** Box OAuth authentication provider. */
-    @JvmField val BOX = OAuthProvider("oauth_box")
+    @JvmField public val BOX: OAuthProvider = OAuthProvider("oauth_box")
 
     /** Slack OAuth authentication provider. */
-    @JvmField val SLACK = OAuthProvider("oauth_slack")
+    @JvmField public val SLACK: OAuthProvider = OAuthProvider("oauth_slack")
 
     /** Linear OAuth authentication provider. */
-    @JvmField val LINEAR = OAuthProvider("oauth_linear")
+    @JvmField public val LINEAR: OAuthProvider = OAuthProvider("oauth_linear")
 
     /** Hugging Face OAuth authentication provider. */
-    @JvmField val HUGGING_FACE = OAuthProvider("oauth_huggingface")
+    @JvmField public val HUGGING_FACE: OAuthProvider = OAuthProvider("oauth_huggingface")
 
     /** Vercel OAuth authentication provider. */
-    @JvmField val VERCEL = OAuthProvider("oauth_vercel")
+    @JvmField public val VERCEL: OAuthProvider = OAuthProvider("oauth_vercel")
 
     /** Generic custom OAuth strategy retained for source compatibility. */
-    @JvmField val CUSTOM = OAuthProvider("oauth_custom")
+    @JvmField public val CUSTOM: OAuthProvider = OAuthProvider("oauth_custom")
 
     /** Unknown OAuth provider - used as fallback for non-OAuth strategies. */
-    @JvmField val UNKNOWN = OAuthProvider("oauth_unknown")
+    @JvmField public val UNKNOWN: OAuthProvider = OAuthProvider("oauth_unknown")
 
     /** Built-in provider values, matching the former enum entry order. */
     @JvmField
-    val entries: List<OAuthProvider> =
+    public val entries: List<OAuthProvider> =
       listOf(
         FACEBOOK,
         GOOGLE,
@@ -259,14 +259,14 @@ data class OAuthProvider private constructor(val strategy: String) {
      * val githubProvider = OAuthProvider.fromStrategy("oauth_github") // Returns OAuthProvider.GITHUB
      * ```
      */
-    fun fromStrategy(strategy: String): OAuthProvider {
+    public fun fromStrategy(strategy: String): OAuthProvider {
       return entries.find { it.strategy == strategy }
         ?: if (strategy.startsWith("oauth_")) OAuthProvider(strategy) else UNKNOWN
     }
 
     /** Creates a custom OAuth provider while preserving its complete strategy key. */
     @JvmStatic
-    fun custom(strategy: String): OAuthProvider {
+    public fun custom(strategy: String): OAuthProvider {
       require(strategy == CUSTOM.strategy || strategy.startsWith("oauth_custom_")) {
         "Custom OAuth strategy must be oauth_custom or start with oauth_custom_"
       }
@@ -274,11 +274,11 @@ data class OAuthProvider private constructor(val strategy: String) {
     }
 
     /** Returns the built-in provider values, matching the former enum API. */
-    @JvmStatic fun values(): Array<OAuthProvider> = entries.toTypedArray()
+    @JvmStatic public fun values(): Array<OAuthProvider> = entries.toTypedArray()
 
     /** Returns a built-in provider by its former enum constant name. */
     @JvmStatic
-    fun valueOf(name: String): OAuthProvider =
+    public fun valueOf(name: String): OAuthProvider =
       entries.firstOrNull { it.name == name }
         ?: throw IllegalArgumentException("No OAuthProvider with name $name")
   }
@@ -340,7 +340,7 @@ internal object OAuthProviderSerializer : KSerializer<OAuthProvider> {
  * @property name The human-readable display name for the OAuth provider. This is used in user
  *   interfaces and error messages.
  */
-data class OAuthProviderData(val provider: String, val strategy: String, val name: String)
+public data class OAuthProviderData(val provider: String, val strategy: String, val name: String)
 
 /**
  * Extension property to get the human-readable name of the OAuth provider.
@@ -356,7 +356,7 @@ data class OAuthProviderData(val provider: String, val strategy: String, val nam
  * val displayName = provider.providerName // Returns "Google"
  * ```
  */
-val OAuthProvider.providerName: String
+public val OAuthProvider.providerName: String
   get() = this.providerData.name
 
 /**
@@ -380,7 +380,7 @@ val OAuthProvider.providerName: String
  * }
  * ```
  */
-val OAuthProvider.logoUrl: String?
+public val OAuthProvider.logoUrl: String?
   get() =
     Clerk.socialProviders.values
       .find { it.strategy == strategy }
