@@ -125,7 +125,7 @@ A spec names no instance. Most specs run on the standard settings and declare no
 
 ### Golden and explored specs
 
-Golden specs under `specs/golden/<feature>/` are committed, cover the Feature Map in `features/`, and run unchanged as regression. Run the features your change touches.
+Golden specs under `specs/golden/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the golden specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). The release workflow runs every one of them unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a golden spec already covers, that spec is your proof: run it. Run another feature's specs yourself when you changed code that feature shares, because nothing else runs them until a release, and a failure there stops the release.
 
 For new work, write a spec under `specs/explored/`, which is gitignored and does not exist in a fresh worktree. Run it, read the screen it ended on with `screen`, and fix locators from that output until it passes. A failing spec prints `FAIL`, the first assertion message, and the path of its failure page, which lists every step, the screen tree at the failure, and a screenshot. `run` exits 1.
 
@@ -171,7 +171,7 @@ $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot prof
 
 `attach` posts once per run with `gh pr comment --attach`, and says so when the `gh` on this machine has no such flag. It refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create. Without it, name the run id in the PR and say the evidence was not attached.
 
-Attach the focused run, not the regression run. Run your new or changed spec on its own and attach that run, so the PR video shows only the behavior the change is about. Run the golden specs for every feature you touched in a separate `run` and cite its run id in the PR.
+Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the PR video shows only the behavior the change is about. If you ran other golden specs too, cite that run's id in the PR.
 
 ## Cleanup
 
@@ -193,4 +193,5 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 
 - `src/core/`, `specs/support/`, `specs/fixtures.ts`, and `e2e.config.ts` are shared with the same package in clerk-ios and in clerk/javascript. They are byte copies of the same files in clerk-ios, and `src/core/MANIFEST` pins them. Change them there first, run `node e2e-tests/src/core/manifest.ts --write`, then copy them here. Nothing under `specs/` or `e2e.config.ts` imports the CLI, and `test/seam.test.ts` fails when a file does.
 - `src/platform/android/` boots and owns lanes. The package in clerk/javascript holds copies of its files, so a change here goes there too. `src/host.ts`, `src/host-app.ts`, `specs/app.ts`, `specs/compose.ts`, `specs/phone.ts`, and `specs/totp.ts` are this repo's own.
-- `npm test --prefix e2e-tests` runs the CLI's unit tests with no network, keys, or emulator, and `npm run typecheck --prefix e2e-tests` runs `tsc`. The `e2e-runner-tests` job of `.github/workflows/android-test.yml` runs both on a pull request that changes the package. It runs no test on an emulator.
+- `npm test --prefix e2e-tests` runs the CLI's unit tests with no network, keys, or emulator, and `npm run typecheck --prefix e2e-tests` runs `tsc`. The `e2e-runner-tests` job of `.github/workflows/android-test.yml` runs both on a pull request that changes the package.
+- `.github/workflows/verify-e2e.yml` runs `up`, `run --all --retries 1 --github-report`, and `down` on an emulator on a CI runner. The release workflow (`.github/workflows/manual-release.yml`) calls it before it creates the release, and publishes to Maven Central only when it passed. Nothing runs it for a pull request. `gh workflow run verify-e2e.yml --ref <branch>` starts it by hand on any branch. A test that fails and then passes is reported as flaky and does not fail the job. It needs the repository secret `MOBILE_VERIFICATION_PLATFORM_API_KEY` and fails without it. The repository variable `VERIFY_CI_RUNNER` names a runner label other than `ubuntu-24.04`.
