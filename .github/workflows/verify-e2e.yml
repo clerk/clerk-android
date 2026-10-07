@@ -1,0 +1,134 @@
+name: Verify end-to-end tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      MOBILE_VERIFICATION_PLATFORM_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-tests:
+    runs-on: ${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    env:
+      SKILL: .claude/skills/verify-clerk-android
+      CLI: .claude/skills/verify-clerk-android/bin/control-clerk-android
+      # A cancelled job can end before it deletes its Clerk application. A later session of the skill deletes it after this many hours, and two is the minimum.
+      VERIFY_THROWAWAY_HOURS: "2"
+    steps:
+      - name: Check that the end-to-end tests can run
+        env:
+          HAS_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY != '' }}
+        run: |
+          if [ "$HAS_PLATFORM_API_KEY" != "true" ]; then
+            echo "::error title=End-to-end tests::The MOBILE_VERIFICATION_PLATFORM_API_KEY secret is not set for this repository, so the end-to-end tests cannot run."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install the emulator and its system image
+        run: |
+          set -euo pipefail
+          IMAGE="system-images;android-36;google_apis;x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$IMAGE" emulator platform-tools < /dev/null > "$RUNNER_TEMP/sdkmanager.log" 2>&1 \
+            || { echo "::error::sdkmanager could not install $IMAGE"; tail -20 "$RUNNER_TEMP/sdkmanager.log"; exit 1; }
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+      - name: Install the verify skill
+        id: install
+        run: npm ci --prefix "$SKILL" --no-audit --no-fund
+
+      - name: Build the e2e host and boot an emulator
+        env:
+          CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
+        run: |
+          "$CLI" up --backend local
+
+      - name: Run the golden specs
+        timeout-minutes: 20
+        env:
+          CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          "$CLI" run --all --backend local --retries 1 --github-report
+
+      - name: Release the emulator and delete the Clerk application
+        if: always() && steps.install.outcome == 'success'
+        env:
+          CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
+        run: |
+          "$CLI" down
+
+      - name: Check that every run is sealed
+        id: evidence
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const runs = path.join(process.env.SKILL, ".verify", "runs");
+            const ids = fs.existsSync(runs) ? fs.readdirSync(runs) : [];
+            let upload = ids.length > 0;
+            for (const id of ids) {
+              let record = null;
+              try { record = JSON.parse(fs.readFileSync(path.join(runs, id, "run.json"), "utf8")); } catch {}
+              if (record === null || record.sealed !== true || record.tainted.length > 0) {
+                upload = false;
+                console.log("::warning::Run " + id + " was not sealed, or a file in it holds a secret value. No evidence is uploaded.");
+              }
+            }
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "upload=" + upload + "\n");
+          '
+
+      - name: Upload the evidence
+        if: ${{ !cancelled() && steps.evidence.outputs.upload == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: verify-e2e-android
+          overwrite: true
+          include-hidden-files: true
+          path: |
+            ${{ env.SKILL }}/.verify/runs/*/run.json
+            ${{ env.SKILL }}/.verify/runs/*/app.log
+            ${{ env.SKILL }}/.verify/runs/*/video.mp4
+            ${{ env.SKILL }}/.verify/runs/*/screenshots
+            ${{ env.SKILL }}/.verify/runs/*/e2e*/report.json
+            ${{ env.SKILL }}/.verify/runs/*/e2e*/junit.xml
+            ${{ env.SKILL }}/.verify/runs/*/e2e*/summary.md
+            ${{ env.SKILL }}/.verify/runs/*/e2e*/failures
+            ${{ env.SKILL }}/.verify/runs/*/e2e*/artifacts
+          retention-days: 3
+          if-no-files-found: warn
