@@ -34,7 +34,6 @@ data class VerifyLaunchConfig(
   val initialIdentifier: String?,
   val signInTicket: String?,
   val debugLogging: Boolean,
-  val hasVerifyInputs: Boolean,
 ) {
   val publishableKeyFailure: VerifyFailure? =
     if (isWellFormedPublishableKey(publishableKey)) {
@@ -47,22 +46,9 @@ data class VerifyLaunchConfig(
     }
 
   companion object {
-    private val VERIFY_INPUTS =
-      listOf(
-        "verifyPublishableKey",
-        "verifyRunId",
-        "verifyStorageScope",
-        "verifyLaunchId",
-        "verifyAuthMode",
-        "verifyInitialIdentifier",
-        "verifySignInTicket",
-        "verifyLogLevel",
-      )
-
     fun parse(extra: (String) -> String?, fallbackPublishableKey: String): VerifyLaunchConfig {
       val argument = { key: String -> extra(key)?.trim()?.takeIf(String::isNotEmpty) }
       return VerifyLaunchConfig(
-        hasVerifyInputs = VERIFY_INPUTS.any { argument(it) != null },
         publishableKey = argument("verifyPublishableKey") ?: fallbackPublishableKey,
         runId = argument("verifyRunId"),
         storageScope = argument("verifyStorageScope"),
