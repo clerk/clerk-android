@@ -2,7 +2,11 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
+import kotlinx.validation.KotlinApiBuildTask
+import kotlinx.validation.KotlinApiCompareTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
   alias(libs.plugins.android.application) apply false
@@ -15,6 +19,7 @@ plugins {
   alias(libs.plugins.mavenPublish) apply false
   alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.compose) apply false
+  alias(libs.plugins.binaryCompatibilityValidator) apply false
 }
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -202,6 +207,72 @@ tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
 // need 21). `jvmTarget` is the bytecode level we publish, so consumers on Java 17 are unaffected.
 val buildJdk = libs.versions.jdk.map(JavaLanguageVersion::of)
 val bytecodeTarget = JavaVersion.toVersion(libs.versions.jvmTarget.get())
+
+// Neither KGP's abiValidation nor the BCV plugin registers tasks for Android libraries built
+// with AGP 9 built-in Kotlin, so we register BCV's task types against the release compilation.
+val abiTrackedAndroidLibraries = setOf(":source:api", ":source:ui", ":source:telemetry")
+
+subprojects {
+  if (path !in abiTrackedAndroidLibraries) return@subprojects
+  plugins.withId("com.android.library") {
+    val abiRuntime =
+      configurations.create("abiValidationRuntime") {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+      }
+    dependencies {
+      add(abiRuntime.name, projectLibs.findLibrary("abi-asm").get())
+      add(abiRuntime.name, projectLibs.findLibrary("abi-asmTree").get())
+      add(abiRuntime.name, projectLibs.findLibrary("abi-kotlinMetadataJvm").get())
+    }
+
+    val referenceDump = layout.projectDirectory.file("api/${project.name}.api")
+    val apiBuild =
+      tasks.register<KotlinApiBuildTask>("apiBuild") {
+        description = "Builds the public ABI dump of the release variant."
+        runtimeClasspath.from(abiRuntime)
+        outputApiFile.set(layout.buildDirectory.file("api/${project.name}.api"))
+        // The Compose compiler emits a public ComposableSingletons$<File>Kt class holding
+        // getLambda$<hash>$<module> getters for every lambda it hoists, including those in private
+        // previews. They are not callable API and their hashes change with unrelated edits, so
+        // drop those classes from the dump. ignoredClasses only takes exact names, hence the
+        // post-processing.
+        val dumpFile = outputApiFile
+        doLast {
+          val file = dumpFile.get().asFile
+          val blocks = file.readText().split(Regex("\n\n+"))
+          val kept = blocks.filterNot { block ->
+            block.lineSequence().firstOrNull()?.contains("/ComposableSingletons$") == true
+          }
+          if (kept.size != blocks.size) file.writeText(kept.joinToString("\n\n"))
+        }
+      }
+    extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
+      if (name == "release") {
+        val release = this
+        apiBuild.configure {
+          inputClassesDirs.from(
+            release.compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory }
+          )
+        }
+      }
+    }
+
+    val apiCheck =
+      tasks.register<KotlinApiCompareTask>("apiCheck") {
+        group = "verification"
+        description = "Checks the public ABI against the checked-in api/${project.name}.api dump."
+        projectApiFile.set(referenceDump)
+        generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
+      }
+    tasks.register<Copy>("apiDump") {
+      description = "Overwrites api/${project.name}.api with the current public ABI."
+      from(apiBuild.flatMap { it.outputApiFile })
+      into(layout.projectDirectory.dir("api"))
+    }
+    tasks.named("check") { dependsOn(apiCheck) }
+  }
+}
 
 subprojects {
   plugins.withType<JavaPlugin> {
