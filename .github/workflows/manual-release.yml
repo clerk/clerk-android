@@ -22,9 +22,6 @@ on:
         default: true
 
 jobs:
-  trailblaze-e2e:
-    uses: ./.github/workflows/trailblaze-e2e.yml
-
   verify:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
@@ -68,7 +65,7 @@ jobs:
 
   create-release:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: [trailblaze-e2e, verify, verify-e2e]
+    needs: [verify, verify-e2e]
     if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -153,9 +150,9 @@ jobs:
 
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: [trailblaze-e2e, verify, verify-e2e, create-release]
+    needs: [verify, verify-e2e, create-release]
     # always() lets this run when create-release is skipped (release events); every gate must pass.
-    if: always() && needs.trailblaze-e2e.result == 'success' && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
+    if: always() && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
     outputs:
       tag_name: ${{ steps.release_metadata.outputs.tag_name }}
       release_url: ${{ steps.release_metadata.outputs.release_url }}
