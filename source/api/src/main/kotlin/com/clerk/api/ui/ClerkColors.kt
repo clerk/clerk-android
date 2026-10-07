@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
  * that color definitions can be swapped out at runtime (e.g. for dark mode) or adjusted centrally
  * without touching all call-sites.
  */
-data class ClerkColors(
+public data class ClerkColors(
   /** Main brand color used for primary actions and highlights. */
   val primary: Color? = null,
   /** Default surface background. */

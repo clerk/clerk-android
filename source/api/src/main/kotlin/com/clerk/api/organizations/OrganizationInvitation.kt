@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class OrganizationInvitation(
+public data class OrganizationInvitation(
   /** The unique identifier for this organization invitation. */
   val id: String,
   /** The email address the invitation has been sent to. */
@@ -43,7 +43,7 @@ data class OrganizationInvitation(
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = Status.Serializer::class)
-  enum class Status {
+  public enum class Status {
     @SerialName("pending") Pending,
     @SerialName("accepted") Accepted,
     @SerialName("revoked") Revoked,
@@ -61,7 +61,7 @@ data class OrganizationInvitation(
   }
 }
 
-suspend fun OrganizationInvitation.revoke():
+public suspend fun OrganizationInvitation.revoke():
   ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
   return ClerkApi.organization.revokeOrganizationInvitation(
     organizationId = this.organizationId!!,

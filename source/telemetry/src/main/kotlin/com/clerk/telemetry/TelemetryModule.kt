@@ -7,7 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-object TelemetryModule {
+public object TelemetryModule {
 
   private val json = Json {
     encodeDefaults = true
@@ -24,9 +24,10 @@ object TelemetryModule {
     "The SDK posts telemetry with OkHttp and no longer ships Ktor. Use createCollector, or pass " +
       "an OkHttpClient to TelemetryCollector."
   )
-  fun httpClient(): HttpClient = HttpClient(OkHttp) { install(ContentNegotiation) { json(json) } }
+  public fun httpClient(): HttpClient =
+    HttpClient(OkHttp) { install(ContentNegotiation) { json(json) } }
 
-  fun createCollector(
+  public fun createCollector(
     context: Context,
     environment: TelemetryEnvironment,
     options: TelemetryCollectorOptions = TelemetryCollectorOptions(),

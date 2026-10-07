@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** Public information about a user that can be shared with other users. */
 @Serializable
-data class PublicUserData(
+public data class PublicUserData(
   /** The user's first name. */
   @SerialName("first_name") val firstName: String? = null,
 

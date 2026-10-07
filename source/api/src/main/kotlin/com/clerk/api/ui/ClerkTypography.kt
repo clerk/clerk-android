@@ -30,7 +30,7 @@ import androidx.compose.ui.text.TextStyle
  * - Weight values are provided via the [ClerkFontWeight] enum which wraps named constants defined
  *   in [ClerkFontWeights] instead of using hard-coded numbers.
  */
-data class ClerkTypography(
+public data class ClerkTypography(
   val displaySmall: TextStyle? = ClerkTypographyDefaults.displaySmall,
   val headlineLarge: TextStyle? = ClerkTypographyDefaults.headlineLarge,
   val headlineMedium: TextStyle? = ClerkTypographyDefaults.headlineMedium,

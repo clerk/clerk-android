@@ -33,7 +33,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * app is transferred to a new Android device.
  */
 @Suppress("ReturnCount")
-object RestoreCredentials {
+public object RestoreCredentials {
 
   @VisibleForTesting
   internal var credentialManager: RestoreCredentialManager = RestoreCredentialManagerImpl()
@@ -47,7 +47,9 @@ object RestoreCredentials {
    * @param isCloudBackupEnabled Whether Google Password Manager should back up the restore key to
    *   the cloud when end-to-end encrypted backup is available.
    */
-  suspend fun create(isCloudBackupEnabled: Boolean = true): ClerkResult<Unit, ClerkErrorResponse> {
+  public suspend fun create(
+    isCloudBackupEnabled: Boolean = true
+  ): ClerkResult<Unit, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
     if (Clerk.activeSession == null || Clerk.user == null) {
       return ClerkResult.unknownFailure(
@@ -103,7 +105,7 @@ object RestoreCredentials {
    * This method does not display credential-selection UI. When no restore credential is available,
    * it returns a credential-flow failure so the host app can continue with its normal sign-in UI.
    */
-  suspend fun signIn(): ClerkResult<SignIn, ClerkErrorResponse> =
+  public suspend fun signIn(): ClerkResult<SignIn, ClerkErrorResponse> =
     Clerk.auth.reportingFailures { signInWithRestoreCredential() }
 
   private suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -141,7 +143,7 @@ object RestoreCredentials {
   }
 
   /** Deletes the app's restore credential from this device and its cloud backup. */
-  suspend fun clear(): ClerkResult<Unit, ClerkErrorResponse> {
+  public suspend fun clear(): ClerkResult<Unit, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return ClerkResult.success(Unit)
     val context =
       Clerk.applicationContext?.get()

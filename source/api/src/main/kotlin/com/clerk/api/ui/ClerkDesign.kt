@@ -10,4 +10,4 @@ import androidx.compose.ui.unit.dp
  * @property logoMaxHeight The maximum height of the application logo shown on authentication
  *   screens. The logo maintains its aspect ratio within this height.
  */
-data class ClerkDesign(val borderRadius: Dp = 8.dp, val logoMaxHeight: Dp = 44.dp)
+public data class ClerkDesign(val borderRadius: Dp = 8.dp, val logoMaxHeight: Dp = 44.dp)

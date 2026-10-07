@@ -47,6 +47,8 @@ mavenPublishing {
   }
 }
 
+kotlin { explicitApi() }
+
 dependencies {
   api(libs.okhttp)
 

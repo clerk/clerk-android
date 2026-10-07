@@ -64,7 +64,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
  */
 @Composable
-fun ClerkTextField(
+public fun ClerkTextField(
   value: String,
   onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,

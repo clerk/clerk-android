@@ -33,7 +33,7 @@ import retrofit2.http.Query
  *
  * @see com.clerk.api.organizations
  */
-interface OrganizationApi {
+public interface OrganizationApi {
 
   /**
    * Retrieves roles for a specific organization.
@@ -46,7 +46,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.getRoles
    */
   @GET(ApiPaths.Organization.ROLES)
-  suspend fun getRoles(
+  public suspend fun getRoles(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
@@ -63,7 +63,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.BASE)
-  suspend fun createOrganization(
+  public suspend fun createOrganization(
     @Field("name") name: String,
     @Field("slug") slug: String? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -78,7 +78,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.get
    */
   @GET(ApiPaths.Organization.WITH_ID)
-  suspend fun getOrganization(
+  public suspend fun getOrganization(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
@@ -95,7 +95,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @PATCH(ApiPaths.Organization.WITH_ID)
-  suspend fun updateOrganization(
+  public suspend fun updateOrganization(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String? = null,
     @Field("slug") slug: String? = null,
@@ -111,7 +111,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.delete
    */
   @DELETE(ApiPaths.Organization.WITH_ID)
-  suspend fun deleteOrganization(
+  public suspend fun deleteOrganization(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
@@ -127,7 +127,7 @@ interface OrganizationApi {
    */
   @Multipart
   @PUT(ApiPaths.Organization.LOGO)
-  suspend fun updateOrganizationLogo(
+  public suspend fun updateOrganizationLogo(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Part file: MultipartBody.Part,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -142,7 +142,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.deleteLogo
    */
   @DELETE(ApiPaths.Organization.LOGO)
-  suspend fun deleteOrganizationLogo(
+  public suspend fun deleteOrganizationLogo(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
@@ -158,7 +158,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Domain.BASE)
-  suspend fun createOrganizationDomain(
+  public suspend fun createOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -177,7 +177,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.getDomains
    */
   @GET(ApiPaths.Organization.Domain.BASE)
-  suspend fun getAllOrganizationDomains(
+  public suspend fun getAllOrganizationDomains(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
@@ -196,7 +196,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.getDomain
    */
   @GET(ApiPaths.Organization.Domain.WITH_ID)
-  suspend fun getOrganizationDomain(
+  public suspend fun getOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -212,7 +212,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.deleteDomain
    */
   @DELETE(ApiPaths.Organization.Domain.WITH_ID)
-  suspend fun deleteOrganizationDomain(
+  public suspend fun deleteOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -231,7 +231,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Domain.UPDATE_ENROLLMENT_MODE)
-  suspend fun updateEnrollmentMode(
+  public suspend fun updateEnrollmentMode(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("enrollment_mode") enrollmentMode: String,
@@ -251,7 +251,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Domain.PREPARE_AFFILIATION)
-  suspend fun prepareAffiliationVerification(
+  public suspend fun prepareAffiliationVerification(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("affiliation_email_address") affiliationEmailAddress: String,
@@ -274,7 +274,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Domain.ATTEMPT_AFFILIATION)
-  suspend fun attemptAffiliationVerification(
+  public suspend fun attemptAffiliationVerification(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("code") code: String,
@@ -293,7 +293,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.MEMBERSHIPS)
-  suspend fun createMembership(
+  public suspend fun createMembership(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field(ApiParams.ROLE) role: String?,
     @Field(ApiParams.USER_ID) userId: String?,
@@ -315,7 +315,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.getMemberships
    */
   @GET(ApiPaths.Organization.MEMBERSHIPS)
-  suspend fun getMembers(
+  public suspend fun getMembers(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int?,
     @Query(ApiParams.OFFSET) offset: Int?,
@@ -337,7 +337,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @PATCH(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
-  suspend fun updateMembership(
+  public suspend fun updateMembership(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
     @Field(ApiParams.ROLE) role: String,
@@ -354,7 +354,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.removeMember
    */
   @DELETE(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
-  suspend fun removeMember(
+  public suspend fun removeMember(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -370,7 +370,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Invitations.BASE)
-  suspend fun createInvitation(
+  public suspend fun createInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddress: String,
     @Field(ApiParams.ROLE) role: String,
@@ -389,7 +389,7 @@ interface OrganizationApi {
    * @param status The status to filter by. See: [OrganizationInvitation.Status]
    */
   @GET(ApiPaths.Organization.Invitations.BASE)
-  suspend fun getAllInvitations(
+  public suspend fun getAllInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
@@ -409,7 +409,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Invitations.BULK_CREATE)
-  suspend fun bulkCreateInvitations(
+  public suspend fun bulkCreateInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddresses: List<String>,
     @Field(ApiParams.ROLE) role: String,
@@ -425,7 +425,7 @@ interface OrganizationApi {
    * @param invitationId The id of the invitation to be revoked.
    */
   @POST(ApiPaths.Organization.Invitations.REVOKE)
-  suspend fun revokeOrganizationInvitation(
+  public suspend fun revokeOrganizationInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.INVITATION_ID) invitationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -443,7 +443,7 @@ interface OrganizationApi {
    * @param status The status to filter by.
    */
   @GET(ApiPaths.Organization.MembershipRequests.BASE)
-  suspend fun getMembershipRequests(
+  public suspend fun getMembershipRequests(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
@@ -459,7 +459,7 @@ interface OrganizationApi {
    * @param membershipRequestId The request ID.
    */
   @POST(ApiPaths.Organization.MembershipRequests.ACCEPT)
-  suspend fun acceptMembershipRequest(
+  public suspend fun acceptMembershipRequest(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path("request_id") membershipRequestId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -473,7 +473,7 @@ interface OrganizationApi {
    * @param membershipRequestId The request Id.
    */
   @POST(ApiPaths.Organization.MembershipRequests.REJECT)
-  suspend fun rejectMembershipRequest(
+  public suspend fun rejectMembershipRequest(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path("request_id") membershipRequestId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,

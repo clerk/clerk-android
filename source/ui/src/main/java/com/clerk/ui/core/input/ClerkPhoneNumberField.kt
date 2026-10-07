@@ -110,7 +110,7 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * @param clerkTheme Optional Clerk theme override for this component
  */
 @Composable
-fun ClerkPhoneNumberField(
+public fun ClerkPhoneNumberField(
   value: String,
   onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,

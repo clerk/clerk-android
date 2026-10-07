@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
  * ```
  */
 @Serializable
-data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
+public data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
 
   /**
    * Convenience property to determine the type of result.
@@ -39,7 +39,7 @@ data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
       "non-null signUp) and Outcome.Empty (neither was returned; resultType reports this as " +
       "SIGN_UP)."
   )
-  val resultType
+  val resultType: ResultType
     get() = if (signIn != null) ResultType.SIGN_IN else ResultType.SIGN_UP
 
   /**
@@ -55,20 +55,20 @@ data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
       }
 
   /** What an SSO operation produced. */
-  sealed interface Outcome {
+  public sealed interface Outcome {
     /** The operation completed or continued a sign-in. */
-    data class SignIn(val signIn: com.clerk.api.signin.SignIn) : Outcome
+    public data class SignIn(val signIn: com.clerk.api.signin.SignIn) : Outcome
 
     /** The operation created or continued a sign-up (for example, a new user via OAuth). */
-    data class SignUp(val signUp: com.clerk.api.signup.SignUp) : Outcome
+    public data class SignUp(val signUp: com.clerk.api.signup.SignUp) : Outcome
 
     /** The operation returned neither a sign-in nor a sign-up. */
-    data object Empty : Outcome
+    public data object Empty : Outcome
   }
 }
 
 @kotlinx.serialization.Serializable
-enum class ResultType {
+public enum class ResultType {
   SIGN_IN,
   SIGN_UP,
   UNKNOWN,

@@ -33,6 +33,8 @@ android {
   lint { baseline = file("lint-baseline.xml") }
 }
 
+kotlin { explicitApi() }
+
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")

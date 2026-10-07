@@ -5,6 +5,6 @@ package com.clerk.telemetry
  * whether a specific event should be sent or discarded based on custom logic, such as rate limiting
  * or event type filtering.
  */
-interface TelemetryEventThrottler {
-  suspend fun isEventThrottled(event: TelemetryEvent): Boolean
+public interface TelemetryEventThrottler {
+  public suspend fun isEventThrottled(event: TelemetryEvent): Boolean
 }
