@@ -9,6 +9,7 @@ import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import io.mockk.unmockkAll
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -95,6 +96,43 @@ class StorageHelperTest {
     )
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test-value")
     assertEquals("test-value", StorageHelper.loadValue(StorageKey.DEVICE_ID))
+  }
+
+  @Test
+  fun `a read racing initialize waits for the cipher instead of seeing storage without it`() {
+    preferences().edit(commit = true) {
+      putString(
+        StorageKey.DEVICE_TOKEN.name,
+        ENCRYPTED_VALUE_PREFIX + TestStorageCipher().encrypt("stored-token"),
+      )
+    }
+    val cipherRequested = CountDownLatch(1)
+    val releaseCipher = CountDownLatch(1)
+    StorageHelper.storageCipherFactoryOverride = {
+      cipherRequested.countDown()
+      releaseCipher.await(5, TimeUnit.SECONDS)
+      TestStorageCipher()
+    }
+    StorageHelper.prepare(context)
+    val initializer = Thread { StorageHelper.initialize(context) }.apply { start() }
+    assertTrue(cipherRequested.await(5, TimeUnit.SECONDS))
+
+    var loaded: String? = null
+    val reader = Thread { loaded = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) }
+    reader.start()
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+    while (
+      reader.state != Thread.State.BLOCKED &&
+        reader.state != Thread.State.TERMINATED &&
+        System.nanoTime() < deadline
+    ) {
+      Thread.yield()
+    }
+    releaseCipher.countDown()
+    initializer.join(5_000)
+    reader.join(5_000)
+
+    assertEquals("stored-token", loaded)
   }
 
   @Test
