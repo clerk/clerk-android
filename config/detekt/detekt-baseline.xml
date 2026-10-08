@@ -11,7 +11,6 @@
     <ID>LongMethod:ClerkTextField.kt:@PreviewLightDark @Composable private fun PreviewClerkTextFieldError</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt:ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldError</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt:ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldUnfocused</ID>
-    <ID>LongMethod:SignInFactorCodeView.kt:@Composable private fun SignInFactorCodeViewImpl</ID>
     <ID>LongMethod:SignUpCollectFieldView.kt:@Composable private fun SignUpCollectFieldViewImpl</ID>
     <ID>LongMethod:SignUpCompleteProfileView.kt:@Composable private fun InputRow</ID>
     <ID>LongMethod:SignUpCompleteProfileView.kt:@Composable private fun SignUpCompleteProfileImpl</ID>

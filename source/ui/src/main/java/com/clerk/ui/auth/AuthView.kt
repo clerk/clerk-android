@@ -34,8 +34,10 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
+import com.clerk.ui.navigation.rememberClerkNavEntryDecorators
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -66,6 +68,14 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  * [Clerk.isAuthFlowCompleteFlow] to choose between this view and authenticated content. A session
  * can become active while post-auth steps — session tasks or the biometric credential enrollment
  * prompt — still need to be shown.
+ *
+ * When your own navigation takes this view off screen and saves its state, as Navigation Compose,
+ * Navigation 3 and Fragment back stacks do, the view comes back on the screen it was showing. Its
+ * in-progress input comes back too when the destination has its own `ViewModelStoreOwner`: a
+ * Navigation Compose destination, a Navigation 3 entry with
+ * `rememberViewModelStoreNavEntryDecorator()`, or a Fragment. When the view's `ViewModelStoreOwner`
+ * is the Activity, its ViewModels are cleared when it leaves composition, so it comes back with new
+ * ViewModels and the input is lost.
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
@@ -110,50 +120,52 @@ public fun AuthView(
   onAuthComplete: () -> Unit = {},
   mode: AuthMode = AuthMode.SignInOrUp,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    val fullScreenModifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds().then(modifier)
-    val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-    val isAuthNavigationReady = rememberAuthNavigationReady(backStack)
-    if (!isAuthNavigationReady) return@ClerkThemeOverrideProvider
-    val completeAuthFlow = rememberAuthFlowCompletion(isDismissible, onAuthComplete)
-    val identifierConfig =
-      remember(
-        initialIdentifier,
-        initialFirstName,
-        initialLastName,
-        lockPrefilledFields,
-        persistIdentifiers,
-        unsafeMetadata,
-      ) {
-        AuthIdentifierConfig(
-          initialIdentifier = initialIdentifier,
-          initialFirstName = initialFirstName,
-          initialLastName = initialLastName,
-          lockPrefilledFields = lockPrefilledFields,
-          persistIdentifiers = persistIdentifiers,
-          unsafeMetadata = unsafeMetadata,
-        )
-      }
-    AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
-      ObservePendingSessionTaskRouting(backStack = backStack, isDismissible = isDismissible)
-      TrackScreenLoaded(LocalAuthState.current.mode.name)
-      ClerkLogoProvider(logo) {
-        DevelopmentModeWarningBox(
-          modifier = fullScreenModifier,
-          background = DevelopmentModeWarningBackground.White,
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      val fullScreenModifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds().then(modifier)
+      val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+      val isAuthNavigationReady = rememberAuthNavigationReady(backStack)
+      if (!isAuthNavigationReady) return@ClerkThemeOverrideProvider
+      val completeAuthFlow = rememberAuthFlowCompletion(isDismissible, onAuthComplete)
+      val identifierConfig =
+        remember(
+          initialIdentifier,
+          initialFirstName,
+          initialLastName,
+          lockPrefilledFields,
+          persistIdentifiers,
+          unsafeMetadata,
         ) {
-          AuthNavDisplay(
-            modifier = Modifier.fillMaxSize(),
-            backStack = backStack,
-            options =
-              AuthNavOptions(
-                preferGoogleOneTap = preferGoogleOneTap,
-                startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-                isDismissible = isDismissible,
-                onDismiss = onDismiss,
-                onAuthComplete = completeAuthFlow,
-              ),
+          AuthIdentifierConfig(
+            initialIdentifier = initialIdentifier,
+            initialFirstName = initialFirstName,
+            initialLastName = initialLastName,
+            lockPrefilledFields = lockPrefilledFields,
+            persistIdentifiers = persistIdentifiers,
+            unsafeMetadata = unsafeMetadata,
           )
+        }
+      AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
+        ObservePendingSessionTaskRouting(backStack = backStack, isDismissible = isDismissible)
+        TrackScreenLoaded(LocalAuthState.current.mode.name)
+        ClerkLogoProvider(logo) {
+          DevelopmentModeWarningBox(
+            modifier = fullScreenModifier,
+            background = DevelopmentModeWarningBackground.White,
+          ) {
+            AuthNavDisplay(
+              modifier = Modifier.fillMaxSize(),
+              backStack = backStack,
+              options =
+                AuthNavOptions(
+                  preferGoogleOneTap = preferGoogleOneTap,
+                  startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+                  isDismissible = isDismissible,
+                  onDismiss = onDismiss,
+                  onAuthComplete = completeAuthFlow,
+                ),
+            )
+          }
         }
       }
     }
@@ -247,6 +259,7 @@ private fun AuthNavDisplay(
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
+    entryDecorators = rememberClerkNavEntryDecorators(),
     transitionSpec = { clerkNavigationForwardTransition() },
     popTransitionSpec = { clerkNavigationPopTransition() },
     predictivePopTransitionSpec = { clerkNavigationPopTransition() },
