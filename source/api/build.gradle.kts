@@ -36,6 +36,8 @@ android {
   }
 }
 
+kotlin { explicitApi() }
+
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
@@ -57,6 +59,23 @@ tasks
     dependsOn(tasks.named("kspReleaseKotlin"))
   }
 
+// AutoMap emits public declarations without a modifier, which explicit API mode rejects. Its
+// non-public output always carries a modifier, so a bare top-level `fun` is a public one.
+// Remove once clerk/AutoMap emits `public` itself.
+tasks
+  .matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }
+  .configureEach {
+    doLast {
+      outputs.files.asFileTree
+        .matching { include("**/*.kt") }
+        .forEach { file ->
+          val text = file.readText()
+          val explicit = text.replace(Regex("^fun ", RegexOption.MULTILINE), "public fun ")
+          if (explicit != text) file.writeText(explicit)
+        }
+    }
+  }
+
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
   publishToMavenCentral()
@@ -66,8 +85,8 @@ mavenPublishing {
     signAllPublications()
   }
   pom {
-    name.set("Clerk Android UI")
-    description.set("UI components for Clerk Android SDK")
+    name.set("Clerk Android API")
+    description.set("Core API client for the Clerk Android SDK: authentication, sessions and users")
     inceptionYear.set("2025")
     url.set("https://github.com/clerk/clerk-android")
     licenses {

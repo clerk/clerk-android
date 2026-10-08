@@ -1,6 +1,7 @@
 package com.clerk.ui.organizationprofile.custom
 
 import android.annotation.SuppressLint
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -9,24 +10,24 @@ import androidx.compose.runtime.staticCompositionLocalOf
  *
  * Access via [LocalOrganizationProfileCustomNavigator].
  */
-class OrganizationProfileCustomNavigator
+public class OrganizationProfileCustomNavigator
 internal constructor(
   private val pushAction: (String) -> Unit,
   private val popToRootAction: () -> Unit,
   private val navigateBackAction: () -> Unit,
 ) {
   /** Push another custom route key onto the organization profile navigation stack. */
-  fun push(routeKey: String) {
+  public fun push(routeKey: String) {
     pushAction(routeKey)
   }
 
   /** Pop back to the root organization profile screen. */
-  fun popToRoot() {
+  public fun popToRoot() {
     popToRootAction()
   }
 
   /** Navigate back one screen. */
-  fun navigateBack() {
+  public fun navigateBack() {
     navigateBackAction()
   }
 }
@@ -39,7 +40,8 @@ internal constructor(
  * [com.clerk.ui.organizationswitcher.OrganizationSwitcher].
  */
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalOrganizationProfileCustomNavigator =
+public val LocalOrganizationProfileCustomNavigator:
+  ProvidableCompositionLocal<OrganizationProfileCustomNavigator> =
   staticCompositionLocalOf<OrganizationProfileCustomNavigator> {
     error(
       "No OrganizationProfileCustomNavigator provided. " +

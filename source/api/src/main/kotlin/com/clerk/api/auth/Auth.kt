@@ -73,7 +73,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  * ```
  */
 @Suppress("TooManyFunctions")
-class Auth internal constructor() {
+public class Auth internal constructor() {
 
   private val _events = MutableSharedFlow<AuthEvent>(extraBufferCapacity = 64)
 
@@ -83,7 +83,7 @@ class Auth internal constructor() {
    * Subscribe to this flow to receive notifications about authentication state changes, including
    * sign-in, sign-out, session changes, and errors.
    */
-  val events: Flow<AuthEvent> = _events.asSharedFlow()
+  public val events: Flow<AuthEvent> = _events.asSharedFlow()
 
   internal fun send(event: AuthEvent) {
     val emitted = _events.tryEmit(event)
@@ -113,7 +113,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  val currentSignIn: SignIn?
+  public val currentSignIn: SignIn?
     get() = if (Clerk.clientInitialized) Clerk.client.signIn else null
 
   /**
@@ -130,11 +130,11 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  val currentSignUp: SignUp?
+  public val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
 
   /** Native magic-link manager for PKCE-bound email link flows. */
-  val nativeMagicLink: NativeMagicLinkManager
+  public val nativeMagicLink: NativeMagicLinkManager
     get() = NativeMagicLinkService
 
   /**
@@ -143,7 +143,7 @@ class Auth internal constructor() {
    * In multi-session mode this can include sessions for multiple accounts. The current session is
    * the one whose ID matches [Client.lastActiveSessionId].
    */
-  val sessions: List<Session>
+  public val sessions: List<Session>
     get() = if (Clerk.clientInitialized) Clerk.client.sessions else emptyList()
 
   // endregion
@@ -168,7 +168,7 @@ class Auth internal constructor() {
    * signIn.verifyCode("123456")
    * ```
    */
-  suspend fun signIn(
+  public suspend fun signIn(
     block: SignInIdentifierBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val builder = SignInIdentifierBuilder().apply(block)
@@ -194,7 +194,7 @@ class Auth internal constructor() {
    *   activation fails. When the user dismisses the browser or another flow supersedes this one,
    *   the failure's throwable is a [HostedAuthCancellationException].
    */
-  suspend fun startHostedAuth(
+  public suspend fun startHostedAuth(
     mode: HostedAuthMode? = null,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
   ): ClerkResult<Session, ClerkErrorResponse> {
@@ -226,7 +226,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signInWithPassword(
+  public suspend fun signInWithPassword(
     block: SignInWithPasswordBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val builder = SignInWithPasswordBuilder().apply(block)
@@ -256,7 +256,7 @@ class Auth internal constructor() {
    * signIn.verifyCode("123456")
    * ```
    */
-  suspend fun signInWithOtp(
+  public suspend fun signInWithOtp(
     block: SignInWithOtpBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val builder = SignInWithOtpBuilder().apply(block)
@@ -289,7 +289,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signInWithOAuth(OAuthProvider.GOOGLE)
    * ```
    */
-  suspend fun signInWithOAuth(
+  public suspend fun signInWithOAuth(
     provider: OAuthProvider,
     transferable: Boolean = true,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -301,7 +301,7 @@ class Auth internal constructor() {
   }
 
   @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
-  suspend fun signInWithOAuth(
+  public suspend fun signInWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> = signInWithOAuth(provider, transferable = true)
 
@@ -318,7 +318,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signInWithGoogleOneTap()
    * ```
    */
-  suspend fun signInWithGoogleOneTap(
+  public suspend fun signInWithGoogleOneTap(
     transferable: Boolean = true
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     return reportingFailures { GoogleSignInService().signInWithGoogle(transferable) }
@@ -339,7 +339,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signInWithIdToken(
+  public suspend fun signInWithIdToken(
     block: SignInWithIdTokenBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = SignInWithIdTokenBuilder().apply(block)
@@ -371,7 +371,7 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithPasskey()
    * ```
    */
-  suspend fun signInWithPasskey(
+  public suspend fun signInWithPasskey(
     preferImmediatelyAvailableCredentials: Boolean = false
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     return reportingFailures {
@@ -382,7 +382,7 @@ class Auth internal constructor() {
   }
 
   @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
-  suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> =
+  public suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> =
     signInWithPasskey(preferImmediatelyAvailableCredentials = false)
 
   /**
@@ -391,7 +391,7 @@ class Auth internal constructor() {
    * When no restore credential is available, the returned failure can be ignored and the app can
    * continue with its normal sign-in experience.
    */
-  suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
+  public suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
     return reportingFailures {
       RestoreCredentials.signIn()
     }
@@ -416,7 +416,7 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithBiometrics()
    * ```
    */
-  suspend fun signInWithBiometrics(
+  public suspend fun signInWithBiometrics(
     id: String? = null,
     identifierHint: String? = null,
     promptTitle: String? = null,
@@ -446,7 +446,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signInWithEnterpriseSSO { email = "user@company.com" }
    * ```
    */
-  suspend fun signInWithEnterpriseSso(
+  public suspend fun signInWithEnterpriseSso(
     transferable: Boolean = true,
     block: EnterpriseSsoBuilder.() -> Unit,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
@@ -463,7 +463,7 @@ class Auth internal constructor() {
   }
 
   @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
-  suspend fun signInWithEnterpriseSso(
+  public suspend fun signInWithEnterpriseSso(
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> =
     signInWithEnterpriseSso(transferable = true, block = block)
@@ -480,7 +480,7 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithTicket(ticket)
    * ```
    */
-  suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
+  public suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
     return createSignIn(SignIn.CreateParams.Strategy.Ticket(ticket = ticket))
   }
 
@@ -494,7 +494,7 @@ class Auth internal constructor() {
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
    *   failure.
    */
-  suspend fun transferToSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
+  public suspend fun transferToSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
     return createSignIn(SignIn.CreateParams.Strategy.Transfer())
   }
 
@@ -504,19 +504,21 @@ class Auth internal constructor() {
    * The flow sends only a code challenge to Clerk and expects completion through a deep-link
    * callback carrying `flow_id` and `approval_token`.
    */
-  suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError> {
+  public suspend fun startEmailLinkSignIn(
+    email: String
+  ): ClerkResult<SignIn, NativeMagicLinkError> {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
   /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
-  suspend fun handleMagicLinkDeepLink(
+  public suspend fun handleMagicLinkDeepLink(
     uri: Uri
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     return nativeMagicLink.handleMagicLinkDeepLink(uri)
   }
 
   /** Completes a pending native magic-link flow using callback values from the deep link. */
-  suspend fun completeMagicLink(
+  public suspend fun completeMagicLink(
     flowId: String,
     approvalToken: String,
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
@@ -544,7 +546,9 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signUp(block: SignUpBuilder.() -> Unit): ClerkResult<SignUp, ClerkErrorResponse> {
+  public suspend fun signUp(
+    block: SignUpBuilder.() -> Unit
+  ): ClerkResult<SignUp, ClerkErrorResponse> {
     val builder = SignUpBuilder().apply(block)
 
     return createSignUp(
@@ -578,7 +582,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signUpWithOAuth(OAuthProvider.GOOGLE)
    * ```
    */
-  suspend fun signUpWithOAuth(
+  public suspend fun signUpWithOAuth(
     provider: OAuthProvider,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     unsafeMetadata: Map<String, Any>? = null,
@@ -593,7 +597,7 @@ class Auth internal constructor() {
   }
 
   @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
-  suspend fun signUpWithOAuth(
+  public suspend fun signUpWithOAuth(
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> =
     signUpWithOAuth(provider, redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL)
@@ -612,7 +616,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signUpWithGoogleOneTap()
    * ```
    */
-  suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  public suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
     return signInWithGoogleOneTap(transferable = true)
   }
 
@@ -633,7 +637,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signUpWithIdToken(
+  public suspend fun signUpWithIdToken(
     token: String,
     provider: IdTokenProvider,
     block: SignUpWithIdTokenBuilder.() -> Unit = {},
@@ -667,7 +671,7 @@ class Auth internal constructor() {
    * val result = clerk.auth.signUpWithEnterpriseSso { email = "user@company.com" }
    * ```
    */
-  suspend fun signUpWithEnterpriseSso(
+  public suspend fun signUpWithEnterpriseSso(
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
@@ -693,7 +697,7 @@ class Auth internal constructor() {
    * val signUp = clerk.auth.signUpWithTicket(ticket)
    * ```
    */
-  suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
+  public suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
     return createSignUp(SignUp.CreateParams.Ticket(ticket = ticket))
   }
 
@@ -706,7 +710,7 @@ class Auth internal constructor() {
    * @return A [ClerkResult] containing the [SignUp] object on success, or a [ClerkErrorResponse] on
    *   failure.
    */
-  suspend fun transferToSignUp(): ClerkResult<SignUp, ClerkErrorResponse> {
+  public suspend fun transferToSignUp(): ClerkResult<SignUp, ClerkErrorResponse> {
     return createSignUp(SignUp.CreateParams.Transfer)
   }
 
@@ -727,7 +731,7 @@ class Auth internal constructor() {
    * clerk.auth.signOut(sessionId = Clerk.session?.id) // sign out the current account only
    * ```
    */
-  suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
+  public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     return reportingFailures {
       if (sessionId != null) {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
@@ -846,7 +850,7 @@ class Auth internal constructor() {
    * clerk.auth.setActive(sessionId, organizationId)
    * ```
    */
-  suspend fun setActive(
+  public suspend fun setActive(
     sessionId: String,
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
@@ -943,7 +947,9 @@ class Auth internal constructor() {
    * val token = clerk.auth.getToken(GetTokenOptions(template = "my-template"))
    * ```
    */
-  suspend fun getToken(options: GetTokenOptions? = null): ClerkResult<String, ClerkErrorResponse> {
+  public suspend fun getToken(
+    options: GetTokenOptions? = null
+  ): ClerkResult<String, ClerkErrorResponse> {
     val session =
       Clerk.session
         ?: return ClerkResult.apiFailure(
@@ -967,7 +973,7 @@ class Auth internal constructor() {
    * clerk.auth.revokeSession(session)
    * ```
    */
-  suspend fun revokeSession(session: Session): ClerkResult<Unit, ClerkErrorResponse> {
+  public suspend fun revokeSession(session: Session): ClerkResult<Unit, ClerkErrorResponse> {
     return when (val result = session.revoke()) {
       is ClerkResult.Success -> ClerkResult.success(Unit)
       is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
@@ -999,7 +1005,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun handle(uri: Uri?): Boolean {
+  public suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
     val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
     if (handledByMagicLink) {

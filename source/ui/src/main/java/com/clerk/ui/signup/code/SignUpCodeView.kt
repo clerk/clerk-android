@@ -35,7 +35,7 @@ import kotlinx.serialization.Serializable
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignUpCodeView(
+public fun SignUpCodeView(
   field: SignUpCodeField,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -119,10 +119,10 @@ private fun Preview() {
 }
 
 @Serializable
-sealed interface SignUpCodeField {
-  val value: String
+public sealed interface SignUpCodeField {
+  public val value: String
 
-  @Serializable data class Phone(override val value: String) : SignUpCodeField
+  @Serializable public data class Phone(override val value: String) : SignUpCodeField
 
-  @Serializable data class Email(override val value: String) : SignUpCodeField
+  @Serializable public data class Email(override val value: String) : SignUpCodeField
 }

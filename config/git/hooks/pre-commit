@@ -59,23 +59,21 @@ if [[ ! -z ${kotlin_files_list} ]]; then
     fi
 
     # Run detekt only if there are Kotlin files
-    kotlin_files_detekt_args="$(echo $kotlin_files_list | tr " " ",")"
+    kotlin_files_detekt_args="$(echo $kotlin_files_list | tr " " ":")"
     if [[ ! -z ${kotlin_files_detekt_args} ]]; then
         "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
             --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
             --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
             --build-upon-default-config \
-            --all-rules \
             --input "${kotlin_files_detekt_args}" &> /dev/null
 
         if [[ $? != 0 ]]; then
             echo -e "${RED}Detekt failed, re-running verbosely. Alternatively, you can run the format command locally" >&2
-            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --all-rules --input ${kotlin_files_detekt_args}'${NC}" >&2
+            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${NC}" >&2
             "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
                 --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
                 --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
                 --build-upon-default-config \
-                --all-rules \
                 --input "${kotlin_files_detekt_args}" >&2
             exit $?
         fi

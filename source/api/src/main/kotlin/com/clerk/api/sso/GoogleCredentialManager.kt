@@ -23,7 +23,7 @@ internal interface GoogleCredentialManager {
   fun getGoogleIdOption(): GetGoogleIdOption
 }
 
-class GoogleCredentialManagerImpl : GoogleCredentialManager {
+public class GoogleCredentialManagerImpl : GoogleCredentialManager {
   override suspend fun getSignInWithGoogleCredential(): GetCredentialResponse {
     val activity = Clerk.credentialActivity() ?: throw CredentialFlowException.MissingActivity()
 

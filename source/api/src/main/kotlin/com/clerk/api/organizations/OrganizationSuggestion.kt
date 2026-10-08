@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 /** An interface representing an organization suggestion. */
 @Serializable
-data class OrganizationSuggestion(
+public data class OrganizationSuggestion(
   /** The unique identifier of the suggestion. */
   val id: String,
   /** The public data of the organization. */
@@ -22,7 +22,7 @@ data class OrganizationSuggestion(
 )
 
 /** Accepts this organization suggestion. */
-suspend fun OrganizationSuggestion.accept():
+public suspend fun OrganizationSuggestion.accept():
   ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
   return ClerkApi.user.acceptOrganizationSuggestion(
     suggestionId = this.id,

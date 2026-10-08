@@ -49,7 +49,7 @@ import kotlinx.collections.immutable.toImmutableList
  *   authentication step. This affects which alternative factors are fetched.
  */
 @Composable
-fun SignInFactorAlternativeMethodsView(
+public fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,

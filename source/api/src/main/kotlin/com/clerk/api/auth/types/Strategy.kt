@@ -32,73 +32,73 @@ import kotlinx.serialization.encoding.Encoder
  * @property value The raw strategy string sent to and received from the Clerk API.
  */
 @Serializable(with = StrategySerializer::class)
-sealed class Strategy(val value: String) {
+public sealed class Strategy(public val value: String) {
 
   /** A one-time code sent by SMS. */
-  object PhoneCode : Strategy("phone_code")
+  public object PhoneCode : Strategy("phone_code")
 
   /** A one-time code sent by email. */
-  object EmailCode : Strategy("email_code")
+  public object EmailCode : Strategy("email_code")
 
   /** A magic link sent by email. */
-  object EmailLink : Strategy("email_link")
+  public object EmailLink : Strategy("email_link")
 
   /** A time-based one-time password from an authenticator app. */
-  object Totp : Strategy("totp")
+  public object Totp : Strategy("totp")
 
   /** A single-use backup code. */
-  object BackupCode : Strategy("backup_code")
+  public object BackupCode : Strategy("backup_code")
 
   /** The user's password. */
-  object Password : Strategy("password")
+  public object Password : Strategy("password")
 
   /** A WebAuthn passkey. */
-  object Passkey : Strategy("passkey")
+  public object Passkey : Strategy("passkey")
 
   /** A password-reset code sent by email. */
-  object ResetPasswordEmailCode : Strategy("reset_password_email_code")
+  public object ResetPasswordEmailCode : Strategy("reset_password_email_code")
 
   /** A password-reset code sent by SMS. */
-  object ResetPasswordPhoneCode : Strategy("reset_password_phone_code")
+  public object ResetPasswordPhoneCode : Strategy("reset_password_phone_code")
 
   /** A sign-in or sign-up ticket, such as an invitation or sign-in token. */
-  object Ticket : Strategy("ticket")
+  public object Ticket : Strategy("ticket")
 
   /** A transfer between a sign-in and a sign-up attempt. */
-  object Transfer : Strategy("transfer")
+  public object Transfer : Strategy("transfer")
 
   /** Enterprise SSO (SAML or OIDC) through an enterprise connection. */
-  object EnterpriseSso : Strategy("enterprise_sso")
+  public object EnterpriseSso : Strategy("enterprise_sso")
 
   /** Legacy SAML SSO. */
-  object Saml : Strategy("saml")
+  public object Saml : Strategy("saml")
 
   /** A biometric credential stored on this device. */
-  object TrustedDevice : Strategy("trusted_device")
+  public object TrustedDevice : Strategy("trusted_device")
 
   /** A Google One Tap / Credential Manager ID token. */
-  object GoogleOneTap : Strategy("google_one_tap")
+  public object GoogleOneTap : Strategy("google_one_tap")
 
   /**
    * A redirect-based OAuth strategy, `oauth_<provider>` (for example `oauth_google` or
    * `oauth_custom_acme`).
    */
-  class OAuth internal constructor(value: String) : Strategy(value) {
+  public class OAuth internal constructor(value: String) : Strategy(value) {
     /** The OAuth provider this strategy authenticates with. */
-    val provider: OAuthProvider
+    public val provider: OAuthProvider
       get() = OAuthProvider.fromStrategy(value)
   }
 
   /** A native OAuth token exchange strategy, `oauth_token_<provider>`. */
-  class OAuthToken internal constructor(value: String) : Strategy(value)
+  public class OAuthToken internal constructor(value: String) : Strategy(value)
 
   /**
    * A strategy this version of the SDK does not recognize.
    *
    * @property raw The raw strategy string returned by the Clerk API.
    */
-  class Unknown internal constructor(raw: String) : Strategy(raw) {
-    val raw: String
+  public class Unknown internal constructor(raw: String) : Strategy(raw) {
+    public val raw: String
       get() = value
   }
 
@@ -109,7 +109,7 @@ sealed class Strategy(val value: String) {
   /** Returns the raw wire [value], so a [Strategy] can be interpolated into requests and logs. */
   final override fun toString(): String = value
 
-  companion object {
+  public companion object {
     private const val OAUTH_PREFIX = "oauth_"
     private const val OAUTH_TOKEN_PREFIX = "oauth_token_"
 
@@ -142,7 +142,7 @@ sealed class Strategy(val value: String) {
      * Never fails: unrecognized values become [Unknown] and keep [value].
      */
     @JvmStatic
-    fun from(value: String): Strategy =
+    public fun from(value: String): Strategy =
       known[value]
         ?: when {
           value.startsWith(OAUTH_TOKEN_PREFIX) -> OAuthToken(value)

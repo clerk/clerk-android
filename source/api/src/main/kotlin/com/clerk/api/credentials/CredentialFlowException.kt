@@ -99,7 +99,7 @@ private val ClerkResult.Failure<ClerkErrorResponse>.credentialFlowUiMessage: Str
       ?: error?.errors?.firstOrNull()?.longMessage
       ?: error?.errors?.firstOrNull()?.message
 
-val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
+public val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
   get() = (throwable as? CredentialFlowException)?.suppressUserFacingError == true
 
 /**
@@ -107,13 +107,14 @@ val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: B
  * itself are logged instead of presented. Server rejections of a credential the user selected
  * arrive as API failures and remain presentable.
  */
-val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCredentialFlowError: Boolean
+public val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCredentialFlowError:
+  Boolean
   get() = throwable is CredentialFlowException || throwable is GetCredentialException
 
-val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
+public val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
   get() = throwable is CredentialFlowException.NoGoogleAccount
 
-val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
+public val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
   get() = credentialFlowUiMessage ?: errorMessage
 
 private fun Throwable.isActivityContextFailure(): Boolean {

@@ -96,7 +96,7 @@ private const val DEFAULT_OTP_LENGTH = 6
  * @param showResend Whether to show the resend code link and timer. Defaults to `true`.
  */
 @Composable
-fun ClerkCodeInputField(
+public fun ClerkCodeInputField(
   onTextChange: (String) -> Unit,
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,

@@ -23,9 +23,9 @@ internal object EmailAppLauncher {
   private fun Context.tryStartActivity(intent: Intent): Boolean {
     val launchIntent = Intent(intent).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
     return runCatching {
-        startActivity(launchIntent)
-        true
-      }
+      startActivity(launchIntent)
+      true
+    }
       .getOrElse { false }
   }
 }

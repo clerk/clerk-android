@@ -350,7 +350,7 @@ private fun nativeRedirectUriRequiredError(): ClerkErrorResponse {
 }
 
 public fun interface NativeMagicLinkAttestationProvider {
-  suspend fun attestation(): String?
+  public suspend fun attestation(): String?
 }
 
 @Serializable
@@ -505,7 +505,7 @@ private fun nativeMagicLinkFailure(
 
 private fun currentTimeMillis(): Long = System.currentTimeMillis()
 
-class NativeMagicLinkError(val reasonCode: String, val message: String? = null)
+public class NativeMagicLinkError(public val reasonCode: String, public val message: String? = null)
 
 internal enum class NativeMagicLinkReason(val code: String) {
   APPROVAL_TOKEN_CONSUMED("approval_token_consumed"),

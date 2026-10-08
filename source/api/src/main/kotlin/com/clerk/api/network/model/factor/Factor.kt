@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * process.
  */
 @Serializable
-data class Factor(
+public data class Factor(
   /** The strategy of the factor. */
   val strategy: String,
 
@@ -45,5 +45,5 @@ data class Factor(
     get() = Strategy.from(strategy)
 }
 
-fun Factor.isResetFactor() =
+public fun Factor.isResetFactor(): Boolean =
   strategyType == Strategy.ResetPasswordEmailCode || strategyType == Strategy.ResetPasswordPhoneCode

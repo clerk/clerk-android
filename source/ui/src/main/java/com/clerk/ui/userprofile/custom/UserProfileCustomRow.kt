@@ -6,19 +6,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Icon for a custom user profile row. */
 @Immutable
-sealed interface UserProfileRowIcon {
+public sealed interface UserProfileRowIcon {
   /** A drawable resource icon. */
-  data class Resource(@DrawableRes val resId: Int) : UserProfileRowIcon
+  public data class Resource(@DrawableRes val resId: Int) : UserProfileRowIcon
 
   /** A Compose [ImageVector] icon. */
-  data class Vector(val imageVector: ImageVector) : UserProfileRowIcon
+  public data class Vector(val imageVector: ImageVector) : UserProfileRowIcon
 }
 
 /**
  * Built-in rows in [com.clerk.ui.userprofile.UserProfileView] that can be used as placement
  * anchors.
  */
-enum class UserProfileRow {
+public enum class UserProfileRow {
   ManageAccount,
   Security,
   SwitchAccount,
@@ -27,7 +27,7 @@ enum class UserProfileRow {
 }
 
 /** Root-level sections in [com.clerk.ui.userprofile.UserProfileView]. */
-enum class UserProfileSection {
+public enum class UserProfileSection {
   /** Contains [UserProfileRow.ManageAccount] and [UserProfileRow.Security]. */
   Profile,
 
@@ -37,14 +37,14 @@ enum class UserProfileSection {
 
 /** Where to insert a custom row relative to built-in rows. */
 @Immutable
-sealed interface UserProfileCustomRowPlacement {
-  data class SectionStart(val section: UserProfileSection) : UserProfileCustomRowPlacement
+public sealed interface UserProfileCustomRowPlacement {
+  public data class SectionStart(val section: UserProfileSection) : UserProfileCustomRowPlacement
 
-  data class SectionEnd(val section: UserProfileSection) : UserProfileCustomRowPlacement
+  public data class SectionEnd(val section: UserProfileSection) : UserProfileCustomRowPlacement
 
-  data class Before(val row: UserProfileRow) : UserProfileCustomRowPlacement
+  public data class Before(val row: UserProfileRow) : UserProfileCustomRowPlacement
 
-  data class After(val row: UserProfileRow) : UserProfileCustomRowPlacement
+  public data class After(val row: UserProfileRow) : UserProfileCustomRowPlacement
 }
 
 /**
@@ -58,7 +58,7 @@ sealed interface UserProfileCustomRowPlacement {
  *   section.
  */
 @Immutable
-data class UserProfileCustomRow(
+public data class UserProfileCustomRow(
   val routeKey: String,
   val title: String,
   val icon: UserProfileRowIcon,
