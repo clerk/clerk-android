@@ -5,7 +5,7 @@ test('the home full-screen sign-in button shows AuthView with no close button', 
   await host.launch();
   await host.tap(host.app.signInFullScreen);
   await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });
-  await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible();
+  await expect(screen.getByTestId('clerk.auth.start.continue')).toHaveText('Next');
   await expect(screen.getByTestId('clerk.dismissButton')).toHaveCount(0);
   await host.screenshot('auth-full-screen');
 });

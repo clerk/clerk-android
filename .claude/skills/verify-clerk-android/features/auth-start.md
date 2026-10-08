@@ -19,7 +19,7 @@ Preconditions:
 
 - The first test needs no user. The second seeds one with `host.seedUser({ phone: true, password: true })`. The spec declares no settings, so it launches on the standard instance, signed out.
 
-- **Full screen.** Run `control-clerk-android run auth-start`. The first test launches, taps `e2e.auth.signInFullScreen`, and expects `clerk.auth.start.identifier` and `clerk.auth.start.continue` with no `clerk.dismissButton`. Screenshot `auth-full-screen`, which shows AuthView as the whole content of the activity.
+- **Full screen.** Run `control-clerk-android run auth-start`. The first test launches, taps `e2e.auth.signInFullScreen`, and expects `clerk.auth.start.identifier`, `clerk.auth.start.continue` labelled `Next`, and no `clerk.dismissButton`. Screenshot `auth-full-screen`, which shows AuthView as the whole content of the activity.
 - **Initial identifier.** The second test launches with `authMode: 'signIn'` and the user's phone as `initialIdentifier`, and taps `e2e.auth.signInFullScreen`, and the host shows `AuthView(initialIdentifier = <that phone>)`. AuthView then opens on the phone field and shows no `clerk.auth.start.identifier`. The test expects `clerk.auth.start.phoneNumber` to hold the number as Clerk formats it and `clerk.auth.start.identifier` to be absent, then taps `clerk.auth.start.continue` and expects `clerk.auth.signIn.password`. Screenshots `auth-initial-identifier` and `auth-initial-identifier-accepted`.
 - **Proof.** `specs/golden/auth-start/auth-start.e2e.ts` passes. The run directory holds `video.mp4` and the three screenshots.
 

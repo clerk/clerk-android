@@ -284,7 +284,7 @@ internal fun AuthStartViewImpl(
 
           ClerkButton(
             modifier = Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.Start.continueButton),
-            text = stringResource(R.string.continue_text),
+            text = stringResource(R.string.next),
             isLoading = state is AuthStartViewModel.AuthState.Loading,
             isEnabled = isContinueEnabled,
             icons =
