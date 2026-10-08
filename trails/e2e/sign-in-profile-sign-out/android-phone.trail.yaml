@@ -156,7 +156,7 @@
               nodeSelector:
                 androidAccessibility:
                   textRegex: Account
-    - step: Open manage account in the prebuilt user profile, return to the account screen, and sign out.
+    - step: Open manage account in the prebuilt user profile, verify email, phone, and connected account sections, open security, return to the account screen, and sign out.
       recording:
         tools:
           - tapOnElementBySelector:

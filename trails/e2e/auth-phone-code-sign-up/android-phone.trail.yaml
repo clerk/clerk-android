@@ -1,0 +1,83 @@
+- config:
+    id: clerk/e2e/auth-phone-code-sign-up
+    target: clerk-e2e
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - e2e
+      - prebuilt-ui
+      - auth-phone
+- tools:
+    - launchApp:
+        appId: com.clerk.e2e
+        launchMode: REINSTALL
+- prompts:
+    - verify: The e2e host shows the signed-out marker.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the e2e host is signed out before the flow starts.
+              timeoutMs: 45000
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.signedOut
+    - step: Start the prebuilt sign-up with the prefilled test phone number 555-555-0160 and continue.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Open the prebuilt AuthView in sign-up mode with the test phone number.
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.signUpWithPhone
+          - assertVisibleBySelector:
+              reason: Verify the sign-up start screen shows the phone number field.
+              timeoutMs: 30000
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Enter your phone number
+          - tapOnElementBySelector:
+              reason: Submit the prefilled test phone number.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Continue
+    - step: Enter the phone verification code 424242.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the phone verification code screen is shown.
+              timeoutMs: 90000
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Check your phone
+          - inputText:
+              text: "424242"
+              hideKeyboardAfter: false
+    - verify: The e2e host shows a signed-in user with an active session.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the e2e host reports a signed-in user.
+              timeoutMs: 45000
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.signedIn
+          - assertVisibleBySelector:
+              reason: Verify the session is active.
+              timeoutMs: 45000
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.sessionActive
+    - step: Delete the test account from the e2e host and verify it is signed out.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Delete the test account from the e2e host.
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.deleteAccount
+          - assertVisibleBySelector:
+              reason: Verify the e2e host is signed out after deleting the account.
+              timeoutMs: 45000
+              nodeSelector:
+                androidAccessibility:
+                  resourceIdRegex: e2e\.auth\.signedOut

@@ -1,5 +1,6 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.EpochMillisecondsSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -17,5 +18,5 @@ public data class BillingCreditLedger(
   val amount: BillingMoneyAmount,
   val sourceType: String,
   val sourceId: String,
-  val createdAt: Long,
+  @Serializable(with = EpochMillisecondsSerializer::class) val createdAt: Long,
 )
