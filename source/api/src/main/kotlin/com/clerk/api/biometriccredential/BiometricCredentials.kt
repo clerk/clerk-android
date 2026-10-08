@@ -220,9 +220,11 @@ public object BiometricCredentials {
   }
 
   /**
-   * Revokes the available local biometric credential for the current signed-in user, if one exists.
+   * Revokes this app installation's biometric credential for the current signed-in user, if one
+   * exists.
    *
-   * Succeeds without a server call when there is no local credential to revoke.
+   * Succeeds without a server call when there is no local credential to revoke, and succeeds when
+   * the server credential was already revoked.
    *
    * @return A [ClerkResult] containing [Unit] on success, or a [ClerkErrorResponse] on failure.
    */
@@ -233,14 +235,19 @@ public object BiometricCredentials {
       )
     }
     val userId = Clerk.user?.id ?: return ClerkResult.success(Unit)
+    val localCredential =
+      onStorage { candidateLocalCredentials(id = null, identifierHint = null, userId) }
+        .firstOrNull() ?: return ClerkResult.success(Unit)
 
-    return when (val result = selectedLocalCredential(id = null, identifierHint = null, userId)) {
-      is LocalCredentialResult.Available ->
-        when (val revokeResult = revoke(result.credential.id)) {
-          is ClerkResult.Success -> ClerkResult.success(Unit)
-          is ClerkResult.Failure -> revokeResult
+    return when (val revokeResult = revoke(localCredential.id)) {
+      is ClerkResult.Success -> ClerkResult.success(Unit)
+      is ClerkResult.Failure ->
+        if (revokeResult.isResourceNotFound) {
+          onStorage { deleteLocalCredential(localCredential) }
+          ClerkResult.success(Unit)
+        } else {
+          revokeResult
         }
-      is LocalCredentialResult.Unavailable -> ClerkResult.success(Unit)
     }
   }
 
@@ -799,6 +806,9 @@ public object BiometricCredentials {
         error.code in MISSING_CREDENTIAL_ERROR_CODES &&
           error.meta?.get("param_name")?.jsonPrimitive?.contentOrNull == "trusted_device_id"
       }
+
+  private val ClerkResult.Failure<ClerkErrorResponse>.isResourceNotFound: Boolean
+    get() = error?.errors.orEmpty().any { it.code == "resource_not_found" }
 
   private fun ClerkResult.Failure<ClerkErrorResponse>
     .biometricCredentialValidationUnavailableReason():
