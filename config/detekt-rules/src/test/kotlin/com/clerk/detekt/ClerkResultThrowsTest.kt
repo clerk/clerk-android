@@ -1,6 +1,6 @@
 package com.clerk.detekt
 
-import io.gitlab.arturbosch.detekt.test.lint
+import dev.detekt.test.lint
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -111,5 +111,22 @@ class ClerkResultThrowsTest {
       )
 
     assertEquals(2, findings.size)
+  }
+
+  @Test
+  fun `flags throwing default argument expressions`() {
+    val findings =
+      rule.lint(
+        """
+        fun a(id: String = error("missing")): ClerkResult<String, Nothing> =
+          ClerkResult.success(id)
+
+        fun b(id: String = catchingClerkResult { error("caught") }): ClerkResult<String, Nothing> =
+          ClerkResult.success(id)
+        """
+          .trimIndent()
+      )
+
+    assertEquals(1, findings.size)
   }
 }

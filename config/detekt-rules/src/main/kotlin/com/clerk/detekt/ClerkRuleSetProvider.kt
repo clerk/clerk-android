@@ -1,13 +1,12 @@
 package com.clerk.detekt
 
-import io.gitlab.arturbosch.detekt.api.Config
-import io.gitlab.arturbosch.detekt.api.RuleSet
-import io.gitlab.arturbosch.detekt.api.RuleSetProvider
+import dev.detekt.api.RuleSet
+import dev.detekt.api.RuleSetId
+import dev.detekt.api.RuleSetProvider
 
 /** Registers the Clerk SDK's repo-specific detekt rules. */
 class ClerkRuleSetProvider : RuleSetProvider {
-  override val ruleSetId: String = "clerk"
+  override val ruleSetId: RuleSetId = RuleSetId("clerk")
 
-  override fun instance(config: Config): RuleSet =
-    RuleSet(ruleSetId, listOf(ClerkResultThrows(config)))
+  override fun instance(): RuleSet = RuleSet(ruleSetId, listOf(::ClerkResultThrows))
 }

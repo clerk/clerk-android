@@ -1,13 +1,10 @@
 package com.clerk.detekt
 
-import io.gitlab.arturbosch.detekt.api.CodeSmell
-import io.gitlab.arturbosch.detekt.api.Config
-import io.gitlab.arturbosch.detekt.api.Debt
-import io.gitlab.arturbosch.detekt.api.Entity
-import io.gitlab.arturbosch.detekt.api.Issue
-import io.gitlab.arturbosch.detekt.api.Rule
-import io.gitlab.arturbosch.detekt.api.Severity
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElement
+import dev.detekt.api.Config
+import dev.detekt.api.Entity
+import dev.detekt.api.Finding
+import dev.detekt.api.Rule
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtCatchClause
@@ -27,63 +24,62 @@ import org.jetbrains.kotlin.psi.KtValueArgument
  * Flags code that can throw from a public function whose declared return type is `ClerkResult`.
  *
  * `ClerkResult` promises consumers a non-exceptional API: failures must be returned as
- * `ClerkResult.Failure`, not thrown. Inside such a function this rule reports `throw`, `error()`,
- * `require()`, `requireNotNull()`, `check()`, `checkNotNull()`, `TODO()` and `!!`, unless the code
- * sits in a `try` block that catches `Exception`/`Throwable` or in a lambda passed to a catching
- * helper. Rethrowing a caught `CancellationException` is allowed because cancellation must
- * propagate.
+ * `ClerkResult.Failure`, not thrown. In such a function's body and default argument expressions
+ * this rule reports `throw`, `error()`, `require()`, `requireNotNull()`, `check()`,
+ * `checkNotNull()`, `TODO()` and `!!`, unless the code sits in a `try` block that catches
+ * `Exception`/`Throwable` or in a lambda passed to a catching helper. Rethrowing a caught
+ * `CancellationException` is allowed because cancellation must propagate.
  *
- * The rule is syntactic (detekt runs without type resolution here), so it relies on the declared
+ * The rule is syntactic, so it works with or without type resolution. It relies on the declared
  * return type and does not follow calls into other functions.
  */
-class ClerkResultThrows(config: Config = Config.empty) : Rule(config) {
-  override val issue: Issue =
-    Issue(
-      id = javaClass.simpleName,
-      severity = Severity.Defect,
-      description =
-        "Public functions returning ClerkResult must report failures as ClerkResult.Failure " +
-          "instead of throwing.",
-      debt = Debt.TWENTY_MINS,
-    )
+class ClerkResultThrows(config: Config = Config.empty) :
+  Rule(
+    config,
+    "Public functions returning ClerkResult must report failures as ClerkResult.Failure " +
+      "instead of throwing.",
+  ) {
 
   override fun visitNamedFunction(function: KtNamedFunction) {
     super.visitNamedFunction(function)
     if (function.isLocal || !function.returnsClerkResult() || !function.isPublicApi()) return
-    val body = function.bodyExpression ?: return
-    body.accept(
-      object : KtTreeVisitorVoid() {
-        override fun visitClassOrObject(classOrObject: KtClassOrObject) = Unit
+    val evaluatedOnCall =
+      function.valueParameters.mapNotNull { it.defaultValue } +
+        listOfNotNull(function.bodyExpression)
+    val visitor = throwingCodeVisitor(function)
+    evaluatedOnCall.forEach { it.accept(visitor) }
+  }
 
-        override fun visitThrowExpression(expression: KtThrowExpression) {
-          super.visitThrowExpression(expression)
-          if (!expression.rethrowsCancellation() && !expression.isCaught(body)) {
-            reportAt(expression, function, "throws")
-          }
-        }
+  private fun throwingCodeVisitor(function: KtNamedFunction): KtTreeVisitorVoid =
+    object : KtTreeVisitorVoid() {
+      override fun visitClassOrObject(classOrObject: KtClassOrObject) = Unit
 
-        override fun visitCallExpression(expression: KtCallExpression) {
-          super.visitCallExpression(expression)
-          val name = expression.calleeExpression?.text ?: return
-          if (name in THROWING_CALLS && !expression.isCaught(body)) {
-            reportAt(expression, function, "calls $name()")
-          }
-        }
-
-        override fun visitPostfixExpression(expression: KtPostfixExpression) {
-          super.visitPostfixExpression(expression)
-          if (expression.operationToken == KtTokens.EXCLEXCL && !expression.isCaught(body)) {
-            reportAt(expression, function, "uses !!")
-          }
+      override fun visitThrowExpression(expression: KtThrowExpression) {
+        super.visitThrowExpression(expression)
+        if (!expression.rethrowsCancellation() && !expression.isCaught(function)) {
+          reportAt(expression, function, "throws")
         }
       }
-    )
-  }
+
+      override fun visitCallExpression(expression: KtCallExpression) {
+        super.visitCallExpression(expression)
+        val name = expression.calleeExpression?.text ?: return
+        if (name in THROWING_CALLS && !expression.isCaught(function)) {
+          reportAt(expression, function, "calls $name()")
+        }
+      }
+
+      override fun visitPostfixExpression(expression: KtPostfixExpression) {
+        super.visitPostfixExpression(expression)
+        if (expression.operationToken == KtTokens.EXCLEXCL && !expression.isCaught(function)) {
+          reportAt(expression, function, "uses !!")
+        }
+      }
+    }
 
   private fun reportAt(element: PsiElement, function: KtNamedFunction, what: String) {
     report(
-      CodeSmell(
-        issue,
+      Finding(
         Entity.from(element),
         "${function.name} returns ClerkResult but $what. Return a ClerkResult.Failure instead.",
       )

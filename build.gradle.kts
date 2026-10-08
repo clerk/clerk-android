@@ -282,7 +282,11 @@ subprojects {
 
 subprojects {
   plugins.withType<JavaPlugin> {
-    the<JavaPluginExtension>().toolchain.languageVersion.set(buildJdk)
+    the<JavaPluginExtension>().apply {
+      toolchain.languageVersion.set(buildJdk)
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
+    }
   }
 
   tasks.withType<Test>().configureEach {
