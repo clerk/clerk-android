@@ -2,5 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "The verify skill pins the versions its doctor checks, the same ones as the clerk-ios and Expo skills.",
+      "matchFileNames": [".claude/skills/**"],
+      "enabled": false
+    }
   ]
 }
