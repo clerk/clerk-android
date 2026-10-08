@@ -32,3 +32,6 @@ local.properties
 .trailblaze/
 .keys.json
 /config/detekt-rules/build/
+e2e-tests/node_modules/
+e2e-tests/specs/explored/
+.verify/
