@@ -68,8 +68,8 @@ public data class EnterpriseAccount(
     /** The display name of the enterprise connection. */
     val name: String,
 
-    /** The public URL of the provider's logo. */
-    val logoPublicUrl: String,
+    /** The public URL of the provider's logo, or null if the connection has no logo. */
+    val logoPublicUrl: String? = null,
 
     /** The domain associated with the enterprise connection (e.g., example.com). */
     val domain: String,
