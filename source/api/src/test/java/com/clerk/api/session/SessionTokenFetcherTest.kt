@@ -273,6 +273,22 @@ class SessionTokenFetcherTest {
     }
 
   @Test
+  fun `getToken clears local session state when token endpoint returns signed out`() = runTest {
+    val error = Error(code = "signed_out", message = "You are signed out")
+    val errorResponse =
+      ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_signed_out")
+
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.httpFailure(code = 401, error = errorResponse)
+
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    assertNull(result)
+    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+  }
+
+  @Test
   fun `getToken does not clear local session state for non-session unauthorized errors`() =
     runTest {
       val error = Error(code = "not_authorized", message = "Unauthorized")

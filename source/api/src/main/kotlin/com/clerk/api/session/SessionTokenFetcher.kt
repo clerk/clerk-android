@@ -25,6 +25,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         "session_not_found",
         "session_invalid",
         "authentication_invalid",
+        "signed_out",
       )
   }
 
