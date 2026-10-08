@@ -2,12 +2,14 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run } from './core/exec.ts';
+import { remoteBackend } from './core/remote/backend.ts';
 import { VerifyFailure, type HostAdapter, type ScratchPath } from './core/types.ts';
 import { localAndroidBackend } from './platform/android/local.ts';
-import { resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
+import { AVD_NAME, resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
 import { APK, ASSEMBLE_HOST } from './host-app.ts';
 import { APP_ID, app } from '../specs/app.ts';
 
+const PACKAGE_DIR = fileURLToPath(new URL('../', import.meta.url));
 const WORKTREE = fileURLToPath(new URL('../../', import.meta.url));
 const GITHUB_REPO = 'clerk/clerk-android';
 
@@ -31,5 +33,19 @@ export const host: HostAdapter = {
     copyFileSync(join(WORKTREE, APK), path);
     return { platform, key, appId: APP_ID, path, source: 'local' };
   },
-  backends: [localAndroidBackend()],
+  backends: [
+    localAndroidBackend(),
+    remoteBackend({
+      platform: 'android',
+      repo: GITHUB_REPO,
+      workflow: 'verify-remote.yml',
+      sessionsDir: join(PACKAGE_DIR, '.verify', 'remote'),
+      runner: 'ubuntu-24.04',
+      plumbingRunner: 'ubuntu-latest',
+      device: AVD_NAME,
+      idleMinutes: 15,
+      capMinutes: 60,
+      requirement: 'a pushed branch and access to GitHub Actions on clerk/clerk-android',
+    }),
+  ],
 };
