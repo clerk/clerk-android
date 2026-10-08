@@ -169,7 +169,11 @@ $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n>                  
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot profile  # video and one screenshot
 ```
 
-`attach` posts once per run with `gh pr comment --attach`, and says so when the `gh` on this machine has no such flag. It refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create. Without it, name the run id in the PR and say the evidence was not attached.
+`attach` puts the video and the screenshots in the description of the pull request with `gh pr edit --attach`. It writes one block: a line that names the run, the device, and the commit, then the files, between the comments `<!-- verify-evidence:android -->` and `<!-- /verify-evidence:android -->`. The first `attach` adds the block after the description. A later `attach` replaces the block, so the description holds the latest run and the media does not pile up. `attach` changes nothing outside the block. Keep both comments or remove both: `attach` refuses a description that has one without the other, or either one twice. A comment counts only when it is a whole line outside a code fence, so a description can quote one in a sentence or show a whole block as an example.
+
+`attach` reads the description again just before it writes, and builds on the newer text once if it changed. It cannot see an edit that someone saves while the files upload, and that edit is lost, so do not edit the description while `attach` runs.
+
+`attach` needs gh 2.99.0 or newer, whose `gh pr edit` has `--attach`, and it says so when the `gh` on this machine has no such flag. Without it, name the run id in the PR and say the evidence was not attached. `attach` uploads a run to a PR once, and a second `attach` of the same run and PR prints `already posted`. It refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create.
 
 Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the PR video shows only the behavior the change is about. If you ran other golden specs too, cite that run's id in the PR.
 
