@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
-import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
