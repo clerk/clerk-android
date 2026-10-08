@@ -5,7 +5,7 @@ package com.clerk.api.auth.types
  *
  * Represents all supported second factor verification methods.
  */
-enum class MfaType {
+public enum class MfaType {
   /** SMS code sent to the user's phone. */
   PHONE_CODE,
 

@@ -12,7 +12,7 @@ import com.clerk.api.Clerk
  *
  * This is an internal utility and should not be used outside the Clerk SDK.
  */
-object ClerkLog {
+public object ClerkLog {
   private inline fun safeLog(action: () -> Int): Int =
     try {
       action()
@@ -37,7 +37,7 @@ object ClerkLog {
    * @param message The error message to log
    * @return The result of the underlying Log.e() call
    */
-  fun e(message: String) =
+  public fun e(message: String): Int =
     safeLog { Log.e("ClerkLog", "Clerk error: $message") }.takeIf { it != 0 }
       ?: fallback("Clerk error: ", message)
 
@@ -50,7 +50,7 @@ object ClerkLog {
    * @param message The warning message to log
    * @return The result of the underlying Log.w() call
    */
-  fun w(message: String) =
+  public fun w(message: String): Int =
     safeLog { Log.w("ClerkLog", "Clerk warning: $message") }.takeIf { it != 0 }
       ?: fallback("Clerk warning: ", message)
 
@@ -62,7 +62,7 @@ object ClerkLog {
    * @param message The informational message to log
    * @return The result of the underlying Log.i() call
    */
-  fun i(message: String) =
+  public fun i(message: String): Int =
     safeLog { Log.i("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk info: ", message)
 
   /**
@@ -74,9 +74,10 @@ object ClerkLog {
    * @param message The debug message to log
    * @return The result of the underlying Log.d() call
    */
-  fun d(message: String) =
+  public fun d(message: String): Int =
     if (Clerk.debugMode) {
-      safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
+      safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 }
+        ?: fallback("Clerk debug: ", message)
     } else {
       0
     }
@@ -90,7 +91,7 @@ object ClerkLog {
    * @param message The verbose message to log
    * @return The result of the underlying Log.v() call
    */
-  fun v(message: String) =
+  public fun v(message: String): Int =
     if (Clerk.debugMode) {
       safeLog { Log.v("ClerkLog", message) }.takeIf { it != 0 }
         ?: fallback("Clerk verbose: ", message)

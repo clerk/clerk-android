@@ -3,14 +3,10 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
-import com.clerk.api.Constants.Strategy.PHONE_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
-import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.MfaType
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.PreferredSignInStrategy
@@ -40,13 +36,14 @@ import com.clerk.api.sso.SSOService
  * @return A [List] of alternative [Factor] objects, sorted by preference. Returns an empty list if
  *   no suitable alternatives are found or if [SignIn.supportedFirstFactors] is null.
  */
-fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
+public fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
   val firstFactors = supportedFirstFactors?.filter {
     it != factor &&
       !it.isResetFactor() &&
-      !it.strategy.contains("oauth") &&
-      it.strategy != "enterprise_sso" &&
-      it.strategy != "saml"
+      it.strategyType !is Strategy.OAuth &&
+      it.strategyType !is Strategy.OAuthToken &&
+      it.strategyType != Strategy.EnterpriseSso &&
+      it.strategyType != Strategy.Saml
   }
   return (firstFactors ?: emptyList()).sortedWith(FactorComparators.allStrategiesButtonsComparator)
 }
@@ -62,7 +59,7 @@ fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
  * @param factor The factor to exclude from the returned list.
  * @return A list of alternative second factors, sorted according to the predefined order.
  */
-fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
+public fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
   return supportedSecondFactors
     ?.filter { it != factor }
     .orEmpty()
@@ -83,27 +80,27 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
  * @return The [Factor] to be presented as the initial first factor, or `null` if no suitable factor
  *   is found.
  */
-val SignIn.startingFirstFactor: Factor?
+public val SignIn.startingFirstFactor: Factor?
   get() =
     when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
 
-val SignIn.startingSecondFactor: Factor?
+public val SignIn.startingSecondFactor: Factor?
   get() {
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "passkey" }
+      ?.firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "totp" }
+      ?.firstOrNull { it.strategyType == Strategy.Totp }
       ?.let {
         return it
       }
     supportedSecondFactors
-      ?.firstOrNull { it.strategy == "phone_code" }
+      ?.firstOrNull { it.strategyType == Strategy.PhoneCode }
       ?.let {
         return it
       }
@@ -115,13 +112,13 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
     val availableFirstFactors = supportedFirstFactors ?: return null
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "passkey" }
+      .firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "password" }
+      .firstOrNull { it.strategyType == Strategy.Password }
       ?.let {
         return it
       }
@@ -140,7 +137,7 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
     val availableFirstFactors = supportedFirstFactors ?: return null
 
     availableFirstFactors
-      .firstOrNull { it.strategy == "passkey" }
+      .firstOrNull { it.strategyType == Strategy.Passkey }
       ?.let {
         return it
       }
@@ -164,15 +161,16 @@ private fun List<Factor>.emailLinkFactorForIdentifier(identifier: String?): Fact
 
   return when {
     !isEmailIdentifier -> null
-    matchingEmailFactor == null -> filter { it.strategy == EMAIL_LINK }.singleOrNull()
+    matchingEmailFactor == null -> singleOrNull { it.strategyType == Strategy.EmailLink }
     else ->
-      firstOrNull { it.strategy == EMAIL_LINK && it.hasSameIdentityAs(matchingEmailFactor) }
-        ?: matchingEmailFactor.takeIf { it.strategy == EMAIL_LINK }
+      firstOrNull {
+        it.strategyType == Strategy.EmailLink && it.hasSameIdentityAs(matchingEmailFactor)
+      } ?: matchingEmailFactor.takeIf { it.strategyType == Strategy.EmailLink }
   }
 }
 
 private val Factor.isEmailFactor: Boolean
-  get() = strategy == EMAIL_LINK || strategy == EMAIL_CODE
+  get() = strategyType == Strategy.EmailLink || strategyType == Strategy.EmailCode
 
 private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
   return (!emailAddressId.isNullOrBlank() && emailAddressId == other.emailAddressId) ||
@@ -197,7 +195,7 @@ private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.authenticateWithPreparedRedirect(
+public suspend fun SignIn.authenticateWithPreparedRedirect(
   transferable: Boolean = true
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
@@ -229,7 +227,7 @@ suspend fun SignIn.authenticateWithPreparedRedirect(
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.authenticateWithOAuth(
+public suspend fun SignIn.authenticateWithOAuth(
   provider: OAuthProvider,
   transferable: Boolean = true,
   redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -253,7 +251,7 @@ suspend fun SignIn.authenticateWithOAuth(
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.authenticateWithEnterpriseSso(
+public suspend fun SignIn.authenticateWithEnterpriseSso(
   transferable: Boolean = true,
   redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
@@ -292,7 +290,7 @@ private suspend fun SignIn.authenticateWithRedirectFactor(
  * signIn.sendCode { phone = "+1234567890" }
  * ```
  */
-suspend fun SignIn.sendCode(
+public suspend fun SignIn.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
@@ -301,14 +299,15 @@ suspend fun SignIn.sendCode(
   return Clerk.auth.reportingFailures {
     val email = builder.email
     if (email != null) {
-      val factor = firstFactorFor(listOf(EMAIL_CODE), email, ::normalizeEmail)
+      val factor = firstFactorFor(listOf(Strategy.EmailCode), email, ::normalizeEmail)
       val emailAddressId =
-        factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(EMAIL_CODE)
+        factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(Strategy.EmailCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
     } else {
-      val factor = firstFactorFor(listOf(PHONE_CODE), builder.phone!!, ::normalizePhone)
+      val factor =
+        firstFactorFor(listOf(Strategy.PhoneCode), checkNotNull(builder.phone), ::normalizePhone)
       val phoneNumberId =
-        factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(PHONE_CODE)
+        factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(Strategy.PhoneCode)
       prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
     }
   }
@@ -323,13 +322,13 @@ suspend fun SignIn.sendCode(
  * number. Factors without any identifier are used when they all belong to one destination.
  */
 private fun SignIn.firstFactorFor(
-  strategies: List<String>,
+  strategies: List<Strategy>,
   value: String,
   normalize: (String) -> String,
 ): Factor? {
-  val candidates = supportedFirstFactors.orEmpty().filter { it.strategy in strategies }
+  val candidates = supportedFirstFactors.orEmpty().filter { it.strategyType in strategies }
   fun preferred(factors: List<Factor>): Factor? = strategies.firstNotNullOfOrNull { strategy ->
-    factors.firstOrNull { it.strategy == strategy }
+    factors.firstOrNull { it.strategyType == strategy }
   }
 
   val exact = candidates.filter { factor ->
@@ -372,10 +371,10 @@ private fun normalizePhone(phone: String): String = phone.filter {
   it.isDigit() || it == MASK_CHARACTER
 }
 
-private fun noMatchingFactor(strategy: String): ClerkResult.Failure<ClerkErrorResponse> =
+private fun noMatchingFactor(strategy: Strategy): ClerkResult.Failure<ClerkErrorResponse> =
   invalidPrepareState(
     code = "first_factor_strategy_not_supported",
-    longMessage = "No $strategy first factor matches the requested identifier",
+    longMessage = "No ${strategy.value} first factor matches the requested identifier",
   )
 
 private const val MASK_CHARACTER = '*'
@@ -394,15 +393,15 @@ private const val MASK_CHARACTER = '*'
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun SignIn.sendEmailLink(
+public suspend fun SignIn.sendEmailLink(
   emailAddressId: String? = null,
   redirectUri: String? = null,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val emailId =
     emailAddressId
-      ?: supportedFirstFactors?.find { it.strategy == EMAIL_LINK }?.emailAddressId
+      ?: supportedFirstFactors?.find { it.strategyType == Strategy.EmailLink }?.emailAddressId
       ?: error("No email address found for email_link strategy")
-  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategyType }.orEmpty()
   val validationError =
     when {
       status != SignIn.Status.NEEDS_FIRST_FACTOR ->
@@ -410,10 +409,10 @@ suspend fun SignIn.sendEmailLink(
           code = "sign_in_status_invalid",
           longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
         )
-      EMAIL_LINK !in supportedFirstFactorStrategies ->
+      Strategy.EmailLink !in supportedFirstFactorStrategies ->
         invalidEmailLinkPrepareState(
           code = "first_factor_strategy_not_supported",
-          longMessage = "$EMAIL_LINK is not supported for this sign-in attempt",
+          longMessage = "${Strategy.EmailLink} is not supported for this sign-in attempt",
         )
       else -> null
     }
@@ -424,7 +423,7 @@ suspend fun SignIn.sendEmailLink(
 }
 
 @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
-suspend fun SignIn.sendEmailLink(
+public suspend fun SignIn.sendEmailLink(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> = sendEmailLink(emailAddressId, redirectUri = null)
 
@@ -454,15 +453,15 @@ private fun invalidEmailLinkPrepareState(
  * signIn.verifyCode("123456")
  * ```
  */
-suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
-  val strategy = firstFactorVerification?.strategy ?: EMAIL_CODE
+public suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorResponse> {
+  val strategy = firstFactorVerification?.strategyType ?: Strategy.EmailCode
 
   val params =
     when (strategy) {
-      PHONE_CODE -> SignIn.AttemptFirstFactorParams.PhoneCode(code = code)
-      RESET_PASSWORD_EMAIL_CODE ->
+      Strategy.PhoneCode -> SignIn.AttemptFirstFactorParams.PhoneCode(code = code)
+      Strategy.ResetPasswordEmailCode ->
         SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code)
-      RESET_PASSWORD_PHONE_CODE ->
+      Strategy.ResetPasswordPhoneCode ->
         SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code)
       else -> SignIn.AttemptFirstFactorParams.EmailCode(code = code)
     }
@@ -482,7 +481,9 @@ suspend fun SignIn.verifyCode(code: String): ClerkResult<SignIn, ClerkErrorRespo
  * signIn.verifyWithPassword("secretpassword")
  * ```
  */
-suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, ClerkErrorResponse> {
+public suspend fun SignIn.verifyWithPassword(
+  password: String
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Password(password = password)
   return attemptFirstFactor(params)
 }
@@ -499,7 +500,9 @@ suspend fun SignIn.verifyWithPassword(password: String): ClerkResult<SignIn, Cle
  * signIn.verifyWithPasskey(credential)
  * ```
  */
-suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, ClerkErrorResponse> {
+public suspend fun SignIn.verifyWithPasskey(
+  credential: String
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params = SignIn.AttemptFirstFactorParams.Passkey(publicKeyCredential = credential)
   return attemptFirstFactor(params)
 }
@@ -519,7 +522,7 @@ suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, Cl
  * signIn.verifyMfaCode("backup123", MfaType.BACKUP_CODE)
  * ```
  */
-suspend fun SignIn.verifyMfaCode(
+public suspend fun SignIn.verifyMfaCode(
   code: String,
   type: MfaType,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -548,7 +551,7 @@ suspend fun SignIn.verifyMfaCode(
  * signIn.sendResetPasswordCode { phone = "+1234567890" }
  * ```
  */
-suspend fun SignIn.sendResetPasswordCode(
+public suspend fun SignIn.sendResetPasswordCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
@@ -558,21 +561,25 @@ suspend fun SignIn.sendResetPasswordCode(
     val email = builder.email
     if (email != null) {
       val factor =
-        firstFactorFor(listOf(RESET_PASSWORD_EMAIL_CODE, EMAIL_CODE), email, ::normalizeEmail)
+        firstFactorFor(
+          listOf(Strategy.ResetPasswordEmailCode, Strategy.EmailCode),
+          email,
+          ::normalizeEmail,
+        )
       val emailAddressId =
         factor?.emailAddressId
-          ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
+          ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordEmailCode)
       sendResetPasswordEmailCode(emailAddressId)
     } else {
       val factor =
         firstFactorFor(
-          listOf(RESET_PASSWORD_PHONE_CODE, PHONE_CODE),
-          builder.phone!!,
+          listOf(Strategy.ResetPasswordPhoneCode, Strategy.PhoneCode),
+          checkNotNull(builder.phone),
           ::normalizePhone,
         )
       val phoneNumberId =
         factor?.phoneNumberId
-          ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)
+          ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordPhoneCode)
       sendResetPasswordPhoneCode(phoneNumberId)
     }
   }
@@ -588,14 +595,16 @@ suspend fun SignIn.sendResetPasswordCode(
  *   [ClerkErrorResponse] on failure. When [emailAddressId] is `null`, fails without contacting
  *   Clerk if there is no such factor. An explicit [emailAddressId] is sent as given.
  */
-suspend fun SignIn.sendResetPasswordEmailCode(
+public suspend fun SignIn.sendResetPasswordEmailCode(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
     val id =
       emailAddressId
-        ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_EMAIL_CODE }?.emailAddressId
-        ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_EMAIL_CODE)
+        ?: supportedFirstFactors
+          ?.find { it.strategyType == Strategy.ResetPasswordEmailCode }
+          ?.emailAddressId
+        ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordEmailCode)
     prepareFirstFactorImpl(
       SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = id)
     )
@@ -611,14 +620,16 @@ suspend fun SignIn.sendResetPasswordEmailCode(
  *   [ClerkErrorResponse] on failure. When [phoneNumberId] is `null`, fails without contacting Clerk
  *   if there is no such factor. An explicit [phoneNumberId] is sent as given.
  */
-suspend fun SignIn.sendResetPasswordPhoneCode(
+public suspend fun SignIn.sendResetPasswordPhoneCode(
   phoneNumberId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
     val id =
       phoneNumberId
-        ?: supportedFirstFactors?.find { it.strategy == RESET_PASSWORD_PHONE_CODE }?.phoneNumberId
-        ?: return@reportingFailures noMatchingFactor(RESET_PASSWORD_PHONE_CODE)
+        ?: supportedFirstFactors
+          ?.find { it.strategyType == Strategy.ResetPasswordPhoneCode }
+          ?.phoneNumberId
+        ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordPhoneCode)
     prepareFirstFactorImpl(
       SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = id)
     )
@@ -640,7 +651,7 @@ suspend fun SignIn.sendResetPasswordPhoneCode(
  * )
  * ```
  */
-suspend fun SignIn.resetPassword(
+public suspend fun SignIn.resetPassword(
   newPassword: String,
   signOutOfOtherSessions: Boolean = false,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -664,7 +675,7 @@ suspend fun SignIn.resetPassword(
  * signIn.reload()
  * ```
  */
-suspend fun SignIn.reload(
+public suspend fun SignIn.reload(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {

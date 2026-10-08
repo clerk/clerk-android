@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonObject
  * `EnterpriseAccount` encapsulates the details of a user's enterprise account.
  */
 @Serializable
-data class EnterpriseAccount(
+public data class EnterpriseAccount(
   /** The unique identifier for the enterprise account. */
   val id: String,
 
@@ -55,7 +55,7 @@ data class EnterpriseAccount(
    * enterprise account and the identity provider.
    */
   @Serializable
-  data class EnterpriseConnection(
+  public data class EnterpriseConnection(
     /** The unique identifier for the enterprise connection. */
     val id: String,
 

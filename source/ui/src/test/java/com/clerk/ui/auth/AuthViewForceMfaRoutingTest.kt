@@ -2,9 +2,9 @@ package com.clerk.ui.auth
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.SessionTaskKey
-import com.clerk.ui.core.common.StrategyKeys
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -92,10 +92,10 @@ class AuthViewForceMfaRoutingTest {
 
   @Test
   fun `forgot password factor selection pushes the selected first factor`() {
-    val passwordFactor = Factor(strategy = StrategyKeys.PASSWORD)
+    val passwordFactor = Factor(strategy = Strategy.Password.value)
     val emailCodeFactor =
       Factor(
-        strategy = StrategyKeys.EMAIL_CODE,
+        strategy = Strategy.EmailCode.value,
         emailAddressId = "email_123",
         safeIdentifier = "sam@clerk.dev",
       )

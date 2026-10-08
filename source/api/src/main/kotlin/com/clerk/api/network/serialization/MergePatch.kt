@@ -23,11 +23,10 @@ internal fun computeMergePatch(current: JsonElement, desired: JsonElement): Json
     return desired
   }
 
-  val changes =
-    desired.mapNotNull { (key, desiredValue) ->
-      val valuePatch = patchValue(current[key], desiredValue)
-      valuePatch?.let { key to it }
-    }
+  val changes = desired.mapNotNull { (key, desiredValue) ->
+    val valuePatch = patchValue(current[key], desiredValue)
+    valuePatch?.let { key to it }
+  }
   val deletions = (current.keys - desired.keys).map { it to JsonNull }
 
   return JsonObject((changes + deletions).toMap())

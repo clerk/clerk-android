@@ -71,7 +71,7 @@ private const val DISABLED_ICON_ALPHA = 0.5f
  *   [OAuthProvider].
  */
 @Composable
-fun ClerkSocialButton(
+public fun ClerkSocialButton(
   provider: OAuthProvider,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,

@@ -2,11 +2,7 @@
 
 package com.clerk.api.session
 
-import com.clerk.api.Constants.Strategy.BACKUP_CODE
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
-import com.clerk.api.Constants.Strategy.PHONE_CODE
-import com.clerk.api.Constants.Strategy.TOTP
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialPolicy
 import com.clerk.api.biometriccredential.BiometricSessionVerificationService
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -15,48 +11,54 @@ import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.RedirectConfiguration
 
 /** Sends a verification code to the email address for first-factor reverification. */
-suspend fun Session.sendEmailCode(
+public suspend fun Session.sendEmailCode(
   emailAddressId: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return prepareFirstFactorVerification(strategy = EMAIL_CODE, emailAddressId = emailAddressId)
+  return prepareFirstFactorVerification(
+    strategy = Strategy.EmailCode.value,
+    emailAddressId = emailAddressId,
+  )
 }
 
 /** Sends a verification code to the phone number for first-factor reverification. */
-suspend fun Session.sendPhoneCode(
+public suspend fun Session.sendPhoneCode(
   phoneNumberId: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return prepareFirstFactorVerification(strategy = PHONE_CODE, phoneNumberId = phoneNumberId)
+  return prepareFirstFactorVerification(
+    strategy = Strategy.PhoneCode.value,
+    phoneNumberId = phoneNumberId,
+  )
 }
 
 /** Verifies the current session with an email code. */
-suspend fun Session.verifyWithEmailCode(
+public suspend fun Session.verifyWithEmailCode(
   code: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return attemptFirstFactorVerification(strategy = EMAIL_CODE, code = code)
+  return attemptFirstFactorVerification(strategy = Strategy.EmailCode.value, code = code)
 }
 
 /** Verifies the current session with a phone code as a first factor. */
-suspend fun Session.verifyWithPhoneCode(
+public suspend fun Session.verifyWithPhoneCode(
   code: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return attemptFirstFactorVerification(strategy = PHONE_CODE, code = code)
+  return attemptFirstFactorVerification(strategy = Strategy.PhoneCode.value, code = code)
 }
 
 /** Verifies the current session by asking the user to re-enter their password. */
-suspend fun Session.verifyWithPassword(
+public suspend fun Session.verifyWithPassword(
   password: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return attemptFirstFactorVerification(Session.AttemptFirstFactorParams.Password(password))
 }
 
 /** Starts Enterprise SSO for first-factor reverification. */
-suspend fun Session.startEnterpriseSso(
+public suspend fun Session.startEnterpriseSso(
   emailAddressId: String? = null,
   enterpriseConnectionId: String? = null,
   redirectUrl: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return prepareFirstFactorVerification(
-    strategy = ENTERPRISE_SSO,
+    strategy = Strategy.EnterpriseSso.value,
     emailAddressId = emailAddressId,
     enterpriseConnectionId = enterpriseConnectionId,
     redirectUrl = redirectUrl ?: RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -64,35 +66,38 @@ suspend fun Session.startEnterpriseSso(
 }
 
 /** Sends an MFA code to the phone number for second-factor reverification. */
-suspend fun Session.sendMfaPhoneCode(
+public suspend fun Session.sendMfaPhoneCode(
   phoneNumberId: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return prepareSecondFactorVerification(strategy = PHONE_CODE, phoneNumberId = phoneNumberId)
+  return prepareSecondFactorVerification(
+    strategy = Strategy.PhoneCode.value,
+    phoneNumberId = phoneNumberId,
+  )
 }
 
 /** Verifies the current session with a phone code as a second factor. */
-suspend fun Session.verifyWithMfaPhoneCode(
+public suspend fun Session.verifyWithMfaPhoneCode(
   code: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return attemptSecondFactorVerification(strategy = PHONE_CODE, code = code)
+  return attemptSecondFactorVerification(strategy = Strategy.PhoneCode.value, code = code)
 }
 
 /** Verifies the current session with a TOTP code. */
-suspend fun Session.verifyWithTOTP(
+public suspend fun Session.verifyWithTOTP(
   code: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return attemptSecondFactorVerification(strategy = TOTP, code = code)
+  return attemptSecondFactorVerification(strategy = Strategy.Totp.value, code = code)
 }
 
 /** Verifies the current session with a backup code. */
-suspend fun Session.verifyWithBackupCode(
+public suspend fun Session.verifyWithBackupCode(
   code: String
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return attemptSecondFactorVerification(strategy = BACKUP_CODE, code = code)
+  return attemptSecondFactorVerification(strategy = Strategy.BackupCode.value, code = code)
 }
 
 /** Verifies the current session with a passkey via Android Credential Manager. */
-suspend fun Session.verifyWithPasskey(
+public suspend fun Session.verifyWithPasskey(
   allowedCredentialIds: List<String> = emptyList(),
   level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
@@ -122,7 +127,7 @@ suspend fun Session.verifyWithPasskey(
  * @param level The factor stage to verify. Defaults to FIRST_FACTOR.
  * @return The resulting verification, or an API or local biometric failure.
  */
-suspend fun Session.verifyWithBiometrics(
+public suspend fun Session.verifyWithBiometrics(
   promptTitle: String? = null,
   promptSubtitle: String? = null,
   level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,

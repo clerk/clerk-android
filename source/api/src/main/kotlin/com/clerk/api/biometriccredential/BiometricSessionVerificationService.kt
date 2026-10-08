@@ -1,7 +1,7 @@
 package com.clerk.api.biometriccredential
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.flatMap
@@ -59,7 +59,7 @@ internal object BiometricSessionVerificationService {
               prepared.firstFactorVerification
             }
           val challenge = factor?.biometricCredentialChallenge
-          if (factor?.strategy != TRUSTED_DEVICE || challenge == null) {
+          if (factor?.strategyType != Strategy.TrustedDevice || challenge == null) {
             BiometricCredentials.clientFailure(
               "Biometric reverification did not return a matching challenge."
             )
@@ -101,11 +101,17 @@ internal object BiometricSessionVerificationService {
   ): ClerkResult<SessionVerification, ClerkErrorResponse> =
     if (level == SessionVerification.Level.SECOND_FACTOR) {
       session.prepareSecondFactorVerification(
-        Session.PrepareSecondFactorParams(TRUSTED_DEVICE, biometricCredentialId = credentialId)
+        Session.PrepareSecondFactorParams(
+          Strategy.TrustedDevice.value,
+          biometricCredentialId = credentialId,
+        )
       )
     } else {
       session.prepareFirstFactorVerification(
-        Session.PrepareFirstFactorParams(TRUSTED_DEVICE, biometricCredentialId = credentialId)
+        Session.PrepareFirstFactorParams(
+          Strategy.TrustedDevice.value,
+          biometricCredentialId = credentialId,
+        )
       )
     }
 

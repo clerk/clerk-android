@@ -13,7 +13,7 @@ import com.clerk.api.user.currentSessionId
  * pass an Organization ID to read that Organization's data, which requires the
  * `org:sys_billing:read` Permission.
  */
-object Billing {
+public object Billing {
 
   /**
    * Lists your publicly visible Plans.
@@ -25,7 +25,7 @@ object Billing {
    * @param limit The maximum number of Plans to return.
    * @param offset The number of Plans to skip.
    */
-  suspend fun getPlans(
+  public suspend fun getPlans(
     forPayer: ForPayerType = ForPayerType.USER,
     orgId: String? = null,
     minSeats: Int? = null,
@@ -43,12 +43,12 @@ object Billing {
   }
 
   /** Gets a Plan by ID. */
-  suspend fun getPlan(id: String): ClerkResult<BillingPlan, ClerkErrorResponse> {
+  public suspend fun getPlan(id: String): ClerkResult<BillingPlan, ClerkErrorResponse> {
     return ClerkApi.billing.getPlan(id = id, sessionId = currentSessionId())
   }
 
   /** Gets the Subscription of the signed-in user, or of the Organization with [orgId]. */
-  suspend fun getSubscription(
+  public suspend fun getSubscription(
     orgId: String? = null
   ): ClerkResult<BillingSubscription, ClerkErrorResponse> {
     val sessionId = currentSessionId()
@@ -65,7 +65,7 @@ object Billing {
    * @param limit The maximum number of statements to return.
    * @param offset The number of statements to skip.
    */
-  suspend fun getStatements(
+  public suspend fun getStatements(
     orgId: String? = null,
     limit: Int = DEFAULT_BILLING_LIMIT,
     offset: Int = 0,
@@ -84,7 +84,7 @@ object Billing {
   }
 
   /** Gets a statement by ID. */
-  suspend fun getStatement(
+  public suspend fun getStatement(
     id: String,
     orgId: String? = null,
   ): ClerkResult<BillingStatement, ClerkErrorResponse> {
@@ -106,7 +106,7 @@ object Billing {
    * @param limit The maximum number of payment attempts to return.
    * @param offset The number of payment attempts to skip.
    */
-  suspend fun getPaymentAttempts(
+  public suspend fun getPaymentAttempts(
     orgId: String? = null,
     limit: Int = DEFAULT_BILLING_LIMIT,
     offset: Int = 0,
@@ -129,7 +129,7 @@ object Billing {
   }
 
   /** Gets a payment attempt by ID. */
-  suspend fun getPaymentAttempt(
+  public suspend fun getPaymentAttempt(
     id: String,
     orgId: String? = null,
   ): ClerkResult<BillingPayment, ClerkErrorResponse> {
@@ -146,7 +146,7 @@ object Billing {
   }
 
   /** Gets the credit balance of the signed-in user, or of the Organization with [orgId]. */
-  suspend fun getCreditBalance(
+  public suspend fun getCreditBalance(
     orgId: String? = null
   ): ClerkResult<BillingCreditBalance, ClerkErrorResponse> {
     val sessionId = currentSessionId()
@@ -163,7 +163,7 @@ object Billing {
    * @param limit The maximum number of entries to return.
    * @param offset The number of entries to skip.
    */
-  suspend fun getCreditHistory(
+  public suspend fun getCreditHistory(
     orgId: String? = null,
     limit: Int = DEFAULT_BILLING_LIMIT,
     offset: Int = 0,

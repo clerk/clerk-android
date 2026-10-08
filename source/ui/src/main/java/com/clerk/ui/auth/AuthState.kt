@@ -18,9 +18,9 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
+import com.clerk.api.signup.isEmailLinkVerificationSupported
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentPrompt
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.composition.AuthStateProvider
@@ -325,7 +325,7 @@ internal class AuthState(
         val emailAddress = signUp.emailAddress
         if (emailAddress != null) {
           val destination =
-            if (signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK) {
+            if (signUp.isEmailLinkVerificationSupported) {
               AuthDestination.SignUpEmailLink(emailAddress = emailAddress)
             } else {
               AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress))

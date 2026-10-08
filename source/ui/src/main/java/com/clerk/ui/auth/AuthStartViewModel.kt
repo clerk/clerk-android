@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialKeyManagerException
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
@@ -18,7 +19,7 @@ import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.ResultType
+import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.core.extensions.isEmailAddress
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -257,17 +258,15 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
         .onSuccess {
           withContext(Dispatchers.Main) {
             _state.value =
-              when (it.resultType) {
-                ResultType.SIGN_IN -> {
-                  it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
-                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+              when (val outcome = it.outcome) {
+                is OAuthResult.Outcome.SignIn ->
+                  AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
+                is OAuthResult.Outcome.SignUp ->
+                  AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
+                OAuthResult.Outcome.Empty -> {
+                  ClerkLog.e("Google One Tap returned neither a sign-in nor a sign-up")
+                  AuthState.OAuthState.Error(null)
                 }
-                ResultType.SIGN_UP -> {
-                  it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
-                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
-                }
-                ResultType.UNKNOWN ->
-                  AuthState.OAuthState.Error("Unknown result type from Google One Tap")
               }
           }
         }
@@ -306,17 +305,15 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       result
         .onSuccess {
           _state.value =
-            when (it.resultType) {
-              ResultType.SIGN_IN -> {
-                it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
-                  ?: AuthState.OAuthState.Error("Unknown result type from OAuthProvider")
+            when (val outcome = it.outcome) {
+              is OAuthResult.Outcome.SignIn ->
+                AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
+              is OAuthResult.Outcome.SignUp ->
+                AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
+              OAuthResult.Outcome.Empty -> {
+                ClerkLog.e("OAuth provider returned neither a sign-in nor a sign-up")
+                AuthState.OAuthState.Error(null)
               }
-              ResultType.SIGN_UP -> {
-                it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
-                  ?: AuthState.OAuthState.Error("Unknown result type from OAuth Provider")
-              }
-              ResultType.UNKNOWN ->
-                AuthState.OAuthState.Error("Unknown result type from OAuth provider")
             }
         }
         .onFailure {
@@ -347,11 +344,11 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       .onSuccess {
         withContext(Dispatchers.Main) {
           val successType =
-            when (it.resultType) {
-              ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
-              ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
-              ResultType.UNKNOWN -> {
-                ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
+            when (val outcome = it.outcome) {
+              is OAuthResult.Outcome.SignIn -> AuthState.Success.SignInSuccess(outcome.signIn)
+              is OAuthResult.Outcome.SignUp -> AuthState.Success.SignUpSuccess(outcome.signUp)
+              OAuthResult.Outcome.Empty -> {
+                ClerkLog.e("SSO redirect returned neither a sign-in nor a sign-up")
                 AuthState.Error("Unknown result type after SSO redirect")
               }
             }
@@ -377,9 +374,9 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     object Loading : AuthState
 
     sealed interface Success : AuthState {
-      data class SignInSuccess(val signIn: SignIn?) : Success
+      data class SignInSuccess(val signIn: SignIn) : Success
 
-      data class SignUpSuccess(val signUp: SignUp?) : Success
+      data class SignUpSuccess(val signUp: SignUp) : Success
     }
 
     sealed interface BiometricCredentialState : AuthState {
@@ -401,7 +398,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 }
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
-  startingFirstFactor?.strategy == "enterprise_sso"
+  startingFirstFactor?.strategyType == Strategy.EnterpriseSso
 
 internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =

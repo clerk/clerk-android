@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  *   milliseconds)
  */
 @Serializable
-data class TOTPResource(
+public data class TOTPResource(
   /** The unique identifier for this TOTP resource */
   val id: String,
 

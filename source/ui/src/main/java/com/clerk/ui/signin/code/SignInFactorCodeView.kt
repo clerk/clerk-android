@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -20,7 +21,6 @@ import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -52,7 +52,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * ```
  */
 @Composable
-fun SignInFactorCodeView(
+public fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
@@ -100,9 +100,9 @@ private fun SignInFactorCodeViewImpl(
   )
   val identifierEditable =
     isSecondFactor ||
-      when (factor.strategy) {
-        StrategyKeys.PHONE_CODE -> !authState.authStartPhoneNumberLocked
-        StrategyKeys.EMAIL_CODE -> !authState.authStartIdentifierLocked
+      when (factor.strategyType) {
+        Strategy.PhoneCode -> !authState.authStartPhoneNumberLocked
+        Strategy.EmailCode -> !authState.authStartIdentifierLocked
         else -> true
       }
   ClerkThemedAuthScaffold(
@@ -189,7 +189,7 @@ private fun PreviewSignInFactorCodeView() {
   ClerkMaterialTheme {
     PreviewAuthStateProvider {
       SignInFactorCodeView(
-        Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
+        Factor(Strategy.PhoneCode.value, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},
       )
     }
@@ -210,29 +210,29 @@ private const val VERIFICATION_CODE_LENGTH = 6
  * - [Success]: Code verification succeeded
  * - [Error]: Code verification failed
  */
-sealed interface VerificationState {
+public sealed interface VerificationState {
 
   /**
    * Default state indicating the component is ready for user input. Typically shows normal input
    * styling without any status indicators.
    */
-  data object Default : VerificationState
+  public data object Default : VerificationState
 
   /**
    * Verifying state indicating code submission is in progress. Usually displays loading indicators
    * and disables input.
    */
-  data object Verifying : VerificationState
+  public data object Verifying : VerificationState
 
   /**
    * Success state indicating the code was successfully verified. Often shows success indicators and
    * may trigger navigation.
    */
-  data object Success : VerificationState
+  public data object Success : VerificationState
 
   /**
    * Error state indicating code verification failed. Typically displays error styling and allows
    * retry.
    */
-  data object Error : VerificationState
+  public data object Error : VerificationState
 }

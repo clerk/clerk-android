@@ -3,6 +3,7 @@ package com.clerk.ui.signin.alternativemethods
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.signin.authenticateWithRedirect
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -45,6 +46,19 @@ class AlternativeMethodsViewModelTest {
     advanceUntilIdle()
 
     assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
+  }
+
+  @Test
+  fun `OAuth result without sign in or sign up reports an error instead of crashing`() = runTest {
+    val signIn = SignIn(id = "sign_in_existing", status = SignIn.Status.NEEDS_FIRST_FACTOR)
+    coEvery { authenticateWithRedirect(signIn, OAuthProvider.GITHUB, true) } returns
+      ClerkResult.success(OAuthResult())
+    val viewModel = AlternativeMethodsViewModel()
+
+    viewModel.signInWithProvider(OAuthProvider.GITHUB, signIn = signIn)
+    advanceUntilIdle()
+
+    assertEquals(AuthenticationViewState.Error("Unknown result type"), viewModel.state.value)
   }
 
   @Test

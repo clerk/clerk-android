@@ -3,12 +3,12 @@ package com.clerk.ui.signin
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.emaillink.SignInFactorOneEmailLinkView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -18,7 +18,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable
-fun SignInFactorOneView(
+public fun SignInFactorOneView(
   factor: Factor,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -26,17 +26,17 @@ fun SignInFactorOneView(
   val effectiveFactor = resolveFirstFactor(factor)
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
-      when (effectiveFactor.strategy) {
-        StrategyKeys.PASSKEY ->
+      when (effectiveFactor.strategyType) {
+        Strategy.Passkey ->
           SignInFactorOnePasskeyView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        StrategyKeys.PASSWORD ->
+        Strategy.Password ->
           SignInFactorOnePasswordView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        StrategyKeys.EMAIL_LINK ->
+        Strategy.EmailLink ->
           SignInFactorOneEmailLinkView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
-        StrategyKeys.EMAIL_CODE,
-        StrategyKeys.PHONE_CODE,
-        StrategyKeys.RESET_PASSWORD_PHONE_CODE,
-        StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
+        Strategy.EmailCode,
+        Strategy.PhoneCode,
+        Strategy.ResetPasswordPhoneCode,
+        Strategy.ResetPasswordEmailCode ->
           SignInFactorCodeView(factor = effectiveFactor, onAuthComplete = onAuthComplete)
         else -> SignInGetHelpView()
       }
@@ -53,11 +53,11 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
 
   val preparedFactor =
     if (hasSignInContext) {
-      supportedFactors.factorForStrategy(currentSignIn.firstFactorVerification?.strategy)
+      supportedFactors.factorForStrategy(currentSignIn.firstFactorVerification?.strategyType)
     } else {
       null
     }
-  val fallbackIsSupported = hasSignInContext && supportedFactors.hasStrategy(fallback.strategy)
+  val fallbackIsSupported = hasSignInContext && supportedFactors.hasStrategy(fallback.strategyType)
 
   return if (!hasSignInContext) {
     fallback
@@ -67,13 +67,13 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
   }
 }
 
-private fun List<Factor>.factorForStrategy(strategy: String?): Factor? {
-  val preparedStrategy = strategy?.takeIf { it.isNotBlank() } ?: return null
-  return firstOrNull { it.strategy == preparedStrategy }
+private fun List<Factor>.factorForStrategy(strategy: Strategy?): Factor? {
+  val preparedStrategy = strategy?.takeIf { it.value.isNotBlank() } ?: return null
+  return firstOrNull { it.strategyType == preparedStrategy }
 }
 
-private fun List<Factor>.hasStrategy(strategy: String): Boolean {
-  return any { it.strategy == strategy }
+private fun List<Factor>.hasStrategy(strategy: Strategy): Boolean {
+  return any { it.strategyType == strategy }
 }
 
 @PreviewLightDark

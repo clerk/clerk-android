@@ -1,65 +1,60 @@
 package com.clerk.api.network.model.factor
 
-import com.clerk.api.Constants
+import com.clerk.api.auth.types.Strategy
 
 internal object FactorComparators {
 
-  val strategySortOrderPasswordPref =
+  val strategySortOrderPasswordPref: List<Strategy> =
     listOf(
-      Constants.Strategy.PASSKEY,
-      Constants.Strategy.PASSWORD,
-      Constants.Strategy.EMAIL_LINK,
-      Constants.Strategy.EMAIL_CODE,
-      Constants.Strategy.PHONE_CODE,
+      Strategy.Passkey,
+      Strategy.Password,
+      Strategy.EmailLink,
+      Strategy.EmailCode,
+      Strategy.PhoneCode,
     )
 
-  val strategySortOrderOtpPref =
+  val strategySortOrderOtpPref: List<Strategy> =
     listOf(
-      Constants.Strategy.EMAIL_LINK,
-      Constants.Strategy.EMAIL_CODE,
-      Constants.Strategy.PHONE_CODE,
-      Constants.Strategy.PASSKEY,
-      Constants.Strategy.PASSWORD,
+      Strategy.EmailLink,
+      Strategy.EmailCode,
+      Strategy.PhoneCode,
+      Strategy.Passkey,
+      Strategy.Password,
     )
 
-  val strategySortOrderAllStrategies =
+  val strategySortOrderAllStrategies: List<Strategy> =
     listOf(
-      Constants.Strategy.EMAIL_LINK,
-      Constants.Strategy.EMAIL_CODE,
-      Constants.Strategy.PHONE_CODE,
-      Constants.Strategy.PASSKEY,
-      Constants.Strategy.PASSWORD,
+      Strategy.EmailLink,
+      Strategy.EmailCode,
+      Strategy.PhoneCode,
+      Strategy.Passkey,
+      Strategy.Password,
     )
 
-  val strategySortOrderBackupCodePref =
-    listOf(
-      Constants.Strategy.PASSKEY,
-      Constants.Strategy.TOTP,
-      Constants.Strategy.PHONE_CODE,
-      Constants.Strategy.BACKUP_CODE,
-    )
+  val strategySortOrderBackupCodePref: List<Strategy> =
+    listOf(Strategy.Passkey, Strategy.Totp, Strategy.PhoneCode, Strategy.BackupCode)
 
   val passwordPrefComparator: Comparator<Factor> = Comparator { lhs, rhs ->
-    val order1 = strategySortOrderPasswordPref.indexOf(lhs.strategy)
-    val order2 = strategySortOrderPasswordPref.indexOf(rhs.strategy)
+    val order1 = strategySortOrderPasswordPref.indexOf(lhs.strategyType)
+    val order2 = strategySortOrderPasswordPref.indexOf(rhs.strategyType)
     if (order1 == -1 || order2 == -1) 0 else order1.compareTo(order2)
   }
 
   val otpPrefComparator: Comparator<Factor> = Comparator { lhs, rhs ->
-    val order1 = strategySortOrderOtpPref.indexOf(lhs.strategy)
-    val order2 = strategySortOrderOtpPref.indexOf(rhs.strategy)
+    val order1 = strategySortOrderOtpPref.indexOf(lhs.strategyType)
+    val order2 = strategySortOrderOtpPref.indexOf(rhs.strategyType)
     if (order1 == -1 || order2 == -1) 0 else order1.compareTo(order2)
   }
 
   val backupCodePrefComparator: Comparator<Factor> = Comparator { lhs, rhs ->
-    val order1 = strategySortOrderBackupCodePref.indexOf(lhs.strategy)
-    val order2 = strategySortOrderBackupCodePref.indexOf(rhs.strategy)
+    val order1 = strategySortOrderBackupCodePref.indexOf(lhs.strategyType)
+    val order2 = strategySortOrderBackupCodePref.indexOf(rhs.strategyType)
     if (order1 == -1 || order2 == -1) 0 else order1.compareTo(order2)
   }
 
   val allStrategiesButtonsComparator: Comparator<Factor> = Comparator { lhs, rhs ->
-    val order1 = strategySortOrderAllStrategies.indexOf(lhs.strategy)
-    val order2 = strategySortOrderAllStrategies.indexOf(rhs.strategy)
+    val order1 = strategySortOrderAllStrategies.indexOf(lhs.strategyType)
+    val order2 = strategySortOrderAllStrategies.indexOf(rhs.strategyType)
     if (order1 == -1 || order2 == -1) 0 else order1.compareTo(order2)
   }
 }

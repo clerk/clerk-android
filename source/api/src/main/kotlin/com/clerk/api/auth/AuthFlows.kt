@@ -1,7 +1,7 @@
 package com.clerk.api.auth
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.TRANSFER
+import com.clerk.api.auth.types.Strategy as AuthStrategy
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -32,7 +32,8 @@ internal suspend fun Auth.createSignIn(
         promptTitle = params.promptTitle,
         promptSubtitle = params.promptSubtitle,
       )
-    is SignIn.CreateParams.Strategy.Transfer -> postSignIn(mapOf(TRANSFER to "true"))
+    is SignIn.CreateParams.Strategy.Transfer ->
+      postSignIn(mapOf(AuthStrategy.Transfer.value to "true"))
     else -> postSignIn(params.toMap())
   }
 }
@@ -69,11 +70,11 @@ internal suspend fun Auth.createSignUp(
   val fields =
     when (params) {
       is SignUp.CreateParams.None -> emptyMap()
-      is SignUp.CreateParams.Transfer -> mapOf(TRANSFER to "true")
+      is SignUp.CreateParams.Transfer -> mapOf(AuthStrategy.Transfer.value to "true")
       is SignUp.CreateParams.Ticket ->
-        mapOf("strategy" to SignUp.CreateParams.Ticket.STRATEGY, "ticket" to params.ticket)
+        mapOf("strategy" to AuthStrategy.Ticket.value, "ticket" to params.ticket)
       is SignUp.CreateParams.GoogleOneTap ->
-        mapOf("strategy" to SignUp.CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
+        mapOf("strategy" to AuthStrategy.GoogleOneTap.value, "token" to params.token)
       else -> params.toMap()
     }
   return postSignUp(fields)

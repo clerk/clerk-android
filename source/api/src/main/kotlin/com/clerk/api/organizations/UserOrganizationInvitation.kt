@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
 @Serializable
-data class UserOrganizationInvitation(
+public data class UserOrganizationInvitation(
   val id: String,
   val emailAddress: String,
   val publicOrganizationData: PublicOrganizationData,
@@ -30,7 +30,7 @@ data class UserOrganizationInvitation(
 ) {
 
   @Serializable
-  data class PublicOrganizationData(
+  public data class PublicOrganizationData(
     val hasImage: Boolean,
     val imageUrl: String?,
     val name: String,
@@ -39,7 +39,7 @@ data class UserOrganizationInvitation(
   )
 }
 
-suspend fun UserOrganizationInvitation.accept():
+public suspend fun UserOrganizationInvitation.accept():
   ClerkResult<UserOrganizationInvitation, ClerkErrorResponse> {
   return ClerkApi.user.acceptUserOrganizationInvitation(id, sessionId = currentSessionId())
 }

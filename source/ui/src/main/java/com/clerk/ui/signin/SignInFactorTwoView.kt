@@ -3,10 +3,10 @@ package com.clerk.ui.signin
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -25,30 +25,30 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignInFactorTwoView(
+public fun SignInFactorTwoView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    when (factor.strategy) {
-      StrategyKeys.TOTP,
-      StrategyKeys.PHONE_CODE,
-      StrategyKeys.EMAIL_CODE ->
+    when (factor.strategyType) {
+      Strategy.Totp,
+      Strategy.PhoneCode,
+      Strategy.EmailCode ->
         SignInFactorCodeView(
           factor = factor,
           isSecondFactor = true,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      StrategyKeys.BACKUP_CODE ->
+      Strategy.BackupCode ->
         SignInFactorTwoBackupCodeView(
           modifier = modifier,
           factor = factor,
           onAuthComplete = onAuthComplete,
         )
-      StrategyKeys.PASSKEY ->
+      Strategy.Passkey ->
         SignInFactorTwoPasskeyView(
           factor = factor,
           modifier = modifier,
@@ -63,6 +63,6 @@ fun SignInFactorTwoView(
 @Composable
 private fun Preview() {
   PreviewAuthStateProvider {
-    SignInFactorTwoView(factor = Factor(StrategyKeys.TOTP), onAuthComplete = {})
+    SignInFactorTwoView(factor = Factor(Strategy.Totp.value), onAuthComplete = {})
   }
 }

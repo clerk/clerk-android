@@ -10,7 +10,7 @@ This sample app demonstrates advanced authentication flows using the Clerk Andro
    - Choose "Android" as your platform
 
 2. **Configure Authentication Methods**
-   
+
    **Email/Password Authentication:**
    - Go to **User & Authentication** → **Email, Phone, Username**
    - Enable **Email** authentication
@@ -44,12 +44,12 @@ This sample app demonstrates advanced authentication flows using the Clerk Andro
    ```
 
 2. **Add your Clerk Publishable Key**:
-   
+
    Open the `gradle.properties` file in the project root and add your publishable key:
    ```properties
    CUSTOM_FLOWS_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
    ```
-   
+
    > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
 
 ## How to Run

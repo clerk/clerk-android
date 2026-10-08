@@ -33,6 +33,7 @@
     <string name="set_new_password">设置新密码</string>
     <string name="reset_password">重置密码</string>
     <string name="confirm_password">确认密码</string>
+    <string name="passwords_dont_match">密码不匹配</string>
     <string name="new_password">新密码</string>
     <string name="sign_out_of_all_other_devices">退出所有其他设备</string>
     <string name="back">返回</string>
@@ -55,6 +56,7 @@
     <string name="email_code">电子邮件验证码</string>
     <string name="or">或</string>
     <string name="continue_to">继续到 %1$s</string>
+    <string name="continue_with">使用 %1$s 继续</string>
     <string name="create_your_account">创建您的账户</string>
     <string name="welcome_sign_in_to_continue">欢迎！登录以继续。</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">欢迎！请填写详细信息以开始。</string>

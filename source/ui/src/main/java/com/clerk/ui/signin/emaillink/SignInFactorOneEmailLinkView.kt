@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -32,7 +33,6 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -42,7 +42,7 @@ import com.clerk.ui.util.EmailAppLauncher
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignInFactorOneEmailLinkView(
+public fun SignInFactorOneEmailLinkView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -168,7 +168,7 @@ private fun SignInEmailLinkSecondaryActions(
 private fun PreviewSignInFactorOneEmailLinkView() {
   PreviewAuthStateProvider {
     SignInFactorOneEmailLinkView(
-      factor = Factor(strategy = StrategyKeys.EMAIL_LINK, safeIdentifier = "sam@clerk.dev"),
+      factor = Factor(strategy = Strategy.EmailLink.value, safeIdentifier = "sam@clerk.dev"),
       onAuthComplete = {},
     )
   }

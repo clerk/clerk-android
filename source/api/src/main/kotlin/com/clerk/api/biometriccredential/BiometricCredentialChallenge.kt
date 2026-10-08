@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * @property algorithm The signature algorithm required for the challenge.
  */
 @Serializable
-data class BiometricCredentialChallenge(
+public data class BiometricCredentialChallenge(
   /** The challenge value. */
   val challenge: String,
 

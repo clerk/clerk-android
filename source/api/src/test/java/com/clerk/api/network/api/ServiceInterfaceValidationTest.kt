@@ -48,9 +48,6 @@ class ServiceInterfaceValidationTest {
       .declaredFields
       .map { it.type }
       .filter { it.isInterface && it.name.substringBeforeLast('.') == servicePackage }
-      // getChallenge() returns void, which Retrofit rejects. Nothing has called this API since
-      // device attestation was removed in #571; drop the exclusion when the API is deleted.
-      .filterNot { it == DeviceAttestationApi::class.java }
       .distinct()
   }
 }

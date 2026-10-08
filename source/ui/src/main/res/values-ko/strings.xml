@@ -33,6 +33,7 @@
     <string name="set_new_password">새 비밀번호 설정</string>
     <string name="reset_password">비밀번호 재설정</string>
     <string name="confirm_password">비밀번호 확인</string>
+    <string name="passwords_dont_match">비밀번호가 일치하지 않습니다</string>
     <string name="new_password">새 비밀번호</string>
     <string name="sign_out_of_all_other_devices">다른 모든 기기에서 로그아웃</string>
     <string name="back">뒤로</string>
@@ -55,6 +56,7 @@
     <string name="email_code">이메일 코드</string>
     <string name="or">또는</string>
     <string name="continue_to">%1$s(으)로 계속</string>
+    <string name="continue_with">%1$s(으)로 계속하기</string>
     <string name="create_your_account">계정 만들기</string>
     <string name="welcome_sign_in_to_continue">환영합니다! 계속하려면 로그인하세요.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">환영합니다! 시작하려면 세부 정보를 입력하세요.</string>
