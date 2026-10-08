@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -67,6 +68,13 @@ class ClerkTestTagsTest {
 
     composeTestRule.onNodeWithTag(ClerkTestTags.Auth.Start.phoneNumber).assert(hasSetTextAction())
     composeTestRule.onNodeWithTag(ClerkTestTags.Auth.Start.identifier).assertDoesNotExist()
+  }
+
+  @Test
+  fun `auth start primary button reads Next`() {
+    showAuthStart()
+
+    composeTestRule.onNodeWithTag(ClerkTestTags.Auth.Start.continueButton).assertTextEquals("Next")
   }
 
   @Test
