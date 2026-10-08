@@ -60,10 +60,13 @@ import kotlinx.serialization.Serializable
  * matching [customDestination] composable is rendered. Custom destinations participate in the
  * navigation back stack and survive activity recreation.
  *
- * When your own navigation shows another destination over this view, its in-progress state is kept
- * only if the destination has its own `ViewModelStoreOwner`, as Navigation Compose destinations do
- * and Navigation 3 entries do with `rememberViewModelStoreNavEntryDecorator()`. Otherwise the view
- * starts fresh when it comes back.
+ * When your own navigation takes this view off screen and saves its state, as Navigation Compose,
+ * Navigation 3 and Fragment back stacks do, the view comes back on the screen it was showing. Its
+ * in-progress input comes back too when the destination has its own `ViewModelStoreOwner`: a
+ * Navigation Compose destination, a Navigation 3 entry with
+ * `rememberViewModelStoreNavEntryDecorator()`, or a Fragment. When the view's `ViewModelStoreOwner`
+ * is the Activity, its ViewModels are cleared when it leaves composition, so it comes back with new
+ * ViewModels and the input is lost.
  *
  * @param clerkTheme Optional theme customization for the organization profile UI.
  * @param isDismissible Whether to show a top-level back affordance that calls [onDismiss].

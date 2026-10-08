@@ -79,7 +79,7 @@ private fun UserProfilePasskeySectionImpl(
                 )
               )
             },
-            viewModel = viewModel,
+            onClickRemove = { viewModel.deletePasskey(passkey) },
           )
           if (index < passkeys.lastIndex) {
             Spacers.Vertical.Spacer32()

@@ -1,9 +1,11 @@
 package com.clerk.ui.navigation
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -157,7 +159,7 @@ class ClerkViewModelStoreScopeTest {
   }
 
   @Test
-  fun componentInASavedTabKeepsItsViewModelsAcrossTabSwitches() {
+  fun componentInASavedTabUnderAPerDestinationOwnerKeepsItsViewModelsAcrossTabSwitches() {
     var selectedTab by mutableStateOf("clerk")
     val created = mutableListOf<TrackingViewModel>()
 
@@ -182,6 +184,61 @@ class ClerkViewModelStoreScopeTest {
     composeTestRule.waitForIdle()
     assertSame(first, created.last())
     assertFalse(first.cleared)
+  }
+
+  @Test
+  fun componentInASavedTabUnderTheActivityGetsNewViewModelsAfterATabSwitch() {
+    var selectedTab by mutableStateOf("clerk")
+    val created = mutableListOf<TrackingViewModel>()
+
+    composeTestRule.setContent {
+      val tabs = rememberSaveableStateHolder()
+      tabs.SaveableStateProvider(selectedTab) {
+        if (selectedTab == "clerk") {
+          ClerkViewModelStoreScope { created += viewModel<TrackingViewModel>() }
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    val first = created.last()
+
+    composeTestRule.runOnIdle { selectedTab = "other" }
+    composeTestRule.waitForIdle()
+    assertTrue(first.cleared)
+
+    composeTestRule.runOnIdle { selectedTab = "clerk" }
+    composeTestRule.waitForIdle()
+    assertNotSame(first, created.last())
+  }
+
+  @Test
+  fun componentInASavedTabUnderACustomOwnerOfTheActivityStoreIsClearedOnTabSwitch() {
+    var selectedTab by mutableStateOf("clerk")
+    val created = mutableListOf<TrackingViewModel>()
+
+    composeTestRule.setContent {
+      val activity = checkNotNull(LocalActivity.current as? ViewModelStoreOwner)
+      val activityStoreOwner = remember {
+        object : ViewModelStoreOwner {
+          override val viewModelStore = activity.viewModelStore
+        }
+      }
+      CompositionLocalProvider(LocalViewModelStoreOwner provides activityStoreOwner) {
+        val tabs = rememberSaveableStateHolder()
+        tabs.SaveableStateProvider(selectedTab) {
+          if (selectedTab == "clerk") {
+            ClerkViewModelStoreScope { created += viewModel<TrackingViewModel>() }
+          }
+        }
+      }
+    }
+    composeTestRule.waitForIdle()
+    val first = created.last()
+
+    composeTestRule.runOnIdle { selectedTab = "other" }
+    composeTestRule.waitForIdle()
+
+    assertTrue(first.cleared)
   }
 
   @Test
