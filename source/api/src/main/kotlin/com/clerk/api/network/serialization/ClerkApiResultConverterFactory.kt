@@ -2,7 +2,7 @@ package com.clerk.api.network.serialization
 
 import com.clerk.api.billing.BillingPayment
 import com.clerk.api.billing.BillingPlan
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
@@ -40,7 +40,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
 
     val actualSuccessType =
       if (isSessionList) {
-        ClerkLog.d(
+        ClerkLogger.d(
           "This is a List<Session> type, using direct type (no ClientPiggybackedResponse wrapper)"
         )
         successType
@@ -113,7 +113,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         @Suppress("UNCHECKED_CAST") ClerkResult.success(unwrappedResult as Any)
       }
         ?: run {
-          ClerkLog.e("Delegate converter returned null!")
+          ClerkLogger.e("Delegate converter returned null!")
           null
         }
     }

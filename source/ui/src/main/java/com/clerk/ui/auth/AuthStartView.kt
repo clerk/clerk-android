@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.biometriccredential.BiometricCredentialValidationResult
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
@@ -51,6 +50,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.extensions.isEmailAddress
 import com.clerk.ui.core.input.ClerkPhoneNumberFieldImpl
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.log.ClerkLog
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -60,7 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-public fun AuthStartView(
+internal fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   logo: (@Composable () -> Unit)? = null,

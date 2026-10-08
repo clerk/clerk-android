@@ -1,7 +1,7 @@
 package com.clerk.api.configuration
 
 import androidx.annotation.VisibleForTesting
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.util.UUID
@@ -18,15 +18,15 @@ internal object DeviceIdGenerator {
 
             if (!storedId.isNullOrEmpty()) {
               cachedDeviceId = storedId
-              ClerkLog.d("Loaded existing device ID from storage")
+              ClerkLogger.d("Loaded existing device ID from storage")
             } else {
               val newId = UUID.randomUUID().toString()
               cachedDeviceId = newId
               StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
-              ClerkLog.d("Generated and saved new device ID")
+              ClerkLogger.d("Generated and saved new device ID")
             }
           } catch (e: Exception) {
-            ClerkLog.w("Storage not available, generating temporary device ID: ${e.message}")
+            ClerkLogger.w("Storage not available, generating temporary device ID: ${e.message}")
             cachedDeviceId = UUID.randomUUID().toString()
           }
         }
@@ -65,18 +65,18 @@ internal object DeviceIdGenerator {
         try {
           val existingId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
           if (!existingId.isNullOrEmpty()) {
-            ClerkLog.d("Loaded existing device ID from storage during lazy initialization")
+            ClerkLogger.d("Loaded existing device ID from storage during lazy initialization")
             existingId
           } else {
             val newId = UUID.randomUUID().toString()
-            ClerkLog.d("Generated temporary device ID (will persist when storage is ready)")
+            ClerkLogger.d("Generated temporary device ID (will persist when storage is ready)")
 
             tryPersistDeviceIdAsync(newId)
 
             newId
           }
         } catch (e: Exception) {
-          ClerkLog.w("Storage not available during lazy initialization: ${e.message}")
+          ClerkLogger.w("Storage not available during lazy initialization: ${e.message}")
           UUID.randomUUID().toString()
         }
 
@@ -88,9 +88,9 @@ internal object DeviceIdGenerator {
   private fun tryPersistDeviceIdAsync(deviceId: String) {
     try {
       StorageHelper.saveValue(StorageKey.DEVICE_ID, deviceId)
-      ClerkLog.d("Persisted device ID to storage")
+      ClerkLogger.d("Persisted device ID to storage")
     } catch (e: Exception) {
-      ClerkLog.w("Could not persist device ID: ${e.message}")
+      ClerkLogger.w("Could not persist device ID: ${e.message}")
     }
   }
 

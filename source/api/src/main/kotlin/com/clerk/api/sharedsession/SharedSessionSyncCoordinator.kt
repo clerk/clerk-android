@@ -2,7 +2,7 @@ package com.clerk.api.sharedsession
 
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.storage.StorageHelper
@@ -194,7 +194,7 @@ internal constructor(
       // applied by reloadBlocking) may already have replaced [value]. Publishing it now would let
       // peers overwrite the newer token with this stale one.
       if (StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != value) {
-        ClerkLog.d("Skipping shared publish of a device token that is no longer stored")
+        ClerkLogger.d("Skipping shared publish of a device token that is no longer stored")
         return
       }
       val deviceTokenSnapshot =
@@ -261,7 +261,7 @@ internal constructor(
     localSnapshot = snapshot
     runCatching { transport.saveLocalSnapshot(snapshot, notifyPeers) }
       .onFailure { error ->
-        ClerkLog.w("Failed to persist shared Clerk session state: ${error.message}")
+        ClerkLogger.w("Failed to persist shared Clerk session state: ${error.message}")
       }
   }
 

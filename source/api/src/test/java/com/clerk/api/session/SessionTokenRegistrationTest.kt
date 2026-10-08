@@ -1,7 +1,7 @@
 package com.clerk.api.session
 
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.model.client.Client
@@ -52,7 +52,7 @@ class SessionTokenRegistrationTest {
   @Before
   fun setup() {
     SessionTokensCache.clear()
-    mockkObject(Clerk, ClerkApi, ClerkLog)
+    mockkObject(Clerk, ClerkApi, ClerkLogger)
     every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(session)))
     every { Clerk.environment } returns null
     every { ClerkApi.session } returns api
@@ -142,7 +142,7 @@ class SessionTokenRegistrationTest {
       isAccessible = true
       set(fetcher, tasks)
     }
-    every { ClerkLog.d(any()) } answers
+    every { ClerkLogger.d(any()) } answers
       {
         if (
           Thread.currentThread() == tasks.oldCaller.get() &&

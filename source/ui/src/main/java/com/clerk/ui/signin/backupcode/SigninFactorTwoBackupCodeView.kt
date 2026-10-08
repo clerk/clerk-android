@@ -37,7 +37,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-public fun SignInFactorTwoBackupCodeView(
+internal fun SignInFactorTwoBackupCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

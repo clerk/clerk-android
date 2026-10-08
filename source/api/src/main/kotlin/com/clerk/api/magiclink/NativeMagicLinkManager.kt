@@ -5,7 +5,7 @@ package com.clerk.api.magiclink
 import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.types.Strategy
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ClerkApi
@@ -310,7 +310,7 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   private suspend fun refreshClientState() {
     when (val clientResult = Client.get()) {
       is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
-      is ClerkResult.Failure -> ClerkLog.w("event=native_magic_link_client_refresh_failure")
+      is ClerkResult.Failure -> ClerkLogger.w("event=native_magic_link_client_refresh_failure")
     }
   }
 
@@ -393,7 +393,9 @@ internal class PersistentPendingNativeMagicLinkStore(
     val encoded = StorageHelper.loadValue(StorageKey.PENDING_NATIVE_MAGIC_LINK_FLOW) ?: return null
     return runCatching { json.decodeFromString<PendingNativeMagicLinkFlow>(encoded) }
       .getOrElse { error ->
-        ClerkLog.w("event=native_magic_link_pending_flow_decode_failure message=${error.message}")
+        ClerkLogger.w(
+          "event=native_magic_link_pending_flow_decode_failure message=${error.message}"
+        )
         clear()
         null
       }
@@ -686,17 +688,17 @@ internal object NativeMagicLinkLogger {
 private fun PendingNativeMagicLinkState.logName(): String = name.lowercase()
 
 private fun logFlowIdMismatch(expectedFlowId: String?, actualFlowId: String) {
-  ClerkLog.w(
+  ClerkLogger.w(
     "event=native_magic_link_flow_id_mismatch expected=$expectedFlowId actual=$actualFlowId"
   )
 }
 
 private fun nativeMagicLinkInfo(event: String, vararg fields: Pair<String, String>) {
-  ClerkLog.i(nativeMagicLinkLogMessage(event, *fields))
+  ClerkLogger.i(nativeMagicLinkLogMessage(event, *fields))
 }
 
 private fun nativeMagicLinkWarn(event: String, vararg fields: Pair<String, String>) {
-  ClerkLog.w(nativeMagicLinkLogMessage(event, *fields))
+  ClerkLogger.w(nativeMagicLinkLogMessage(event, *fields))
 }
 
 private fun nativeMagicLinkLogMessage(event: String, vararg fields: Pair<String, String>): String {

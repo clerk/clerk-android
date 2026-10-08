@@ -51,7 +51,7 @@ private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
   "Email addresses cannot be changed for this application."
 
 @Composable
-public fun UserProfileDetailView(modifier: Modifier = Modifier) {
+internal fun UserProfileDetailView(modifier: Modifier = Modifier) {
   UserProfileDetailViewContent(modifier = modifier)
 }
 
