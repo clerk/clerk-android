@@ -28,6 +28,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
@@ -75,7 +76,7 @@ public fun OrganizationListView(
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
       TelemetryProvider {
-        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
+        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
           OrganizationListViewImpl(
             modifier = Modifier.fillMaxSize(),
             clerkTheme = clerkTheme,
@@ -239,7 +240,9 @@ private fun OrganizationListFullScreenPage(onDismiss: () -> Unit, content: @Comp
       color = ClerkMaterialTheme.colors.background,
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
-      DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) { content() }
+      DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
+        content()
+      }
     }
   }
 }

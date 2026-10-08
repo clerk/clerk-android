@@ -29,6 +29,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
@@ -147,7 +148,7 @@ public fun UserProfileView(
           )
         }
       } else {
-        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
+        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
           val detailProgress by
             animateFloatAsState(
               targetValue = if (showDetail) 1f else 0f,

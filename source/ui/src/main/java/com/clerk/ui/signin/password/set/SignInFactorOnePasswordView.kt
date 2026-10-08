@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,6 +32,7 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.resetPasswordFactor
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
@@ -116,7 +118,7 @@ private fun SignInFactorOnePasswordViewImpl(
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignIn.continueButton),
       onClick = onSubmit,
       text = stringResource(R.string.continue_text),
       isEnabled = authState.signInPassword.isNotEmpty(),
@@ -135,6 +137,7 @@ private fun SignInFactorOnePasswordViewImpl(
 @Composable
 private fun PasswordInput(password: String, onValueChange: (String) -> Unit, onSubmit: () -> Unit) {
   ClerkTextField(
+    modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.password),
     value = password,
     onValueChange = onValueChange,
     label = stringResource(R.string.enter_your_password),
@@ -156,6 +159,14 @@ private fun Footer(authState: AuthState, factor: Factor) {
   val density = LocalDensity.current
   val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
   val isCompact = widthDp < 360.dp
+  val onUseAnotherMethod = {
+    authState.navigateTo(AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
+  }
+  val onForgotPassword = {
+    Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
+      authState.navigateTo(AuthDestination.SignInForgotPassword)
+    } ?: onUseAnotherMethod()
+  }
   if (isCompact) {
     Column(
       modifier = Modifier.fillMaxWidth().padding(horizontal = dp8),
@@ -163,23 +174,13 @@ private fun Footer(authState: AuthState, factor: Factor) {
       verticalArrangement = Arrangement.spacedBy(dp24),
     ) {
       ClerkTextButton(
+        modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
         text = stringResource(R.string.use_another_method),
-        onClick = {
-          authState.navigateTo(
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          )
-        },
+        onClick = onUseAnotherMethod,
       )
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
-        onClick = {
-          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
-            authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
-            ?: authState.navigateTo(
-              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-            )
-        },
+        onClick = onForgotPassword,
       )
     }
   } else {
@@ -189,23 +190,13 @@ private fun Footer(authState: AuthState, factor: Factor) {
       verticalAlignment = Alignment.CenterVertically,
     ) {
       ClerkTextButton(
+        modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
         text = stringResource(R.string.use_another_method),
-        onClick = {
-          authState.navigateTo(
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          )
-        },
+        onClick = onUseAnotherMethod,
       )
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
-        onClick = {
-          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
-            authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
-            ?: authState.navigateTo(
-              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-            )
-        },
+        onClick = onForgotPassword,
       )
     }
   }

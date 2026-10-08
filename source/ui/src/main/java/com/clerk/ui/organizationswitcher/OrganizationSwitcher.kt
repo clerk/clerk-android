@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -49,7 +50,9 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
@@ -716,7 +719,7 @@ private fun OrganizationSwitcherFullScreenPage(
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
       DevelopmentModeWarningBox(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds(),
         showWarning = showDevelopmentModeWarning,
       ) {
         content()
@@ -776,9 +779,11 @@ internal fun OrganizationSwitcherCustomTrigger(
   val openOrganizationSwitcherDescription = stringResource(R.string.open_organization_switcher)
   Box(
     modifier =
-      modifier.clickable(enabled = !isLoading, onClick = onClick).semantics {
-        contentDescription = openOrganizationSwitcherDescription
-      }
+      modifier
+        .clerkTestTagsAsResourceIds()
+        .testTag(ClerkTestTags.OrganizationSwitcher.triggerButton)
+        .clickable(enabled = !isLoading, onClick = onClick)
+        .semantics { contentDescription = openOrganizationSwitcherDescription }
   ) {
     content()
   }
@@ -804,9 +809,11 @@ internal fun OrganizationSwitcherButton(
     }
   val openOrganizationSwitcherDescription = stringResource(R.string.open_organization_switcher)
   val clickableModifier =
-    modifier.clickable(enabled = !isLoading, onClick = onClick).semantics {
-      contentDescription = openOrganizationSwitcherDescription
-    }
+    modifier
+      .clerkTestTagsAsResourceIds()
+      .testTag(ClerkTestTags.OrganizationSwitcher.triggerButton)
+      .clickable(enabled = !isLoading, onClick = onClick)
+      .semantics { contentDescription = openOrganizationSwitcherDescription }
 
   if (displayMode.isCompact) {
     CompactOrganizationSwitcherButton(

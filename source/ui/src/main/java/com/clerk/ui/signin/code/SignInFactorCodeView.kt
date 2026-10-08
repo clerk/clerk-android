@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -14,6 +15,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
@@ -131,6 +133,7 @@ private fun SignInFactorCodeViewImpl(
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
       ClerkTextButton(
+        modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
         text = stringResource(R.string.use_another_method),
         onClick = {
           if (isSecondFactor) {
@@ -175,6 +178,7 @@ private fun SignInCodeInput(
   onClickResend: () -> Unit,
 ) {
   ClerkCodeInputField(
+    modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.code),
     verificationState = verificationTextState.verificationState(),
     onTextChange = onTextChange,
     showResend =

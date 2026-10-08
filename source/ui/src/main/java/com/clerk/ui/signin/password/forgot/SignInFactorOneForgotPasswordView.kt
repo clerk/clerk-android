@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +24,7 @@ import com.clerk.api.signin.alternativeFirstFactors
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -156,7 +158,9 @@ internal fun AlternativeFactorList(
       val iconRes = textIconHelper.iconResource(it)
 
       ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+          Modifier.fillMaxWidth()
+            .testTag(ClerkTestTags.Auth.SignIn.alternativeMethodButton(it.strategy)),
         icons =
           ClerkButtonDefaults.icons(
             leadingIcon = iconRes,
