@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.clerk.api.Clerk
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,20 +18,30 @@ class E2ECleanupReceiver : BroadcastReceiver() {
     if (intent.action != ACTION_CLEANUP_ACCOUNT) return
     val pendingResult = goAsync()
     CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
-      val status =
-        withTimeoutOrNull(CLEANUP_TIMEOUT_MS) {
-          Clerk.isInitialized.first { it }
-          E2EAccountCleanup.deleteCurrentAccount()
-        }
-          ?: CleanupStatus.Failed("Timed out waiting for account cleanup.").also {
-            E2EAccountCleanup.reportFailure(it.message)
-          }
-      pendingResult.resultCode =
-        if (status == CleanupStatus.Complete) Activity.RESULT_OK else Activity.RESULT_CANCELED
-      pendingResult.resultData = status.toString()
-      pendingResult.finish()
+      var status: CleanupStatus = CleanupStatus.Failed("Account cleanup was cancelled.")
+      try {
+        status = cleanUpWithinTimeout()
+      } catch (cancellation: CancellationException) {
+        throw cancellation
+      } catch (error: Exception) {
+        status = failed(error.message ?: error.toString())
+      } finally {
+        pendingResult.resultCode =
+          if (status == CleanupStatus.Complete) Activity.RESULT_OK else Activity.RESULT_CANCELED
+        pendingResult.resultData = status.toString()
+        pendingResult.finish()
+      }
     }
   }
+
+  private suspend fun cleanUpWithinTimeout(): CleanupStatus =
+    withTimeoutOrNull(CLEANUP_TIMEOUT_MS) {
+      Clerk.isInitialized.first { it }
+      E2EAccountCleanup.deleteCurrentAccount()
+    } ?: failed("Timed out waiting for account cleanup.")
+
+  private fun failed(message: String): CleanupStatus.Failed =
+    CleanupStatus.Failed(message).also { E2EAccountCleanup.reportFailure(it.message) }
 
   companion object {
     const val ACTION_CLEANUP_ACCOUNT = "com.clerk.e2e.action.CLEANUP_ACCOUNT"

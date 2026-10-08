@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
+import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import com.clerk.ui.auth.AuthMode
 import com.clerk.ui.auth.AuthView
@@ -109,6 +110,7 @@ private fun E2EApp(viewModel: E2EViewModel) {
           route = route,
           onRouteChange = { route = it },
           user = user,
+          sessionIsActive = session?.status == Session.SessionStatus.ACTIVE,
           viewModel = viewModel,
           statusPanel = statusPanel,
         )
@@ -122,6 +124,7 @@ private fun E2ERouteContent(
   route: E2ERoute,
   onRouteChange: (E2ERoute) -> Unit,
   user: User?,
+  sessionIsActive: Boolean,
   viewModel: E2EViewModel,
   statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
 ) {
@@ -131,6 +134,7 @@ private fun E2ERouteContent(
     E2ERoute.Home ->
       HomeScreen(
         user = user,
+        sessionIsActive = sessionIsActive,
         statusPanel = statusPanel,
         actions =
           HomeActions(
@@ -148,18 +152,22 @@ private fun E2ERouteContent(
           ),
       )
     E2ERoute.CustomOtpSignIn ->
-      CustomOtpSignInScreen(
-        state = customOtpState,
-        onSubmitPhone = viewModel::submitCustomOtpPhone,
-        onVerifyCode = viewModel::verifyCustomOtpCode,
-        onBack = { onRouteChange(E2ERoute.Home) },
-      )
+      WithStatusPanel(
+        statusPanel,
+        showTotpHelper = false,
+        placement = StatusPanelPlacement.BelowContent,
+      ) {
+        CustomOtpSignInScreen(
+          state = customOtpState,
+          onSubmitPhone = viewModel::submitCustomOtpPhone,
+          onVerifyCode = viewModel::verifyCustomOtpCode,
+          onBack = { onRouteChange(E2ERoute.Home) },
+        )
+      }
     E2ERoute.CustomProfile -> CustomProfileScreen(user = user, onSignOut = viewModel::signOut)
     E2ERoute.PrebuiltAuth ->
-      AuthView(
-        initialIdentifier = TEST_PHONE_E164,
-        persistIdentifiers = false,
-        preferGoogleOneTap = false,
+      PrebuiltSignInScreen(
+        statusPanel = statusPanel,
         onAuthComplete = { onRouteChange(E2ERoute.PrebuiltProfile) },
       )
     E2ERoute.PrebuiltProfile -> UserProfileView(onDismiss = { onRouteChange(E2ERoute.Home) })
@@ -186,15 +194,49 @@ private fun LoadingScreen() {
 }
 
 @Composable
+private fun WithStatusPanel(
+  statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
+  showTotpHelper: Boolean,
+  placement: StatusPanelPlacement = StatusPanelPlacement.AboveContent,
+  content: @Composable () -> Unit,
+) {
+  Column(modifier = Modifier.fillMaxSize()) {
+    if (placement == StatusPanelPlacement.AboveContent) statusPanel(showTotpHelper)
+    Box(modifier = Modifier.weight(1f)) { content() }
+    if (placement == StatusPanelPlacement.BelowContent) statusPanel(showTotpHelper)
+  }
+}
+
+private enum class StatusPanelPlacement {
+  AboveContent,
+  BelowContent,
+}
+
+@Composable
+private fun PrebuiltSignInScreen(
+  statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
+  onAuthComplete: () -> Unit,
+) {
+  WithStatusPanel(statusPanel, showTotpHelper = true) {
+    AuthView(
+      modifier = Modifier.fillMaxSize(),
+      initialIdentifier = TEST_PHONE_E164,
+      persistIdentifiers = false,
+      preferGoogleOneTap = false,
+      onAuthComplete = onAuthComplete,
+    )
+  }
+}
+
+@Composable
 private fun PrebuiltSignUpScreen(
   initialIdentifier: String,
   statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
   onAuthComplete: () -> Unit,
 ) {
-  Column(modifier = Modifier.fillMaxSize()) {
-    statusPanel(true)
+  WithStatusPanel(statusPanel, showTotpHelper = true) {
     AuthView(
-      modifier = Modifier.weight(1f),
+      modifier = Modifier.fillMaxSize(),
       initialIdentifier = initialIdentifier,
       persistIdentifiers = false,
       preferGoogleOneTap = false,
@@ -207,17 +249,17 @@ private fun PrebuiltSignUpScreen(
 @Composable
 private fun HomeScreen(
   user: User?,
+  sessionIsActive: Boolean,
   statusPanel: @Composable (showTotpHelper: Boolean) -> Unit,
   actions: HomeActions,
 ) {
-  Column(modifier = Modifier.fillMaxSize()) {
-    statusPanel(false)
-    Box(modifier = Modifier.weight(1f)) { HomeContent(user = user, actions = actions) }
+  WithStatusPanel(statusPanel, showTotpHelper = false) {
+    HomeContent(user = user, sessionIsActive = sessionIsActive, actions = actions)
   }
 }
 
 @Composable
-private fun HomeContent(user: User?, actions: HomeActions) {
+private fun HomeContent(user: User?, sessionIsActive: Boolean, actions: HomeActions) {
   E2EColumn {
     Text("Clerk Android E2E", style = MaterialTheme.typography.headlineSmall)
     Text("Instance: ${BuildConfig.E2E_CLERK_KEY_NAME}", style = MaterialTheme.typography.labelSmall)
@@ -225,7 +267,10 @@ private fun HomeContent(user: User?, actions: HomeActions) {
       Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onCustomOtpSignIn) {
         Text("Custom OTP Sign In")
       }
-      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onPrebuiltSignIn) {
+      Button(
+        modifier = Modifier.fillMaxWidth().testTag(E2ETags.SIGN_IN),
+        onClick = actions.onPrebuiltSignIn,
+      ) {
         Text("Prebuilt UI Sign In")
       }
       Button(
@@ -255,11 +300,13 @@ private fun HomeContent(user: User?, actions: HomeActions) {
       ) {
         Text("Sign Out")
       }
-      Button(
-        modifier = Modifier.fillMaxWidth().testTag(E2ETags.DELETE_ACCOUNT),
-        onClick = actions.onDeleteAccount,
-      ) {
-        Text("Delete Account")
+      if (sessionIsActive) {
+        Button(
+          modifier = Modifier.fillMaxWidth().testTag(E2ETags.DELETE_ACCOUNT),
+          onClick = actions.onDeleteAccount,
+        ) {
+          Text("Delete Account")
+        }
       }
     }
   }

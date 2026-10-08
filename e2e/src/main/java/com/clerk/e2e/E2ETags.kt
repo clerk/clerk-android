@@ -1,6 +1,7 @@
 package com.clerk.e2e
 
 internal object E2ETags {
+  const val SIGN_IN = "e2e.auth.signIn"
   const val SIGN_UP_WITH_EMAIL = "e2e.auth.signUpWithEmail"
   const val SIGN_UP_WITH_PHONE = "e2e.auth.signUpWithPhone"
   const val SIGNED_IN = "e2e.auth.signedIn"

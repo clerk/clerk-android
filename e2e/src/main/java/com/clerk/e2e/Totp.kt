@@ -6,16 +6,22 @@ import javax.crypto.spec.SecretKeySpec
 
 internal object Totp {
   const val PERIOD_SECONDS = 30L
+  const val MINIMUM_KEY_BYTES = 10
   private const val DIGITS = 6
   private const val MODULUS = 1_000_000
+  private const val ALGORITHM = "SHA1"
   private const val BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
   private const val BITS_PER_BASE32_CHAR = 5
   private const val BITS_PER_BYTE = 8
   private const val BYTE_MASK = 0xFF
   private const val OFFSET_MASK = 0x0F
+  private const val OTPAUTH_TOTP_PREFIX = "otpauth://totp/"
 
   fun code(secret: String, epochSeconds: Long): String {
     val key = base32Decode(secret)
+    require(key.size >= MINIMUM_KEY_BYTES) {
+      "TOTP secret decodes to ${key.size} bytes; at least $MINIMUM_KEY_BYTES are required."
+    }
     val counter = ByteBuffer.allocate(Long.SIZE_BYTES).putLong(epochSeconds / PERIOD_SECONDS)
     val mac = Mac.getInstance("HmacSHA1").apply { init(SecretKeySpec(key, "HmacSHA1")) }
     val hash = mac.doFinal(counter.array())
@@ -33,23 +39,38 @@ internal object Totp {
     val trimmed = text.trim()
     val secret =
       if (trimmed.startsWith("otpauth://", ignoreCase = true)) {
-        trimmed
-          .substringAfter('?', missingDelimiterValue = "")
-          .split('&')
-          .firstOrNull { it.startsWith("secret=", ignoreCase = true) }
-          ?.substringAfter('=')
+        secretFromOtpauthUri(trimmed)
       } else {
         trimmed
       }
-    return secret?.takeIf { candidate ->
-      candidate.isNotEmpty() &&
-        candidate.uppercase().filterNot { it == '=' || it == ' ' }.all { it in BASE32_ALPHABET }
-    }
+    return secret?.takeIf { isBase32(it) && base32Decode(it).size >= MINIMUM_KEY_BYTES }
   }
+
+  private fun secretFromOtpauthUri(uri: String): String? {
+    if (!uri.startsWith(OTPAUTH_TOTP_PREFIX, ignoreCase = true)) return null
+    val parameters =
+      uri
+        .substringAfter('?', missingDelimiterValue = "")
+        .split('&')
+        .filter { it.isNotEmpty() }
+        .associate { it.substringBefore('=').lowercase() to it.substringAfter('=', "") }
+    val usesSupportedParameters =
+      parameters.matchesOrAbsent("algorithm") { it.equals(ALGORITHM, ignoreCase = true) } &&
+        parameters.matchesOrAbsent("digits") { it.toIntOrNull() == DIGITS } &&
+        parameters.matchesOrAbsent("period") { it.toLongOrNull() == PERIOD_SECONDS }
+    return parameters["secret"]?.takeIf { usesSupportedParameters }
+  }
+
+  private fun Map<String, String>.matchesOrAbsent(
+    name: String,
+    predicate: (String) -> Boolean,
+  ): Boolean = get(name)?.let(predicate) ?: true
+
+  private fun isBase32(candidate: String): Boolean =
+    candidate.uppercase().filterNot { it == '=' || it == ' ' }.all { it in BASE32_ALPHABET }
 
   private fun base32Decode(secret: String): ByteArray {
     val characters = secret.uppercase().filter { it in BASE32_ALPHABET }
-    require(characters.isNotEmpty()) { "TOTP secret has no base32 characters." }
     var buffer = 0
     var bitsLeft = 0
     val bytes = mutableListOf<Byte>()

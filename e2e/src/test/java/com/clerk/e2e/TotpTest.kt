@@ -2,6 +2,7 @@ package com.clerk.e2e
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class TotpTest {
@@ -41,6 +42,37 @@ class TotpTest {
     assertNull(Totp.secretFrom("Copied to clipboard!"))
     assertNull(Totp.secretFrom(""))
     assertNull(Totp.secretFrom("otpauth://totp/Clerk?issuer=Clerk"))
+  }
+
+  @Test
+  fun `secretFrom rejects secrets that decode to fewer than ten bytes`() {
+    assertNull(Totp.secretFrom("A"))
+    assertNull(Totp.secretFrom("HELLOWORLD"))
+    assertNull(Totp.secretFrom("JBSWY3DPEHPK3PX"))
+    assertEquals("JBSWY3DPEHPK3PXP", Totp.secretFrom("JBSWY3DPEHPK3PXP"))
+  }
+
+  @Test
+  fun `secretFrom accepts otpauth uris that state the default parameters`() {
+    val uri =
+      "otpauth://totp/Clerk?secret=JBSWY3DPEHPK3PXP&algorithm=sha1&digits=6&period=30&issuer=Clerk"
+
+    assertEquals("JBSWY3DPEHPK3PXP", Totp.secretFrom(uri))
+  }
+
+  @Test
+  fun `secretFrom rejects otpauth uris whose codes this generator cannot produce`() {
+    val base = "otpauth://totp/Clerk?secret=JBSWY3DPEHPK3PXP"
+
+    assertNull(Totp.secretFrom("$base&algorithm=SHA256"))
+    assertNull(Totp.secretFrom("$base&digits=8"))
+    assertNull(Totp.secretFrom("$base&period=60"))
+    assertNull(Totp.secretFrom("otpauth://hotp/Clerk?secret=JBSWY3DPEHPK3PXP&counter=0"))
+  }
+
+  @Test
+  fun `code rejects a secret that is too short to be a key`() {
+    assertThrows(IllegalArgumentException::class.java) { Totp.code("JBSWY3DP", 59) }
   }
 
   @Test

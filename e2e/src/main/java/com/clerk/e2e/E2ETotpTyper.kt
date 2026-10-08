@@ -4,6 +4,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.view.KeyEvent
 import android.view.View
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 
 internal sealed interface TotpTypingState {
@@ -18,7 +19,16 @@ internal object E2ETotpTyper {
   private const val MINIMUM_SECONDS_REMAINING = 8L
   private const val MILLIS_PER_SECOND = 1_000L
 
-  suspend fun typeCodeFromClipboardSecret(context: Context, rootView: View): TotpTypingState {
+  suspend fun typeCodeFromClipboardSecret(context: Context, rootView: View): TotpTypingState =
+    try {
+      typeCode(context, rootView)
+    } catch (cancellation: CancellationException) {
+      throw cancellation
+    } catch (error: Exception) {
+      TotpTypingState.Failed(error.message ?: "Could not type the TOTP code.")
+    }
+
+  private suspend fun typeCode(context: Context, rootView: View): TotpTypingState {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     val clipboardText =
       clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)

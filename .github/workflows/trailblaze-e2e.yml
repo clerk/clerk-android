@@ -2,6 +2,9 @@ name: Trailblaze E2E
 
 on:
   workflow_call:
+    secrets:
+      CLERK_TEST_KEYS_JSON:
+        required: false
   workflow_dispatch:
 
 concurrency:
@@ -12,19 +15,32 @@ permissions:
   contents: read
 
 jobs:
+  select-shards:
+    name: Select Trailblaze E2E shards
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      shards: ${{ steps.select.outputs.shards }}
+    steps:
+      - id: select
+        env:
+          HAS_TEST_KEYS: ${{ secrets.CLERK_TEST_KEYS_JSON != '' }}
+        run: |
+          if [ "$HAS_TEST_KEYS" = "true" ]; then
+            echo 'shards=["custom-flow","auth-email","auth-phone","user-profile","session-task-setup-mfa"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::CLERK_TEST_KEYS_JSON is not set, so only the custom-flow shard runs. Add the shared mobile e2e .keys.json (the clerk-ios secret) to run the rest."
+            echo 'shards=["custom-flow"]' >> "$GITHUB_OUTPUT"
+          fi
+
   trailblaze-e2e:
     name: Run Trailblaze E2E on Android (${{ matrix.shard }})
+    needs: select-shards
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
-        shard:
-          - custom-flow
-          - auth-email
-          - auth-phone
-          - user-profile
-          - session-task-setup-mfa
+        shard: ${{ fromJSON(needs.select-shards.outputs.shards) }}
 
     env:
       TRAILBLAZE_DEVICE: android/emulator-5554

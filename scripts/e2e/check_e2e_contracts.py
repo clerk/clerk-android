@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Static checks that keep the Trailblaze e2e trails, the e2e host app, and the shard runner in sync."""
-
 import os
 import re
 import sys

@@ -24,6 +24,8 @@ on:
 jobs:
   trailblaze-e2e:
     uses: ./.github/workflows/trailblaze-e2e.yml
+    secrets:
+      CLERK_TEST_KEYS_JSON: ${{ secrets.CLERK_TEST_KEYS_JSON }}
 
   verify:
     runs-on: blacksmith-4vcpu-ubuntu-2404
