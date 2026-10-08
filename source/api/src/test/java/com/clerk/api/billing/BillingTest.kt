@@ -515,8 +515,32 @@ class BillingTest {
     assertEquals(500L, balance.balance?.amount)
     assertEquals("ledger_1", ledger.id)
     assertEquals("grant", ledger.sourceType)
+    assertEquals(1782223512123L, ledger.createdAt)
     assertEquals("SSO", feature.name)
     assertEquals("sso", feature.slug)
+  }
+
+  @Test
+  fun `decodes credit ledger createdAt from RFC 3339 strings, offsets, and epoch milliseconds`() {
+    val withoutFraction =
+      decode<BillingCreditLedger>(
+        CREDIT_LEDGER_JSON.replace("\"2026-06-23T14:05:12.123456Z\"", "\"2026-06-23T14:05:12Z\"")
+      )
+    val epochMilliseconds =
+      decode<BillingCreditLedger>(
+        CREDIT_LEDGER_JSON.replace("\"2026-06-23T14:05:12.123456Z\"", "1782223512500")
+      )
+    val withOffset =
+      decode<BillingCreditLedger>(
+        CREDIT_LEDGER_JSON.replace(
+          "\"2026-06-23T14:05:12.123456Z\"",
+          "\"2026-06-23T10:05:12.5-04:00\"",
+        )
+      )
+
+    assertEquals(1782223512000L, withoutFraction.createdAt)
+    assertEquals(1782223512500L, epochMilliseconds.createdAt)
+    assertEquals(1782223512500L, withOffset.createdAt)
   }
 
   @Test
@@ -858,7 +882,7 @@ class BillingTest {
         "amount": $MONEY,
         "source_type": "grant",
         "source_id": "grant_1",
-        "created_at": 1700000000000
+        "created_at": "2026-06-23T14:05:12.123456Z"
       }
       """
 
