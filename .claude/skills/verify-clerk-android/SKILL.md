@@ -1,11 +1,11 @@
 ---
 name: verify-clerk-android
-description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
+description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
 ---
 
 # verify-clerk-android
 
-`e2e-tests/bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e). It builds the debug APK of `:e2e`, the test app that this file calls the host, boots an emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence.
+`e2e-tests/bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e). It builds the debug APK of `:e2e`, the test app that this file calls the host, boots an emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence. The emulator runs on this machine when this machine can run it, and on a CI runner when it cannot. The CLI chooses and says which, and every verb, spec, and evidence file is the same either way.
 
 The tests are an ordinary e2e project. `e2e.config.ts` and `specs/` run under `npx e2e run` when the environment names a device, a build of the test app, and a development instance's keys. The CLI sits on top: it makes those three for a run and keeps the evidence. [The package README](../../../e2e-tests/README.md) has the commands for a run by hand and what such a run leaves out.
 
@@ -23,6 +23,8 @@ A machine needs these once:
 - A Clerk Platform API credential for the team's verification workspace (see below).
 
 The first `up` writes the `Clerk_Verify_Pixel` AVD when the machine has none. An AVD you already have is never changed.
+
+A machine that cannot run the emulator, such as one with no SDK or a Linux machine with no KVM, needs only Node 24 (24.8 or newer), the credential, and access to GitHub. The CLI then borrows an emulator on a CI runner, as the end of this section describes.
 
 ```console
 $ npm ci --prefix e2e-tests   # once per worktree
@@ -49,6 +51,20 @@ The CLI drives only the lane emulators it boots. Any other emulator on a lane po
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`, and `down` stops it.
 
+When this machine cannot run the emulator, `up` borrows one on a GitHub Actions runner. The runner session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. This `up` forces the runner with `--backend remote`. Its first line, one of its `wait` lines, and its last line:
+
+```console
+$ git commit -am "..." && git push
+$ e2e-tests/bin/control-clerk-android up --backend remote
+backend remote  forced by --backend remote
+wait    run <run> has waited 14s, now for the tunnel on ubuntu-24.04
+device  Clerk_Verify_Pixel on ubuntu-24.04  remote  leased by this worktree  installed android-cba5fdb5c161
+```
+
+With no flag, the first line gives the reason instead, such as `backend remote  local is out: there is no /dev/kvm, so this machine has no hardware virtualization for the emulator; the device runs on a CI runner (ubuntu-24.04 unless --runner names another), started through verify-remote.yml on clerk/clerk-android`.
+
+A session runs on a free GitHub-hosted runner. Allow about ten minutes for the first `up` on a runner, most of that the first Gradle build. `--runner blacksmith-4vcpu-ubuntu-2404` on `up` leases a Blacksmith runner instead, which is billed by the minute. A session holds its runner until it stops, so run `down` as soon as you are done. `--backend local` or `--backend remote` forces the choice, and `--runner <label>` names another runner label. [references/remote.md](references/remote.md) has how the CLI chooses, what a session needs from this machine, the labels, the cost, and what crosses the tunnel.
+
 ## Doctor
 
 ```console
@@ -60,6 +76,8 @@ Run it first, and again whenever anything looks off. Without `--live` it only re
 Before the first `up`, `build` is the one failing check, and its fix is `e2e-tests/bin/control-clerk-android up`.
 
 `doctor --live` also proves that the credential can create, configure, and delete an application. It creates one application, configures it, compares it with the standard file, and deletes it, unless this worktree already holds one.
+
+With the remote backend, plain `doctor` checks that GitHub has your commit. It starts no workflow run and pushes nothing. `doctor --live` starts one short session on a free runner, with no emulator, to prove that a session can start.
 
 ## Drive
 
@@ -74,6 +92,8 @@ $ e2e-tests/bin/control-clerk-android screen --png                       # plus 
 ```
 
 `run` also takes `--grep <regex>`, `--retries <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a failed test again, up to `n` more times. The default is 0, so a run of your own change shows exactly what happened. [references/cli.md](references/cli.md) has every flag, the `--json` output, and the exit codes.
+
+With a remote session, an edit to the app reaches the emulator only through a pushed commit: commit and push, then `run` again, and the same session builds it. A commit that only touches specs needs no push, because specs run from this machine.
 
 ```ts
 import { tapMiddle } from '../../compose.ts';
@@ -164,6 +184,8 @@ Proof standards: drive the real user path. The video and the screenshots show th
 
 After a run, the CLI searches the run directory for every secret the run used (the Platform API key, secret keys, tickets, the passwords the tests typed, and a GitHub token in `GITHUB_TOKEN` or `GH_TOKEN`), and for any token shaped like a JWT. A hit marks the file tainted in `run.json`, and a tainted run cannot be attached.
 
+A remote run is laid out the same. Its `run.json` also has `remote`, with `provider`, `runner`, and `builtSha`, and its video is recorded on the runner's emulator and then fetched.
+
 ```console
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n>                       # video and every screenshot
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot profile  # video and one screenshot
@@ -173,7 +195,13 @@ $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot prof
 
 `attach` reads the description again just before it writes, and builds on the newer text once if it changed. It cannot see an edit that someone saves while the files upload, and that edit is lost, so do not edit the description while `attach` runs.
 
-`attach` needs gh 2.99.0 or newer, whose `gh pr edit` has `--attach`, and it says so when the `gh` on this machine has no such flag. Without it, name the run id in the PR and say the evidence was not attached. `attach` uploads a run to a PR once, and a second `attach` of the same run and PR prints `already posted`. It refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create.
+On a machine whose `gh` can attach, `attach` edits the description itself and prints `posted`. That needs gh 2.99.0 or newer, whose `gh pr edit` has `--attach`. It uploads a run to a PR once, and a second `attach` of the same run and PR prints `already posted`.
+
+`attach` always tries `gh pr edit --attach` itself first, on every kind of machine, and hands off only when that cannot work. On a machine whose `gh` cannot attach, such as a cloud sandbox, it hands the files of a remote run to the session's runner and prints `handed off`. Run it before `down`. The evidence reaches the description after `down` ends the session, when the `verify-attach` workflow publishes it. Its line says that the session reported the result, links the session's run, and names the account that started the session and the commit the run was made at. That workflow publishes only to the open pull request of the session's branch, and only when the commit the session started on and the commit of the run are both commits of that pull request. So open the pull request before `up`. A later push does not lose the evidence: the line then says that the pull request has newer commits. To show the newer commit, `run` and `attach` again, which replaces the block. `attach` checks the pull request first, and fails with the reason when the workflow would refuse it.
+
+When this machine cannot attach and there is no session to hand the files to, or the hand-off fails, `attach` fails and says which. Then name the run id in the PR and say that the evidence was not attached. A run on a local emulator has no session, so its fix is a newer `gh`. [The emulator on a CI runner](references/remote.md) has what the repository needs before a hand-off can be published, and its limits.
+
+`attach` refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create.
 
 Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the PR video shows only the behavior the change is about. If you ran other golden specs too, cite that run's id in the PR.
 
@@ -181,11 +209,13 @@ Attach the run of your own change. Run your new or changed spec on its own and a
 
 ```console
 $ e2e-tests/bin/control-clerk-android down --dry-run   # what it would release, delete, and stop
-$ e2e-tests/bin/control-clerk-android down             # kill the lane emulator, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
+$ e2e-tests/bin/control-clerk-android down             # kill the lane emulator or end the remote session, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
 $ e2e-tests/bin/control-clerk-android down --stale     # also finish cleanup left by a crashed run in this worktree
 ```
 
 `down` deletes only what this worktree created. It needs the same credential `up` used, releases the emulator first, and if Clerk refuses a delete it fails with the fix `down` again, which finishes what is left. Run it after a failed iteration too, so no emulator is stranded.
+
+With a remote session `down` ends the runner job and deletes `.verify/remote/<session>/`. No other checkout ends it. A session that nobody ends stops itself after 15 idle minutes, and always after 60.
 
 It never deletes `.verify/runs/`, and it prints how many runs it kept (`--json` lists their ids). Evidence lives inside the worktree, so `git worktree remove` deletes it. Copy the runs you need out first.
 
@@ -197,5 +227,7 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 
 - `src/core/`, `specs/support/`, `specs/fixtures.ts`, and `e2e.config.ts` are shared with the same package in clerk-ios and in clerk/javascript. They are byte copies of the same files in clerk-ios, and `src/core/MANIFEST` pins them. Change them there first, run `node e2e-tests/src/core/manifest.ts --write`, then copy them here. Nothing under `specs/` or `e2e.config.ts` imports the CLI, and `test/seam.test.ts` fails when a file does.
 - `src/platform/android/` boots and owns lanes. The package in clerk/javascript holds copies of its files, so a change here goes there too. `src/host.ts`, `src/host-app.ts`, `specs/app.ts`, `specs/compose.ts`, `specs/phone.ts`, and `specs/totp.ts` are this repo's own.
+- A remote session runs in `.github/workflows/verify-remote.yml`. Its code is `src/core/remote/` (the session agent that runs on the runner, the GitHub Actions provider, and the tunnel), `src/platform/android/session-device.ts`, and `src/platform/android/session-lane.ts`. A running session keeps the `src/core/` of the commit it started on, so after a change to a file that `src/core/MANIFEST` lists, commit, push, `down`, then `up`.
+- `.github/workflows/verify-attach.yml` publishes the evidence that `attach` hands to a session's runner, with `.github/scripts/verify-attach.mjs`. It reads the manifest that `src/core/remote/handoff.ts` writes. It and `src/core/publish.ts` each replace the block the other wrote, and each applies the same rules to the comments and to the start of the line. So a change to the manifest, the comments, or those rules is a change in both places. `node --test .github/scripts/verify-attach.test.mjs` runs its tests.
 - `npm test --prefix e2e-tests` runs the CLI's unit tests with no network, keys, or emulator, and `npm run typecheck --prefix e2e-tests` runs `tsc`. The `e2e-runner-tests` job of `.github/workflows/android-test.yml` runs both on a pull request that changes the package.
 - `.github/workflows/verify-e2e.yml` runs `up`, `run --all --retries 1 --github-report`, and `down` on an emulator on a CI runner. The release workflow (`.github/workflows/manual-release.yml`) calls it before it creates the release, and publishes to Maven Central only when it passed. Nothing runs it for a pull request. `gh workflow run verify-e2e.yml --ref <branch>` starts it by hand on any branch. A test that fails and then passes is reported as flaky and does not fail the job. It needs the repository secret `MOBILE_VERIFICATION_PLATFORM_API_KEY` and fails without it. The repository variable `VERIFY_CI_RUNNER` names a runner label other than `ubuntu-24.04`.
