@@ -15,6 +15,7 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
@@ -270,6 +271,9 @@ internal object SSOService {
               handleSignUpTransfer(pendingAuth)
             } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
               completeTransferBlocked(pendingAuth)
+            } else if (!uri.hasCallbackOutcome() && signInAwaitsTransfer()) {
+              if (transferable) handleSignUpTransfer(pendingAuth)
+              else completeTransferBlocked(pendingAuth)
             } else {
               completeCancellation(pendingAuth, uri)
             }
@@ -278,6 +282,8 @@ internal object SSOService {
             if (nonce != null) {
               handleSignUp(pendingAuth, signUp, nonce)
             } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
+              handleSignInTransfer(pendingAuth, signUp)
+            } else if (!uri.hasCallbackOutcome() && signUpAwaitsTransfer(signUp)) {
               handleSignInTransfer(pendingAuth, signUp)
             } else {
               completeCancellation(pendingAuth, uri)
@@ -416,6 +422,32 @@ internal object SSOService {
     SIGN_UP,
   }
 
+  /**
+   * Whether the callback itself says how the flow ended: a nonce, a Clerk transfer marker, or a
+   * provider error. A bare callback carries none of these.
+   */
+  private fun Uri.hasCallbackOutcome(): Boolean =
+    listOf(ROTATING_TOKEN_NONCE, CLERK_STATUS, CLERK_ERROR_CODE, ERROR, ERROR_DESCRIPTION).any {
+      !getQueryParameter(it).isNullOrBlank()
+    }
+
+  /**
+   * FAPI can return a bare callback (no nonce, no `__clerk_status`) when the external account has
+   * no Clerk user yet. The sign-in's own state is then the source of truth, as in clerk-js.
+   */
+  private suspend fun signInAwaitsTransfer(): Boolean {
+    val signIn = Clerk.auth.currentSignIn ?: return false
+    val reloaded = signIn.reload() as? ClerkResult.Success ?: return false
+    return reloaded.value.firstFactorVerification?.status == Verification.Status.TRANSFERABLE
+  }
+
+  private suspend fun signUpAwaitsTransfer(signUp: SignUp?): Boolean {
+    val current = signUp ?: Clerk.auth.currentSignUp ?: return false
+    val reloaded = current.get() as? ClerkResult.Success ?: return false
+    return reloaded.value.verifications[EXTERNAL_ACCOUNT_VERIFICATION]?.status ==
+      Verification.Status.TRANSFERABLE
+  }
+
   private fun Uri.isTransferCallbackFor(redirectFlow: RedirectFlow): Boolean {
     if (getQueryParameter(CLERK_STATUS) != CLERK_STATUS_FAILED) return false
 
@@ -435,5 +467,6 @@ internal object SSOService {
   private const val EXTERNAL_ACCOUNT_NOT_FOUND = "external_account_not_found"
   private const val EXTERNAL_ACCOUNT_EXISTS = "external_account_exists"
   private const val ERROR = "error"
+  private const val EXTERNAL_ACCOUNT_VERIFICATION = "external_account"
   private const val ERROR_DESCRIPTION = "error_description"
 }
