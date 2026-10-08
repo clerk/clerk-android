@@ -11,6 +11,8 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
@@ -136,6 +138,24 @@ class AuthErrorEventsTest {
     assertTrue(sharedEvents.isEmpty())
     facadeEvents.job.cancel()
     sharedEvents.job.cancel()
+  }
+
+  @Test
+  fun `facade builder validation failure emits exactly one auth error event`() = runTest {
+    val auth = Auth()
+    val events = collect(auth.events)
+
+    val result = auth.signIn {}
+
+    runCurrent()
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      LocalFailureCodes.INVALID_ARGUMENTS,
+      failure.error?.errors?.single()?.code,
+    )
+    assertEquals(1, events.size)
+    assertEquals(failure.errorMessage, (events.single() as AuthEvent.Error).message)
+    events.job.cancel()
   }
 
   @Test
