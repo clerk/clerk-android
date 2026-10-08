@@ -8,6 +8,47 @@ permissions:
   contents: read
 
 jobs:
+  verify-skill:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    env:
+      SKILL: .claude/skills/verify-clerk-android
+      WATCHED: >-
+        .claude/skills/verify-clerk-android
+        .github/workflows/android-test.yml
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check whether the verify skill changed
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "pull_request" ] || ! git diff --quiet HEAD^1 HEAD -- $WATCHED; then
+            echo "skill=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v7
+        if: steps.changed.outputs.skill == 'true'
+        with:
+          node-version: 24
+
+      - name: Install the verify skill's dependencies
+        if: steps.changed.outputs.skill == 'true'
+        run: npm ci --prefix "$SKILL"
+
+      - name: Run the verify skill's unit tests
+        if: steps.changed.outputs.skill == 'true'
+        run: npm test --prefix "$SKILL"
+
+      - name: Typecheck the verify skill
+        if: steps.changed.outputs.skill == 'true'
+        run: npm run typecheck --prefix "$SKILL"
+
   test-module:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -25,6 +66,10 @@ jobs:
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
+            task: "testDebugUnitTest"
+          - module: ":e2e"
+            path: "e2e"
+            label: "e2e"
             task: "testDebugUnitTest"
     steps:
       - uses: actions/checkout@v7
