@@ -8,6 +8,8 @@ import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -224,6 +226,50 @@ class BiometricCredentialsTest {
   }
 
   @Test
+  fun `revoking the current credential works when biometrics are unavailable`() = runTest {
+    credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+    keyManager.supportedPolicies = emptySet()
+    val api = mockRevoke(ClerkResult.success(biometricCredential("td_1")))
+
+    val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `revoking the current credential works when the local key is missing`() = runTest {
+    credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+    keyManager.hasKeys = false
+    val api = mockRevoke(ClerkResult.success(biometricCredential("td_1")))
+
+    val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `revoking the current credential forgets a credential already revoked on the server`() =
+    runTest {
+      credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+      mockRevoke(
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(message = "not found", code = "resource_not_found"))
+          )
+        )
+      )
+
+      val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+      assertTrue(result is ClerkResult.Success)
+      assertTrue(credentialStore.credentials.isEmpty())
+    }
+
+  @Test
   fun `biometric credential sign in includes the configured locale`() = runTest {
     credentialStore.credentials += credential(id = "td_1", userId = "user_1")
     Clerk.environment =
@@ -332,6 +378,18 @@ class BiometricCredentialsTest {
     return api
   }
 
+  private fun mockRevoke(
+    result: ClerkResult<BiometricCredential, ClerkErrorResponse>
+  ): BiometricCredentialApi {
+    val api = mockEnrollment()
+    coEvery { api.list(any()) } returns
+      ClerkResult.success(
+        listOf(biometricCredential("td_1").copy(status = BiometricCredential.Status.ACTIVE))
+      )
+    coEvery { api.revoke(any(), any()) } returns result
+    return api
+  }
+
   private fun credential(id: String, userId: String) =
     BiometricCredentialLocalRecord(
       id = id,
@@ -375,6 +433,7 @@ class BiometricCredentialsTest {
     val signingPolicies = mutableListOf<BiometricCredentialPolicy>()
     var supportedPolicies = BiometricCredentialPolicy.entries.toSet()
     var deleteFailuresRemaining = 0
+    var hasKeys = true
 
     override fun isSupported(policy: BiometricCredentialPolicy): Boolean =
       policy in supportedPolicies
@@ -395,7 +454,7 @@ class BiometricCredentialsTest {
       return BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
     }
 
-    override fun hasKey(localKeyId: String): Boolean = true
+    override fun hasKey(localKeyId: String): Boolean = hasKeys
 
     override fun deleteKey(localKeyId: String) {
       deleteAttempts += localKeyId
