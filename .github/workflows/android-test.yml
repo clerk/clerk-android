@@ -18,6 +18,8 @@ jobs:
         e2e-tests
         .github/workflows/android-test.yml
         .github/workflows/verify-remote.yml
+        .github/workflows/verify-attach.yml
+        .github/scripts
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,6 +51,10 @@ jobs:
       - name: Typecheck the test package
         if: steps.changed.outputs.package == 'true'
         run: npm run typecheck --prefix "$PACKAGE"
+
+      - name: Run the verify-attach script's tests
+        if: steps.changed.outputs.package == 'true'
+        run: node --test .github/scripts/verify-attach.test.mjs
 
   test-module:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
