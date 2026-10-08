@@ -1,11 +1,11 @@
 ---
 name: verify-clerk-android
-description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
+description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
 ---
 
 # verify-clerk-android
 
-`bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e). It builds the debug APK of `:e2e`, the test app that this file calls the host, boots an emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence.
+`bin/control-clerk-android` is a control CLI over [e2e](https://github.com/tester-army/e2e). It builds the debug APK of `:e2e`, the test app that this file calls the host, boots an emulator, creates one Clerk application for the worktree, seeds `+clerk_test` users, runs specs, and keeps the evidence. The emulator runs on this machine when this machine can run it, and on a CI runner when it cannot. The CLI chooses and says which, and every verb, spec, and evidence file is the same either way.
 
 The rule: no change to clerk-android UI or auth behavior is done until a `run` on the real host shows the changed behavior.
 
@@ -21,6 +21,8 @@ A machine needs these once:
 - A Clerk Platform API credential for the team's verification workspace (see below).
 
 The first `up` writes the `Clerk_Verify_Pixel` AVD when the machine has none. An AVD you already have is never changed.
+
+A machine that cannot run the emulator, such as one with no SDK or a Linux machine with no KVM, needs only Node 24 (24.8 or newer), the credential, and access to GitHub. The CLI then borrows an emulator on a CI runner, as the end of this section describes.
 
 ```console
 $ npm ci --prefix .claude/skills/verify-clerk-android   # once per worktree
@@ -47,6 +49,20 @@ The CLI drives only the lane emulators it boots. Any other emulator on a lane po
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`, and `down` stops it.
 
+When this machine cannot run the emulator, `up` borrows one on a GitHub Actions runner. The runner session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. This `up` forces the runner with `--backend remote`. Its first line, one of its `wait` lines, and its last line:
+
+```console
+$ git commit -am "..." && git push
+$ control-clerk-android up --backend remote
+backend remote  forced by --backend remote
+wait    run <run> has waited 14s, now for the tunnel on ubuntu-24.04
+device  Clerk_Verify_Pixel on ubuntu-24.04  remote  leased by this worktree  installed android-cba5fdb5c161
+```
+
+With no flag, the first line gives the reason instead, such as `backend remote  local is out: there is no /dev/kvm, so this machine has no hardware virtualization for the emulator; the device runs on a CI runner (ubuntu-24.04 unless --runner names another), started through verify-remote.yml on clerk/clerk-android`.
+
+A session runs on a free GitHub-hosted runner. Allow about ten minutes for the first `up` on a runner, most of that the first Gradle build. `--runner blacksmith-4vcpu-ubuntu-2404` on `up` leases a Blacksmith runner instead, which is billed by the minute. A session holds its runner until it stops, so run `down` as soon as you are done. `--backend local` or `--backend remote` forces the choice, and `--runner <label>` names another runner label. [references/remote.md](references/remote.md) has how the CLI chooses, what a session needs from this machine, the labels, the cost, and what crosses the tunnel.
+
 ## Doctor
 
 ```console
@@ -58,6 +74,8 @@ Run it first, and again whenever anything looks off. Without `--live` it only re
 Before the first `up`, `build` is the one failing check, and its fix is `control-clerk-android up`.
 
 `doctor --live` also proves that the credential can create, configure, and delete an application. It creates one application, configures it, compares it with the standard file, and deletes it, unless this worktree already holds one.
+
+With the remote backend, plain `doctor` checks that GitHub has your commit. It starts no workflow run and pushes nothing. `doctor --live` starts one short session on a free runner, with no emulator, to prove that a session can start.
 
 ## Drive
 
@@ -72,6 +90,8 @@ $ control-clerk-android screen --png                       # plus a screenshot i
 ```
 
 `run` also takes `--grep <regex>`, `--retries <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a failed test again, up to `n` more times. The default is 0, so a run of your own change shows exactly what happened. [references/cli.md](references/cli.md) has every flag, the `--json` output, and the exit codes.
+
+With a remote session, an edit to the app reaches the emulator only through a pushed commit: commit and push, then `run` again, and the same session builds it. A commit that only touches specs needs no push, because specs run from this machine.
 
 ```ts
 import { tapMiddle } from '../../compose.ts';
@@ -162,6 +182,8 @@ Proof standards: drive the real user path. The video and the screenshots show th
 
 After a run, the CLI searches the run directory for every secret the run used (the Platform API key, secret keys, tickets, and a GitHub token in `GITHUB_TOKEN` or `GH_TOKEN`). A hit marks the file tainted in `run.json`, and a tainted run cannot be attached.
 
+A remote run is laid out the same. Its `run.json` also has `remote`, with `provider`, `runner`, and `builtSha`, and its video is recorded on the runner's emulator and then fetched.
+
 ```console
 $ control-clerk-android attach <run-id> --pr <n>                       # video and every screenshot
 $ control-clerk-android attach <run-id> --pr <n> --screenshot profile  # video and one screenshot
@@ -175,11 +197,13 @@ Attach the run of your own change. Run your new or changed spec on its own and a
 
 ```console
 $ control-clerk-android down --dry-run   # what it would release, delete, and stop
-$ control-clerk-android down             # kill the lane emulator, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
+$ control-clerk-android down             # kill the lane emulator or end the remote session, delete this worktree's application with every user in it, stop this worktree's agent-device daemon
 $ control-clerk-android down --stale     # also finish cleanup left by a crashed run in this worktree
 ```
 
 `down` deletes only what this worktree created. It needs the same credential `up` used, releases the emulator first, and if Clerk refuses a delete it fails with the fix `down` again, which finishes what is left. Run it after a failed iteration too, so no emulator is stranded.
+
+With a remote session `down` ends the runner job and deletes `.verify/remote/<session>/`. No other checkout ends it. A session that nobody ends stops itself after 15 idle minutes, and always after 60.
 
 It never deletes `.verify/runs/`, and it prints how many runs it kept (`--json` lists their ids). Evidence lives inside the worktree, so `git worktree remove` deletes it. Copy the runs you need out first.
 
@@ -189,5 +213,6 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 
 - `src/core/` is shared with the clerk-ios skill and the Expo skill in clerk/javascript. It is a byte copy of the same directory in the clerk-ios skill, and `src/core/MANIFEST` pins it. Change it there first, run `node src/core/manifest.ts --write`, then copy it here. `specs/fixtures.ts` is shared with the clerk-ios skill too.
 - `src/platform/android/` boots and owns lanes. The Expo skill holds copies of its files, so a change here goes there too. `src/host.ts`, `src/host-app.ts`, and `specs/compose.ts` are this repo's own.
+- A remote session runs in `.github/workflows/verify-remote.yml`. Its code is `src/core/remote/` (the session agent that runs on the runner, the GitHub Actions provider, and the tunnel), `src/platform/android/session-device.ts`, and `src/platform/android/session-lane.ts`. A running session keeps the `src/core/` of the commit it started on, so after a change under `src/core/`, commit, push, `down`, then `up`.
 - `npm test` runs the CLI's unit tests with no network, keys, or emulator, and `npm run typecheck` runs `tsc`. The `verify-skill` job of `.github/workflows/android-test.yml` runs both on a pull request that changes the skill.
 - `.github/workflows/verify-e2e.yml` runs `up`, `run --all --retries 1 --github-report`, and `down` on an emulator on a CI runner. The release workflow (`.github/workflows/manual-release.yml`) calls it before it creates the release, and publishes to Maven Central only when it passed. Nothing runs it for a pull request. `gh workflow run verify-e2e.yml --ref <branch>` starts it by hand on any branch. A test that fails and then passes is reported as flaky and does not fail the job. It needs the repository secret `MOBILE_VERIFICATION_PLATFORM_API_KEY` and fails without it. The repository variable `VERIFY_CI_RUNNER` names a runner label other than `ubuntu-24.04`.
