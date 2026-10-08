@@ -69,7 +69,7 @@ class AuthStateForceMfaTest {
   }
 
   @Test
-  fun `resolveCorrespondingSession does not fallback when created session id is present but missing`() {
+  fun `resolveCorrespondingSession uses fallback not an unrelated session when created session is missing`() {
     val fallback =
       session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
     val sessions =
