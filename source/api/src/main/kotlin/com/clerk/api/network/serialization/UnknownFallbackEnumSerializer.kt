@@ -1,6 +1,6 @@
 package com.clerk.api.network.serialization
 
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -27,7 +27,7 @@ internal open class UnknownFallbackEnumSerializer<E : Enum<E>>(
     val raw = decoder.decodeString()
     val index = generated.descriptor.getElementIndex(raw)
     if (index == CompositeDecoder.UNKNOWN_NAME) {
-      ClerkLog.w("Unrecognized ${generated.descriptor.serialName} value '$raw'; using $fallback")
+      ClerkLogger.w("Unrecognized ${generated.descriptor.serialName} value '$raw'; using $fallback")
       return fallback
     }
     return entries[index]

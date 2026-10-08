@@ -197,7 +197,9 @@ internal class ConfigurationManager(
       val configuredVersion = configureSdkState(context, publishableKey, options)
       initializationJob = launchInitialization(options, configuredVersion)
 
-      ClerkLogger.d("ConfigurationManager configured successfully - background initialization started")
+      ClerkLogger.d(
+        "ConfigurationManager configured successfully - background initialization started"
+      )
       return true
     } catch (e: Exception) {
       hasConfigured = false

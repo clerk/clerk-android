@@ -1,7 +1,6 @@
 package com.clerk.ui.signin.code
 
 import com.clerk.api.auth.types.Strategy
-import com.clerk.ui.core.log.ClerkLog
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -13,6 +12,7 @@ import com.clerk.api.signin.sendMfaPhoneCode
 import com.clerk.api.signin.sendPhoneCode
 import com.clerk.api.signin.sendResetPasswordEmailCode
 import com.clerk.api.signin.sendResetPasswordPhoneCode
+import com.clerk.ui.core.log.ClerkLog
 
 internal class SignInPrepareHandler {
 

@@ -735,12 +735,16 @@ public object BiometricCredentials {
     propagateFailures: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
-    keyDeletionResult.onFailure { ClerkLogger.w("Failed to delete biometric-credential private key.") }
+    keyDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric-credential private key.")
+    }
     if (propagateFailures) {
       keyDeletionResult.getOrThrow()
     }
     val recordDeletionResult = runCatching { credentialStore.delete(credential.id) }
-    recordDeletionResult.onFailure { ClerkLogger.w("Failed to delete biometric credential metadata.") }
+    recordDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric credential metadata.")
+    }
     if (propagateFailures) {
       recordDeletionResult.getOrThrow()
     }

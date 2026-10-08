@@ -393,7 +393,9 @@ internal class PersistentPendingNativeMagicLinkStore(
     val encoded = StorageHelper.loadValue(StorageKey.PENDING_NATIVE_MAGIC_LINK_FLOW) ?: return null
     return runCatching { json.decodeFromString<PendingNativeMagicLinkFlow>(encoded) }
       .getOrElse { error ->
-        ClerkLogger.w("event=native_magic_link_pending_flow_decode_failure message=${error.message}")
+        ClerkLogger.w(
+          "event=native_magic_link_pending_flow_decode_failure message=${error.message}"
+        )
         clear()
         null
       }

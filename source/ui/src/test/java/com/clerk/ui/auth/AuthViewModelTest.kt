@@ -5,7 +5,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.factor.Factor
@@ -15,6 +14,7 @@ import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
+import com.clerk.ui.core.log.ClerkLog
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
