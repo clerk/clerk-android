@@ -14,6 +14,9 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.shortErrorMessageOrNull
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.signup.SignUp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,13 +26,14 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -58,22 +62,22 @@ class SSOServiceCancellationTest {
 
   @After
   fun tearDown() {
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.resetForTests()
     unmockkAll()
   }
 
   @Test
-  fun `cancelPendingAuthentication returns typed cancellation failure`() = runTest {
+  fun `cancelling the pending flow returns typed cancellation failure`() = runTest {
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
 
     val failure = pendingResult.await() as ClerkResult.Failure
     assertTrue(failure.throwable is SSOCancellationException)
-    assertFalse(SSOService.hasPendingAuthentication())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.Sso))
   }
 
   @Test
@@ -85,7 +89,7 @@ class SSOServiceCancellationTest {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
         }
 
-      SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+      RedirectCoordinator.dispatch(Uri.parse(CALLBACK_URL))
 
       val failure = pendingResult.await() as ClerkResult.Failure
       assertTrue(failure.throwable is SSOCancellationException)
@@ -100,7 +104,7 @@ class SSOServiceCancellationTest {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
 
-    SSOService.completeAuthenticateWithRedirect(
+    RedirectCoordinator.dispatch(
       Uri.parse("$CALLBACK_URL?error=access_denied&error_description=User%20cancelled")
     )
 
@@ -118,7 +122,7 @@ class SSOServiceCancellationTest {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, transferable = false)
         }
 
-      SSOService.completeAuthenticateWithRedirect(
+      RedirectCoordinator.dispatch(
         Uri.parse(
           "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found"
         )
@@ -129,7 +133,7 @@ class SSOServiceCancellationTest {
       assertEquals("external_account_not_found", failure.error?.errors?.single()?.code)
       assertEquals("The External Account was not found.", failure.errorMessage)
       assertEquals("The External Account was not found.", failure.shortErrorMessageOrNull())
-      assertFalse(SSOService.hasPendingAuthentication())
+      assertFalse((RedirectCoordinator.current() is PendingRedirect.Sso))
       coVerify(exactly = 0) { auth.createSignUp(any<SignUp.CreateParams>()) }
     }
 
@@ -143,7 +147,7 @@ class SSOServiceCancellationTest {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
 
-    SSOService.completeAuthenticateWithRedirect(
+    RedirectCoordinator.dispatch(
       Uri.parse("$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found")
     )
 
@@ -169,10 +173,9 @@ class SSOServiceCancellationTest {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
 
-    SSOService.completeAuthenticateWithRedirect(
-      Uri.parse("$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found")
-    )
+    val outcome = RedirectCoordinator.dispatch(Uri.parse(TRANSFER_CALLBACK_URL))
 
+    assertEquals(CallbackOutcome.Completed(success = false), outcome)
     assertTrue(pendingResult.await() is ClerkResult.Failure)
     runCurrent()
     assertTrue(errors.isEmpty())
@@ -180,7 +183,7 @@ class SSOServiceCancellationTest {
   }
 
   @Test
-  fun `cancellation thrown while completing redirect propagates and fails pending auth as interrupted`() =
+  fun `cancellation thrown while completing redirect fails pending auth as interrupted`() =
     runTest {
       mockkStatic("com.clerk.api.auth.AuthFlowsKt")
       coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } throws
@@ -190,41 +193,10 @@ class SSOServiceCancellationTest {
           SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
         }
 
-      val thrown = runCatching {
-        SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
-      }
-        .exceptionOrNull()
+      val outcome = RedirectCoordinator.dispatch(Uri.parse(TRANSFER_CALLBACK_URL))
 
-      assertTrue(thrown is CancellationException)
-      assertFalse(SSOService.hasPendingAuthentication())
-      assertInterrupted(pendingResult.await())
-    }
-
-  @Test
-  fun `cancelling the completing job mid-request propagates and fails pending auth as interrupted`() =
-    runTest {
-      mockkStatic("com.clerk.api.auth.AuthFlowsKt")
-      val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-      coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
-        {
-          neverCompletes.await()
-        }
-      val pendingResult =
-        async(start = CoroutineStart.UNDISPATCHED) {
-          SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
-        }
-      val completionJob = launch {
-        SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
-      }
-      runCurrent()
-      assertTrue(completionJob.isActive)
-      assertFalse(pendingResult.isCompleted)
-
-      completionJob.cancel()
-      completionJob.join()
-
-      assertTrue(completionJob.isCancelled)
-      assertFalse(SSOService.hasPendingAuthentication())
+      assertEquals(CallbackOutcome.Completed(success = false), outcome)
+      assertFalse((RedirectCoordinator.current() is PendingRedirect.Sso))
       assertInterrupted(pendingResult.await())
     }
 
@@ -240,8 +212,8 @@ class SSOServiceCancellationTest {
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    val staleCompletion = launch {
-      SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
+    val staleCompletion = async {
+      RedirectCoordinator.dispatch(Uri.parse(TRANSFER_CALLBACK_URL))
     }
     runCurrent()
 
@@ -249,50 +221,56 @@ class SSOServiceCancellationTest {
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    staleCompletion.cancel()
-    staleCompletion.join()
 
     val firstFailure = firstResult.await() as ClerkResult.Failure
     assertTrue(firstFailure.throwable is SSOCancellationException)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertEquals(CallbackOutcome.Completed(success = false), staleCompletion.await())
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.Sso))
     assertFalse(secondResult.isCompleted)
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     val secondFailure = secondResult.await() as ClerkResult.Failure
     assertTrue(secondFailure.throwable is SSOCancellationException)
   }
 
   @Test
   fun `stale completion that succeeds does not resolve or clear a newer redirect flow`() = runTest {
-    val signUpApi = mockk<SignUpApi>()
-    mockkObject(ClerkApi)
-    every { ClerkApi.signUp } returns signUpApi
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
     val staleSignUp = mockk<SignUp>(relaxed = true)
-    val signUpResponse = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-    coEvery { signUpApi.createSignUp(any()) } coAnswers { signUpResponse.await() }
+    val transferStarted = CountDownLatch(1)
+    val releaseTransfer = CountDownLatch(1)
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } answers
+      {
+        transferStarted.countDown()
+        releaseTransfer.await(5, TimeUnit.SECONDS)
+        ClerkResult.success(staleSignUp)
+      }
     val firstResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    val staleCompletion = launch {
-      SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
+    val firstFlow = RedirectCoordinator.current() as PendingRedirect.Sso
+    val staleCompletion = async {
+      RedirectCoordinator.dispatch(Uri.parse(TRANSFER_CALLBACK_URL))
     }
     runCurrent()
+    assertTrue(transferStarted.await(5, TimeUnit.SECONDS))
 
     val secondResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    signUpResponse.complete(ClerkResult.success(staleSignUp))
-    advanceUntilIdle()
+    val secondFlow = RedirectCoordinator.current()
+    releaseTransfer.countDown()
+    firstFlow.completionJob.get()?.join()
 
-    assertTrue(staleCompletion.isCompleted)
+    assertEquals(CallbackOutcome.Completed(success = false), staleCompletion.await())
     val firstFailure = firstResult.await() as ClerkResult.Failure
     assertTrue(firstFailure.throwable is SSOCancellationException)
     assertFalse(secondResult.isCompleted)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertSame(secondFlow, RedirectCoordinator.current())
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     val secondFailure = secondResult.await() as ClerkResult.Failure
     assertTrue(secondFailure.throwable is SSOCancellationException)
   }

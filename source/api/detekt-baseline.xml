@@ -7,7 +7,7 @@
     <ID>ImplicitDefaultLocale:SharedSessionSyncSnapshot.kt:SharedSessionSyncSnapshot.Companion$"%02x".format(byte)</ID>
     <ID>InjectDispatcher:BiometricCredentials.kt:BiometricCredentials$IO</ID>
     <ID>InjectDispatcher:DeviceAttestationHelper.kt:DeviceAttestationHelper$IO</ID>
-    <ID>InjectDispatcher:HostedAuthService.kt:HostedAuthService$IO</ID>
+    <ID>InjectDispatcher:RedirectCoordinator.kt:RedirectCoordinator$IO</ID>
     <ID>InjectDispatcher:SharedSessionSyncCoordinator.kt:SharedSessionSyncCoordinator$IO</ID>
     <ID>LargeClass:BiometricCredentials.kt:BiometricCredentials</ID>
     <ID>LargeClass:Clerk.kt:Clerk</ID>

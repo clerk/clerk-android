@@ -18,7 +18,6 @@ import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkError
 import com.clerk.api.magiclink.NativeMagicLinkManager
 import com.clerk.api.magiclink.NativeMagicLinkService
-import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.model.client.Client
@@ -26,6 +25,8 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.passkeys.PasskeyService
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
@@ -38,7 +39,6 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.api.sso.SSOService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -1012,18 +1012,7 @@ public class Auth internal constructor() {
    */
   public suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
-    val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
-    if (handledByMagicLink) {
-      NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
-    }
-
-    val handledByHostedAuth = !handledByMagicLink && HostedAuthService.complete(callbackUri) != null
-    val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
-    if (!handledByMagicLink && !handledByHostedAuth && isClerkCallback) {
-      SSOService.completeAuthenticateWithRedirect(callbackUri)
-    }
-
-    return handledByMagicLink || handledByHostedAuth || isClerkCallback
+    return RedirectCoordinator.dispatch(callbackUri) != CallbackOutcome.NotHandled
   }
 
   // endregion

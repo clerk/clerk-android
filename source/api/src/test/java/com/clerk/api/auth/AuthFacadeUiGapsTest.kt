@@ -20,6 +20,7 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
+import io.mockk.MockKMatcherScope
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -149,7 +150,7 @@ class AuthFacadeUiGapsTest {
       coVerify(exactly = 1) {
         signInApi.prepareSignInFirstFactor(
           SIGN_IN_ID,
-          mapOf("strategy" to "oauth_github", "redirect_url" to REDIRECT),
+          withRedirectState(strategy = "oauth_github"),
         )
       }
       coVerify(exactly = 1) {
@@ -170,7 +171,7 @@ class AuthFacadeUiGapsTest {
     coVerify(exactly = 1) {
       signInApi.prepareSignInFirstFactor(
         SIGN_IN_ID,
-        mapOf("strategy" to "enterprise_sso", "redirect_url" to REDIRECT),
+        withRedirectState(strategy = "enterprise_sso"),
       )
     }
     coVerify(exactly = 1) {
@@ -346,6 +347,14 @@ class AuthFacadeUiGapsTest {
       1,
       methods.count { it.name == "signInWithPasskey" && it.parameterTypes.size == 2 },
     )
+  }
+
+  private fun MockKMatcherScope.withRedirectState(strategy: String): Map<String, String> = match {
+    it.keys == setOf("strategy", "redirect_url") &&
+      it["strategy"] == strategy &&
+      it["redirect_url"]
+        .orEmpty()
+        .matches(Regex("${Regex.escape(REDIRECT)}\\?clerk_redirect_state=[0-9a-f]+"))
   }
 
   private fun SignIn.withRedirectUrl() =

@@ -1,22 +1,21 @@
 package com.clerk.api.sso
 
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.types.Strategy
-import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
-import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
-import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.PendingRedirect.RedirectFlow
+import com.clerk.api.redirect.RedirectCoordinator
+import com.clerk.api.redirect.RedirectState
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactorImpl
 import com.clerk.api.signin.reload
@@ -24,26 +23,9 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.get
 import com.clerk.api.signup.toUnsafeMetadataJsonString
 import com.clerk.api.user.User.CreateExternalAccountParams
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-
-private typealias PendingAuth = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>
 
 @Suppress("TooManyFunctions")
 internal object SSOService {
-  private var currentPendingAuth: PendingAuth? = null
-
-  /**
-   * Whether the current pending authentication flow allows transferring to a sign-up. When false, a
-   * redirect callback that would normally trigger a sign-up transfer instead completes with an
-   * error.
-   */
-  private var currentTransferable: Boolean = true
-
-  private var currentRedirectFlow: RedirectFlow = RedirectFlow.SIGN_IN
-
-  private var currentSignUp: SignUp? = null
-
   /**
    * Initiates an OAuth authentication flow with redirect to an external provider.
    *
@@ -53,7 +35,7 @@ internal object SSOService {
    * 3. Suspending until the user completes authentication and returns to the app
    * 4. Processing the authentication result and returning the appropriate [ClerkResult]
    *
-   * The method automatically cancels any existing pending authentication to prevent conflicts.
+   * Any pending redirect flow (SSO, external account or hosted auth) is cancelled first.
    *
    * @param strategy The OAuth strategy to use for authentication (e.g., "oauth_google",
    *   "oauth_facebook")
@@ -74,7 +56,7 @@ internal object SSOService {
     legalAccepted: Boolean? = null,
     transferable: Boolean = true,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    cancelCompetingAuthenticationFlows()
+    RedirectCoordinator.supersedePending()
     val resolvedStrategy =
       strategy
         ?: return ClerkResult.unknownFailure(
@@ -146,13 +128,14 @@ internal object SSOService {
     legalAccepted: Boolean? = null,
     unsafeMetadata: Map<String, Any>? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    cancelCompetingAuthenticationFlows()
+    RedirectCoordinator.supersedePending()
+    val state = RedirectState.generate()
 
     val initialResult =
       SignUp.create(
         buildMap {
           strategy?.let { put("strategy", it) }
-          put("redirect_url", redirectUrl)
+          put("redirect_url", RedirectState.withState(redirectUrl, state))
           put("locale", Clerk.locale.value.orEmpty())
           identifier?.let { put("identifier", it) }
           emailAddress?.let { put("email_address", it) }
@@ -175,6 +158,7 @@ internal object SSOService {
           ) {
             "External URL cannot be null"
           }
+        RedirectState.remember(externalUrl, state)
 
         authenticateWithPreparedRedirect(
           externalVerificationRedirectUrl = externalUrl,
@@ -199,106 +183,63 @@ internal object SSOService {
     redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
     signUp: SignUp? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    val expectedState = RedirectState.take(externalVerificationRedirectUrl)
     val context =
       Clerk.applicationContext?.get()
         ?: return ClerkResult.unknownFailure(
           IllegalStateException("Clerk must be initialized before starting redirect authentication")
         )
-    cancelCompetingAuthenticationFlows()
+    if (expectedState == null) {
+      ClerkLog.w("Redirect was prepared without a state; its callback cannot be verified")
+    }
 
-    val completableDeferred = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
-
-    currentPendingAuth = completableDeferred
-    currentTransferable = transferable
-    currentRedirectFlow = redirectFlow
-    currentSignUp = signUp
-
-    val intent =
-      SSOManagerActivity.createAuthorizationIntent(
-          context = context,
-          authorizationUri = externalVerificationRedirectUrl.toUri(),
-        )
-        .apply { addFlags(FLAG_ACTIVITY_NEW_TASK) }
-    context.startActivity(intent)
-
-    return completableDeferred.await()
+    val pendingAuth =
+      PendingRedirect.Sso(
+        expectedState = expectedState,
+        transferable = transferable,
+        redirectFlow = redirectFlow,
+        signUp = signUp,
+      )
+    RedirectCoordinator.begin(pendingAuth)
+    return RedirectCoordinator.launchAndAwait(
+      redirect = pendingAuth,
+      context = context,
+      authorizationUri = externalVerificationRedirectUrl.toUri(),
+    )
   }
 
   /**
-   * Completes the authentication flow initiated by [authenticateWithRedirect].
-   *
-   * This method is called when the user is redirected back to the app after completing external
-   * authentication (e.g., OAuth or SSO provider). It processes the redirect URI to retrieve the
-   * authentication result and resolves the pending authentication flow.
+   * Completes [pendingAuth] from its redirect callback [uri]. [RedirectCoordinator] has already
+   * checked the callback's state and runs this once per flow, in its process-wide scope, without
+   * auth error reporting: the outcome is reported by the `authenticateWithRedirect` call awaiting
+   * it.
    *
    * The method handles two authentication scenarios:
    * 1. **Sign In**: When the URI contains a `rotating_token_nonce` parameter
    * 2. **Sign Up Transfer**: When the callback contains Clerk's explicit transfer marker
-   *
-   * This method is typically triggered internally via [SSOReceiverActivity] when the app receives a
-   * redirect URI containing authentication results.
-   *
-   * @param uri The redirect URI received after completion of the external authentication flow.
-   *   Expected to contain a `rotating_token_nonce` query parameter for sign-in flows.
    */
-  @Suppress("TooGenericExceptionCaught")
-  suspend fun completeAuthenticateWithRedirect(uri: Uri) {
-    ClerkLog.d("Completing authentication with redirect: $uri")
-
-    // Capture the flow this callback belongs to. A newer flow may replace `currentPendingAuth`
-    // while this completion is suspended on the network; every completion below targets only the
-    // captured deferred and only clears shared state if that flow is still the current one.
-    val pendingAuth = currentPendingAuth
-    if (pendingAuth == null) {
-      ClerkLog.w("No pending authentication found for redirect: ${SafeUriLog.describe(uri)}")
-      return
-    }
-    val transferable = currentTransferable
-    val redirectFlow = currentRedirectFlow
-    val signUp = currentSignUp
-
-    try {
-      val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
-
-      // The outcome is reported by the suspended authenticateWithRedirect call that awaits it.
-      withoutAuthErrorReporting {
-        when (redirectFlow) {
-          RedirectFlow.SIGN_IN -> {
-            if (nonce != null) {
-              handleSignIn(pendingAuth, nonce)
-            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && transferable) {
-              handleSignUpTransfer(pendingAuth)
-            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
-              completeTransferBlocked(pendingAuth)
-            } else {
-              completeCancellation(pendingAuth, uri)
-            }
+  internal suspend fun completeRedirect(pendingAuth: PendingRedirect.Sso, uri: Uri) {
+    ClerkLog.d("Completing authentication with redirect")
+    val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
+    val result =
+      when (pendingAuth.redirectFlow) {
+        RedirectFlow.SIGN_IN ->
+          when {
+            nonce != null -> handleSignIn(nonce)
+            uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && pendingAuth.transferable ->
+              handleSignUpTransfer()
+            uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) -> transferBlocked()
+            else -> cancellation(uri)
           }
-          RedirectFlow.SIGN_UP -> {
-            if (nonce != null) {
-              handleSignUp(pendingAuth, signUp, nonce)
-            } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
-              handleSignInTransfer(pendingAuth, signUp)
-            } else {
-              completeCancellation(pendingAuth, uri)
-            }
+        RedirectFlow.SIGN_UP ->
+          when {
+            nonce != null -> handleSignUp(pendingAuth.signUp, nonce)
+            uri.isTransferCallbackFor(RedirectFlow.SIGN_UP) ->
+              handleSignInTransfer(pendingAuth.signUp)
+            else -> cancellation(uri)
           }
-        }
       }
-    } catch (e: CancellationException) {
-      // The completing coroutine was cancelled (e.g. the callback activity was recreated while the
-      // request was in flight). This is not a user cancellation: the user finished the external
-      // flow, so report an interruption the UI surfaces as an error instead of silently resetting.
-      ClerkLog.w("Redirect completion interrupted: ${e.message}")
-      finishPendingAuth(
-        pendingAuth,
-        ClerkResult.unknownFailure(IllegalStateException(REDIRECT_COMPLETION_INTERRUPTED, e)),
-      )
-      throw e
-    } catch (e: Exception) {
-      ClerkLog.e("Error completing authentication with redirect: ${e.message}")
-      finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(e))
-    }
+    RedirectCoordinator.finish(pendingAuth, result)
   }
 
   suspend fun connectExternalAccount(
@@ -307,113 +248,55 @@ internal object SSOService {
     return ExternalAccountService.connectExternalAccount(params)
   }
 
-  suspend fun completeExternalConnection() {
-    ExternalAccountService.completeExternalConnection()
-  }
+  private suspend fun handleSignIn(nonce: String): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    requireNotNull(Clerk.auth.currentSignIn)
+      .reload(rotatingTokenNonce = nonce)
+      .signInToOAuthResult()
 
-  private suspend fun handleSignIn(pendingAuth: PendingAuth, nonce: String) {
-    val signInResult =
-      requireNotNull(Clerk.auth.currentSignIn)
-        .reload(rotatingTokenNonce = nonce)
-        .signInToOAuthResult()
-    finishPendingAuth(pendingAuth, signInResult)
-  }
-
-  private suspend fun handleSignUpTransfer(pendingAuth: PendingAuth) {
+  private suspend fun handleSignUpTransfer(): ClerkResult<OAuthResult, ClerkErrorResponse> {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
-    finishPendingAuth(pendingAuth, createResult)
+    return Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
   }
 
-  private suspend fun handleSignUp(pendingAuth: PendingAuth, signUp: SignUp?, nonce: String) {
-    val signUpResult = requireNotNull(signUp ?: Clerk.auth.currentSignUp).get(nonce)
-    finishPendingAuth(pendingAuth, signUpResult.signUpToOAuthResult())
-  }
+  private suspend fun handleSignUp(
+    signUp: SignUp?,
+    nonce: String,
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    requireNotNull(signUp ?: Clerk.auth.currentSignUp).get(nonce).signUpToOAuthResult()
 
-  private suspend fun handleSignInTransfer(pendingAuth: PendingAuth, signUp: SignUp?) {
+  private suspend fun handleSignInTransfer(
+    signUp: SignUp?
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     ClerkLog.d("Handling sign-in transfer")
-    val signUpResult = requireNotNull(signUp ?: Clerk.auth.currentSignUp).get()
-    finishPendingAuth(pendingAuth, signUpResult.signUpToOAuthResultWithTransfer())
+    return requireNotNull(signUp ?: Clerk.auth.currentSignUp)
+      .get()
+      .signUpToOAuthResultWithTransfer()
   }
 
-  private fun completeTransferBlocked(pendingAuth: PendingAuth) {
+  private fun transferBlocked(): ClerkResult<OAuthResult, ClerkErrorResponse> {
     ClerkLog.d("Sign-up transfer blocked: transferable is false")
-    finishPendingAuth(
-      pendingAuth,
-      ClerkResult.apiFailure(
-        ClerkErrorResponse(
-          errors =
-            listOf(
-              Error(
-                code = EXTERNAL_ACCOUNT_NOT_FOUND,
-                message = "The External Account was not found.",
-                longMessage = "The External Account was not found.",
-              )
+    return ClerkResult.apiFailure(
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = EXTERNAL_ACCOUNT_NOT_FOUND,
+              message = "The External Account was not found.",
+              longMessage = "The External Account was not found.",
             )
-        )
-      ),
+          )
+      )
     )
   }
 
-  private fun completeCancellation(pendingAuth: PendingAuth, uri: Uri) {
+  private fun cancellation(uri: Uri): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val reason =
       uri.getQueryParameter(ERROR_DESCRIPTION)
         ?: uri.getQueryParameter(ERROR)
         ?: uri.getQueryParameter(CLERK_ERROR_CODE)
         ?: AUTHENTICATION_CANCELLED
     ClerkLog.d("Redirect authentication cancelled")
-    finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(SSOCancellationException(reason)))
-  }
-
-  /**
-   * Completes [pendingAuth] and clears the shared flow state only if [pendingAuth] is still the
-   * current flow, so a stale completion never clobbers a newer flow.
-   */
-  private fun finishPendingAuth(
-    pendingAuth: PendingAuth,
-    result: ClerkResult<OAuthResult, ClerkErrorResponse>,
-  ) {
-    pendingAuth.complete(result)
-    if (currentPendingAuth === pendingAuth) {
-      clearCurrentAuth()
-    }
-  }
-
-  private fun clearCurrentAuth() {
-    currentPendingAuth = null
-    currentTransferable = true
-    currentRedirectFlow = RedirectFlow.SIGN_IN
-    currentSignUp = null
-  }
-
-  private fun cancelCompetingAuthenticationFlows() {
-    currentPendingAuth?.complete(
-      ClerkResult.unknownFailure(
-        SSOCancellationException("New authentication started, cancelling previous attempt")
-      )
-    )
-    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
-    clearCurrentAuth()
-  }
-
-  fun cancelPendingAuthentication() {
-    currentPendingAuth?.complete(
-      ClerkResult.unknownFailure(SSOCancellationException(AUTHENTICATION_CANCELLED))
-    )
-    clearCurrentAuth()
-  }
-
-  fun hasPendingAuthentication(): Boolean {
-    return currentPendingAuth != null
-  }
-
-  fun hasPendingExternalAccountConnection(): Boolean {
-    return ExternalAccountService.hasPendingExternalAccountConnection()
-  }
-
-  internal enum class RedirectFlow {
-    SIGN_IN,
-    SIGN_UP,
+    return ClerkResult.unknownFailure(SSOCancellationException(reason))
   }
 
   private fun Uri.isTransferCallbackFor(redirectFlow: RedirectFlow): Boolean {
@@ -426,8 +309,6 @@ internal object SSOService {
   }
 
   private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
-  private const val REDIRECT_COMPLETION_INTERRUPTED =
-    "Authentication was interrupted before it could complete. Please try again."
   private const val ROTATING_TOKEN_NONCE = "rotating_token_nonce"
   private const val CLERK_STATUS = "__clerk_status"
   private const val CLERK_STATUS_FAILED = "failed"

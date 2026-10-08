@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.HostedAuthMode
-import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
@@ -15,8 +14,11 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.hostedauth.HostedAuthResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.ReceiverDelivery
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.Session
-import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -60,32 +62,29 @@ class HostedAuthServiceTest {
     justRun { Clerk.updateClient(any()) }
     mockkObject(ClerkApi)
     every { ClerkApi.client } returns clientApi
-    mockkObject(SSOService)
-    justRun { SSOService.cancelPendingAuthentication() }
-    mockkObject(ExternalAccountService)
-    justRun { ExternalAccountService.cancelPendingExternalAccountConnection() }
   }
 
   @After
   fun tearDown() {
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.resetForTests()
     unmockkAll()
   }
 
   @Test
-  fun startRejectsSecondConcurrentFlow() = runBlocking {
+  fun secondFlowSupersedesTheFirst() = runBlocking {
     val capturedState = stubCreateHostedAuth()
     val first = startInBackground()
     withTimeout(TIMEOUT_MS) { capturedState.await() }
 
-    val second = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+    val second = startInBackground()
 
-    assertTrue(second is ClerkResult.Failure)
-    val message = (second as ClerkResult.Failure).throwable?.message.orEmpty()
-    assertTrue(message.contains("already in progress"))
+    val firstResult = withTimeout(TIMEOUT_MS) { first.await() } as ClerkResult.Failure
+    assertTrue(firstResult.throwable is HostedAuthCancellationException)
+    assertEquals(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW, firstResult.throwable?.message)
+    assertTrue((RedirectCoordinator.current() is PendingRedirect.HostedAuth))
 
-    HostedAuthService.cancelPendingAuthentication()
-    assertTrue(withTimeout(TIMEOUT_MS) { first.await() } is ClerkResult.Failure)
+    RedirectCoordinator.cancelPending()
+    assertTrue(withTimeout(TIMEOUT_MS) { second.await() } is ClerkResult.Failure)
   }
 
   @Test
@@ -94,12 +93,12 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     withTimeout(TIMEOUT_MS) { capturedState.await() }
 
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
 
     val result = withTimeout(TIMEOUT_MS) { start.await() }
     assertTrue(result is ClerkResult.Failure)
     assertTrue((result as ClerkResult.Failure).throwable is HostedAuthCancellationException)
-    assertFalse(HostedAuthService.hasPendingAuthentication())
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.HostedAuth))
   }
 
   @Test
@@ -108,7 +107,7 @@ class HostedAuthServiceTest {
     every { Clerk.applicationContext } returns WeakReference(appContext)
     coEvery { clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any()) } answers
       {
-        HostedAuthService.cancelPendingAuthentication()
+        RedirectCoordinator.cancelPending()
         ClerkResult.success(
           HostedAuthResource(objectType = "hosted_auth", url = "https://portal.dev/start")
         )
@@ -162,7 +161,7 @@ class HostedAuthServiceTest {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
     }
 
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
   }
 
@@ -189,7 +188,7 @@ class HostedAuthServiceTest {
   fun startDoesNotRetrySignedOutCreateAfterFlowIsCancelledDuringRefresh() = runBlocking {
     coEvery { clientApi.getSkippingClientId(any(), any()) } coAnswers
       {
-        HostedAuthService.cancelPendingAuthentication()
+        RedirectCoordinator.cancelPending()
         ClerkResult.success(Client(id = "client_new"))
       }
     coEvery {
@@ -263,7 +262,7 @@ class HostedAuthServiceTest {
     assertEquals(INTERNAL_HEADER_TRUE, requests.last().skipClientId)
     assertSame(requests.first().responseGuard, requests.last().responseGuard)
 
-    HostedAuthService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
   }
 
@@ -334,7 +333,7 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
 
-    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+    val result = withTimeout(TIMEOUT_MS) { completeCallback(callbackUri) }
 
     assertTrue(result is ClerkResult.Failure)
     coVerify(exactly = 1) { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) }
@@ -356,12 +355,12 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
 
-    val firstComplete = async(Dispatchers.Default) { HostedAuthService.complete(callbackUri) }
+    val firstComplete = async(Dispatchers.Default) { completeCallback(callbackUri) }
     waitUntil { redeemCalls.get() == 1 }
     // UNDISPATCHED runs the duplicate delivery up to its first suspension point while the
     // original completion still holds the redemption gate, guaranteeing true concurrency.
     val secondComplete =
-      async(start = CoroutineStart.UNDISPATCHED) { HostedAuthService.complete(callbackUri) }
+      async(start = CoroutineStart.UNDISPATCHED) { completeCallback(callbackUri) }
     redeemGate.complete(Unit)
 
     val results =
@@ -386,16 +385,16 @@ class HostedAuthServiceTest {
       Uri.parse(
         "$REDIRECT_URL?state=forged&rotating_token_nonce=nonce_forged&created_session_id=sess_forged"
       )
-    assertTrue(HostedAuthService.isForgedCallback(forgedUri))
-    assertFalse(HostedAuthService.isForgedCallback(legitimateCallback(state)))
-    val forgedResult = HostedAuthService.complete(forgedUri)
-
-    assertTrue(forgedResult is ClerkResult.Failure)
-    assertTrue(HostedAuthService.hasPendingAuthentication())
+    assertEquals(ReceiverDelivery.DROP, RedirectCoordinator.receiverDelivery(forgedUri))
+    assertEquals(
+      ReceiverDelivery.FORWARD,
+      RedirectCoordinator.receiverDelivery(legitimateCallback(state)),
+    )
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(forgedUri))
+    assertTrue(RedirectCoordinator.current() is PendingRedirect.HostedAuth)
     assertFalse(start.isCompleted)
 
-    val legitimateResult =
-      withTimeout(TIMEOUT_MS) { HostedAuthService.complete(legitimateCallback(state)) }
+    val legitimateResult = withTimeout(TIMEOUT_MS) { completeCallback(legitimateCallback(state)) }
 
     assertTrue(legitimateResult is ClerkResult.Success)
     assertEquals(SESSION_ID, (legitimateResult as ClerkResult.Success).value.id)
@@ -411,7 +410,7 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
 
-    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+    val result = withTimeout(TIMEOUT_MS) { completeCallback(callbackUri) }
 
     assertTrue(result is ClerkResult.Success)
     verify(exactly = 1) { Clerk.updateClient(client) }
@@ -427,7 +426,7 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
 
-    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+    val result = withTimeout(TIMEOUT_MS) { completeCallback(callbackUri) }
 
     assertTrue(result is ClerkResult.Failure)
     val message = (result as ClerkResult.Failure).throwable?.message.orEmpty()
@@ -445,13 +444,19 @@ class HostedAuthServiceTest {
     val start = startInBackground()
     val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
 
-    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+    val result = withTimeout(TIMEOUT_MS) { completeCallback(callbackUri) }
 
     assertTrue(result is ClerkResult.Failure)
     val message = (result as ClerkResult.Failure).throwable?.message.orEmpty()
     assertTrue(message.contains("no longer current"))
     verify(exactly = 0) { Clerk.updateClient(client) }
     assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
+  }
+
+  private suspend fun completeCallback(uri: Uri): ClerkResult<Session, ClerkErrorResponse> {
+    val pending = RedirectCoordinator.current() as PendingRedirect.HostedAuth
+    RedirectCoordinator.dispatch(uri)
+    return pending.result.await()
   }
 
   private fun stubCreateHostedAuth(): CompletableDeferred<String> {
@@ -488,6 +493,28 @@ class HostedAuthServiceTest {
         arg<ManualClientSyncRequest>(3).recordResponse(null, null)
         ClerkResult.success(client)
       }
+  }
+
+  @Test
+  fun startCancelledBeforeLaunchFreesTheRedirectSlot() = runBlocking {
+    val createStarted = CompletableDeferred<Unit>()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } coAnswers
+      {
+        createStarted.complete(Unit)
+        CompletableDeferred<ClerkResult<HostedAuthResource, ClerkErrorResponse>>().await()
+      }
+
+    val start = startInBackground()
+    withTimeout(TIMEOUT_MS) { createStarted.await() }
+    assertTrue(RedirectCoordinator.hasPendingRedirect.value)
+
+    start.cancel()
+    start.join()
+
+    assertFalse(RedirectCoordinator.hasPendingRedirect.value)
+    assertEquals(null, RedirectCoordinator.current())
   }
 
   private fun CoroutineScope.startInBackground(

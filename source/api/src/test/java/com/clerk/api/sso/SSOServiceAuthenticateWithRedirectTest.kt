@@ -5,6 +5,7 @@ import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.signin.SignIn
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -24,7 +25,7 @@ class SSOServiceAuthenticateWithRedirectTest {
 
   @After
   fun tearDown() {
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     unmockkAll()
   }
 
@@ -79,7 +80,8 @@ class SSOServiceAuthenticateWithRedirectTest {
     assertEquals(redirectUrl, createParams.captured["redirect_url"])
     assertTrue(createParams.captured.containsKey("locale"))
     assertEquals("oauth_google", prepareParams.captured["strategy"])
-    assertEquals(redirectUrl, prepareParams.captured["redirect_url"])
+    val preparedRedirectUrl = prepareParams.captured.getValue("redirect_url")
+    assertTrue(preparedRedirectUrl.startsWith("$redirectUrl?clerk_redirect_state="))
     coVerify(exactly = 1) { signInApi.createSignIn(any()) }
     coVerify(exactly = 1) { signInApi.prepareSignInFirstFactor(createdSignIn.id, any()) }
     coVerify(exactly = 1) {

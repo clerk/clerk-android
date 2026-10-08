@@ -1,12 +1,10 @@
 package com.clerk.api.hostedauth
 
 import android.content.Context
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.HostedAuthMode
-import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
@@ -14,26 +12,13 @@ import com.clerk.api.network.middleware.outgoing.INTERNAL_HEADER_TRUE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.redirect.PendingRedirect
+import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.Session
-import com.clerk.api.sso.SSOManagerActivity
-import com.clerk.api.sso.SSOService
 import java.security.SecureRandom
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 @Suppress("TooManyFunctions")
 internal object HostedAuthService {
-  private val pendingAuthStore = HostedAuthPendingStore()
-  private val completionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
   suspend fun start(
     mode: HostedAuthMode?,
     redirectUrl: String,
@@ -48,132 +33,41 @@ internal object HostedAuthService {
     mode: HostedAuthMode?,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val pendingAuth =
-      PendingHostedAuth(
+      PendingRedirect.HostedAuth(
         redirectUrl = preparation.redirectUrl,
         state = preparation.state,
         codeVerifier = preparation.codeVerifier,
-        deferred = CompletableDeferred(),
       )
-    if (!pendingAuthStore.add(pendingAuth)) {
-      return ClerkResult.unknownFailure(
-        IllegalStateException("A hosted authentication session is already in progress.")
-      )
+    RedirectCoordinator.begin(pendingAuth)
+    val responseGuard = ResponseGuard { sideEffect ->
+      RedirectCoordinator.runIfCurrent(pendingAuth, sideEffect)
     }
-
-    SSOService.cancelPendingAuthentication()
-    ExternalAccountService.cancelPendingExternalAccountConnection()
-    return try {
-      val responseGuard = ResponseGuard { sideEffect ->
-        pendingAuthStore.runIfCurrent(pendingAuth, sideEffect)
-      }
-      when (val result = createHostedAuth(preparation, mode, responseGuard)) {
-        is ClerkResult.Failure -> finishPendingAuth(pendingAuth, result)
-        is ClerkResult.Success -> launchAndAwait(preparation.context, result.value, pendingAuth)
+    try {
+      return when (val result = createHostedAuth(preparation, mode, responseGuard)) {
+        is ClerkResult.Failure -> {
+          finishPendingAuth(pendingAuth, result)
+          RedirectCoordinator.await(pendingAuth)
+        }
+        is ClerkResult.Success ->
+          RedirectCoordinator.launchAndAwait(pendingAuth, preparation.context, result.value)
       }
     } finally {
-      val removed = pendingAuthStore.remove(pendingAuth)
-      if (!pendingAuth.deferred.isCompleted && removed) {
-        pendingAuth.deferred.cancel()
+      if (!pendingAuth.result.isCompleted) {
+        RedirectCoordinator.cancelPending(matches = { it === pendingAuth })
       }
     }
   }
 
-  private suspend fun launchAndAwait(
-    context: Context,
-    hostedAuthUri: Uri,
-    pendingAuth: PendingHostedAuth,
-  ): ClerkResult<Session, ClerkErrorResponse> {
-    val intent =
-      SSOManagerActivity.createAuthorizationIntent(context, hostedAuthUri).apply {
-        addFlags(FLAG_ACTIVITY_NEW_TASK)
-      }
-    // The launch holds the pending-store lock so a concurrent cancellation cannot slip in
-    // between the ownership check and the activity start; when the attempt is no longer
-    // current, nothing launches and the deferred already carries the cancellation result.
-    // await() stays outside the catch so its CancellationException propagates instead of being
-    // swallowed as a launch failure.
-    val launchFailure =
-      try {
-        pendingAuthStore.runIfCurrent(pendingAuth) { context.startActivity(intent) }
-        null
-      } catch (exception: RuntimeException) {
-        exception
-      }
-    return if (launchFailure == null) {
-      pendingAuth.deferred.await()
-    } else {
-      finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(launchFailure))
-    }
-  }
-
-  suspend fun complete(uri: Uri): ClerkResult<Session, ClerkErrorResponse>? {
-    val pendingAuth = pendingAuthStore.current()
-    if (pendingAuth == null || !uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl)) {
-      return null
-    }
-    val callbackResult =
-      validateHostedAuthCallback(
-        uri = uri,
-        redirectUrl = pendingAuth.redirectUrl,
-        expectedState = pendingAuth.state,
-      )
-    return when (callbackResult) {
-      // An invalid callback (e.g. a forged state fired by another app) must not consume the
-      // single completion slot or fail the pending flow. Report the failure to this caller and
-      // keep waiting so the legitimate callback can still complete the authentication.
-      is ClerkResult.Failure -> callbackResult
-      is ClerkResult.Success ->
-        if (pendingAuth.completionStarted.compareAndSet(false, true)) {
-          startClaimedCompletion(pendingAuth, callbackResult.value)
-        } else {
-          pendingAuth.deferred.await()
-        }
-    }
-  }
-
-  @Suppress("TooGenericExceptionCaught")
-  private suspend fun startClaimedCompletion(
-    pendingAuth: PendingHostedAuth,
-    callback: HostedAuthCallback,
-  ): ClerkResult<Session, ClerkErrorResponse> {
-    val completionJob =
-      completionScope.launch(start = CoroutineStart.LAZY) {
-        try {
-          redeemAndComplete(pendingAuth, callback)
-        } catch (cancellation: CancellationException) {
-          throw cancellation
-        } catch (error: Exception) {
-          finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(error))
-        }
-      }
-    pendingAuth.completionJob.set(completionJob)
-    if (pendingAuthStore.isCurrent(pendingAuth)) {
-      completionJob.start()
-    } else {
-      completionJob.cancel()
-    }
-    return pendingAuth.deferred.await()
-  }
-
-  fun canHandle(uri: Uri): Boolean =
-    pendingAuthStore.current()?.let { uri.matchesHostedAuthRedirectUrl(it.redirectUrl) } == true
-
-  /** True when the URI targets the pending flow's callback but fails validation. */
-  fun isForgedCallback(uri: Uri): Boolean {
-    val pendingAuth = pendingAuthStore.current() ?: return false
-    return uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl) &&
-      validateHostedAuthCallback(
-        uri = uri,
-        redirectUrl = pendingAuth.redirectUrl,
-        expectedState = pendingAuth.state,
-      ) is
-        ClerkResult.Failure
-  }
+  suspend fun complete(
+    pendingAuth: PendingRedirect.HostedAuth,
+    validatedCallback: HostedAuthCallback,
+  ): ClerkResult<Session, ClerkErrorResponse> =
+    RedirectCoordinator.complete(pendingAuth) { redeemAndComplete(pendingAuth, validatedCallback) }
 
   private suspend fun redeemAndComplete(
-    pendingAuth: PendingHostedAuth,
+    pendingAuth: PendingRedirect.HostedAuth,
     callback: HostedAuthCallback,
-  ): ClerkResult<Session, ClerkErrorResponse> {
+  ) {
     val manualClientSyncRequest = ManualClientSyncRequest()
     val clientResult =
       ClerkApi.client.redeemHostedAuth(
@@ -184,34 +78,35 @@ internal object HostedAuthService {
     if (clientResult is ClerkResult.Success) {
       var clientApplied = false
       manualClientSyncRequest.runIfResponseCurrent {
-        pendingAuthStore.runIfCurrent(pendingAuth) {
+        RedirectCoordinator.runIfCurrent(pendingAuth) {
           Clerk.updateClient(clientResult.value)
           clientApplied = true
         }
       }
       if (!clientApplied) {
-        return finishPendingAuth(
+        finishPendingAuth(
           pendingAuth,
           ClerkResult.unknownFailure(
             IllegalStateException("Hosted auth redemption response is no longer current.")
           ),
         )
+        return
       }
     }
-    return when (clientResult) {
+    when (clientResult) {
       is ClerkResult.Failure -> finishPendingAuth(pendingAuth, clientResult)
       is ClerkResult.Success -> completeRedeemedClient(pendingAuth, callback, clientResult.value)
     }
   }
 
   private fun completeRedeemedClient(
-    pendingAuth: PendingHostedAuth,
+    pendingAuth: PendingRedirect.HostedAuth,
     callback: HostedAuthCallback,
     client: Client,
-  ): ClerkResult<Session, ClerkErrorResponse> {
+  ) {
     // The redeemed client has already been applied locally; this only resolves the flow result.
     val createdSession = client.sessions.firstOrNull { it.id == callback.createdSessionId }
-    return if (createdSession == null) {
+    if (createdSession == null) {
       finishPendingAuth(
         pendingAuth,
         ClerkResult.unknownFailure(
@@ -223,20 +118,11 @@ internal object HostedAuthService {
     }
   }
 
-  fun cancelPendingAuthentication(reason: String = AUTHENTICATION_CANCELLED) {
-    pendingAuthStore.cancel(reason)
-  }
-
-  fun hasPendingAuthentication(): Boolean = pendingAuthStore.hasPending()
-
   private fun finishPendingAuth(
-    pendingAuth: PendingHostedAuth,
+    pendingAuth: PendingRedirect.HostedAuth,
     result: ClerkResult<Session, ClerkErrorResponse>,
-  ): ClerkResult<Session, ClerkErrorResponse> {
-    if (!pendingAuthStore.completeIfCurrent(pendingAuth, result)) {
-      return ClerkResult.unknownFailure(HostedAuthCancellationException(AUTHENTICATION_CANCELLED))
-    }
-    return result
+  ) {
+    RedirectCoordinator.finish(pendingAuth, result)
   }
 }
 
@@ -247,76 +133,6 @@ private data class PreparedHostedAuth(
   val codeVerifier: String,
   val codeChallenge: String,
 )
-
-private data class PendingHostedAuth(
-  val redirectUrl: String,
-  val state: String,
-  val codeVerifier: String,
-  val deferred: CompletableDeferred<ClerkResult<Session, ClerkErrorResponse>>,
-  val completionStarted: AtomicBoolean = AtomicBoolean(false),
-  val completionJob: AtomicReference<Job?> = AtomicReference(null),
-)
-
-private class HostedAuthPendingStore {
-  private val lock = Any()
-  private var currentPendingAuth: PendingHostedAuth? = null
-
-  fun add(pendingAuth: PendingHostedAuth): Boolean =
-    synchronized(lock) {
-      if (currentPendingAuth != null) {
-        false
-      } else {
-        currentPendingAuth = pendingAuth
-        true
-      }
-    }
-
-  fun current(): PendingHostedAuth? = synchronized(lock) { currentPendingAuth }
-
-  fun isCurrent(pendingAuth: PendingHostedAuth): Boolean =
-    synchronized(lock) { currentPendingAuth === pendingAuth }
-
-  fun runIfCurrent(pendingAuth: PendingHostedAuth, sideEffect: () -> Unit) {
-    synchronized(lock) {
-      if (currentPendingAuth === pendingAuth) {
-        sideEffect()
-      }
-    }
-  }
-
-  fun completeIfCurrent(
-    pendingAuth: PendingHostedAuth,
-    result: ClerkResult<Session, ClerkErrorResponse>,
-  ): Boolean =
-    synchronized(lock) {
-      if (currentPendingAuth !== pendingAuth) {
-        false
-      } else {
-        pendingAuth.deferred.complete(result)
-      }
-    }
-
-  fun remove(pendingAuth: PendingHostedAuth): Boolean =
-    synchronized(lock) {
-      if (currentPendingAuth !== pendingAuth) {
-        false
-      } else {
-        currentPendingAuth = null
-        true
-      }
-    }
-
-  fun cancel(reason: String) {
-    val pendingAuth =
-      synchronized(lock) { currentPendingAuth.also { currentPendingAuth = null } } ?: return
-    pendingAuth.completionJob.get()?.cancel()
-    pendingAuth.deferred.complete(
-      ClerkResult.unknownFailure(HostedAuthCancellationException(reason))
-    )
-  }
-
-  fun hasPending(): Boolean = synchronized(lock) { currentPendingAuth != null }
-}
 
 private fun prepareHostedAuth(
   redirectUrl: String
@@ -409,7 +225,6 @@ private fun ClerkResult.Failure<ClerkErrorResponse>.isSignedOutFailure(): Boolea
 
 private const val HTTP_UNAUTHORIZED = 401
 private const val SIGNED_OUT_ERROR_CODE = "signed_out"
-private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
 
 internal const val HOSTED_AUTH_CANCELLED_BY_NEW_FLOW =
   "New authentication started, cancelling previous hosted auth attempt"
