@@ -3,18 +3,20 @@ package com.clerk.snapshot.appbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalClerkLogoContent
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 import io.mockk.every
 import io.mockk.mockkObject
@@ -93,11 +95,14 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
             hasLogo = false,
             title = "Members",
             trailingContent = {
-              Text(
-                text = "Invite",
-                style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
-                color = ClerkMaterialTheme.colors.primary,
-              )
+              IconButton(onClick = {}) {
+                Icon(
+                  modifier = Modifier.size(24.dp),
+                  painter = painterResource(R.drawable.ic_cross),
+                  contentDescription = null,
+                  tint = ClerkMaterialTheme.colors.foreground,
+                )
+              }
             },
           )
         }
