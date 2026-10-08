@@ -197,6 +197,17 @@ class ClientStateStoreTest {
   }
 
   @Test
+  fun `cache restore does not drop an awaited fetch that started before it`() {
+    val store = store()
+    val revisionAtStart = store.revision
+
+    store.replaceClientIfUnset(Client(id = "client_cached"), serverFetchAtMillis = 100)
+
+    assertTrue(store.applyClientIfUnchangedSince(revisionAtStart, Client(id = "client_network")))
+    assertEquals("client_network", store.client?.id)
+  }
+
+  @Test
   fun `environment restore applies only while the environment is unset`() {
     val store = store()
     val live = testEnvironment()
@@ -224,6 +235,17 @@ class ClientStateStoreTest {
     assertFalse(store.applyClientResponse(Client(id = "client_older"), olderPiggyback))
 
     assertEquals("client_ref", store.client?.id)
+  }
+
+  @Test
+  fun `awaited fetch with a response order records the server date`() {
+    val store = store()
+    val revisionAtStart = store.revision
+    val refresh = store.observeResponse(serverDateMillis = 2_000)
+
+    store.applyClientIfUnchangedSince(revisionAtStart, Client(id = "client_ref"), refresh)
+
+    assertEquals(2_000L, store.serverFetchAtMillis)
   }
 
   @Test

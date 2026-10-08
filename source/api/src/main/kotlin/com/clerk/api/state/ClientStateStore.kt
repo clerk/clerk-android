@@ -156,7 +156,11 @@ internal class ClientStateStore(
           return false
         }
         advanceNewestAppliedOrderLocked(order)
-        commitLocalLocked(client)
+        if (order != null) {
+          commitClientLocked(client = client, serverFetchAtMillis = order.serverDateMillis)
+        } else {
+          commitLocalLocked(client)
+        }
       }
     dispatch(commit)
     return true
@@ -185,7 +189,11 @@ internal class ClientStateStore(
     val commit =
       synchronized(lock) {
         if (state.publishedClient != null) return false
-        commitClientLocked(client = client, serverFetchAtMillis = serverFetchAtMillis)
+        commitClientLocked(
+          client = client,
+          serverFetchAtMillis = serverFetchAtMillis,
+          revision = state.revision,
+        )
       }
     dispatch(commit)
     return true
@@ -328,10 +336,13 @@ internal class ClientStateStore(
   private fun commitLocalLocked(client: Client): ClientCommit =
     commitClientLocked(client = client, serverFetchAtMillis = localFetchAtLocked(client))
 
-  private fun commitClientLocked(client: Client, serverFetchAtMillis: Long): ClientCommit {
+  private fun commitClientLocked(
+    client: Client,
+    serverFetchAtMillis: Long,
+    revision: Long = state.revision + 1,
+  ): ClientCommit {
     val previousSession = state.clientOrEmptyAfterReset?.currentSession()
     val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
-    val revision = state.revision + 1
     state =
       state.copy(
         clientOrEmptyAfterReset = resolvedClient,

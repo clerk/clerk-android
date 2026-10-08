@@ -150,7 +150,8 @@ public object Clerk {
    * When enabled, a client can hold sessions for multiple accounts and switch the active session by
    * updating [Client.lastActiveSessionId].
    */
-  public val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = stateStore.multiSessionModeIsEnabledFlow
+  public val multiSessionModeIsEnabledFlow: StateFlow<Boolean> =
+    stateStore.multiSessionModeIsEnabledFlow
 
   internal var environment: Environment?
     get() = stateStore.environment
