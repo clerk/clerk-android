@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
@@ -14,10 +15,15 @@ import com.clerk.api.storage.StorageCipher
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.storage.failCommitsForTesting
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -28,6 +34,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -115,6 +122,82 @@ class DeviceTokenDecryptCountTest {
     cipherAvailable = true
     StorageHelper.initialize(context)
     assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `a read that started before the cipher was ready is not cached after initialize finishes`() {
+    StorageHelper.resetToUninitializedForTesting()
+    persistTokenFromEarlierProcess("clerk:v1:${encode("token_1")}")
+    val cipherAvailable = AtomicBoolean(false)
+    StorageHelper.storageCipherFactoryOverride = {
+      check(cipherAvailable.get()) { "keystore not ready" }
+      CountingCipher(decryptedValues)
+    }
+    StorageHelper.initialize(context)
+    val readSawNoCipher = CountDownLatch(1)
+    val releaseRead = CountDownLatch(1)
+    mockkObject(ClerkLog)
+    try {
+      every { ClerkLog.w(any()) } answers
+        {
+          if (firstArg<String>().startsWith("Encrypted storage is unavailable, returning null")) {
+            readSawNoCipher.countDown()
+            releaseRead.await(5, TimeUnit.SECONDS)
+          }
+          0
+        }
+      val readResult = AtomicReference<String?>("unset")
+      val reader = Thread {
+        readResult.set(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+      }
+        .apply { start() }
+      assertTrue(readSawNoCipher.await(5, TimeUnit.SECONDS))
+
+      cipherAvailable.set(true)
+      StorageHelper.initialize(context)
+      releaseRead.countDown()
+      reader.join(5_000)
+
+      assertNull(readResult.get())
+      assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    } finally {
+      releaseRead.countDown()
+      unmockkObject(ClerkLog)
+    }
+  }
+
+  @Test
+  fun `migrating a plaintext token keeps a token written while it was encrypting`() {
+    val firstEncryptStarted = CountDownLatch(1)
+    val releaseFirstEncrypt = CountDownLatch(1)
+    StorageHelper.storageCipherFactoryOverride = {
+      object : StorageCipher {
+        private val legacyEncryptCalls = AtomicInteger()
+
+        override fun encrypt(plaintext: String): String {
+          if (plaintext == "token_1" && legacyEncryptCalls.getAndIncrement() == 0) {
+            firstEncryptStarted.countDown()
+            releaseFirstEncrypt.await(5, TimeUnit.SECONDS)
+          }
+          return encode(plaintext)
+        }
+
+        override fun decrypt(ciphertext: String): String =
+          CountingCipher(decryptedValues).decrypt(ciphertext)
+      }
+    }
+    StorageHelper.resetToUninitializedForTesting()
+    StorageHelper.initialize(context)
+    persistTokenFromEarlierProcess("token_1")
+    val reader = Thread { StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) }.apply { start() }
+    assertTrue(firstEncryptStarted.await(5, TimeUnit.SECONDS))
+
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_2")
+    releaseFirstEncrypt.countDown()
+    reader.join(5_000)
+
+    assertEquals("clerk:v1:${encode("token_2")}", storedDeviceToken())
+    assertEquals("token_2", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 
   @Test
