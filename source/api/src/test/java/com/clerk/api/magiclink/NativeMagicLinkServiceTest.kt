@@ -164,6 +164,36 @@ class NativeMagicLinkServiceTest {
     assertNull(PersistentPendingNativeMagicLinkStore().load())
   }
 
+  @Test
+  fun `native magic link sign-in keeps the organization the created session started in`() =
+    runTest {
+      val initialSignIn = emailLinkSignIn()
+      val preparedSignIn = initialSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
+      val completedSignIn =
+        initialSignIn.copy(status = SignIn.Status.COMPLETE, createdSessionId = "sess_123")
+      val createdSession = mockk<Session>(relaxed = true)
+      every { createdSession.id } returns "sess_123"
+      every { createdSession.lastActiveOrganizationId } returns "org_123"
+      val signedInClient = mockk<Client>(relaxed = true)
+      every { signedInClient.sessions } returns listOf(createdSession)
+      every { Clerk.client } returns signedInClient
+
+      mockEmailLinkPrepare(initialSignIn, preparedSignIn)
+      coEvery { magicLinkApi.complete(any()) } returns
+        ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
+      coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
+      coEvery { auth.setActive("sess_123", "org_123") } returns ClerkResult.success(createdSession)
+
+      assertTrue(
+        NativeMagicLinkService.startEmailLinkSignIn("user@example.com") is ClerkResult.Success
+      )
+      val callbackUri =
+        Uri.parse("clerk://com.clerk.test.oauth?flow_id=sign_in_123&approval_token=approval_123")
+      assertTrue(NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri) is ClerkResult.Success)
+
+      coVerify(exactly = 1) { auth.setActive("sess_123", "org_123") }
+    }
+
   private fun assertPkceVerifierMatchesPreparedChallenge() {
     val prepareFields = slot<Map<String, String>>()
     val completeFields = slot<Map<String, String>>()
