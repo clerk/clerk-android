@@ -34,7 +34,11 @@ internal class ClientStateStore(
 
     fun onClientCommittedAfterWriteLock(commit: ClientCommit) = Unit
 
-    fun onEnvironmentCommittedAfterWriteLock(previous: Environment?, current: Environment) = Unit
+    fun onEnvironmentCommittedAfterWriteLock(
+      previous: Environment?,
+      current: Environment,
+      restoredFromCache: Boolean,
+    ) = Unit
   }
 
   internal data class ClientCommit(
@@ -42,6 +46,7 @@ internal class ClientStateStore(
     val serverFetchAtMillis: Long,
     val revision: Long,
     val endedSession: Boolean,
+    val restoredFromCache: Boolean,
   )
 
   /**
@@ -193,6 +198,7 @@ internal class ClientStateStore(
           client = client,
           serverFetchAtMillis = serverFetchAtMillis,
           revision = state.revision,
+          restoredFromCache = true,
         )
       }
     dispatch(commit)
@@ -220,7 +226,7 @@ internal class ClientStateStore(
 
   fun applyEnvironment(environment: Environment) {
     val previous = synchronized(lock) { commitEnvironmentLocked(environment) }
-    dispatchEnvironment(previous, environment)
+    dispatchEnvironment(previous, environment, restoredFromCache = false)
   }
 
   fun applyEnvironmentIfUnset(environment: Environment): Boolean {
@@ -229,7 +235,7 @@ internal class ClientStateStore(
         if (state.environment != null) return false
         commitEnvironmentLocked(environment)
       }
-    dispatchEnvironment(previous, environment)
+    dispatchEnvironment(previous, environment, restoredFromCache = true)
     return true
   }
 
@@ -340,6 +346,7 @@ internal class ClientStateStore(
     client: Client,
     serverFetchAtMillis: Long,
     revision: Long = state.revision + 1,
+    restoredFromCache: Boolean = false,
   ): ClientCommit {
     val previousSession = state.clientOrEmptyAfterReset?.currentSession()
     val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
@@ -357,6 +364,7 @@ internal class ClientStateStore(
       serverFetchAtMillis = serverFetchAtMillis,
       revision = revision,
       endedSession = previousSession != null && currentSession == null,
+      restoredFromCache = restoredFromCache,
     )
   }
 
@@ -396,8 +404,12 @@ internal class ClientStateStore(
     return previous
   }
 
-  private fun dispatchEnvironment(previous: Environment?, current: Environment) {
-    listener?.onEnvironmentCommittedAfterWriteLock(previous, current)
+  private fun dispatchEnvironment(
+    previous: Environment?,
+    current: Environment,
+    restoredFromCache: Boolean,
+  ) {
+    listener?.onEnvironmentCommittedAfterWriteLock(previous, current, restoredFromCache)
     schedulePersist()
   }
 

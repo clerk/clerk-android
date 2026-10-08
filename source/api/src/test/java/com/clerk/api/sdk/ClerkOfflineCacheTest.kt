@@ -274,6 +274,18 @@ class ClerkOfflineCacheTest {
     }
 
   @Test
+  fun `restoring the cache does not publish the cached state to sibling apps`() = runBlocking {
+    saveCachedState()
+    stubNeverCompletingRefresh()
+
+    initialize(sharedSessionSync = SharedSessionSyncConfig.enabled)
+    withTimeout(5_000) { Clerk.isInitialized.first { it } }
+
+    assertEquals("client_cached", Clerk.client.id)
+    assertNull(StorageHelper.loadValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT))
+  }
+
+  @Test
   fun `a refresh started before the cache restore still replaces the restored client`() {
     val updateCountAtRefreshStart = Clerk.clientUpdateCount
     Clerk.restoreCachedClient(Client(id = "client_cached"), SERVER_FETCH_AT_MILLIS)
