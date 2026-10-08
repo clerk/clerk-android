@@ -28,6 +28,9 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -201,6 +204,89 @@ class ExternalAccountServiceTest {
 
     val result = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Success
     assertSame(mockExternalAccount, result.value)
+  }
+
+  @Test
+  fun `callback fails pending connection when the account is missing`() = runBlocking {
+    every { mockUser.externalAccounts } returns emptyList()
+    coEvery { Client.get() } returns ClerkResult.success(mockClient)
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
+
+    RedirectCoordinator.dispatch(callback(state))
+
+    val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+    assertEquals("External account not found for ID: ext_account_123", failure.throwable?.message)
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
+  }
+
+  @Test
+  fun `callback fails pending connection when the account is not verified`() = runBlocking {
+    coEvery { Client.get() } returns ClerkResult.success(mockClient)
+    val pendingResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
+    every { mockVerification.status } returns Verification.Status.UNVERIFIED
+
+    RedirectCoordinator.dispatch(callback(state))
+
+    val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+    assertTrue(
+      failure.throwable?.message.orEmpty().startsWith("External account verification failed")
+    )
+    assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
+  }
+
+  @Test
+  fun `cancellation thrown while completing the connection fails it as interrupted`() =
+    runBlocking {
+      coEvery { Client.get() } throws CancellationException("caller cancelled")
+      val pendingResult = async(Dispatchers.Default) { connect() }
+      val state = awaitPendingState()
+
+      val outcome = RedirectCoordinator.dispatch(callback(state))
+
+      assertEquals(CallbackOutcome.Completed(success = false), outcome)
+      assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
+      val failure = withTimeout(TIMEOUT_MS) { pendingResult.await() } as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertFalse(failure.throwable is SSOCancellationException)
+      assertFalse(failure.throwable is CancellationException)
+      assertTrue(failure.throwable?.cause is CancellationException)
+    }
+
+  @Test
+  fun `stale completion does not clear a newer external account connection`() = runBlocking {
+    val refreshStarted = CountDownLatch(1)
+    val releaseRefresh = CountDownLatch(1)
+    coEvery { Client.get() } answers
+      {
+        refreshStarted.countDown()
+        releaseRefresh.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        ClerkResult.success(mockClient)
+      }
+    val firstResult = async(Dispatchers.Default) { connect() }
+    val state = awaitPendingState()
+    val firstConnection = RedirectCoordinator.current() as PendingRedirect.ExternalAccountConnection
+    val staleCompletion =
+      async(Dispatchers.Default) {
+        RedirectCoordinator.dispatch(callback(state))
+      }
+    assertTrue(refreshStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS))
+
+    val secondResult = async(Dispatchers.Default) { connect() }
+    waitUntil { RedirectCoordinator.current().let { it != null && it !== firstConnection } }
+    val secondConnection = RedirectCoordinator.current()
+    releaseRefresh.countDown()
+    withTimeout(TIMEOUT_MS) { firstConnection.completionJob.get()?.join() }
+
+    assertEquals(CallbackOutcome.Completed(success = false), staleCompletion.await())
+    val superseded = withTimeout(TIMEOUT_MS) { firstResult.await() } as ClerkResult.Failure
+    assertTrue(superseded.throwable is SSOCancellationException)
+    assertFalse(secondResult.isCompleted)
+    assertSame(secondConnection, RedirectCoordinator.current())
+
+    RedirectCoordinator.cancelPending()
+    assertTrue(withTimeout(TIMEOUT_MS) { secondResult.await() } is ClerkResult.Failure)
   }
 
   @Test

@@ -176,9 +176,6 @@ internal object SSOService {
    * Some flows, like Enterprise SSO after `prepareFirstFactor`, already have an external provider
    * URL from the current sign-in attempt. In those cases we should launch that URL and wait for the
    * callback without creating a new sign-in redirect attempt.
-   *
-   * The callback must carry the state that was added to the redirect URL when the redirect was
-   * prepared (see [RedirectState]). A redirect prepared without one accepts any callback.
    */
   suspend fun authenticateWithPreparedRedirect(
     externalVerificationRedirectUrl: String,

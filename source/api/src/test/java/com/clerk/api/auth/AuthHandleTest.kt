@@ -107,6 +107,29 @@ class AuthHandleTest {
   }
 
   @Test
+  fun `handle does not fall back to SSO when hosted auth completes a Clerk scheme callback`() =
+    runTest {
+      val session = mockk<Session>(relaxed = true)
+      RedirectCoordinator.begin(
+        PendingRedirect.HostedAuth(
+          redirectUrl = "clerk://com.example.app.callback",
+          state = "s",
+          codeVerifier = "v",
+        )
+      )
+      val callbackUri =
+        Uri.parse(
+          "clerk://com.example.app.callback?state=s&rotating_token_nonce=n&created_session_id=sess"
+        )
+      coEvery { HostedAuthService.complete(any(), any()) } returns ClerkResult.success(session)
+
+      assertTrue(auth.handle(callbackUri))
+
+      coVerify(exactly = 1) { HostedAuthService.complete(any(), any()) }
+      coVerify(exactly = 0) { SSOService.completeRedirect(any(), any()) }
+    }
+
+  @Test
   fun `handle returns false for non Clerk URIs`() = runTest {
     assertFalse(auth.handle(Uri.parse("https://example.com/page")))
 

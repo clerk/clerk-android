@@ -325,11 +325,17 @@ class SSOManagerActivityTest {
     mockkObject(RedirectCoordinator)
     coEvery { RedirectCoordinator.dispatch(any()) } throws RuntimeException("boom")
     val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
-
-    val activity = resumeWithCallback(responseUri, authorizationStarted = true)
-
-    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
-    assertTrue(activity.isFinishing)
+    val uncaught = mutableListOf<Throwable>()
+    val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { _, throwable -> uncaught += throwable }
+    try {
+      val activity = resumeWithCallback(responseUri, authorizationStarted = true)
+      assertEquals(emptyList<Throwable>(), uncaught)
+      assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+      assertTrue(activity.isFinishing)
+    } finally {
+      Thread.setDefaultUncaughtExceptionHandler(originalHandler)
+    }
   }
 
   @Test

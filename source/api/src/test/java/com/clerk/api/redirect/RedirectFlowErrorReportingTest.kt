@@ -104,7 +104,7 @@ class RedirectFlowErrorReportingTest {
   }
 
   @Test
-  fun `a failed hosted auth flow reports exactly one error`() = runBlocking {
+  fun `a failed hosted auth redemption is reported once by startHostedAuth`() = runBlocking {
     val capturedState = CompletableDeferred<String>()
     coEvery {
       clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())

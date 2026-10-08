@@ -26,13 +26,14 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -234,35 +235,42 @@ class SSOServiceCancellationTest {
 
   @Test
   fun `stale completion that succeeds does not resolve or clear a newer redirect flow`() = runTest {
-    val signUpApi = mockk<SignUpApi>()
-    mockkObject(ClerkApi)
-    every { ClerkApi.signUp } returns signUpApi
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
     val staleSignUp = mockk<SignUp>(relaxed = true)
-    val signUpResponse = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
-    coEvery { signUpApi.createSignUp(any()) } coAnswers { signUpResponse.await() }
+    val transferStarted = CountDownLatch(1)
+    val releaseTransfer = CountDownLatch(1)
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } answers
+      {
+        transferStarted.countDown()
+        releaseTransfer.await(5, TimeUnit.SECONDS)
+        ClerkResult.success(staleSignUp)
+      }
     val firstResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    val staleCompletion = launch {
-      SSOService.completeAuthenticateWithRedirect(Uri.parse(TRANSFER_CALLBACK_URL))
+    val firstFlow = RedirectCoordinator.current() as PendingRedirect.Sso
+    val staleCompletion = async {
+      RedirectCoordinator.dispatch(Uri.parse(TRANSFER_CALLBACK_URL))
     }
     runCurrent()
+    assertTrue(transferStarted.await(5, TimeUnit.SECONDS))
 
     val secondResult =
       async(start = CoroutineStart.UNDISPATCHED) {
         SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
       }
-    signUpResponse.complete(ClerkResult.success(staleSignUp))
-    advanceUntilIdle()
+    val secondFlow = RedirectCoordinator.current()
+    releaseTransfer.countDown()
+    firstFlow.completionJob.get()?.join()
 
-    assertTrue(staleCompletion.isCompleted)
+    assertEquals(CallbackOutcome.Completed(success = false), staleCompletion.await())
     val firstFailure = firstResult.await() as ClerkResult.Failure
     assertTrue(firstFailure.throwable is SSOCancellationException)
     assertFalse(secondResult.isCompleted)
-    assertTrue(SSOService.hasPendingAuthentication())
+    assertSame(secondFlow, RedirectCoordinator.current())
 
-    SSOService.cancelPendingAuthentication()
+    RedirectCoordinator.cancelPending()
     val secondFailure = secondResult.await() as ClerkResult.Failure
     assertTrue(secondFailure.throwable is SSOCancellationException)
   }
