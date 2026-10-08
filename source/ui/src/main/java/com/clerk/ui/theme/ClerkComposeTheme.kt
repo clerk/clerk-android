@@ -14,8 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
@@ -55,7 +58,15 @@ internal val LocalClerkThemeOverride = compositionLocalOf<ClerkTheme?> { null }
 internal fun ClerkThemeOverrideProvider(clerkTheme: ClerkTheme?, content: @Composable () -> Unit) {
   val parentTheme = LocalClerkThemeOverride.current
   val effectiveTheme = clerkTheme ?: parentTheme
-  CompositionLocalProvider(LocalClerkThemeOverride provides effectiveTheme, content = content)
+  CompositionLocalProvider(LocalClerkThemeOverride provides effectiveTheme) {
+    RebuiltWhenClerkLoads(content)
+  }
+}
+
+@Composable
+private fun RebuiltWhenClerkLoads(content: @Composable () -> Unit) {
+  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
+  key(isInitialized) { content() }
 }
 
 @Composable
