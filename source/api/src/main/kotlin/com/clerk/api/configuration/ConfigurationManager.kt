@@ -144,11 +144,11 @@ internal class ConfigurationManager(
   }
 
   private fun hydrateCachedState(cachedState: CachedClerkState) {
-    Clerk.updateClient(
+    Clerk.restoreCachedClient(
       client = cachedState.client,
       serverFetchAtMillis = cachedState.clientServerFetchAtMillis,
     )
-    Clerk.updateEnvironment(cachedState.environment)
+    Clerk.restoreCachedEnvironment(cachedState.environment)
     _isInitialized.value = true
     _initializationError.value = null
     ClerkLog.d("Hydrated client and environment from cache")
@@ -579,7 +579,7 @@ internal class ConfigurationManager(
       when {
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
-            client = clientResult.value,
+            clientResult = clientResult,
             clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
@@ -612,13 +612,13 @@ internal class ConfigurationManager(
     }
 
   private fun handleSuccessfulRefresh(
-    client: Client,
+    clientResult: ClerkResult.Success<Client>,
     clientUpdateCountAtStart: Long,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     initializationRetryJob?.cancel()
     initializationRetryJob = null
-    updateClerkState(client, clientUpdateCountAtStart, environment)
+    updateClerkState(clientResult, clientUpdateCountAtStart, environment)
     _isInitialized.value = true
     _initializationError.value = null
 
@@ -804,11 +804,11 @@ internal class ConfigurationManager(
    * This method is called only when both client and environment data have been loaded successfully.
    */
   private fun updateClerkState(
-    client: Client,
+    clientResult: ClerkResult.Success<Client>,
     clientUpdateCountAtStart: Long,
     environment: Environment,
   ) {
-    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
+    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, clientResult)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {

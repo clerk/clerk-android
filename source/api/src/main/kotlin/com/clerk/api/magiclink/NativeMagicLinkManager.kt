@@ -308,9 +308,8 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   }
 
   private suspend fun refreshClientState() {
-    when (val clientResult = Client.get()) {
-      is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
-      is ClerkResult.Failure -> ClerkLog.w("event=native_magic_link_client_refresh_failure")
+    if (Clerk.fetchAndApplyClient { Client.get() } is ClerkResult.Failure) {
+      ClerkLog.w("event=native_magic_link_client_refresh_failure")
     }
   }
 

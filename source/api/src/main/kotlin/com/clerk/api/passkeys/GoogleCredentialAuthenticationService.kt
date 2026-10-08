@@ -262,10 +262,12 @@ internal object GoogleCredentialAuthenticationService {
     ) {
       return
     }
-    if (!Clerk.clientInitialized || Clerk.client.signIn?.id != signIn.id) return
-
-    ClerkLog.d("Clearing suppressed automatic passkey sign-in attempt ${signIn.id}")
-    Clerk.updateClient(Clerk.client.copy(signIn = null))
+    val cleared = Clerk.mutateClient { client ->
+      client.copy(signIn = null).takeIf { client.signIn?.id == signIn.id }
+    }
+    if (cleared) {
+      ClerkLog.d("Cleared suppressed automatic passkey sign-in attempt ${signIn.id}")
+    }
   }
 
   /**

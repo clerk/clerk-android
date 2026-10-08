@@ -166,16 +166,14 @@ public suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErr
  * This keeps [Clerk.organization] and other active organization UI in sync after profile updates.
  */
 public suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse> {
-  return when (val clientResult = Client.get()) {
+  return when (val clientResult = Clerk.fetchAndApplyClient { Client.get() }) {
     is ClerkResult.Success -> {
-      Clerk.updateClient(clientResult.value)
       val updated =
-        Clerk.organization?.takeIf { it.id == id }
-          ?: clientResult.value.sessions
-            .asSequence()
-            .flatMap { it.user?.organizationMemberships.orEmpty().asSequence() }
-            .map { it.organization }
-            .firstOrNull { it.id == id }
+        clientResult.value.sessions
+          .asSequence()
+          .flatMap { it.user?.organizationMemberships.orEmpty().asSequence() }
+          .map { it.organization }
+          .firstOrNull { it.id == id }
 
       if (updated != null) {
         ClerkResult.success(updated)
