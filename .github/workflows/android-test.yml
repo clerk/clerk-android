@@ -8,6 +8,47 @@ permissions:
   contents: read
 
 jobs:
+  e2e-runner-tests:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    env:
+      PACKAGE: e2e-tests
+      WATCHED: >-
+        e2e-tests
+        .github/workflows/android-test.yml
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check whether the test package changed
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "pull_request" ] || ! git diff --quiet HEAD^1 HEAD -- $WATCHED; then
+            echo "package=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v7
+        if: steps.changed.outputs.package == 'true'
+        with:
+          node-version: 24
+
+      - name: Install the test package's dependencies
+        if: steps.changed.outputs.package == 'true'
+        run: npm ci --prefix "$PACKAGE"
+
+      - name: Run the test package's unit tests
+        if: steps.changed.outputs.package == 'true'
+        run: npm test --prefix "$PACKAGE"
+
+      - name: Typecheck the test package
+        if: steps.changed.outputs.package == 'true'
+        run: npm run typecheck --prefix "$PACKAGE"
+
   test-module:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -25,6 +66,10 @@ jobs:
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
+            task: "testDebugUnitTest"
+          - module: ":e2e"
+            path: "e2e"
+            label: "e2e"
             task: "testDebugUnitTest"
     steps:
       - uses: actions/checkout@v7
