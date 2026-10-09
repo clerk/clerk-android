@@ -1,5 +1,6 @@
 package com.clerk.ui.sessiontask.mfa
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,12 +44,19 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  var taskIsDone by remember { mutableStateOf(false) }
 
-  LaunchedEffect(session?.requiresForcedMfa) {
-    if (session?.requiresForcedMfa == false) {
-      onAuthComplete()
+  val showStep = { step: FlowStep ->
+    if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
+      taskIsDone = true
+    } else {
+      flowStep = step
     }
   }
+
+  LaunchedEffect(session?.requiresForcedMfa) { showStep(flowStep) }
+  LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
+  BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }
 
   if (!Clerk.mfaPhoneCodeIsEnabled && !Clerk.mfaAuthenticatorAppIsEnabled) {
     SignInGetHelpView(modifier = modifier)
@@ -61,7 +69,7 @@ internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: (
     SessionTaskMfaFlowContent(
       modifier = contentModifier,
       flowStep = flowStep,
-      onFlowStepChange = { flowStep = it },
+      onFlowStepChange = showStep,
     )
   }
 }
