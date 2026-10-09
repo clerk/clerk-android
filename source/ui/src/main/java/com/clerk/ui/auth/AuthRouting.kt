@@ -62,7 +62,9 @@ internal fun authNavigationCommand(
       } ?: AuthNavigationCommand.CompleteAuth(offerBiometricEnrollment = false)
     is AuthRoutingInput.PendingSessionTask -> {
       val taskKey = input.session?.pendingTaskKey
-      if (taskKey == null || input.top.satisfiesSessionTask(taskKey)) {
+      if (
+        taskKey == null || input.top.satisfiesSessionTask(taskKey) || input.top.handsOffItself()
+      ) {
         AuthNavigationCommand.None
       } else {
         AuthNavigationCommand.Push(sessionTaskDestination(taskKey))
@@ -85,6 +87,8 @@ internal fun NavKey?.satisfiesSessionTask(taskKey: SessionTaskKey): Boolean =
         this is AuthDestination.SessionTaskCreateOrganization
     else -> this == sessionTaskDestination(taskKey)
   }
+
+private fun NavKey?.handsOffItself(): Boolean = this == AuthDestination.SessionTaskMfa
 
 internal fun NavKey?.isSessionTaskDestination(): Boolean =
   this == AuthDestination.SessionTaskMfa ||
