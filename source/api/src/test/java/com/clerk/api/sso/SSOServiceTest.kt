@@ -243,6 +243,73 @@ class SSOServiceTest {
     assertFalse(SSOService.hasPendingAuthentication())
   }
 
+  @Test
+  fun `bare callback transfers to sign up when the reloaded sign in is transferable`() = runTest {
+    val currentSignIn = createdSignIn()
+    val transferableSignIn =
+      SignIn(
+        id = SIGN_IN_ID,
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        firstFactorVerification = Verification(status = Verification.Status.TRANSFERABLE),
+      )
+    val createdSignUp = testSignUp(status = SignUp.Status.COMPLETE)
+    val transferParams = slot<Map<String, String>>()
+    every { auth.currentSignIn } returns currentSignIn
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns
+      ClerkResult.success(transferableSignIn)
+    coEvery { signUpApi.createSignUp(capture(transferParams)) } returns
+      ClerkResult.success(createdSignUp)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+    val result = (pendingResult.await() as ClerkResult.Success).value
+    assertSame(createdSignUp, result.signUp)
+    assertNull(result.signIn)
+    assertEquals("true", transferParams.captured["transfer"])
+    assertFalse(SSOService.hasPendingAuthentication())
+  }
+
+  @Test
+  fun `bare callback cancels when the reloaded sign in is not transferable`() = runTest {
+    val currentSignIn = createdSignIn()
+    every { auth.currentSignIn } returns currentSignIn
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns ClerkResult.success(currentSignIn)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse(SSOService.hasPendingAuthentication())
+    coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
+  @Test
+  fun `provider error callback cancels without reloading the sign in`() = runTest {
+    every { auth.currentSignIn } returns createdSignIn()
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse("$CALLBACK_URL?error=access_denied"))
+
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    coVerify(exactly = 0) { signInApi.fetchSignIn(any(), any()) }
+    coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
   private fun createdSignIn() =
     SignIn(
       id = SIGN_IN_ID,
