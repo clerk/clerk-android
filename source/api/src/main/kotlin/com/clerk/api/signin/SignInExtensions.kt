@@ -3,6 +3,7 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
+import com.clerk.api.auth.builders.CodeChannel
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.MfaType
@@ -11,11 +12,11 @@ import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.PreferredSignInStrategy
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.FactorComparators
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.suspendingFlatMap
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -293,22 +294,24 @@ private suspend fun SignIn.authenticateWithRedirectFactor(
 public suspend fun SignIn.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  val builder = SendCodeBuilder().apply(block)
-  builder.validate()
+  val channel = SendCodeBuilder().apply(block).channel()
 
   return Clerk.auth.reportingFailures {
-    val email = builder.email
-    if (email != null) {
-      val factor = firstFactorFor(listOf(Strategy.EmailCode), email, ::normalizeEmail)
-      val emailAddressId =
-        factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(Strategy.EmailCode)
-      prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
-    } else {
-      val factor =
-        firstFactorFor(listOf(Strategy.PhoneCode), checkNotNull(builder.phone), ::normalizePhone)
-      val phoneNumberId =
-        factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(Strategy.PhoneCode)
-      prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
+    channel.suspendingFlatMap { channel ->
+      when (channel) {
+        is CodeChannel.Email -> {
+          val factor = firstFactorFor(listOf(Strategy.EmailCode), channel.value, ::normalizeEmail)
+          val emailAddressId =
+            factor?.emailAddressId ?: return@reportingFailures noMatchingFactor(Strategy.EmailCode)
+          prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId))
+        }
+        is CodeChannel.Phone -> {
+          val factor = firstFactorFor(listOf(Strategy.PhoneCode), channel.value, ::normalizePhone)
+          val phoneNumberId =
+            factor?.phoneNumberId ?: return@reportingFailures noMatchingFactor(Strategy.PhoneCode)
+          prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId))
+        }
+      }
     }
   }
 }
@@ -373,7 +376,7 @@ private fun normalizePhone(phone: String): String = phone.filter {
 
 private fun noMatchingFactor(strategy: Strategy): ClerkResult.Failure<ClerkErrorResponse> =
   invalidPrepareState(
-    code = "first_factor_strategy_not_supported",
+    code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
     longMessage = "No ${strategy.value} first factor matches the requested identifier",
   )
 
@@ -400,25 +403,26 @@ public suspend fun SignIn.sendEmailLink(
   val emailId =
     emailAddressId
       ?: supportedFirstFactors?.find { it.strategyType == Strategy.EmailLink }?.emailAddressId
-      ?: error("No email address found for email_link strategy")
   val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategyType }.orEmpty()
-  val validationError =
+  return Clerk.auth.reportingFailures {
     when {
       status != SignIn.Status.NEEDS_FIRST_FACTOR ->
-        invalidEmailLinkPrepareState(
+        invalidPrepareState(
           code = "sign_in_status_invalid",
           longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
         )
       Strategy.EmailLink !in supportedFirstFactorStrategies ->
-        invalidEmailLinkPrepareState(
-          code = "first_factor_strategy_not_supported",
-          longMessage = "${Strategy.EmailLink} is not supported for this sign-in attempt",
+        invalidPrepareState(
+          code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+          longMessage = "${Strategy.EmailLink.value} is not supported for this sign-in attempt",
         )
-      else -> null
+      emailId == null ->
+        invalidPrepareState(
+          code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+          longMessage = "No email address found for email_link strategy",
+        )
+      else -> NativeMagicLinkService.prepareSignInEmailLink(this, emailId, redirectUri)
     }
-
-  return Clerk.auth.reportingFailures {
-    validationError ?: NativeMagicLinkService.prepareSignInEmailLink(this, emailId, redirectUri)
   }
 }
 
@@ -426,17 +430,6 @@ public suspend fun SignIn.sendEmailLink(
 public suspend fun SignIn.sendEmailLink(
   emailAddressId: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> = sendEmailLink(emailAddressId, redirectUri = null)
-
-private fun invalidEmailLinkPrepareState(
-  code: String,
-  longMessage: String,
-): ClerkResult.Failure<ClerkErrorResponse> {
-  return ClerkResult.apiFailure(
-    ClerkErrorResponse(
-      errors = listOf(Error(message = "is invalid", longMessage = longMessage, code = code))
-    )
-  )
-}
 
 /**
  * Verifies the first factor with the provided code.
@@ -554,33 +547,36 @@ public suspend fun SignIn.verifyMfaCode(
 public suspend fun SignIn.sendResetPasswordCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  val builder = SendCodeBuilder().apply(block)
-  builder.validate()
+  val channel = SendCodeBuilder().apply(block).channel()
 
   return Clerk.auth.reportingFailures {
-    val email = builder.email
-    if (email != null) {
-      val factor =
-        firstFactorFor(
-          listOf(Strategy.ResetPasswordEmailCode, Strategy.EmailCode),
-          email,
-          ::normalizeEmail,
-        )
-      val emailAddressId =
-        factor?.emailAddressId
-          ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordEmailCode)
-      sendResetPasswordEmailCode(emailAddressId)
-    } else {
-      val factor =
-        firstFactorFor(
-          listOf(Strategy.ResetPasswordPhoneCode, Strategy.PhoneCode),
-          checkNotNull(builder.phone),
-          ::normalizePhone,
-        )
-      val phoneNumberId =
-        factor?.phoneNumberId
-          ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordPhoneCode)
-      sendResetPasswordPhoneCode(phoneNumberId)
+    channel.suspendingFlatMap { channel ->
+      when (channel) {
+        is CodeChannel.Email -> {
+          val factor =
+            firstFactorFor(
+              listOf(Strategy.ResetPasswordEmailCode, Strategy.EmailCode),
+              channel.value,
+              ::normalizeEmail,
+            )
+          val emailAddressId =
+            factor?.emailAddressId
+              ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordEmailCode)
+          sendResetPasswordEmailCode(emailAddressId)
+        }
+        is CodeChannel.Phone -> {
+          val factor =
+            firstFactorFor(
+              listOf(Strategy.ResetPasswordPhoneCode, Strategy.PhoneCode),
+              channel.value,
+              ::normalizePhone,
+            )
+          val phoneNumberId =
+            factor?.phoneNumberId
+              ?: return@reportingFailures noMatchingFactor(Strategy.ResetPasswordPhoneCode)
+          sendResetPasswordPhoneCode(phoneNumberId)
+        }
+      }
     }
   }
 }

@@ -54,6 +54,7 @@ class NativeMagicLinkServiceTest {
   fun setup() {
     StorageHelper.initialize(RuntimeEnvironment.getApplication())
     StorageHelper.reset(RuntimeEnvironment.getApplication())
+    Clerk.stateStore.reset()
 
     signInApi = mockk(relaxed = true)
     signUpApi = mockk(relaxed = true)
@@ -82,6 +83,7 @@ class NativeMagicLinkServiceTest {
     NativeMagicLinkService.resetForTests()
     StorageHelper.reset(RuntimeEnvironment.getApplication())
     unmockkAll()
+    Clerk.stateStore.reset()
   }
 
   @Test
@@ -134,7 +136,7 @@ class NativeMagicLinkServiceTest {
     val preparedSignIn = initialSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
     val completedSignIn =
       initialSignIn.copy(status = SignIn.Status.COMPLETE, createdSessionId = "sess_123")
-    val refreshedClient = mockk<Client>(relaxed = true)
+    val refreshedClient = Client(id = "client_refreshed")
     val activatedSession = mockk<Session>(relaxed = true)
 
     mockEmailLinkPrepare(initialSignIn, preparedSignIn)
@@ -160,7 +162,7 @@ class NativeMagicLinkServiceTest {
 
     verifyEndToEndRequests()
     assertPkceVerifierMatchesPreparedChallenge()
-    verify(exactly = 1) { Clerk.updateClient(refreshedClient) }
+    assertEquals(refreshedClient, Clerk.client)
     assertNull(PersistentPendingNativeMagicLinkStore().load())
   }
 

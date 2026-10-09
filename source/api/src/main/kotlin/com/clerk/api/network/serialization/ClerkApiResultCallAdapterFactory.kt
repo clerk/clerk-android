@@ -78,7 +78,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 response: Response<ClerkResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
-                  val tags = mapOf(okhttp3.Response::class to response.raw())
+                  val tags: Map<KClass<*>, Any> = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {
                       is ClerkResult.Success -> result.withTags(result.tags + tags)
@@ -88,13 +88,12 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                           (responseCode == NO_CONTENT || responseCode == RESET_CONTENT) &&
                             apiResultType.actualTypeArguments[0] == Unit::class.java
                         ) {
-                          @Suppress("UNCHECKED_CAST")
-                          ClerkResult.success(Unit).withTags(tags as Map<KClass<*>, Any>)
+                          ClerkResult.success(Unit).withTags(tags)
                         } else {
-                          null
+                          emptyBodyFailure(responseCode, tags)
                         }
                       }
-                      else -> null
+                      else -> result
                     }
                   callback.onResponse(call, Response.success(withTag))
                 } else {
@@ -161,5 +160,18 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
     override fun responseType(): Type = apiResultType
   }
 }
+
+/**
+ * A successful response without a body cannot satisfy a non-[Unit] result. Report it as a failure
+ * instead of handing Retrofit a null body, which it throws as a KotlinNullPointerException from the
+ * suspending call.
+ */
+private fun emptyBodyFailure(code: Int, tags: Map<KClass<*>, Any>): ClerkResult.Failure<Nothing> =
+  ClerkResult.Failure(
+    error = null,
+    throwable = IllegalStateException("HTTP $code response has no body"),
+    errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
+    tags = tags,
+  )
 
 private class ApiException(public val error: Any?) : Exception()

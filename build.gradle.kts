@@ -65,6 +65,12 @@ allprojects {
   tasks.withType<Detekt>().configureEach {
     jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
+  if (path != ":detekt-rules") {
+    dependencies {
+      // detekt brings its own Kotlin runtime; keep the rules jar from adding a newer stdlib.
+      add("detektPlugins", project(":detekt-rules")) { exclude(group = "org.jetbrains.kotlin") }
+    }
+  }
 
   // The plain `detekt` task has no compile classpath, so rules that need type resolution (for
   // example InjectDispatcher) silently skip. CI also runs the type-resolved task for each SDK
@@ -276,7 +282,11 @@ subprojects {
 
 subprojects {
   plugins.withType<JavaPlugin> {
-    the<JavaPluginExtension>().toolchain.languageVersion.set(buildJdk)
+    the<JavaPluginExtension>().apply {
+      toolchain.languageVersion.set(buildJdk)
+      sourceCompatibility = bytecodeTarget
+      targetCompatibility = bytecodeTarget
+    }
   }
 
   tasks.withType<Test>().configureEach {

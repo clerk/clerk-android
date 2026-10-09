@@ -132,33 +132,11 @@ internal class ConfigurationManager(
   }
 
   private fun hydrateCachedStateIfNeeded(baseUrl: String) {
-    if (Clerk.clientFlow.value == null && Clerk.environment == null) {
-      val cachedState = loadCachedState()
-      when {
-        cachedState == null -> Unit
-        !cachedState.matchesConfiguration(publishableKey = publishableKey, baseUrl = baseUrl) ->
-          ClerkLog.d("Ignoring cached Clerk state for a different configuration")
-        else -> hydrateCachedState(cachedState)
-      }
+    val cachedState = CachedClerkState.loadIfNeeded(publishableKey, baseUrl) ?: return
+    if (cachedState.restoreMissingState()) {
+      _isInitialized.value = true
+      _initializationError.value = null
     }
-  }
-
-  private fun hydrateCachedState(cachedState: CachedClerkState) {
-    Clerk.updateClient(
-      client = cachedState.client,
-      serverFetchAtMillis = cachedState.clientServerFetchAtMillis,
-    )
-    Clerk.updateEnvironment(cachedState.environment)
-    _isInitialized.value = true
-    _initializationError.value = null
-    ClerkLog.d("Hydrated client and environment from cache")
-  }
-
-  private fun loadCachedState(): CachedClerkState? {
-    val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE) ?: return null
-    return runCatching { ClerkApi.json.decodeFromString(CachedClerkState.serializer(), cachedJson) }
-      .onFailure { error -> ClerkLog.w("Failed to decode cached Clerk state: ${error.message}") }
-      .getOrNull()
   }
 
   /**
@@ -168,11 +146,13 @@ internal class ConfigurationManager(
    * 1. Stores application context safely using WeakReference
    * 2. Extracts API base URL from publishable key (synchronous - fast)
    * 3. Configures the Clerk API client (synchronous - fast)
-   * 4. Initiates background client and environment data refresh (async)
-   * 5. Sets up application lifecycle monitoring (async)
+   * 4. Initializes storage and restores cached client/environment state (async)
+   * 5. Initiates background client and environment data refresh (async)
+   * 6. Sets up application lifecycle monitoring (async)
    *
-   * Storage initialization and device ID generation are moved to background to optimize startup
-   * time and avoid blocking the main thread.
+   * Storage initialization (Keystore), cached state decryption, and device ID generation run in the
+   * background so this method does not block the calling thread. Observe [isInitialized] for
+   * readiness, including readiness restored from the cached snapshot.
    *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
@@ -223,13 +203,13 @@ internal class ConfigurationManager(
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
 
-    ensureStorageInitialized()
-    hydrateCachedStateIfNeeded(baseUrl)
+    StorageHelper.prepare(context.applicationContext)
     Clerk.configureSharedSessionSync(
       context = context.applicationContext,
       publishableKey = publishableKey,
       config = options?.sharedSessionSync,
     )
+    BiometricCredentialStorage.initialize(context.applicationContext)
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -250,6 +230,7 @@ internal class ConfigurationManager(
         retryDelaySeconds = 0,
         expectedConfigurationVersion = configuredVersion,
       )
+    if (!restoreLocalState(configuredVersion)) return@launch
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
@@ -271,6 +252,16 @@ internal class ConfigurationManager(
       }
     }
     dataRefreshJob.await()
+  }
+
+  @Synchronized
+  private fun restoreLocalState(configuredVersion: Int): Boolean {
+    if (configuredVersion != configurationVersion || !hasConfigured || context?.get() == null) {
+      return false
+    }
+    ensureStorageInitialized()
+    hydrateCachedStateIfNeeded(Clerk.baseUrl)
+    return true
   }
 
   fun isConfigured(): Boolean = hasConfigured
@@ -579,7 +570,7 @@ internal class ConfigurationManager(
       when {
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
-            client = clientResult.value,
+            clientResult = clientResult,
             clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
@@ -612,13 +603,13 @@ internal class ConfigurationManager(
     }
 
   private fun handleSuccessfulRefresh(
-    client: Client,
+    clientResult: ClerkResult.Success<Client>,
     clientUpdateCountAtStart: Long,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     initializationRetryJob?.cancel()
     initializationRetryJob = null
-    updateClerkState(client, clientUpdateCountAtStart, environment)
+    updateClerkState(clientResult, clientUpdateCountAtStart, environment)
     _isInitialized.value = true
     _initializationError.value = null
 
@@ -804,11 +795,11 @@ internal class ConfigurationManager(
    * This method is called only when both client and environment data have been loaded successfully.
    */
   private fun updateClerkState(
-    client: Client,
+    clientResult: ClerkResult.Success<Client>,
     clientUpdateCountAtStart: Long,
     environment: Environment,
   ) {
-    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, client)
+    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, clientResult)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {

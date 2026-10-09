@@ -12,7 +12,9 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.sso.SSOCancellationException
@@ -42,29 +44,41 @@ internal object ExternalAccountService {
       }
       is ClerkResult.Success -> {
         ClerkLog.d("External account creation initiated: $initialResult")
-        val externalUrl =
-          requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
-            "External verification redirect URL is missing"
-          }
-        val context =
-          Clerk.applicationContext?.get()
-            ?: return ClerkResult.unknownFailure(
+        val externalUrl = initialResult.value.verification?.externalVerificationRedirectUrl
+        val context = Clerk.applicationContext?.get()
+        when {
+          externalUrl == null ->
+            localFailure(
+              code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+              longMessage = "External verification redirect URL is missing",
+            )
+          context == null ->
+            ClerkResult.unknownFailure(
               IllegalStateException(
                 "Clerk must be initialized before connecting an external account"
               )
             )
-        val completableDeferred =
-          CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
-        currentPendingExternalAccountConnection = completableDeferred
-        currentPendingExternalAccountConnectionId = initialResult.value.id
-        val intent =
-          SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
-            addFlags(FLAG_ACTIVITY_NEW_TASK)
-          }
-        context.startActivity(intent)
-        completableDeferred.await()
+          else -> awaitExternalConnection(context, initialResult.value.id, externalUrl)
+        }
       }
     }
+  }
+
+  private suspend fun awaitExternalConnection(
+    context: android.content.Context,
+    externalAccountId: String,
+    externalUrl: String,
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+    val completableDeferred =
+      CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
+    currentPendingExternalAccountConnection = completableDeferred
+    currentPendingExternalAccountConnectionId = externalAccountId
+    val intent =
+      SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
+        addFlags(FLAG_ACTIVITY_NEW_TASK)
+      }
+    context.startActivity(intent)
+    return completableDeferred.await()
   }
 
   /**
@@ -180,13 +194,10 @@ internal object ExternalAccountService {
     when (initialResult.errorType) {
       ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
       ClerkResult.Failure.ErrorType.HTTP ->
-        ClerkResult.Companion.httpFailure(
-          code = initialResult.code ?: -1,
-          error = initialResult.error,
-        )
-
-      ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
+        initialResult.code?.let { code ->
+          ClerkResult.Companion.httpFailure(code = code, error = initialResult.error)
+        } ?: initialResult
+      ClerkResult.Failure.ErrorType.UNKNOWN -> initialResult
     }
 
   private const val EXTERNAL_CONNECTION_CANCELLED = "External account connection cancelled"

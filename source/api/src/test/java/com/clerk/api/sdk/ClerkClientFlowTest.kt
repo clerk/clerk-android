@@ -42,4 +42,24 @@ class ClerkClientFlowTest {
       unmockkObject(Client.Companion)
     }
   }
+
+  @Test
+  fun `refreshClient returns the current client when a newer update landed in flight`() = runTest {
+    mockkObject(Client.Companion)
+    try {
+      val newer = Client(id = "client_newer")
+      coEvery { Client.get() } coAnswers
+        {
+          Clerk.updateClient(newer)
+          ClerkResult.success(Client(id = "client_fetched"))
+        }
+
+      val result = Clerk.refreshClient()
+
+      assertEquals(newer, Clerk.client)
+      assertEquals(newer, (result as ClerkResult.Success).value)
+    } finally {
+      unmockkObject(Client.Companion)
+    }
+  }
 }

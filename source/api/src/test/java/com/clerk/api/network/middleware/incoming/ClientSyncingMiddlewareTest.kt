@@ -49,6 +49,7 @@ class ClientSyncingMiddlewareTest {
     unmockkAll()
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    Clerk.stateStore.reset()
   }
 
   @Test

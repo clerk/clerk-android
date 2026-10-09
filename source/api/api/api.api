@@ -3629,6 +3629,8 @@ public final class com/clerk/api/network/serialization/ExtensionsKt {
 	public static final fun exceptionOrNull (Lcom/clerk/api/network/serialization/ClerkResult$Failure;)Ljava/lang/Throwable;
 	public static final fun flatMap (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;
 	public static final fun fold (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun map (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;
+	public static final fun mapError (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;
 	public static final fun onFailure (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;
 	public static final fun onFailureType (Lcom/clerk/api/network/serialization/ClerkResult;Lcom/clerk/api/network/serialization/ClerkResult$Failure$ErrorType;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;
 	public static final fun onSuccess (Lcom/clerk/api/network/serialization/ClerkResult;Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/network/serialization/ClerkResult;

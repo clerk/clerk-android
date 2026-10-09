@@ -8,8 +8,10 @@ import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.state.ClientStateStore
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -34,6 +36,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
+    val orderAtArrival = Clerk.stateStore.observeResponse(response.serverDateMillis())
     val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
     manualClientSyncRequest?.recordResponse(
       requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
@@ -48,13 +51,19 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         ClerkLog.d("Client sync skipped for a response using a stale shared device token")
         response
       }
-      manualClientSyncRequest != null -> response
-      else -> syncResponse(request = request, response = response)
+      manualClientSyncRequest != null -> response.withResponseOrder(orderAtArrival)
+      else ->
+        syncResponse(request = request, response = response, order = orderAtArrival)
+          .withResponseOrder(orderAtArrival)
     }
   }
 
   @Suppress("NestedBlockDepth")
-  private fun syncResponse(request: Request, response: Response): Response {
+  private fun syncResponse(
+    request: Request,
+    response: Response,
+    order: ClientStateStore.ResponseOrder?,
+  ): Response {
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
@@ -74,7 +83,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             request = request,
             response = response,
             jsonElement = jsonElement,
-            serverFetchAtMillis = response.serverFetchAtMillis(),
+            order = order,
             completedAuthFlow = completedAuthFlow,
           )
 
@@ -99,7 +108,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     request: Request,
     response: Response,
     jsonElement: JsonElement,
-    serverFetchAtMillis: Long,
+    order: ClientStateStore.ResponseOrder?,
     completedAuthFlow: AuthEvent?,
   ) {
     if (jsonElement !is JsonObject) return
@@ -112,7 +121,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             ClerkLog.d("Client sync skipped null piggyback client")
           } else {
             ClerkLog.d("Client sync cleared by explicit null client")
-            request.syncClient(response) { Clerk.updateClient(Client(), serverFetchAtMillis) }
+            request.syncClient(response) { Clerk.applyClientResponse(Client(), order) }
           }
         }
         null -> Unit
@@ -120,7 +129,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           request.syncClient(response) {
             syncClerkClient(
               client = json.decodeFromJsonElement(clientJson),
-              serverFetchAtMillis = serverFetchAtMillis,
+              order = order,
               completedAuthFlow = completedAuthFlow,
             )
           }
@@ -128,11 +137,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
       return
     }
 
-    if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
+    if (request.isClientFetch()) {
       request.syncClient(response) {
         syncClerkClient(
           client = json.decodeFromJsonElement(jsonElement),
-          serverFetchAtMillis = serverFetchAtMillis,
+          order = order,
           completedAuthFlow = completedAuthFlow,
         )
       }
@@ -252,29 +261,39 @@ private fun Request.syncClient(response: Response, sync: () -> Unit) {
   tag(ResponseGuard::class.java)?.runIfAllowed(guardedSync) ?: guardedSync()
 }
 
+private fun Request.isClientFetch(): Boolean =
+  method == "GET" && url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")
+
 private fun syncClerkClient(
   client: Client,
-  serverFetchAtMillis: Long,
+  order: ClientStateStore.ResponseOrder?,
   completedAuthFlow: AuthEvent?,
 ) {
   ClerkLog.d("Client synced: ${client.id}")
-  Clerk.updateClient(
+  Clerk.applyClientResponse(
     client = client,
-    serverFetchAtMillis = serverFetchAtMillis,
+    order = order,
     completedAuthFlow = completedAuthFlow,
   )
 }
 
-private fun Response.serverFetchAtMillis(): Long {
-  val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
-  val parsed =
-    try {
-      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-        .apply { timeZone = TimeZone.getTimeZone("GMT") }
-        .parse(serverDate)
-        ?.time
-    } catch (_: Exception) {
-      null
-    }
-  return parsed ?: System.currentTimeMillis()
+internal fun ClerkResult.Success<*>.responseOrder(): ClientStateStore.ResponseOrder? =
+  (tags[Response::class] as? Response)?.request?.tag(ClientStateStore.ResponseOrder::class.java)
+
+private fun Response.withResponseOrder(order: ClientStateStore.ResponseOrder?): Response {
+  order ?: return this
+  val taggedRequest = request.newBuilder().tag(ClientStateStore.ResponseOrder::class.java, order)
+  return newBuilder().request(taggedRequest.build()).build()
+}
+
+private fun Response.serverDateMillis(): Long? {
+  val serverDate = header(SERVER_DATE_HEADER) ?: return null
+  return try {
+    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+      .apply { timeZone = TimeZone.getTimeZone("GMT") }
+      .parse(serverDate)
+      ?.time
+  } catch (_: Exception) {
+    null
+  }
 }

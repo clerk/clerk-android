@@ -27,7 +27,7 @@ okhttp = "5.4.0"
 retrofit = "3.0.0"
 robolectric = "4.17"
 sortDependencies = "0.21.0"
-spotless = "8.10.3"
+spotless = "8.10.4"
 turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.12.1"
 kotlinStdlib = "2.4.21"
@@ -62,6 +62,7 @@ androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-p
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.10.0"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
 androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0"
+androidx-lifecycle-viewmodel-navigation3 = "androidx.lifecycle:lifecycle-viewmodel-navigation3:2.10.0"
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.6.0"
@@ -77,6 +78,8 @@ coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.5.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.6.1"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
+detekt-api = { module = "dev.detekt:detekt-api", version.ref = "detekt" }
+detekt-test = { module = "dev.detekt:detekt-test", version.ref = "detekt" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.2.1"
 google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.41"
 junit = "junit:junit:4.13.2"

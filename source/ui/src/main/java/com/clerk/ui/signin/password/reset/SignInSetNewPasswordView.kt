@@ -87,7 +87,7 @@ internal fun SessionTaskResetPasswordView(
 private fun SignInSetNewPasswordViewImpl(
   mode: ResetPasswordMode,
   modifier: Modifier = Modifier,
-  viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey()),
+  viewModel: ResetPasswordViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current

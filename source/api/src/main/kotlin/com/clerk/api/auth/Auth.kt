@@ -2,6 +2,7 @@ package com.clerk.api.auth
 
 import android.net.Uri
 import com.clerk.api.Clerk
+import com.clerk.api.auth.builders.CodeChannel
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignInWithIdTokenBuilder
@@ -25,6 +26,8 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.map
+import com.clerk.api.network.serialization.suspendingFlatMap
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
@@ -171,12 +174,11 @@ public class Auth internal constructor() {
   public suspend fun signIn(
     block: SignInIdentifierBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInIdentifierBuilder().apply(block)
-    builder.validate()
-
-    return createSignIn(
-      SignIn.CreateParams.Strategy.Identifier(identifier = builder.getIdentifier())
-    )
+    return reportingFailures {
+      SignInIdentifierBuilder().apply(block).resolvedIdentifier().suspendingFlatMap { identifier ->
+        createSignIn(SignIn.CreateParams.Strategy.Identifier(identifier = identifier))
+      }
+    }
   }
 
   /**
@@ -229,15 +231,16 @@ public class Auth internal constructor() {
   public suspend fun signInWithPassword(
     block: SignInWithPasswordBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithPasswordBuilder().apply(block)
-    builder.validate()
-
-    return createSignIn(
-      SignIn.CreateParams.Strategy.Password(
-        identifier = builder.identifier!!,
-        password = builder.password!!,
-      )
-    )
+    return reportingFailures {
+      SignInWithPasswordBuilder().apply(block).credentials().suspendingFlatMap { credentials ->
+        createSignIn(
+          SignIn.CreateParams.Strategy.Password(
+            identifier = credentials.identifier,
+            password = credentials.password,
+          )
+        )
+      }
+    }
   }
 
   /**
@@ -259,17 +262,18 @@ public class Auth internal constructor() {
   public suspend fun signInWithOtp(
     block: SignInWithOtpBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithOtpBuilder().apply(block)
-    builder.validate()
-
-    val email = builder.email
-    return createSignIn(
-      if (email != null) {
-        SignIn.CreateParams.Strategy.EmailCode(identifier = email)
-      } else {
-        SignIn.CreateParams.Strategy.PhoneCode(identifier = builder.phone!!)
+    return reportingFailures {
+      SignInWithOtpBuilder().apply(block).channel().suspendingFlatMap { channel ->
+        createSignIn(
+          when (channel) {
+            is CodeChannel.Email ->
+              SignIn.CreateParams.Strategy.EmailCode(identifier = channel.value)
+            is CodeChannel.Phone ->
+              SignIn.CreateParams.Strategy.PhoneCode(identifier = channel.value)
+          }
+        )
       }
-    )
+    }
   }
 
   /**
@@ -342,16 +346,13 @@ public class Auth internal constructor() {
   public suspend fun signInWithIdToken(
     block: SignInWithIdTokenBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val builder = SignInWithIdTokenBuilder().apply(block)
-    builder.validate()
-
     return reportingFailures {
-      when (builder.provider!!) {
-        IdTokenProvider.GOOGLE -> {
-          when (val result = ClerkApi.signIn.authenticateWithGoogle(token = builder.token!!)) {
-            is ClerkResult.Success -> ClerkResult.success(OAuthResult(signIn = result.value))
-            is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-          }
+      SignInWithIdTokenBuilder().apply(block).idToken().suspendingFlatMap { idToken ->
+        when (idToken.provider) {
+          IdTokenProvider.GOOGLE ->
+            ClerkApi.signIn.authenticateWithGoogle(token = idToken.token).map {
+              OAuthResult(signIn = it)
+            }
         }
       }
     }
@@ -451,15 +452,17 @@ public class Auth internal constructor() {
     block: EnterpriseSsoBuilder.() -> Unit,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
-    return authenticateSignInWithRedirect(
-      SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
-        redirectUrl = builder.redirectUrl,
-        emailAddress = builder.email,
-      ),
-      transferable = transferable,
-    )
+    return reportingFailures {
+      builder.emailAddress().suspendingFlatMap { email ->
+        authenticateSignInWithRedirect(
+          SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
+            redirectUrl = builder.redirectUrl,
+            emailAddress = email,
+          ),
+          transferable = transferable,
+        )
+      }
+    }
   }
 
   @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
@@ -675,14 +678,16 @@ public class Auth internal constructor() {
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
-    return authenticateSignUpWithRedirect(
-      SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(
-        redirectUrl = builder.redirectUrl,
-        emailAddress = builder.email,
-      )
-    )
+    return reportingFailures {
+      builder.emailAddress().suspendingFlatMap { email ->
+        authenticateSignUpWithRedirect(
+          SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(
+            redirectUrl = builder.redirectUrl,
+            emailAddress = email,
+          )
+        )
+      }
+    }
   }
 
   /**
@@ -741,7 +746,7 @@ public class Auth internal constructor() {
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
-          is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
+          is ClerkResult.Failure -> result
         }
       } else {
         SignOutService.signOut()
@@ -750,34 +755,36 @@ public class Auth internal constructor() {
   }
 
   private fun removeSessionLocally(sessionId: String) {
-    if (!Clerk.clientInitialized) return
-
-    val client = Clerk.client
-    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
-    val lastActiveSessionId =
-      if (client.lastActiveSessionId == sessionId) {
-        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
-          ?: remainingSessions.firstOrNull()?.id
-      } else {
-        client.lastActiveSessionId
-      }
-
-    Clerk.updateClient(
+    Clerk.mutateClient { client ->
+      val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+      val lastActiveSessionId =
+        if (client.lastActiveSessionId == sessionId) {
+          remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+            ?: remainingSessions.firstOrNull()?.id
+        } else {
+          client.lastActiveSessionId
+        }
       client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
-    )
+    }
   }
 
   private suspend fun refreshClientAfterSessionMutation(
     activeSessionFallbackId: String? = null,
     fallbackClient: Client? = null,
   ) {
+    val updateCountAtStart = Clerk.clientUpdateCount
     when (val clientResult = Client.get()) {
       is ClerkResult.Success ->
-        Clerk.updateClient(
-          clientResult.value.withActiveSessionFallback(
-            activeSessionFallbackId = activeSessionFallbackId,
-            fallbackClient = fallbackClient,
-          )
+        Clerk.updateClientIfUnchangedSince(
+          expectedUpdateCount = updateCountAtStart,
+          fetched =
+            ClerkResult.success(
+                clientResult.value.withActiveSessionFallback(
+                  activeSessionFallbackId = activeSessionFallbackId,
+                  fallbackClient = fallbackClient,
+                )
+              )
+              .withTags(clientResult.tags),
         )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
@@ -892,12 +899,15 @@ public class Auth internal constructor() {
     sourceClient: Client? = null,
     activeOrganizationId: String? = null,
   ) {
-    val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
-    val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
-    if (sessions.none { it.id == sessionId }) return
-
-    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
+    Clerk.mutateClient { current ->
+      val client = current.takeIf { it.hasSession(sessionId) } ?: sourceClient ?: current
+      val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
+      if (sessions.none { it.id == sessionId }) null
+      else client.copy(sessions = sessions, lastActiveSessionId = sessionId)
+    }
   }
+
+  private fun Client.hasSession(sessionId: String): Boolean = sessions.any { it.id == sessionId }
 
   private fun List<Session>.withUpdatedSession(
     activeSession: Session?,
@@ -956,10 +966,7 @@ public class Auth internal constructor() {
           ClerkErrorResponse(errors = emptyList(), clerkTraceId = "no-session")
         )
 
-    return when (val result = session.fetchToken(options ?: GetTokenOptions())) {
-      is ClerkResult.Success -> ClerkResult.success(result.value.jwt)
-      is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-    }
+    return session.fetchToken(options ?: GetTokenOptions()).map { it.jwt }
   }
 
   /**
@@ -974,10 +981,7 @@ public class Auth internal constructor() {
    * ```
    */
   public suspend fun revokeSession(session: Session): ClerkResult<Unit, ClerkErrorResponse> {
-    return when (val result = session.revoke()) {
-      is ClerkResult.Success -> ClerkResult.success(Unit)
-      is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-    }
+    return session.revoke().map {}
   }
 
   // endregion

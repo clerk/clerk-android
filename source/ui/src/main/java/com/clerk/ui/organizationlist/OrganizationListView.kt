@@ -35,6 +35,7 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
 import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -73,20 +74,24 @@ public fun OrganizationListView(
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   onAccountSelected: ((String?) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
-          OrganizationListViewImpl(
-            modifier = Modifier.fillMaxSize(),
-            clerkTheme = clerkTheme,
-            hidePersonalAccount = hidePersonalAccount,
-            isDismissible = isDismissible,
-            skipPostCreateInviteFlow = skipPostCreateInviteFlow,
-            onDismissRequest = onDismissRequest,
-            onCreateOrganization = onCreateOrganization,
-            onAccountSelected = onAccountSelected,
-          )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          DevelopmentModeWarningBox(
+            modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()
+          ) {
+            OrganizationListViewImpl(
+              modifier = Modifier.fillMaxSize(),
+              clerkTheme = clerkTheme,
+              hidePersonalAccount = hidePersonalAccount,
+              isDismissible = isDismissible,
+              skipPostCreateInviteFlow = skipPostCreateInviteFlow,
+              onDismissRequest = onDismissRequest,
+              onCreateOrganization = onCreateOrganization,
+              onAccountSelected = onAccountSelected,
+            )
+          }
         }
       }
     }

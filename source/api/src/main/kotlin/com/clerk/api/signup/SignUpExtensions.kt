@@ -5,6 +5,7 @@ package com.clerk.api.signup
 import com.clerk.api.Clerk
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
+import com.clerk.api.auth.builders.invalidBuilderArguments
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -31,11 +32,12 @@ public suspend fun SignUp.sendCode(
   block: SendCodeBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SendCodeBuilder().apply(block)
-  builder.validate()
+  val channel = builder.channel()
   val email = builder.email
   val phone = builder.phone
 
   return Clerk.auth.reportingFailures {
+    if (channel is ClerkResult.Failure) return@reportingFailures channel
     val target =
       when {
         email != null && !email.trim().equals(emailAddress?.trim(), ignoreCase = true) ->
@@ -94,8 +96,8 @@ public suspend fun SignUp.verifyCode(
 /**
  * Updates the sign-up with additional information.
  *
- * Sending [SignUpBuilder.unsafeMetadata] on update is not supported yet. Setting it here throws
- * [IllegalArgumentException] instead of silently dropping it.
+ * Sending [SignUpBuilder.unsafeMetadata] on update is not supported yet. Setting it here returns a
+ * failure with the `invalid_arguments` error code instead of silently dropping it.
  *
  * @param block Builder block to configure the update.
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
@@ -113,7 +115,11 @@ public suspend fun SignUp.update(
   block: SignUpBuilder.() -> Unit
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   val builder = SignUpBuilder().apply(block)
-  require(builder.unsafeMetadata == null) { "update { } cannot change unsafeMetadata" }
+  if (builder.unsafeMetadata != null) {
+    return Clerk.auth.reportingFailures {
+      invalidBuilderArguments("update { } cannot change unsafeMetadata")
+    }
+  }
 
   return updateImpl(
     SignUp.SignUpUpdateParams.Standard(

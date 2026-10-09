@@ -11,13 +11,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
@@ -79,8 +77,7 @@ private fun SignInFactorCodeViewImpl(
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
   isClientTrust: Boolean = false,
-  viewModel: SignInFactorCodeViewModel =
-    viewModel(key = signInFactorCodeViewModelKey(isSecondFactor)),
+  viewModel: SignInFactorCodeViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -132,27 +129,20 @@ private fun SignInFactorCodeViewImpl(
     )
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
-      ClerkTextButton(
-        modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
-        text = stringResource(R.string.use_another_method),
-        onClick = {
-          if (isSecondFactor) {
-            authState.navigateTo(
-              AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
-            )
-          } else {
-            authState.navigateTo(
-              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-            )
-          }
-        },
-      )
+      UseAnotherMethodButton(factor = factor, isSecondFactor = isSecondFactor)
     }
   }
 }
 
-private fun signInFactorCodeViewModelKey(isSecondFactor: Boolean): String =
-  "sign-in-code-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}-$isSecondFactor"
+@Composable
+private fun UseAnotherMethodButton(factor: Factor, isSecondFactor: Boolean) {
+  val authState = LocalAuthState.current
+  ClerkTextButton(
+    modifier = Modifier.testTag(ClerkTestTags.Auth.SignIn.useAnotherMethodButton),
+    text = stringResource(R.string.use_another_method),
+    onClick = { authState.navigateToAlternativeMethods(factor, isSecondFactor) },
+  )
+}
 
 private fun handleCodeTextChange(
   code: String,

@@ -31,3 +31,4 @@ local.properties
 /docs/
 .trailblaze/
 .keys.json
+/config/detekt-rules/build/
