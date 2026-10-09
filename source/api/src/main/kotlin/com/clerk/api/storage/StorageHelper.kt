@@ -12,6 +12,7 @@ internal object StorageHelper {
 
   @Volatile private var secureStorage: SharedPreferences? = null
   @Volatile private var storageCipher: StorageCipher? = null
+  @Volatile private var preparedContext: Context? = null
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
@@ -26,13 +27,6 @@ internal object StorageHelper {
    */
   @Synchronized
   fun initialize(context: Context) {
-    if (secureStorage == null) {
-      secureStorage =
-        context.applicationContext.getSharedPreferences(
-          CLERK_PREFERENCES_FILE_NAME,
-          Context.MODE_PRIVATE,
-        )
-    }
     if (storageCipher == null) {
       storageCipher =
         runCatching { storageCipherFactoryOverride?.invoke() ?: StorageCipherFactory.create() }
@@ -40,6 +34,23 @@ internal object StorageHelper {
             ClerkLog.w("Failed to initialize encrypted storage: ${error.message}")
           }
           .getOrNull()
+    }
+    if (secureStorage == null) {
+      secureStorage =
+        context.applicationContext.getSharedPreferences(
+          CLERK_PREFERENCES_FILE_NAME,
+          Context.MODE_PRIVATE,
+        )
+    }
+  }
+
+  fun prepare(context: Context) {
+    preparedContext = context.applicationContext
+  }
+
+  private fun initializeIfPrepared() {
+    if (secureStorage == null) {
+      preparedContext?.let(::initialize)
     }
   }
 
@@ -92,6 +103,7 @@ internal object StorageHelper {
   }
 
   private fun writeValue(key: StorageKey, value: String): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     val cipher = storageCipher
 
@@ -120,12 +132,14 @@ internal object StorageHelper {
     }
   }
 
-  internal fun loadValue(key: StorageKey): String? =
-    if (key == StorageKey.DEVICE_TOKEN) {
+  internal fun loadValue(key: StorageKey): String? {
+    initializeIfPrepared()
+    return if (key == StorageKey.DEVICE_TOKEN) {
       DeviceTokenCache.getOrLoad(load = { readValue(key) }, canCache = ::isEncryptedStorageReady)
     } else {
       readValue(key)
     }
+  }
 
   private fun isEncryptedStorageReady(): Boolean = secureStorage != null && storageCipher != null
 
@@ -178,6 +192,7 @@ internal object StorageHelper {
   }
 
   private fun removeValue(key: StorageKey): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     if (prefs == null) {
       ClerkLog.w(
@@ -232,6 +247,7 @@ internal object StorageHelper {
   internal fun resetToUninitializedForTesting() {
     clearStoredState()
     secureStorage = null
+    preparedContext = null
   }
 
   private fun clearStoredState() {

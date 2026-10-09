@@ -1145,6 +1145,7 @@ public object Clerk {
     }
 
     override fun onClientCommittedAfterWriteLock(commit: ClientStateStore.ClientCommit) {
+      if (commit.restoredFromCache) return
       sharedSessionSyncCoordinator?.handleClientChange(
         client = commit.client,
         serverFetchAtMillis = commit.serverFetchAtMillis,
@@ -1155,7 +1156,9 @@ public object Clerk {
     override fun onEnvironmentCommittedAfterWriteLock(
       previous: Environment?,
       current: Environment,
+      restoredFromCache: Boolean,
     ) {
+      if (restoredFromCache) return
       sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
     }
   }
