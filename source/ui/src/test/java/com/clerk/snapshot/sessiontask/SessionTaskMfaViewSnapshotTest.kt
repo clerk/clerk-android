@@ -26,10 +26,11 @@ class SessionTaskMfaViewSnapshotTest : BaseSnapshotTest() {
     mockkObject(Clerk)
     every { Clerk.mfaPhoneCodeIsEnabled } returns true
     every { Clerk.mfaAuthenticatorAppIsEnabled } returns true
+    val viewModel = SessionTaskMfaViewModel()
 
     paparazzi.snapshot {
       Box(Modifier.size(width = 390.dp, height = 640.dp)) {
-        SessionTaskMfaView(viewModel = SessionTaskMfaViewModel(), onAuthComplete = {})
+        SessionTaskMfaView(viewModel = viewModel, onAuthComplete = {})
       }
     }
   }
