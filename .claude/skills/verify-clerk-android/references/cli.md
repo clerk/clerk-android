@@ -3,9 +3,9 @@
 ## Verbs and flags
 
 ```console
-e2e-tests/bin/control-clerk-android doctor [--backend auto|local] [--live]
-e2e-tests/bin/control-clerk-android up [--backend auto|local] [--wait <seconds>]
-e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local] [--grep <regex>] [--retries <n>] [--github-report] [--no-video] [--wait <seconds>]
+e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runner <label>] [--live]
+e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
+e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
 e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> [--screenshot <label>]...
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
@@ -15,7 +15,7 @@ Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes
 
 `--github-report` is for a CI job. After the run, `run` hands the results of every settings group to `@e2e-dev/github` as one report. The reporter writes that report to the job summary. When the event of the job names a pull request and the step has a `GITHUB_TOKEN` that may write pull request comments, it also posts one comment and updates that same comment on later runs. `run` prints one `github` line that says what the reporter did, the reporter never changes the exit code, and nothing is reported for a run whose files hold a secret. Without the flag, `run` reports nothing to GitHub.
 
-`--backend auto` is the default and leaves the choice to the CLI.
+`--backend auto` is the default and leaves the choice to the CLI. `--runner` names the runner label of a remote session. With the local backend it is a usage error, and `doctor` takes it only with `--live`.
 
 ## `--wait`
 
@@ -23,6 +23,7 @@ Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes
 - It does not bound the wait for an `up` already running in this worktree. `run` waits for that `up` with no limit and prints that it is waiting.
 - Waiters get no turn order. When a lane frees, any waiting worktree can take it.
 - When the budget runs out, the verb exits 3 with `POOL_FULL` or `DEVICE_BUSY`.
+- A remote session has no lane pool, so there `--wait` only bounds the wait for another verb in this worktree.
 
 While it waits, the CLI prints a `wait` line naming each lane and the worktree that holds it, prints it again when that changes, and prints `still waiting after <n>s` every minute otherwise.
 

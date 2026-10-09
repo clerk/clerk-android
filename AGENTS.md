@@ -9,7 +9,7 @@ Don't leave commented-out code.
 
 ## Verifying changes
 
-Prove every change to `source/api`, `source/ui`, or the `:e2e` host on a real emulator before calling it done. The skill is `.claude/skills/verify-clerk-android/`. The tests and the CLI that runs them are in `e2e-tests/`. Read the skill's `SKILL.md`, then `.claude/skills/verify-clerk-android/features/README.md` for the feature you touched.
+Prove every change to `source/api`, `source/ui`, or the `:e2e` host on a real emulator before calling it done. The skill is `.claude/skills/verify-clerk-android/`. The tests and the CLI that runs them are in `e2e-tests/`. Read the skill's `SKILL.md`, then `.claude/skills/verify-clerk-android/features/README.md` for the feature you touched. This works on any machine: where the machine can run the Android emulator it runs there, and anywhere else the same commands borrow one on a CI runner.
 
 The loop is `doctor`, `up`, `run`, `down`, and `attach`, each a verb of `e2e-tests/bin/control-clerk-android`.
 
