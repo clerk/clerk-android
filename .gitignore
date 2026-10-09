@@ -27,9 +27,7 @@ local.properties
 /source/telemetry/build/
 /samples/prebuilt-ui/build/
 /e2e/build/
-/trails/config/dist/
 /docs/
-.trailblaze/
 .keys.json
 /config/detekt-rules/build/
 e2e-tests/node_modules/
