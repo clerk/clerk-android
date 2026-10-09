@@ -145,7 +145,7 @@ private fun UserButtonPresenter(
     shouldShowButton = resolved.shouldShowButton,
     user = user,
     hasPendingNonMfaTask = hasPendingNonMfaTask,
-    requiresForcedMfa = requiresForcedMfa,
+    hasSession = effectiveSession != null,
     authMode = authMode,
     telemetry = telemetry,
     onDismissPendingSessionSheet = { showPendingSessionSheet = false },
@@ -213,7 +213,7 @@ private fun ObserveUserButtonState(
   shouldShowButton: Boolean,
   user: User?,
   hasPendingNonMfaTask: Boolean,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   telemetry: TelemetryCollector,
   onDismissPendingSessionSheet: () -> Unit,
@@ -223,8 +223,8 @@ private fun ObserveUserButtonState(
     if (shouldShowButton) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
   }
   LaunchedEffect(hasPendingNonMfaTask) { if (!hasPendingNonMfaTask) onDismissPendingSessionSheet() }
-  DismissAuthWhenMfaResolved(
-    requiresForcedMfa = requiresForcedMfa,
+  DismissForcedMfaAuthWhenSignedOut(
+    hasSession = hasSession,
     authMode = authMode,
     onDismissAuth = onDismissAuth,
   )
@@ -353,13 +353,13 @@ private data class UserButtonClickCallbacks(
 )
 
 @Composable
-private fun DismissAuthWhenMfaResolved(
-  requiresForcedMfa: Boolean,
+private fun DismissForcedMfaAuthWhenSignedOut(
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   onDismissAuth: () -> Unit,
 ) {
-  LaunchedEffect(requiresForcedMfa, authMode) {
-    if (shouldDismissAuthWhenMfaResolved(authMode, requiresForcedMfa)) {
+  LaunchedEffect(hasSession, authMode) {
+    if (shouldDismissForcedMfaAuth(authMode, hasSession)) {
       onDismissAuth()
     }
   }
@@ -586,11 +586,11 @@ internal enum class UserButtonAuthMode(
   ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
 }
 
-internal fun shouldDismissAuthWhenMfaResolved(
+internal fun shouldDismissForcedMfaAuth(
   authMode: UserButtonAuthMode?,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
 ): Boolean {
-  return authMode == UserButtonAuthMode.ForcedMfa && !requiresForcedMfa
+  return authMode == UserButtonAuthMode.ForcedMfa && !hasSession
 }
 
 internal fun userButtonClickAction(
