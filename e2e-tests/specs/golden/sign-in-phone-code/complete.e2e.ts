@@ -1,0 +1,32 @@
+import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
+import { nationalDigits } from '../../phone.ts';
+
+test('signs in with the SMS code from the AuthView the home opens', async ({ host, screen }) => {
+  const user = await host.seedUser({ phone: true, password: true });
+  await host.launch();
+  await host.expectSignedOut();
+  await host.tap(host.app.signIn);
+  await expect(screen.getByTestId('clerk.auth.start.identifier')).toBeVisible({ timeout: 20_000 });
+  await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible();
+  await host.screenshot('auth-start');
+  await host.tap(screen.getByTestId('clerk.auth.start.identifierSwitcher'));
+  await host.fill(screen.getByTestId('clerk.auth.start.phoneNumber'), nationalDigits(user.phone!));
+  await host.tap(screen.getByTestId('clerk.auth.start.continue'));
+  await expect(screen.getByTestId('clerk.auth.signIn.password')).toBeVisible({ timeout: 20_000 });
+  await host.screenshot('password-screen');
+  await host.tap(screen.getByTestId('clerk.auth.signIn.useAnotherMethod'));
+  const smsCode = screen.getByTestId('clerk.auth.signIn.alternativeMethod.phone_code');
+  await expect(smsCode).toBeVisible({ timeout: 20_000 });
+  await host.screenshot('methods');
+  await host.tap(smsCode);
+  const code = screen.getByTestId('clerk.auth.signIn.code');
+  await expect(code).toBeVisible({ timeout: 20_000 });
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await expect(code).toBeVisible({ timeout: 1000 });
+  await expect(screen.getByText('Check your phone')).toBeVisible();
+  await expect(screen.getByText(user.phone!)).toBeVisible();
+  await host.screenshot('code-screen');
+  await host.fill(code, CLERK_TEST_CODE);
+  await host.expectSignedInAs(user, 30_000);
+  await host.screenshot('signed-in');
+});
