@@ -9,13 +9,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.ui.ClerkTestTags
@@ -40,12 +38,17 @@ import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+internal fun SessionTaskMfaView(
+  modifier: Modifier = Modifier,
+  viewModel: SessionTaskMfaViewModel = viewModel(),
+  onAuthComplete: () -> Unit,
+) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  val flowStep by viewModel.flowStep.collectAsStateWithLifecycle()
+  val isShowingBackupCodes = flowStep is FlowStep.BackupCodes
 
-  LaunchedEffect(session?.requiresForcedMfa) {
-    if (session?.requiresForcedMfa == false) {
+  LaunchedEffect(session?.requiresForcedMfa, isShowingBackupCodes) {
+    if (session?.requiresForcedMfa == false && !isShowingBackupCodes) {
       onAuthComplete()
     }
   }
@@ -61,7 +64,7 @@ internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: (
     SessionTaskMfaFlowContent(
       modifier = contentModifier,
       flowStep = flowStep,
-      onFlowStepChange = { flowStep = it },
+      onFlowStepChange = viewModel::setFlowStep,
     )
   }
 }
@@ -227,16 +230,4 @@ private fun BackupCodesStep(step: FlowStep.BackupCodes, onFlowStepChange: (FlowS
     mfaType = step.mfaType,
     onDismiss = { onFlowStepChange(FlowStep.ChooseMethod) },
   )
-}
-
-private sealed interface FlowStep {
-  data object ChooseMethod : FlowStep
-
-  data class AddMfa(val viewType: ViewType) : FlowStep
-
-  data object AddPhoneNumber : FlowStep
-
-  data class Verify(val mode: VerifyBottomSheetMode) : FlowStep
-
-  data class BackupCodes(val codes: List<String>, val mfaType: MfaType) : FlowStep
 }
