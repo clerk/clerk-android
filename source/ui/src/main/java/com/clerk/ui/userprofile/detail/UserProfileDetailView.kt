@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
@@ -42,6 +43,7 @@ import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.connectedaccount.userProfileExternalAccountSection
 import com.clerk.ui.userprofile.email.userProfileEmailSection
 import com.clerk.ui.userprofile.phone.userProfilePhoneSection
+import com.clerk.ui.userprofile.security.PendingBackupCodesViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -92,7 +94,9 @@ private fun UserProfileDetailViewImpl(
   isNavigationSettled: Boolean = true,
   onBackPressed: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
+  backupCodesViewModel: PendingBackupCodesViewModel = viewModel(),
 ) {
+  val pendingBackupCodes by backupCodesViewModel.pending.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val userProfileState = LocalUserProfileState.current
   val listState = rememberLazyListState()
@@ -133,18 +137,19 @@ private fun UserProfileDetailViewImpl(
           ),
       )
 
-      if (showBottomSheet) {
+      if (showBottomSheet || pendingBackupCodes != null) {
         UserProfileDetailBottomSheet(
-          bottomSheetType = bottomSheetType,
-          onDismissRequest = { showBottomSheet = false },
+          bottomSheetType =
+            pendingBackupCodes?.let { BottomSheetMode.BackupCodes(it.codes) } ?: bottomSheetType,
+          onDismissRequest = {
+            showBottomSheet = false
+            backupCodesViewModel.clear()
+          },
           onVerify = {
             bottomSheetType = it
             showBottomSheet = true
           },
-          onShowBackupCodes = {
-            bottomSheetType = BottomSheetMode.BackupCodes(it)
-            showBottomSheet = true
-          },
+          onShowBackupCodes = { backupCodesViewModel.show(it) },
         )
       }
     }
