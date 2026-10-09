@@ -291,7 +291,12 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
       SignInFactorTwoView(factor = it.factor, onAuthComplete = options.onAuthComplete)
     }
     entry<AuthDestination.SessionTaskMfa> {
-      SessionTaskMfaView(onAuthComplete = options.onAuthComplete)
+      val authState = LocalAuthState.current
+      SessionTaskMfaView(
+        onAuthComplete = {
+          authState.handleSessionTaskCompletion(Clerk.session, options.onAuthComplete)
+        }
+      )
     }
     entry<AuthDestination.SessionTaskResetPassword> {
       SessionTaskResetPasswordView(onAuthComplete = options.onAuthComplete)
