@@ -11,6 +11,8 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.delete
+import com.clerk.ui.core.log.ClerkLog
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +50,13 @@ internal class OrganizationProfileActionConfirmationViewModel(
     viewModelScope.launch(dispatcher) {
       when (val result = performAction(action, organization, membership)) {
         is ClerkResult.Success -> {
-          runCatching { refreshClient() }
+          try {
+            refreshClient()
+          } catch (e: CancellationException) {
+            throw e
+          } catch (e: Exception) {
+            ClerkLog.w("Failed to refresh client after organization action: ${e.message}")
+          }
           mutableState.value = mutableState.value.copy(isLoading = false, isComplete = true)
         }
         is ClerkResult.Failure ->

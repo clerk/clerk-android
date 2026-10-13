@@ -3,7 +3,9 @@ package com.clerk.api.organizations
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -63,8 +65,14 @@ public data class OrganizationInvitation(
 
 public suspend fun OrganizationInvitation.revoke():
   ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+  val organizationId =
+    organizationId
+      ?: return localFailure(
+        code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+        longMessage = "Cannot revoke an organization invitation without an organization ID",
+      )
   return ClerkApi.organization.revokeOrganizationInvitation(
-    organizationId = this.organizationId!!,
+    organizationId = organizationId,
     invitationId = this.id,
     sessionId = currentSessionId(),
   )

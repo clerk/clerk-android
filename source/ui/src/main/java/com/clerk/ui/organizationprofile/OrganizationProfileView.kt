@@ -31,8 +31,10 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
+import com.clerk.ui.navigation.rememberClerkNavEntryDecorators
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -58,6 +60,14 @@ import kotlinx.serialization.Serializable
  * matching [customDestination] composable is rendered. Custom destinations participate in the
  * navigation back stack and survive activity recreation.
  *
+ * When your own navigation takes this view off screen and saves its state, as Navigation Compose,
+ * Navigation 3 and Fragment back stacks do, the view comes back on the screen it was showing. Its
+ * in-progress input comes back too when the destination has its own `ViewModelStoreOwner`: a
+ * Navigation Compose destination, a Navigation 3 entry with
+ * `rememberViewModelStoreNavEntryDecorator()`, or a Fragment. When the view's `ViewModelStoreOwner`
+ * is the Activity, its ViewModels are cleared when it leaves composition, so it comes back with new
+ * ViewModels and the input is lost.
+ *
  * @param clerkTheme Optional theme customization for the organization profile UI.
  * @param isDismissible Whether to show a top-level back affordance that calls [onDismiss].
  * @param customRows Custom rows to display on the profile root screen.
@@ -80,43 +90,45 @@ public fun OrganizationProfileView(
   onDismiss: (() -> Unit)? = null,
   onComplete: (() -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    TelemetryProvider {
-      val backStack = rememberNavBackStack(OrganizationProfileDestination.Root)
-      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
-      val membership = Clerk.organizationMembership
-      val organization = membership?.organization ?: Clerk.organization
-      val dismissHandler = rememberDismissHandler(onDismiss)
-      val completeHandler = onComplete ?: dismissHandler
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      TelemetryProvider {
+        val backStack = rememberNavBackStack(OrganizationProfileDestination.Root)
+        val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+        val user by Clerk.userFlow.collectAsStateWithLifecycle()
+        val membership = Clerk.organizationMembership
+        val organization = membership?.organization ?: Clerk.organization
+        val dismissHandler = rememberDismissHandler(onDismiss)
+        val completeHandler = onComplete ?: dismissHandler
 
-      LaunchedEffect(Unit) { Clerk.refreshClient() }
-      OrganizationProfileEffects(
-        organizationId = organization?.id,
-        onComplete = completeHandler,
-        hasOrganization = organization != null,
-      )
+        LaunchedEffect(Unit) { Clerk.refreshClient() }
+        OrganizationProfileEffects(
+          organizationId = organization?.id,
+          onComplete = completeHandler,
+          hasOrganization = organization != null,
+        )
 
-      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
-        if (organization != null) {
-          OrganizationProfileNavDisplay(
-            modifier = Modifier.fillMaxSize(),
-            backStack = backStack,
-            organization = organization,
-            membership = membership,
-            isDismissible = isDismissible,
-            customRows = customRows,
-            customDestination = customDestination,
-            onDismiss = dismissHandler,
-            onComplete = completeHandler,
-          )
-        } else {
-          Box(modifier = Modifier.fillMaxSize())
+        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
+          if (organization != null) {
+            OrganizationProfileNavDisplay(
+              modifier = Modifier.fillMaxSize(),
+              backStack = backStack,
+              organization = organization,
+              membership = membership,
+              isDismissible = isDismissible,
+              customRows = customRows,
+              customDestination = customDestination,
+              onDismiss = dismissHandler,
+              onComplete = completeHandler,
+            )
+          } else {
+            Box(modifier = Modifier.fillMaxSize())
+          }
         }
-      }
 
-      LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
+        LaunchedEffect(session?.id, user?.id) {
+          if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
+        }
       }
     }
   }
@@ -140,6 +152,7 @@ private fun OrganizationProfileNavDisplay(
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
+    entryDecorators = rememberClerkNavEntryDecorators(),
     onBack = {
       handleOrganizationProfileBack(
         isAtRoot = backStack.size == 1,

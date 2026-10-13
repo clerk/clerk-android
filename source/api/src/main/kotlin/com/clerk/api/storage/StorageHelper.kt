@@ -3,7 +3,6 @@ package com.clerk.api.storage
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLogger
 
@@ -13,6 +12,7 @@ internal object StorageHelper {
 
   @Volatile private var secureStorage: SharedPreferences? = null
   @Volatile private var storageCipher: StorageCipher? = null
+  @Volatile private var preparedContext: Context? = null
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
@@ -27,13 +27,6 @@ internal object StorageHelper {
    */
   @Synchronized
   fun initialize(context: Context) {
-    if (secureStorage == null) {
-      secureStorage =
-        context.applicationContext.getSharedPreferences(
-          CLERK_PREFERENCES_FILE_NAME,
-          Context.MODE_PRIVATE,
-        )
-    }
     if (storageCipher == null) {
       storageCipher =
         runCatching { storageCipherFactoryOverride?.invoke() ?: StorageCipherFactory.create() }
@@ -41,6 +34,23 @@ internal object StorageHelper {
             ClerkLogger.w("Failed to initialize encrypted storage: ${error.message}")
           }
           .getOrNull()
+    }
+    if (secureStorage == null) {
+      secureStorage =
+        context.applicationContext.getSharedPreferences(
+          CLERK_PREFERENCES_FILE_NAME,
+          Context.MODE_PRIVATE,
+        )
+    }
+  }
+
+  fun prepare(context: Context) {
+    preparedContext = context.applicationContext
+  }
+
+  private fun initializeIfPrepared() {
+    if (secureStorage == null) {
+      preparedContext?.let(::initialize)
     }
   }
 
@@ -93,6 +103,7 @@ internal object StorageHelper {
   }
 
   private fun writeValue(key: StorageKey, value: String): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     val cipher = storageCipher
 
@@ -113,13 +124,26 @@ internal object StorageHelper {
           .onFailure { error ->
             ClerkLogger.w("Failed to encrypt value for key ${key.name}: ${error.message}")
           }
-          .map { encryptedValue -> commitEdit(prefs, key) { putString(key.name, encryptedValue) } }
+          .map { encryptedValue ->
+            commit(prefs, key, cachedDeviceToken = value) { putString(key.name, encryptedValue) }
+          }
           .getOrDefault(false)
       }
     }
   }
 
   internal fun loadValue(key: StorageKey): String? {
+    initializeIfPrepared()
+    return if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.getOrLoad(load = { readValue(key) }, canCache = ::isEncryptedStorageReady)
+    } else {
+      readValue(key)
+    }
+  }
+
+  private fun isEncryptedStorageReady(): Boolean = secureStorage != null && storageCipher != null
+
+  private fun readValue(key: StorageKey): String? {
     val prefs = secureStorage
     val storedValue = prefs?.getString(key.name, null)
     val cipher = storageCipher
@@ -133,7 +157,7 @@ internal object StorageHelper {
       }
       storedValue == null -> null
       !storedValue.startsWith(ENCRYPTED_VALUE_PREFIX) -> {
-        migrateLegacyPlaintextValue(key, storedValue)
+        migrateLegacyPlaintextValue(prefs, key, storedValue)
         storedValue
       }
       cipher == null -> {
@@ -144,7 +168,9 @@ internal object StorageHelper {
         runCatching { cipher.decrypt(storedValue.removePrefix(ENCRYPTED_VALUE_PREFIX)) }
           .onFailure { error ->
             ClerkLogger.w("Failed to decrypt stored value for key ${key.name}: ${error.message}")
-            prefs.edit(commit = true) { remove(key.name) }
+            replaceIfStillStored(prefs, key, storedValue, cachedDeviceToken = null) {
+              remove(key.name)
+            }
           }
           .getOrNull()
       }
@@ -166,6 +192,7 @@ internal object StorageHelper {
   }
 
   private fun removeValue(key: StorageKey): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     if (prefs == null) {
       ClerkLogger.w(
@@ -173,8 +200,36 @@ internal object StorageHelper {
       )
       return false
     }
-    return commitEdit(prefs, key) { remove(key.name) }
+    return commit(prefs, key, cachedDeviceToken = null) { remove(key.name) }
   }
+
+  private inline fun replaceIfStillStored(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    storedValue: String,
+    cachedDeviceToken: String?,
+    crossinline edit: SharedPreferences.Editor.() -> Unit,
+  ): Boolean {
+    val isStillStored = { prefs.getString(key.name, null) == storedValue }
+    val commit = { commitEdit(prefs, key) { edit() } }
+    return if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.writeIf(isStillStored, cachedDeviceToken, commit)
+    } else {
+      isStillStored() && commit()
+    }
+  }
+
+  private inline fun commit(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    cachedDeviceToken: String?,
+    crossinline edit: SharedPreferences.Editor.() -> Unit,
+  ): Boolean =
+    if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.write(cachedDeviceToken) { commitEdit(prefs, key) { edit() } }
+    } else {
+      commitEdit(prefs, key, edit)
+    }
 
   private fun notifyDeviceTokenChange(previousValue: String?, value: String?) {
     if (previousValue != value) {
@@ -192,15 +247,21 @@ internal object StorageHelper {
   internal fun resetToUninitializedForTesting() {
     clearStoredState()
     secureStorage = null
+    preparedContext = null
   }
 
   private fun clearStoredState() {
     valueChangeListener = null
     secureStorage?.edit()?.clear()?.commit()
     storageCipher = null
+    DeviceTokenCache.invalidate()
   }
 
-  private fun migrateLegacyPlaintextValue(key: StorageKey, value: String) {
+  private fun migrateLegacyPlaintextValue(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    value: String,
+  ) {
     if (value.isEmpty()) {
       return
     }
@@ -208,7 +269,9 @@ internal object StorageHelper {
     val cipher = storageCipher ?: return
     runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
       .onSuccess { encryptedValue ->
-        secureStorage?.edit(commit = true) { putString(key.name, encryptedValue) }
+        replaceIfStillStored(prefs, key, storedValue = value, cachedDeviceToken = value) {
+          putString(key.name, encryptedValue)
+        }
       }
       .onFailure { error ->
         ClerkLogger.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
@@ -225,6 +288,47 @@ private inline fun commitEdit(
   val committed = prefs.edit().apply(edit).commit()
   if (!committed) ClerkLogger.w("Failed to commit storage change for key: ${key.name}")
   return committed
+}
+
+private object DeviceTokenCache {
+  private class Entry(val value: String?)
+
+  private val lock = Any()
+  @Volatile private var entry: Entry? = null
+  @Volatile private var generation = 0L
+
+  fun getOrLoad(load: () -> String?, canCache: () -> Boolean): String? {
+    entry?.let {
+      return it.value
+    }
+    val readGeneration = generation
+    val readStartedCacheable = canCache()
+    val value = load()
+    synchronized(lock) {
+      if (readStartedCacheable && readGeneration == generation) {
+        entry = Entry(value)
+      }
+    }
+    return value
+  }
+
+  fun write(value: String?, commit: () -> Boolean): Boolean =
+    synchronized(lock) {
+      val committed = commit()
+      generation += 1
+      entry = if (committed) Entry(value) else null
+      committed
+    }
+
+  fun writeIf(condition: () -> Boolean, value: String?, commit: () -> Boolean): Boolean =
+    synchronized(lock) { condition() && write(value, commit) }
+
+  fun invalidate() {
+    synchronized(lock) {
+      generation += 1
+      entry = null
+    }
+  }
 }
 
 internal enum class StorageKey {

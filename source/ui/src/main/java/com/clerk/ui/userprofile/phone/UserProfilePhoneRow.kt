@@ -46,7 +46,8 @@ internal fun UserProfilePhoneRow(
   onVerify: (PhoneNumber) -> Unit,
   modifier: Modifier = Modifier,
   isInteractive: Boolean = true,
-  viewModel: UserProfileAddPhoneViewModel? = if (isInteractive) viewModel() else null,
+  viewModel: UserProfileAddPhoneViewModel? =
+    if (isInteractive) viewModel(key = "user-profile-phone-row-${phoneNumber.id}") else null,
 ) {
   val isPreview = LocalInspectionMode.current
   if (isInteractive && viewModel != null) {

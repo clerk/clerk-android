@@ -12,32 +12,17 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.Session
-import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.startingFirstFactor
-import com.clerk.api.signin.startingSecondFactor
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.firstFieldToCollect
-import com.clerk.api.signup.firstFieldToVerify
-import com.clerk.api.signup.isEmailLinkVerificationSupported
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentPrompt
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.navigation.pop
-import com.clerk.ui.signup.code.SignUpCodeField
-import com.clerk.ui.signup.collectfield.CollectField
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.util.Locale
-
-private const val EMAIL_ADDRESS = "email_address"
-
-private const val PHONE_NUMBER = "phone_number"
-
-private const val PASSWORD = "password"
-
-private const val USERNAME = "username"
 
 @Stable
 @Suppress("TooManyFunctions")
@@ -177,46 +162,64 @@ internal class AuthState(
     session: Session? = signIn.correspondingSession(),
     onAuthComplete: () -> Unit,
   ) {
-    when (signIn.status) {
-      SignIn.Status.COMPLETE -> {
-        handlePostAuthCompletion(
-          taskKey = signIn.pendingSessionTaskKey(session),
-          hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
-          shouldChooseOrganizationForCreatedSession =
-            signIn.createdSessionId != null && Clerk.organizationSelectionIsForced,
-          completedWithSignUp = false,
-          onAuthComplete = onAuthComplete,
-        )
-      }
-      SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
-      SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
-      SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
-      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
-      SignIn.Status.NEEDS_CLIENT_TRUST -> routeToClientTrustOrHelp(signIn)
-      SignIn.Status.UNKNOWN -> Unit
-    }
+    route(AuthRoutingInput.SignInStep(signIn, session), onAuthComplete)
   }
 
-  private fun handlePostAuthCompletion(
-    taskKey: SessionTaskKey?,
-    hasUnresolvedCreatedSession: Boolean,
-    shouldChooseOrganizationForCreatedSession: Boolean,
-    completedWithSignUp: Boolean,
+  internal fun setToStepForStatus(
+    signUp: SignUp,
+    session: Session? = signUp.correspondingSession(),
     onAuthComplete: () -> Unit,
   ) {
-    when (
-      postAuthCompletionAction(
-        taskKey = taskKey,
-        hasUnresolvedCreatedSession = hasUnresolvedCreatedSession,
-        shouldChooseOrganizationForCreatedSession = shouldChooseOrganizationForCreatedSession,
+    route(AuthRoutingInput.SignUpStep(signUp, session), onAuthComplete)
+  }
+
+  internal fun handleSessionTaskCompletion(session: Session?, onAuthComplete: () -> Unit) {
+    route(AuthRoutingInput.SessionStep(session), onAuthComplete)
+  }
+
+  fun navigateToAlternativeMethods(factor: Factor, isSecondFactor: Boolean = false) {
+    navigateTo(
+      if (isSecondFactor) {
+        AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
+      } else {
+        AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+      }
+    )
+  }
+
+  private fun route(input: AuthRoutingInput, onAuthComplete: () -> Unit) {
+    val context =
+      AuthRoutingContext(
+        organizationSelectionIsForced = Clerk.organizationSelectionIsForced,
+        lastSubmittedIdentifier = lastSubmittedIdentifier,
       )
-    ) {
-      PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
-      PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD -> routeToSessionTaskResetPassword()
-      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION -> routeToChooseOrganization()
-      PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
-      PostAuthCompletionAction.COMPLETE_AUTH -> {
-        if (offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp)) return
+    navigate(authNavigationCommand(input, context), onAuthComplete)
+  }
+
+  internal fun navigate(command: AuthNavigationCommand, onAuthComplete: () -> Unit) {
+    when (command) {
+      AuthNavigationCommand.None -> Unit
+      AuthNavigationCommand.ResetToRoot -> resetToRoot()
+      is AuthNavigationCommand.Push -> backStack.add(command.destination)
+      is AuthNavigationCommand.ShowSessionTask ->
+        if (backStack.lastOrNull() != command.destination) {
+          backStack.add(command.destination)
+        }
+      is AuthNavigationCommand.ReplaceSessionTask -> {
+        if (backStack.lastOrNull().isSessionTaskDestination()) {
+          backStack.removeLastOrNull()
+        }
+        if (backStack.lastOrNull() != command.destination) {
+          backStack.add(command.destination)
+        }
+      }
+      is AuthNavigationCommand.CompleteAuth -> {
+        if (
+          command.offerBiometricEnrollment &&
+            offerBiometricCredentialEnrollmentIfNeeded(command.afterSignUp)
+        ) {
+          return
+        }
         onAuthComplete()
       }
     }
@@ -239,125 +242,6 @@ internal class AuthState(
     BiometricCredentialEnrollmentPrompt.markPromptSeen(sharedPreferences)
     backStack.add(AuthDestination.BiometricCredentialEnrollment)
     return true
-  }
-
-  private fun routeToSessionTaskMfa() {
-    routeToSessionTask(AuthDestination.SessionTaskMfa)
-  }
-
-  private fun routeToSessionTaskResetPassword() {
-    routeToSessionTask(AuthDestination.SessionTaskResetPassword)
-  }
-
-  private fun routeToChooseOrganization() {
-    routeToSessionTask(AuthDestination.SessionTaskChooseOrganization)
-  }
-
-  private fun routeToSessionTask(destination: NavKey) {
-    if (backStack.lastOrNull() != destination) {
-      backStack.add(destination)
-    }
-  }
-
-  private fun routeToFirstFactorOrHelp(signIn: SignIn) {
-    val resolvedSignIn =
-      if (signIn.identifier.isNullOrBlank() && !lastSubmittedIdentifier.isNullOrBlank()) {
-        signIn.copy(identifier = lastSubmittedIdentifier)
-      } else {
-        signIn
-      }
-
-    resolvedSignIn.startingFirstFactor?.let {
-      backStack.add(AuthDestination.SignInFactorOne(factor = it))
-    } ?: backStack.add(AuthDestination.SignInGetHelp)
-  }
-
-  private fun routeToSecondFactorOrHelp(signIn: SignIn) {
-    signIn.startingSecondFactor?.let { backStack.add(AuthDestination.SignInFactorTwo(factor = it)) }
-      ?: backStack.add(AuthDestination.SignInGetHelp)
-  }
-
-  private fun routeToClientTrustOrHelp(signIn: SignIn) {
-    signIn.startingSecondFactor?.let {
-      backStack.add(AuthDestination.SignInClientTrust(factor = it))
-    } ?: backStack.add(AuthDestination.SignInGetHelp)
-  }
-
-  internal fun setToStepForStatus(
-    signUp: SignUp,
-    session: Session? = signUp.correspondingSession(),
-    onAuthComplete: () -> Unit,
-  ) {
-    when (signUp.status) {
-      SignUp.Status.ABANDONED -> resetToRoot()
-      SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
-      SignUp.Status.COMPLETE -> {
-        handlePostAuthCompletion(
-          taskKey = signUp.pendingSessionTaskKey(session),
-          hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
-          shouldChooseOrganizationForCreatedSession =
-            signUp.createdSessionId != null && Clerk.organizationSelectionIsForced,
-          completedWithSignUp = true,
-          onAuthComplete = onAuthComplete,
-        )
-        return
-      }
-      SignUp.Status.UNKNOWN -> return
-    }
-  }
-
-  private fun handleMissingRequirements(signUp: SignUp) {
-    val firstFieldToCollect = signUp.firstFieldToCollect
-    if (firstFieldToCollect != null) {
-      handleFieldCollection(signUp)
-      return
-    }
-
-    val firstFieldToVerify = signUp.firstFieldToVerify
-    if (firstFieldToVerify != null) {
-      handleFieldVerification(signUp, firstFieldToVerify)
-    }
-  }
-
-  private fun handleFieldVerification(signUp: SignUp, fieldToVerify: String) {
-    when (fieldToVerify) {
-      EMAIL_ADDRESS -> {
-        val emailAddress = signUp.emailAddress
-        if (emailAddress != null) {
-          val destination =
-            if (signUp.isEmailLinkVerificationSupported) {
-              AuthDestination.SignUpEmailLink(emailAddress = emailAddress)
-            } else {
-              AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress))
-            }
-          backStack.add(destination)
-        } else {
-          resetToRoot()
-        }
-      }
-      PHONE_NUMBER -> {
-        val phoneNumber = signUp.phoneNumber
-        if (phoneNumber != null) {
-          backStack.add(AuthDestination.SignUpCode(SignUpCodeField.Phone(phoneNumber)))
-        } else {
-          resetToRoot()
-        }
-      }
-      else -> resetToRoot()
-    }
-  }
-
-  private fun handleFieldCollection(signUp: SignUp) {
-    val nextFieldToCollect = signUp.firstFieldToCollect
-    if (nextFieldToCollect != null) {
-      when (nextFieldToCollect) {
-        PASSWORD -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Password))
-        EMAIL_ADDRESS -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Email))
-        PHONE_NUMBER -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Phone))
-        USERNAME -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Username))
-        else -> backStack.add(AuthDestination.SignUpCompleteProfile(signUp.missingFields.count()))
-      }
-    }
   }
 
   init {

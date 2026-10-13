@@ -9,6 +9,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.authenticateWithEnterpriseSso
@@ -229,14 +230,16 @@ class AuthFacadeUiGapsTest {
 
   @Test
   fun `signIn rejects an identifier combined with a typed field`() = runTest {
-    val error = runCatching {
+    val result =
       Auth().signIn {
         email = "user@example.com"
         identifier = "someone-else"
       }
-    }
 
-    assertTrue(error.exceptionOrNull() is IllegalArgumentException)
+    assertEquals(
+      LocalFailureCodes.INVALID_ARGUMENTS,
+      (result as ClerkResult.Failure).error?.errors?.firstOrNull()?.code,
+    )
     coVerify(exactly = 0) { signInApi.createSignIn(any()) }
   }
 

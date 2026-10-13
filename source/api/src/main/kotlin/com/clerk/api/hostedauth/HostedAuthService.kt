@@ -373,13 +373,16 @@ private suspend fun createHostedAuth(
 
 private suspend fun refreshSignedOutClient(responseGuard: ResponseGuard): Boolean {
   val manualClientSyncRequest = ManualClientSyncRequest()
+  val updateCountAtStart = Clerk.clientUpdateCount
   val result =
     ClerkApi.client.getSkippingClientId(manualClientSyncRequest = manualClientSyncRequest)
   if (result !is ClerkResult.Success) return false
   var flowIsCurrent = false
   responseGuard.runIfAllowed {
     flowIsCurrent = true
-    manualClientSyncRequest.runIfResponseCurrent { Clerk.updateClient(result.value) }
+    manualClientSyncRequest.runIfResponseCurrent {
+      Clerk.updateClientIfUnchangedSince(updateCountAtStart, result)
+    }
   }
   return flowIsCurrent
 }

@@ -114,6 +114,20 @@ class SharedSessionSyncCoordinatorTest {
   }
 
   @Test
+  fun `late notification from an older store revision does not overwrite a newer snapshot`() {
+    val transport = FakeTransport()
+    val coordinator = coordinator(transport)
+    coordinator.start()
+
+    coordinator.handleClientChange(Client(id = "newer"), serverFetchAtMillis = 200, revision = 2)
+    coordinator.handleClientChange(Client(id = "older"), serverFetchAtMillis = 100, revision = 1)
+
+    assertEquals("newer", transport.local?.auth?.client?.id)
+    assertEquals(1, transport.notificationCount)
+    coordinator.close()
+  }
+
+  @Test
   fun `sibling device token is copied into encrypted local storage`() = runTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "local-token")
     val transport =

@@ -25,10 +25,8 @@ import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
@@ -39,7 +37,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,6 +69,7 @@ class RestoreCredentialsTest {
         updatedAt = 0,
       )
 
+    Clerk.stateStore.reset()
     mockkObject(Clerk)
     every { Clerk.applicationContext } returns WeakReference(context)
     every { Clerk.activeSession } returns session
@@ -90,6 +88,7 @@ class RestoreCredentialsTest {
   @After
   fun tearDown() {
     unmockkAll()
+    Clerk.stateStore.reset()
     RestoreCredentials.credentialManager = RestoreCredentialManagerImpl()
   }
 
@@ -232,37 +231,36 @@ class RestoreCredentialsTest {
   fun `signIn clears its sign-in attempt and rethrows cancellation`() = runTest {
     val signIn = pendingSignIn()
     val client = Client(id = "client_1", signIn = signIn)
-    val updatedClients = mutableListOf<Client>()
     every { Clerk.activeSession } returns null
     every { Clerk.session } returns null
     every { Clerk.user } returns null
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns client
-    every { Clerk.updateClient(capture(updatedClients)) } just runs
+    Clerk.updateClient(client)
     coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
     coEvery { credentialManager.getCredential(eq(context), any()) } throws
       CancellationException("cancelled")
 
     assertCancels { RestoreCredentials.signIn() }
 
-    assertEquals(listOf(client.copy(signIn = null)), updatedClients)
+    assertEquals(client.copy(signIn = null), Clerk.client)
     coVerify(exactly = 0) { signInApi.attemptFirstFactor(any(), any()) }
   }
 
   @Test
   fun `signIn rethrows cancellation when clearing its sign-in attempt fails`() = runTest {
     val signIn = pendingSignIn()
+    val cleanupFailure = IllegalStateException("cleanup failed")
     every { Clerk.activeSession } returns null
     every { Clerk.session } returns null
     every { Clerk.user } returns null
-    every { Clerk.clientInitialized } returns true
-    every { Clerk.client } returns Client(id = "client_1", signIn = signIn)
-    every { Clerk.updateClient(any()) } throws IllegalStateException("cleanup failed")
+    Clerk.updateClient(Client(id = "client_1", signIn = signIn))
+    every { Clerk.mutateClient(any()) } throws cleanupFailure
     coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(signIn)
     coEvery { credentialManager.getCredential(eq(context), any()) } throws
       CancellationException("cancelled")
 
-    assertCancels { RestoreCredentials.signIn() }
+    val cancellation = assertCancels { RestoreCredentials.signIn() }
+
+    assertEquals(listOf(cleanupFailure), cancellation.suppressedIncludingRecoveredCause())
   }
 
   @Test
@@ -304,15 +302,20 @@ class RestoreCredentialsTest {
     coVerify(exactly = 0) { userApi.createPasskey(any()) }
   }
 
-  private suspend fun assertCancels(block: suspend () -> ClerkResult<*, *>) {
+  private suspend fun assertCancels(block: suspend () -> ClerkResult<*, *>): CancellationException {
     val result =
       try {
         block()
-      } catch (_: CancellationException) {
-        return
+      } catch (e: CancellationException) {
+        return e
       }
-    fail("Expected CancellationException, got $result")
+    throw AssertionError("Expected CancellationException, got $result")
   }
+
+  // kotlinx.coroutines stack-trace recovery may rethrow a copy whose cause is the original
+  // exception, so suppressed exceptions can sit one level down.
+  private fun Throwable.suppressedIncludingRecoveredCause(): List<Throwable> =
+    generateSequence(this) { it.cause }.flatMap { it.suppressed.asSequence() }.toList()
 
   private fun preparedPasskey(): Passkey {
     return Passkey(

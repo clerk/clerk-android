@@ -93,6 +93,44 @@ public inline fun <T : Any, E : Any, C> ClerkResult<T, E>.fold(
 }
 
 /**
+ * Returns a [ClerkResult.Success] holding [transform] applied to the value of a
+ * [ClerkResult.Success], keeping its tags, or returns the original [ClerkResult.Failure] unchanged.
+ */
+@OptIn(ExperimentalContracts::class)
+public inline fun <T : Any, R : Any, E : Any> ClerkResult<T, E>.map(
+  transform: (value: T) -> R
+): ClerkResult<R, E> {
+  contract { callsInPlace(transform, InvocationKind.AT_MOST_ONCE) }
+  return when (this) {
+    is ClerkResult.Success -> ClerkResult.Success(transform(value), tags)
+    is ClerkResult.Failure -> this
+  }
+}
+
+/**
+ * Returns a [ClerkResult.Failure] whose error is [transform] applied to the original error, keeping
+ * the throwable, status code, error type and tags, or returns the original [ClerkResult.Success]
+ * unchanged. [transform] is not called when the failure carries no error.
+ */
+@OptIn(ExperimentalContracts::class)
+public inline fun <T : Any, E : Any, F : Any> ClerkResult<T, E>.mapError(
+  transform: (error: E) -> F
+): ClerkResult<T, F> {
+  contract { callsInPlace(transform, InvocationKind.AT_MOST_ONCE) }
+  return when (this) {
+    is ClerkResult.Success -> this
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = error?.let(transform),
+        throwable = throwable,
+        code = code,
+        errorType = errorType,
+        tags = tags,
+      )
+  }
+}
+
+/**
  * Returns a new [ClerkResult] by applying [transform] to the value of a [ClerkResult.Success], or
  * returns the original [ClerkResult.Failure] if this is a failure.
  */

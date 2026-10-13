@@ -23,6 +23,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -35,7 +36,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 @RunWith(RobolectricTestRunner::class)
 class UserReloadTest {
   private lateinit var fetchedClient: Client
-  private var whileRequestInFlight: () -> Unit = {}
+  private var whileFetchIsInFlight: () -> Unit = {}
 
   @Before
   fun setup() {
@@ -43,7 +44,7 @@ class UserReloadTest {
       OkHttpClient.Builder()
         .addInterceptor(ClientSyncingMiddleware(ClerkApi.json))
         .addInterceptor { chain ->
-          whileRequestInFlight()
+          whileFetchIsInFlight()
           val response = ClerkApi.json.encodeToString(Client.serializer(), fetchedClient)
           val body = """{"response":$response,"client":null}"""
           Response.Builder()
@@ -104,7 +105,7 @@ class UserReloadTest {
     val stale = user(firstName = "Stale")
     Clerk.updateClient(clientWith(session("sess_1", stale)))
     fetchedClient = clientWith(session("sess_1", user(firstName = "Fetched")))
-    whileRequestInFlight = {
+    whileFetchIsInFlight = {
       Clerk.updateClient(clientWith(session("sess_1", user(firstName = "Concurrent"))))
     }
 
@@ -123,6 +124,21 @@ class UserReloadTest {
     val result = stale.reload()
 
     assertTrue(result is ClerkResult.Success)
+    assertEquals("Fresh", (result as ClerkResult.Success).value.firstName)
+  }
+
+  @Test
+  fun `reload does not restore a session removed locally while it was in flight`() = runTest {
+    val stale = user(firstName = "Stale")
+    Clerk.updateClient(clientWith(session("sess_1", stale)))
+    fetchedClient = clientWith(session("sess_1", user(firstName = "Fresh")))
+    whileFetchIsInFlight = {
+      Clerk.mutateClient { it.copy(sessions = emptyList(), lastActiveSessionId = null) }
+    }
+
+    val result = stale.reload()
+
+    assertNull(Clerk.session)
     assertEquals("Fresh", (result as ClerkResult.Success).value.firstName)
   }
 

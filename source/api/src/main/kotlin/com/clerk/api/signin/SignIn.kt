@@ -11,11 +11,11 @@ import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.Strategy as AuthStrategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.OAuthProvider
@@ -999,7 +999,7 @@ internal suspend fun SignIn.prepareFirstFactorImpl(
           !isRedirectStrategy &&
           paramsStrategy !in supportedFirstFactorStrategies ->
           invalidPrepareState(
-            code = "first_factor_strategy_not_supported",
+            code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
             longMessage = "${params.strategy} is not supported for this sign-in attempt",
           )
         else -> null
@@ -1026,13 +1026,17 @@ private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean
  */
 public suspend fun SignIn.sendPhoneCode(
   phoneNumberId: String? = null
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val phoneId =
-    phoneNumberId
-      ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.PhoneCode }?.phoneNumberId
-      ?: error("No phone number found for phone_code strategy")
-  return prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
-}
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    val phoneId =
+      phoneNumberId
+        ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.PhoneCode }?.phoneNumberId
+        ?: return@reportingFailures invalidPrepareState(
+          code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+          longMessage = "No phone number found for phone_code strategy",
+        )
+    prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
+  }
 
 /**
  * Sends a verification code to the user's email address for first factor authentication.
@@ -1047,13 +1051,17 @@ public suspend fun SignIn.sendPhoneCode(
  */
 public suspend fun SignIn.sendEmailCode(
   emailAddressId: String? = null
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val emailId =
-    emailAddressId
-      ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.EmailCode }?.emailAddressId
-      ?: error("No email address found for email_code strategy")
-  return prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
-}
+): ClerkResult<SignIn, ClerkErrorResponse> =
+  Clerk.auth.reportingFailures {
+    val emailId =
+      emailAddressId
+        ?: supportedFirstFactors?.find { it.strategyType == AuthStrategy.EmailCode }?.emailAddressId
+        ?: return@reportingFailures invalidPrepareState(
+          code = FIRST_FACTOR_STRATEGY_NOT_SUPPORTED,
+          longMessage = "No email address found for email_code strategy",
+        )
+    prepareFirstFactorImpl(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
+  }
 
 /**
  * Prepares the second factor verification for the sign-in process.
@@ -1109,13 +1117,11 @@ public suspend fun SignIn.prepareSecondFactor(
 internal fun invalidPrepareState(
   code: String,
   longMessage: String,
-): ClerkResult.Failure<ClerkErrorResponse> {
-  return ClerkResult.apiFailure(
-    ClerkErrorResponse(
-      errors = listOf(Error(message = "is invalid", longMessage = longMessage, code = code))
-    )
-  )
-}
+): ClerkResult.Failure<ClerkErrorResponse> =
+  localFailure(code = code, longMessage = longMessage, message = "is invalid")
+
+internal const val FIRST_FACTOR_STRATEGY_NOT_SUPPORTED = "first_factor_strategy_not_supported"
+internal const val SECOND_FACTOR_STRATEGY_NOT_SUPPORTED = "second_factor_strategy_not_supported"
 
 /**
  * Sends a verification code to the user's phone number for MFA (second factor) authentication.

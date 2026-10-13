@@ -15,6 +15,8 @@ internal object ClerkLog {
 
   fun e(message: String): Int = safeLog { Log.e(TAG, "Clerk error: $message") }
 
+  fun w(message: String): Int = safeLog { Log.w(TAG, "Clerk warning: $message") }
+
   fun d(message: String): Int = if (Clerk.debugMode) safeLog { Log.d(TAG, message) } else 0
 
   fun v(message: String): Int = if (Clerk.debugMode) safeLog { Log.v(TAG, message) } else 0

@@ -23,6 +23,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -344,6 +345,39 @@ class ExternalAccountServiceTest {
 
     assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
     assertEquals(503, failure.code)
+  }
+
+  @Test
+  fun `connectExternalAccount returns an HTTP failure without a status code unchanged`() = runTest {
+    val initial =
+      ClerkResult.Failure<ClerkErrorResponse>(
+        error = null,
+        code = null,
+        errorType = ClerkResult.Failure.ErrorType.HTTP,
+      )
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns initial
+
+    val result =
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+
+    assertSame(initial, result)
+  }
+
+  @Test
+  fun `connectExternalAccount keeps the original throwable of an unknown failure`() = runTest {
+    val cause = IOException("socket closed")
+    val initial = ClerkResult.unknownFailure(cause)
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns initial
+
+    val failure =
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      ) as ClerkResult.Failure
+
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertSame(cause, failure.throwable)
   }
 
   private companion object {
