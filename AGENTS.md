@@ -17,7 +17,9 @@ Don't leave commented-out code.
 
 ## Verifying changes
 
-Prove every change to `source/api`, `source/ui`, or the `:e2e` host on a real emulator before calling it done. The skill is `.claude/skills/verify-clerk-android/`. The tests and the CLI that runs them are in `e2e-tests/`. Read the skill's `SKILL.md`, then `.claude/skills/verify-clerk-android/features/README.md` for the feature you touched. The skill needs a Clerk Platform API key, which Clerk team members have. Without one, say in the pull request that the change was not run on a device.
+Prove every change to `source/api`, `source/ui`, or the `:e2e` host on an emulator before calling it done, and put the screenshots or video on the pull request. How you prove it is up to you. The verification skill in this repository is one way. An app of your own that exercises the change is just as good. If you could not run it on a device at all, say so in the pull request.
+
+The skill is `.claude/skills/verify-clerk-android/`. The tests and the CLI that runs them are in `e2e-tests/`. Read the skill's `SKILL.md`, then `.claude/skills/verify-clerk-android/features/README.md` for the feature you touched. The skill needs a Clerk Platform API key, which Clerk team members have.
 
 The loop is `doctor`, `up`, `run`, `down`, and `attach`, each a verb of `e2e-tests/bin/control-clerk-android`.
 

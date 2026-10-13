@@ -9,7 +9,7 @@ description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileVi
 
 The tests are an ordinary e2e project. `e2e.config.ts` and `specs/` run under `npx e2e run` when the environment names a device, a build of the test app, and a development instance's keys. The CLI sits on top: it makes those three for a run and keeps the evidence. [The package README](../../../e2e-tests/README.md) has the commands for a run by hand and what such a run leaves out.
 
-The rule: no change to clerk-android UI or auth behavior is done until a `run` on the real host shows the changed behavior.
+The rule: no change to clerk-android UI or auth behavior is done until an emulator shows the changed behavior. A `run` on the host is one way to show it. An app of your own that exercises the change is just as good.
 
 Run every command from the repo root. The tests and the CLI are the Node package `e2e-tests/`, and paths that begin `specs/`, `src/`, or `.verify/` are inside it. `features/` and `references/` are beside this file. `features/` is the Feature Map. Start with `features/README.md`.
 
