@@ -8,8 +8,22 @@ import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.invalidBuilderArguments
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.VerificationType
+import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+
+/**
+ * Submits the proof produced by Protect for this sign-up.
+ *
+ * @param proofToken The proof token returned after completing the Protect challenge.
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+public suspend fun SignUp.submitProtectCheck(
+  proofToken: String
+): ClerkResult<SignUp, ClerkErrorResponse> {
+  return ClerkApi.signUp.submitProtectCheck(id = id, proofToken = proofToken)
+}
 
 /**
  * Sends a verification code to the specified email or phone.

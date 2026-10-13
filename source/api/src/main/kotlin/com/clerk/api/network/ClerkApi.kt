@@ -20,6 +20,7 @@ import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
+import com.clerk.protect.interceptor.ProtectOkHttpInterceptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -144,6 +145,8 @@ internal object ClerkApi {
           if (Clerk.debugMode) {
             addInterceptor(RequestLoggingMiddleware.create())
           }
+
+          addInterceptor(ProtectOkHttpInterceptor())
         }
         .build()
 

@@ -35,6 +35,13 @@ internal interface SignUpApi {
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
   @FormUrlEncoded
+  @PATCH(ApiPaths.Client.SignUp.PROTECT_CHECK)
+  suspend fun submitProtectCheck(
+    @Path(ApiParams.ID) id: String,
+    @Field(ApiParams.PROOF_TOKEN) proofToken: String,
+  ): ClerkResult<SignUp, ClerkErrorResponse>
+
+  @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
     @Path(ApiParams.ID) signUpId: String,

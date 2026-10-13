@@ -43,6 +43,8 @@ internal sealed interface AuthNavigationCommand {
 
   data class ShowSessionTask(val destination: NavKey) : AuthNavigationCommand
 
+  data class ShowProtectCheck(val destination: NavKey) : AuthNavigationCommand
+
   data class ReplaceSessionTask(val destination: NavKey) : AuthNavigationCommand
 
   data class CompleteAuth(val offerBiometricEnrollment: Boolean, val afterSignUp: Boolean = false) :
@@ -97,6 +99,17 @@ private fun signInCommand(
   session: Session?,
   context: AuthRoutingContext,
 ): AuthNavigationCommand =
+  if (signIn.protectCheck != null) {
+    AuthNavigationCommand.ShowProtectCheck(AuthDestination.SignInProtectCheck)
+  } else {
+    signInStatusCommand(signIn, session, context)
+  }
+
+private fun signInStatusCommand(
+  signIn: SignIn,
+  session: Session?,
+  context: AuthRoutingContext,
+): AuthNavigationCommand =
   when (signIn.status) {
     SignIn.Status.COMPLETE ->
       postAuthCommand(
@@ -121,10 +134,23 @@ private fun signInCommand(
       AuthNavigationCommand.Push(AuthDestination.SignInSetNewPassword)
     SignIn.Status.NEEDS_CLIENT_TRUST ->
       pushOrHelp(signIn.startingSecondFactor?.let { AuthDestination.SignInClientTrust(it) })
+    SignIn.Status.NEEDS_PROTECT_CHECK ->
+      AuthNavigationCommand.ShowProtectCheck(AuthDestination.SignInProtectCheck)
     SignIn.Status.UNKNOWN -> AuthNavigationCommand.None
   }
 
 private fun signUpCommand(
+  signUp: SignUp,
+  session: Session?,
+  context: AuthRoutingContext,
+): AuthNavigationCommand =
+  if (signUp.protectCheck != null) {
+    AuthNavigationCommand.ShowProtectCheck(AuthDestination.SignUpProtectCheck)
+  } else {
+    signUpStatusCommand(signUp, session, context)
+  }
+
+private fun signUpStatusCommand(
   signUp: SignUp,
   session: Session?,
   context: AuthRoutingContext,
@@ -146,6 +172,8 @@ private fun missingRequirementsCommand(signUp: SignUp): AuthNavigationCommand {
   val fieldToCollect = signUp.firstFieldToCollect
   val fieldToVerify = signUp.firstFieldToVerify
   return when {
+    PROTECT_CHECK in signUp.missingFields ->
+      AuthNavigationCommand.ShowProtectCheck(AuthDestination.SignUpProtectCheck)
     fieldToCollect != null ->
       AuthNavigationCommand.Push(
         collectField(fieldToCollect)?.let { AuthDestination.SignUpCollectField(it) }
@@ -247,3 +275,4 @@ private const val EMAIL_ADDRESS = "email_address"
 private const val PHONE_NUMBER = "phone_number"
 private const val PASSWORD = "password"
 private const val USERNAME = "username"
+private const val PROTECT_CHECK = "protect_check"

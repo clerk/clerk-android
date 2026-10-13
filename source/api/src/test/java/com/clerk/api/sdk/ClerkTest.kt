@@ -76,6 +76,9 @@ class ClerkTest {
     every { mockEnvironment.authConfig } returns AuthConfig(singleSessionMode = false)
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
     every { mockEnvironment.userSettings } returns mockUserSettings
+    every { mockEnvironment.protectConfig } returns null
+    every { mockEnvironment.frontendApi } returns null
+    every { mockDisplayConfig.frontendApiUrl } returns null
     every { mockDisplayConfig.logoImageUrl } returns "https://example.com/logo.png"
     every { mockDisplayConfig.applicationName } returns "Test App"
     every { mockDisplayConfig.supportEmail } returns null
@@ -127,6 +130,9 @@ class ClerkTest {
         every { uninitializedEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
         every { uninitializedEnvironment.displayConfig } returns uninitializedDisplayConfig
         every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
+        every { uninitializedEnvironment.protectConfig } returns null
+        every { uninitializedEnvironment.frontendApi } returns null
+        every { uninitializedDisplayConfig.frontendApiUrl } returns null
         every { uninitializedDisplayConfig.logoImageUrl } returns ""
         every { uninitializedDisplayConfig.applicationName } returns ""
         every { uninitializedDisplayConfig.supportEmail } returns null

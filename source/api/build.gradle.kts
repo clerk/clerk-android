@@ -123,6 +123,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.playServicesAuth)
   implementation(libs.clerk.automap.annotations)
+  implementation(libs.clerk.protect)
   implementation(libs.google.identity)
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)

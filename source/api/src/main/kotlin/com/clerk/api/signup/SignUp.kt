@@ -18,6 +18,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import com.clerk.api.protect.ProtectCheckResource
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -186,6 +187,9 @@ public data class SignUp(
    * @return The abandonment timestamp in milliseconds since epoch, null if not abandoned.
    */
   @SerialName("abandoned_at") val abandonedAt: Long? = null,
+
+  /** Opaque Protect challenge data when this sign-up requires a Protect check. */
+  @SerialName("protect_check") val protectCheck: ProtectCheckResource? = null,
 ) {
   /**
    * Represents the current status of the sign-up process.

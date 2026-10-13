@@ -21,6 +21,9 @@ internal data class DisplayConfig(
   @SerialName("privacy_policy_url") val privacyPolicyUrl: String?,
   @SerialName("terms_url") val termsUrl: String?,
   @SerialName("google_one_tap_client_id") val googleOneTapClientId: String?,
+
+  /** Frontend API URL used as a fallback when configuring Clerk Protect. */
+  @SerialName("frontend_api_url") val frontendApiUrl: String? = null,
 )
 
 @OptIn(ExperimentalSerializationApi::class)

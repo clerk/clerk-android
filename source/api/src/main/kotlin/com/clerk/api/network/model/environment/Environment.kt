@@ -5,6 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 internal data class Environment(
@@ -14,6 +15,8 @@ internal data class Environment(
   @SerialName("organization_settings")
   val organizationSettings: OrganizationSettings = OrganizationSettings(),
   @SerialName("commerce_settings") val commerceSettings: CommerceSettings = CommerceSettings(),
+  @SerialName("protect_config") val protectConfig: JsonObject? = null,
+  @SerialName("frontend_api") val frontendApi: String? = null,
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }

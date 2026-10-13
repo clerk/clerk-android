@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
@@ -35,6 +36,7 @@ import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.protect.ClerkProtect
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.ReverificationConfig
 import com.clerk.api.session.Session
@@ -874,6 +876,7 @@ public object Clerk {
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
     ExternalAccountService.cancelPendingExternalAccountConnection()
+    ClerkProtect.reset()
     LocaleProvider.cleanup()
     ClerkApi.reset()
     publishableKey = null
@@ -1015,6 +1018,11 @@ public object Clerk {
    */
   public suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> =
     configurationManager.clearDeviceToken()
+
+  @VisibleForTesting
+  internal fun setProtectAssertion(token: String?) {
+    ClerkProtect.setAssertion(token)
+  }
 
   /**
    * Returns the current device token from encrypted storage, or null if unavailable.
@@ -1158,6 +1166,10 @@ public object Clerk {
       current: Environment,
       restoredFromCache: Boolean,
     ) {
+      ClerkProtect.initialize(
+        environment = current,
+        fapiOrigin = runCatching { baseUrl }.getOrNull()?.takeIf(String::isNotBlank),
+      )
       if (restoredFromCache) return
       sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
     }

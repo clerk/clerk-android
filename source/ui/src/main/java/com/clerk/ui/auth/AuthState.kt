@@ -201,17 +201,13 @@ internal class AuthState(
       AuthNavigationCommand.None -> Unit
       AuthNavigationCommand.ResetToRoot -> resetToRoot()
       is AuthNavigationCommand.Push -> backStack.add(command.destination)
-      is AuthNavigationCommand.ShowSessionTask ->
-        if (backStack.lastOrNull() != command.destination) {
-          backStack.add(command.destination)
-        }
+      is AuthNavigationCommand.ShowSessionTask -> pushUnlessOnTop(command.destination)
+      is AuthNavigationCommand.ShowProtectCheck -> pushUnlessOnTop(command.destination)
       is AuthNavigationCommand.ReplaceSessionTask -> {
         if (backStack.lastOrNull().isSessionTaskDestination()) {
           backStack.removeLastOrNull()
         }
-        if (backStack.lastOrNull() != command.destination) {
-          backStack.add(command.destination)
-        }
+        pushUnlessOnTop(command.destination)
       }
       is AuthNavigationCommand.CompleteAuth -> {
         if (
@@ -222,6 +218,12 @@ internal class AuthState(
         }
         onAuthComplete()
       }
+    }
+  }
+
+  private fun pushUnlessOnTop(destination: NavKey) {
+    if (backStack.lastOrNull() != destination) {
+      backStack.add(destination)
     }
   }
 
