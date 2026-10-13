@@ -17,7 +17,7 @@ dokka = "2.2.0"
 firebase-appDistrubution = "5.3.0"
 googleGms = "4.5.0"
 ksp = "2.3.12"
-lifecycleProcess = "2.10.0"
+lifecycle = "2.11.0"
 material3 = "1.4.0"
 materialKolor = "4.1.1"
 mavenPublish = "0.37.0"
@@ -40,7 +40,8 @@ jdk = "21"
 jvmTarget = "17"
 kotlin = "2.4.21"
 minSdk = "24"
-compileSdk = "36"
+compileSdk = "37"
+targetSdk = "36"
 
 
 [libraries]
@@ -57,12 +58,12 @@ androidx-compose-icons = "org.jetbrains.compose.material:material-icons-core:1.7
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-core = { module = "androidx.test:core", version.ref = "core" }
 androidx-credentials = "androidx.credentials:credentials:1.6.0"
-androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.10.0"
-androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
-androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.10.0"
-androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
-androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0"
-androidx-lifecycle-viewmodel-navigation3 = "androidx.lifecycle:lifecycle-viewmodel-navigation3:2.10.0"
+androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycle" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.6.0"
