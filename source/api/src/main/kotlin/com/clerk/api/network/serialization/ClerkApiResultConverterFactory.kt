@@ -10,11 +10,11 @@ import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.session.Session
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-/**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
     type: Type,
@@ -26,11 +26,11 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       return null
     }
 
-    val successType = (type as ParameterizedType).actualTypeArguments[0]
-    val errorType = type.actualTypeArguments[1]
-
-    val errorResultType: Annotation = createResultType(errorType)
-    val nextAnnotations = annotations.toList() + errorResultType
+    // ClerkResult<out T, ...> reaches Retrofit as `? extends T` for suspend functions.
+    val successType =
+      (type as ParameterizedType).actualTypeArguments[0].let {
+        if (it is WildcardType) it.upperBounds.single() else it
+      }
 
     // For List<Session>, don't wrap in ClientPiggybackedResponse - it comes as plain JSON array
     val isSessionList =
@@ -45,7 +45,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         )
         successType
       } else {
-        // Check if the success type should be wrapped in ClientPiggybackedResponse
         val shouldWrap = shouldWrapInClientPiggybackedResponse(successType)
 
         if (shouldWrap) {
@@ -56,11 +55,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       }
 
     val delegateConverter =
-      retrofit.nextResponseBodyConverter<Any>(
-        this,
-        actualSuccessType,
-        nextAnnotations.toTypedArray(),
-      )
+      retrofit.nextResponseBodyConverter<Any>(this, actualSuccessType, annotations)
 
     return ClerkApiResultConverter(delegateConverter)
   }
@@ -71,7 +66,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     }
     val rawType = getRawType(successType)
 
-    // Don't wrap the Environment type
     return rawType.name !in getExcludedTypeNames()
   }
 
@@ -109,7 +103,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     override fun convert(value: ResponseBody): ClerkResult<*, *>? {
 
       return delegate.convert(value)?.let { result ->
-        // If the result is a ClientPiggybackedResponse, unwrap it
         val unwrappedResult =
           if (result is ClientPiggybackedResponse<*>) {
             result.response

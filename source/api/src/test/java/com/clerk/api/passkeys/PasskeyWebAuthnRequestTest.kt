@@ -6,6 +6,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class PasskeyWebAuthnRequestTest {
@@ -114,5 +115,17 @@ class PasskeyWebAuthnRequestTest {
       )
 
     assertEquals("fapi.example.com", request.rpId)
+  }
+
+  @Test
+  fun `createWebAuthnRequest fails without server or Clerk relying party id`() {
+    mockkObject(Clerk)
+    every { Clerk.baseUrl } returns "not-a-url"
+
+    assertThrows(IllegalStateException::class.java) {
+      GoogleCredentialAuthenticationService.createWebAuthnRequest(
+        nonce = """{"challenge":"test-challenge"}"""
+      )
+    }
   }
 }

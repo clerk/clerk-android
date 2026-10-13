@@ -1,24 +1,24 @@
 package com.clerk.api.biometriccredential
 
 /** Local availability state for biometric sign-in. */
-sealed interface BiometricCredentialAvailability {
+public sealed interface BiometricCredentialAvailability {
 
   /** Biometric sign-in can be started with a local credential on this device. */
-  data object Available : BiometricCredentialAvailability
+  public data object Available : BiometricCredentialAvailability
 
   /** Biometric sign-in is unavailable for the given [reason]. */
-  data class Unavailable(val reason: UnavailableReason) : BiometricCredentialAvailability
+  public data class Unavailable(val reason: UnavailableReason) : BiometricCredentialAvailability
 
   /** Whether the SDK has a local credential and key that can be used for biometric sign-in. */
-  val isAvailable: Boolean
+  public val isAvailable: Boolean
     get() = this is Available
 
   /** The reason biometric sign-in is unavailable, if any. */
-  val unavailableReason: UnavailableReason?
+  public val unavailableReason: UnavailableReason?
     get() = (this as? Unavailable)?.reason
 
   /** The reason biometric sign-in is unavailable. */
-  enum class UnavailableReason {
+  public enum class UnavailableReason {
     /** The Clerk environment has not been loaded yet. */
     ENVIRONMENT_UNAVAILABLE,
 

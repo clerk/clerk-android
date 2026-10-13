@@ -8,8 +8,10 @@ import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.state.ClientStateStore
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -30,25 +32,11 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 private const val SERVER_DATE_HEADER = "Date"
 private const val SERVER_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
-/**
- * Network middleware that automatically syncs the Clerk client state from API responses.
- *
- * This middleware intercepts successful JSON responses and checks for either a direct client
- * response or a piggybacked "client" field. If found, it deserializes the client data and updates
- * the global [Clerk.client] state.
- *
- * @property json The JSON serializer used for deserializing the client data.
- */
 internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
-  /**
-   * Intercepts network responses to sync client state.
-   *
-   * @param chain The interceptor chain.
-   * @return The original response, potentially with a new body if it was read for client syncing.
-   */
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
+    val orderAtArrival = Clerk.stateStore.observeResponse(response.serverDateMillis())
     val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
     manualClientSyncRequest?.recordResponse(
       requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
@@ -63,20 +51,24 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         ClerkLog.d("Client sync skipped for a response using a stale shared device token")
         response
       }
-      manualClientSyncRequest != null -> response
-      else -> syncResponse(request = request, response = response)
+      manualClientSyncRequest != null -> response.withResponseOrder(orderAtArrival)
+      else ->
+        syncResponse(request = request, response = response, order = orderAtArrival)
+          .withResponseOrder(orderAtArrival)
     }
   }
 
   @Suppress("NestedBlockDepth")
-  private fun syncResponse(request: Request, response: Response): Response {
-    // Only process JSON responses
+  private fun syncResponse(
+    request: Request,
+    response: Response,
+    order: ClientStateStore.ResponseOrder?,
+  ): Response {
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
       responseBody.let {
         try {
-          // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
           val authEvents =
             if (jsonElement is JsonObject) {
@@ -89,16 +81,13 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           }
           syncClientFromResponse(
             request = request,
+            response = response,
             jsonElement = jsonElement,
-            serverFetchAtMillis = response.serverFetchAtMillis(),
+            order = order,
             completedAuthFlow = completedAuthFlow,
           )
 
           authEvents.forEach(Clerk.auth::send)
-
-          // Return the original response with its body
-          val newBody = it.toResponseBody(body.contentType())
-          return response.newBuilder().body(newBody).build()
         } catch (e: SerializationException) {
           ClerkLog.e("Error deserializing client: ${e.message}")
         } catch (e: IOException) {
@@ -106,6 +95,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         } catch (e: IllegalArgumentException) {
           ClerkLog.e("Error parsing JSON: ${e.message}")
         }
+
+        val newBody = it.toResponseBody(body.contentType())
+        return response.newBuilder().body(newBody).build()
       }
     }
 
@@ -114,8 +106,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   private fun syncClientFromResponse(
     request: Request,
+    response: Response,
     jsonElement: JsonElement,
-    serverFetchAtMillis: Long,
+    order: ClientStateStore.ResponseOrder?,
     completedAuthFlow: AuthEvent?,
   ) {
     if (jsonElement !is JsonObject) return
@@ -128,15 +121,15 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             ClerkLog.d("Client sync skipped null piggyback client")
           } else {
             ClerkLog.d("Client sync cleared by explicit null client")
-            request.syncClient { Clerk.updateClient(Client(), serverFetchAtMillis) }
+            request.syncClient(response) { Clerk.applyClientResponse(Client(), order) }
           }
         }
         null -> Unit
         else ->
-          request.syncClient {
+          request.syncClient(response) {
             syncClerkClient(
               client = json.decodeFromJsonElement(clientJson),
-              serverFetchAtMillis = serverFetchAtMillis,
+              order = order,
               completedAuthFlow = completedAuthFlow,
             )
           }
@@ -144,11 +137,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
       return
     }
 
-    if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
-      request.syncClient {
+    if (request.isClientFetch()) {
+      request.syncClient(response) {
         syncClerkClient(
           client = json.decodeFromJsonElement(jsonElement),
-          serverFetchAtMillis = serverFetchAtMillis,
+          order = order,
           completedAuthFlow = completedAuthFlow,
         )
       }
@@ -222,11 +215,19 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   }
 
   private fun decodeSignIn(responseElement: JsonElement): SignIn? {
-    return runCatching { json.decodeFromJsonElement<SignIn>(responseElement) }.getOrNull()
+    return try {
+      json.decodeFromJsonElement<SignIn>(responseElement)
+    } catch (_: Exception) {
+      null
+    }
   }
 
   private fun decodeSignUp(responseElement: JsonElement): SignUp? {
-    return runCatching { json.decodeFromJsonElement<SignUp>(responseElement) }.getOrNull()
+    return try {
+      json.decodeFromJsonElement<SignUp>(responseElement)
+    } catch (_: Exception) {
+      null
+    }
   }
 
   private fun isSignInCreationRequest(path: String, method: String): Boolean {
@@ -238,30 +239,61 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   }
 }
 
-private fun Request.syncClient(sync: () -> Unit) {
-  tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
+/**
+ * Re-checks that the response's device token is still current immediately before applying its
+ * client, since the device token may change while the body is read and decoded. This narrows but
+ * does not close the window: the check and apply are not atomic because applying the client
+ * notifies shared-session sync, which takes its own lock and then storage's device-token lock.
+ */
+private fun Request.syncClient(response: Response, sync: () -> Unit) {
+  val guardedSync: () -> Unit = {
+    if (
+      Clerk.isClientResponseCurrent(
+        requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
+        responseDeviceToken = response.header(AUTHORIZATION_HEADER),
+      )
+    ) {
+      sync()
+    } else {
+      ClerkLog.d("Client sync skipped: device token changed while reading the response")
+    }
+  }
+  tag(ResponseGuard::class.java)?.runIfAllowed(guardedSync) ?: guardedSync()
 }
+
+private fun Request.isClientFetch(): Boolean =
+  method == "GET" && url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")
 
 private fun syncClerkClient(
   client: Client,
-  serverFetchAtMillis: Long,
+  order: ClientStateStore.ResponseOrder?,
   completedAuthFlow: AuthEvent?,
 ) {
   ClerkLog.d("Client synced: ${client.id}")
-  Clerk.updateClient(
+  Clerk.applyClientResponse(
     client = client,
-    serverFetchAtMillis = serverFetchAtMillis,
+    order = order,
     completedAuthFlow = completedAuthFlow,
   )
 }
 
-private fun Response.serverFetchAtMillis(): Long {
-  val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
-  return runCatching {
-      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-        .apply { timeZone = TimeZone.getTimeZone("GMT") }
-        .parse(serverDate)
-        ?.time
-    }
-    .getOrNull() ?: System.currentTimeMillis()
+internal fun ClerkResult.Success<*>.responseOrder(): ClientStateStore.ResponseOrder? =
+  (tags[Response::class] as? Response)?.request?.tag(ClientStateStore.ResponseOrder::class.java)
+
+private fun Response.withResponseOrder(order: ClientStateStore.ResponseOrder?): Response {
+  order ?: return this
+  val taggedRequest = request.newBuilder().tag(ClientStateStore.ResponseOrder::class.java, order)
+  return newBuilder().request(taggedRequest.build()).build()
+}
+
+private fun Response.serverDateMillis(): Long? {
+  val serverDate = header(SERVER_DATE_HEADER) ?: return null
+  return try {
+    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+      .apply { timeZone = TimeZone.getTimeZone("GMT") }
+      .parse(serverDate)
+      ?.time
+  } catch (_: Exception) {
+    null
+  }
 }

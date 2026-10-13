@@ -35,9 +35,10 @@ internal object SafeUriLog {
     }
   }
 
-  private fun queryParamKeys(uri: Uri): Set<String> =
-    runCatching { uri.queryParameterNames.map { it.trim() }.filter { it.isNotEmpty() }.toSet() }
-      .getOrDefault(emptySet())
+  private fun queryParamKeys(uri: Uri): Set<String> = runCatching {
+    uri.queryParameterNames.map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+  }
+    .getOrDefault(emptySet())
 
   private fun fragmentParamKeys(fragment: String?): Set<String> {
     if (fragment.isNullOrBlank()) return emptySet()

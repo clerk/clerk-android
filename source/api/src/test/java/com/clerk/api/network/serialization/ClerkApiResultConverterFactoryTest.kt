@@ -1,9 +1,11 @@
 package com.clerk.api.network.serialization
 
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.response.ClientPiggybackedResponse
 import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.MediaType.Companion.toMediaType
@@ -12,6 +14,8 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,102 +37,96 @@ class ClerkApiResultConverterFactoryTest {
 
   @Test
   fun `responseBodyConverter returns null for non-ClerkResult types`() {
-    // Given
     val stringType = String::class.java
     val annotations = emptyArray<Annotation>()
 
-    // When
     val converter = converterFactory.responseBodyConverter(stringType, annotations, mockRetrofit)
 
-    // Then
     assertNull(converter)
   }
 
+  @Suppress("UNCHECKED_CAST")
   @Test
-  fun `responseBodyConverter returns converter for parameterized ClerkResult types`() {
-    // Given
+  fun `responseBodyConverter wraps success type in piggyback response and unwraps on convert`() {
     val clerkResultType =
       createParameterizedType(ClerkResult::class.java, String::class.java, Exception::class.java)
-    val annotations = emptyArray<Annotation>()
+    val requestedType = slot<Type>()
+    val delegateConverter = mockk<Converter<ResponseBody, Any>>()
+    every { delegateConverter.convert(any()) } returns
+      ClientPiggybackedResponse(response = "unwrapped", client = null)
+    every {
+      mockRetrofit.nextResponseBodyConverter<Any>(any(), capture(requestedType), any())
+    } returns delegateConverter
 
-    // Mock the retrofit.nextResponseBodyConverter to return a mock converter
-    val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>(relaxed = true)
-    every { mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), any()) } returns
-      mockDelegateConverter
-
-    // When
     val converter =
-      converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
+      converterFactory.responseBodyConverter(clerkResultType, emptyArray(), mockRetrofit)
+        as Converter<ResponseBody, ClerkResult<*, *>>
 
-    // Then
-    assertNotNull(converter)
+    val delegateType = requestedType.captured as ParameterizedType
+    assertEquals(ClientPiggybackedResponse::class.java, delegateType.rawType)
+    assertEquals(listOf<Type>(String::class.java), delegateType.actualTypeArguments.toList())
+
+    val result = converter.convert("{}".toResponseBody("application/json".toMediaType()))
+    assertTrue(result is ClerkResult.Success)
+    assertEquals("unwrapped", (result as ClerkResult.Success).value)
   }
 
   @Test
   fun `responseBodyConverter handles Environment type without wrapping`() {
-    // Given
     val environmentResultType =
       createParameterizedType(
         ClerkResult::class.java,
         Environment::class.java,
         Exception::class.java,
       )
-    val annotations = emptyArray<Annotation>()
 
-    // Mock the retrofit.nextResponseBodyConverter to return a mock converter
-    val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>(relaxed = true)
-    every { mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), any()) } returns
-      mockDelegateConverter
-
-    // When
-    val converter =
-      converterFactory.responseBodyConverter(environmentResultType, annotations, mockRetrofit)
-
-    // Then
-    assertNotNull(converter)
+    assertEquals(Environment::class.java, requestedDelegateType(environmentResultType))
   }
 
   @Test
   fun `responseBodyConverter handles List of Session without wrapping`() {
-    // Given
     val sessionListType = createParameterizedType(List::class.java, Session::class.java)
     val clerkResultType =
       createParameterizedType(ClerkResult::class.java, sessionListType, Exception::class.java)
-    val annotations = emptyArray<Annotation>()
 
-    // Mock the retrofit.nextResponseBodyConverter to return a mock converter
-    val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>(relaxed = true)
-    every { mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), any()) } returns
-      mockDelegateConverter
-
-    // When
-    val converter =
-      converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
-
-    // Then
-    assertNotNull(converter)
+    assertSame(sessionListType, requestedDelegateType(clerkResultType))
   }
 
   @Test
-  fun `shouldWrapInClientPiggybackedResponse returns false for List of Session`() {
-    // Given a List<Session> type
-    val sessionListType = createParameterizedType(List::class.java, Session::class.java)
+  fun `responseBodyConverter passes the caller's annotations to the delegate unchanged`() {
+    val clerkResultType =
+      createParameterizedType(
+        ClerkResult::class.java,
+        Environment::class.java,
+        Exception::class.java,
+      )
+    val annotations = arrayOf<Annotation>(Deprecated("marker"))
+    val delegateAnnotations = slot<Array<Annotation>>()
+    every {
+      mockRetrofit.nextResponseBodyConverter<Any>(any(), any(), capture(delegateAnnotations))
+    } returns mockk(relaxed = true)
 
-    // When we check if it's a List
-    val isListType = sessionListType.rawType == List::class.java
+    converterFactory.responseBodyConverter(clerkResultType, annotations, mockRetrofit)
 
-    // Then it should be identified as a List
-    assertEquals(true, isListType)
+    assertEquals(annotations.toList(), delegateAnnotations.captured.toList())
+  }
 
-    // And the element type should be Session
-    val elementType = sessionListType.actualTypeArguments[0] as Class<*>
-    assertEquals("Session", elementType.simpleName)
+  private fun requestedDelegateType(clerkResultType: Type): Type {
+    val requestedType = slot<Type>()
+    every {
+      mockRetrofit.nextResponseBodyConverter<Any>(any(), capture(requestedType), any())
+    } returns mockk(relaxed = true)
+
+    assertNotNull(
+      converterFactory.responseBodyConverter(clerkResultType, emptyArray(), mockRetrofit)
+    )
+
+    return requestedType.captured
   }
 
   @Suppress("UNCHECKED_CAST")
   @Test
   fun `ClerkApiResultConverter handles null delegate response`() {
-    // Given
     val responseBody = "null".toResponseBody("application/json".toMediaType())
 
     val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>()
@@ -146,10 +144,8 @@ class ClerkApiResultConverterFactoryTest {
     val converter =
       constructor.newInstance(mockDelegateConverter) as Converter<ResponseBody, ClerkResult<*, *>>
 
-    // When
     val result = converter.convert(responseBody)
 
-    // Then
     assertNull(result)
   }
 

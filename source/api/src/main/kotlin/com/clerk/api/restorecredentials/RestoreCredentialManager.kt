@@ -8,7 +8,6 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 
-/** Testable wrapper around the Android Credential Manager restore-credential operations. */
 internal interface RestoreCredentialManager {
 
   suspend fun createCredential(

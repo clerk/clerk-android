@@ -42,6 +42,22 @@ class AuthStateConfigurationTest {
   }
 
   @Test
+  fun identifierKeystrokesPersistWithoutBlockingCommits() {
+    val prefs = InMemorySharedPreferences()
+    val authState = createAuthState(sharedPreferences = prefs)
+
+    "user@example.com".indices.forEach { end ->
+      authState.authStartIdentifier = "user@example.com".substring(0, end + 1)
+    }
+    authState.authStartPhoneNumber = "+1555"
+
+    assertEquals(0, prefs.commitCount)
+    assertEquals("user@example.com", prefs.getString(AUTH_START_IDENTIFIER_STORAGE_KEY, null))
+    assertEquals("+1555", prefs.getString(AUTH_START_PHONE_NUMBER_STORAGE_KEY, null))
+    assertEquals("user@example.com", createAuthState(sharedPreferences = prefs).authStartIdentifier)
+  }
+
+  @Test
   fun initialEmailOverridesPersistedValues() {
     val prefs = authPreferences()
     prefs.edit().putString(AUTH_START_IDENTIFIER_STORAGE_KEY, "stored@example.com").commit()

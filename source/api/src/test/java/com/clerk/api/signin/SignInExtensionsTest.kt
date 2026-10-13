@@ -20,9 +20,11 @@ import org.robolectric.RobolectricTestRunner
 class SignInExtensionsTest {
   private lateinit var environment: Environment
   private lateinit var displayConfig: DisplayConfig
+  private var previousEnvironment: Environment? = null
 
   @Before
   fun setup() {
+    previousEnvironment = Clerk.environment
     environment = mockk(relaxed = true)
     displayConfig = mockk(relaxed = true)
     every { environment.displayConfig } returns displayConfig
@@ -31,6 +33,7 @@ class SignInExtensionsTest {
 
   @After
   fun tearDown() {
+    Clerk.environment = previousEnvironment
     unmockkAll()
   }
 

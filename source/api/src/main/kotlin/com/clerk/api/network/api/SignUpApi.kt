@@ -15,7 +15,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 internal interface SignUpApi {
-  /** @see [SignUp.create] */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.BASE)
   suspend fun createSignUp(
@@ -28,7 +27,6 @@ internal interface SignUpApi {
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
-  /** @see [com.clerk.api.signup.update] */
   @FormUrlEncoded
   @PATCH(ApiPaths.Client.SignUp.WITH_ID)
   suspend fun updateSignUp(
@@ -36,7 +34,6 @@ internal interface SignUpApi {
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
-  /** @see [com.clerk.api.signup.prepareVerification] */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
@@ -44,7 +41,6 @@ internal interface SignUpApi {
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
-  /** @see [com.clerk.api.signup.attemptVerification] */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.ATTEMPT_VERIFICATION)
   suspend fun attemptSignUpVerification(

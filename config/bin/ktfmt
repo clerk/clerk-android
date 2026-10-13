@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:45739e1c6844c6e9232b4341e822df35a2617ffa0239dbbf8cc603a1a508492c
-size 67919097
+#!/bin/sh
+# Runs the same ktfmt version that Spotless uses (the `ktfmt` entry in
+# gradle/libs.versions.toml). Arguments are passed through, e.g.
+#   ./config/bin/ktfmt --google-style path/to/File.kt
+
+REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"
+
+version="$(catalog_version ktfmt)" || exit 1
+jar="$(tool_jar "com/facebook/ktfmt/$version" "ktfmt-$version-with-dependencies.jar")" || exit 1
+java="$(java_cmd)" || exit 1
+
+exec "$java" -Xmx512m -jar "$jar" "$@"

@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
-import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
@@ -30,10 +29,6 @@ import com.clerk.ui.core.dimens.dp64
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/**
- * Prompt offered after sign-in or sign-up asking the user to enable biometric
- * (biometric-credential) sign-in for this device.
- */
 @Composable
 internal fun BiometricCredentialEnrollmentView(
   onAuthComplete: () -> Unit,

@@ -33,6 +33,7 @@
     <string name="set_new_password">Ustaw nowe hasło</string>
     <string name="reset_password">Zresetuj hasło</string>
     <string name="confirm_password">Potwierdź hasło</string>
+    <string name="passwords_dont_match">Hasła nie są zgodne</string>
     <string name="new_password">Nowe hasło</string>
     <string name="account_requires_new_password_before_continue">Konto wymaga ustawienia nowego hasła, zanim będzie można kontynuować</string>
     <string name="sign_out_of_all_other_devices">Wyloguj się ze wszystkich innych urządzeń</string>
@@ -108,6 +109,7 @@
     <string name="email_code">Kod e-mail</string>
     <string name="or">lub</string>
     <string name="continue_to">Kontynuuj do %1$s</string>
+    <string name="continue_with">Kontynuuj z %1$s</string>
     <string name="create_your_account">Utwórz konto</string>
     <string name="welcome_sign_in_to_continue">Witaj! Zaloguj się, aby kontynuować.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">Witaj! Uzupełnij dane, aby rozpocząć.</string>

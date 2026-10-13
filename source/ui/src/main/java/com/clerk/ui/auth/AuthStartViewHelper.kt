@@ -1,13 +1,11 @@
 package com.clerk.ui.auth
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.R
 
@@ -17,43 +15,61 @@ private const val USERNAME = "username"
 
 private const val PHONE_NUMBER = "phone_number"
 
-@Stable
-internal class AuthStartViewHelper {
+internal interface AuthStartConfig {
+  val enabledFirstFactorAttributes: List<String>
+  val authenticatableSocialProviders: List<OAuthProvider>
+  val applicationName: String?
+  val passkeyFirstFactorIsEnabled: Boolean
+  val passkeyAutofillIsEnabled: Boolean
+  val biometricSignInIsEnabled: Boolean
+}
 
-  // Test backdoor properties - set these for testing
-  internal var testEnabledFirstFactorAttributes: List<String>? = null
-  internal var testSocialProviders: List<OAuthProvider>? = null
-  internal var testApplicationName: String? = null
-  internal var testPasskeyIsEnabled: Boolean? = null
-  internal var testPasskeyAutofillIsEnabled: Boolean? = null
-  internal var testBiometricSignInIsEnabled: Boolean? = null
+internal object ClerkAuthStartConfig : AuthStartConfig {
+  override val enabledFirstFactorAttributes: List<String>
+    get() = Clerk.enabledFirstFactorAttributes
+
+  override val authenticatableSocialProviders: List<OAuthProvider>
+    get() =
+      Clerk.socialProviders.values
+        .filter { it.enabled && it.authenticatable }
+        .map { OAuthProvider.fromStrategy(it.strategy) }
+
+  override val applicationName: String?
+    get() = Clerk.applicationName
+
+  override val passkeyFirstFactorIsEnabled: Boolean
+    get() = Clerk.passkeyFirstFactorIsEnabled
+
+  override val passkeyAutofillIsEnabled: Boolean
+    get() = Clerk.passkeyAutofillIsEnabled
+
+  override val biometricSignInIsEnabled: Boolean
+    get() = Clerk.biometricSignInIsEnabled
+}
+
+internal data class FixedAuthStartConfig(
+  override val enabledFirstFactorAttributes: List<String> = emptyList(),
+  override val authenticatableSocialProviders: List<OAuthProvider> = emptyList(),
+  override val applicationName: String? = null,
+  override val passkeyFirstFactorIsEnabled: Boolean = false,
+  override val passkeyAutofillIsEnabled: Boolean = false,
+  override val biometricSignInIsEnabled: Boolean = false,
+) : AuthStartConfig
+
+@Stable
+internal class AuthStartViewHelper(private val config: AuthStartConfig = ClerkAuthStartConfig) {
 
   val authenticatableSocialProviders: List<OAuthProvider>
-    get() {
-      return if (testSocialProviders != null) {
-        testSocialProviders!!
-      } else {
-        Clerk.socialProviders.values
-          .filter { it.enabled && it.authenticatable }
-          .map { OAuthProvider.fromStrategy(it.strategy) }
-      }
-    }
+    get() = config.authenticatableSocialProviders
 
   val emailIsEnabled: Boolean
-    get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
-        EMAIL_ADDRESS
-      )
+    get() = config.enabledFirstFactorAttributes.contains(EMAIL_ADDRESS)
 
   val usernameIsEnabled: Boolean
-    get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(USERNAME)
+    get() = config.enabledFirstFactorAttributes.contains(USERNAME)
 
   val phoneNumberIsEnabled: Boolean
-    get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
-        PHONE_NUMBER
-      )
+    get() = config.enabledFirstFactorAttributes.contains(PHONE_NUMBER)
 
   val showIdentifierSwitcher: Boolean
     get() = (emailIsEnabled || usernameIsEnabled) && phoneNumberIsEnabled
@@ -62,25 +78,13 @@ internal class AuthStartViewHelper {
     get() = emailIsEnabled || usernameIsEnabled || phoneNumberIsEnabled
 
   val showOrDivider: Boolean
-    get() {
-      val socialProviders = testSocialProviders ?: Clerk.socialProviders.values
-      return socialProviders.any {
-        // For testing, assume all test social providers are authenticatable
-        if (testSocialProviders != null) true
-        else
-          (it as? UserSettings.SocialConfig)?.let { config ->
-            config.enabled && config.authenticatable
-          } == true
-      } && showIdentifierField
-    }
+    get() = authenticatableSocialProviders.isNotEmpty() && showIdentifierField
 
   val passkeySignInConfigIsEnabled: Boolean
-    get() =
-      (testPasskeyIsEnabled ?: Clerk.passkeyFirstFactorIsEnabled) &&
-        (testPasskeyAutofillIsEnabled ?: Clerk.passkeyAutofillIsEnabled)
+    get() = config.passkeyFirstFactorIsEnabled && config.passkeyAutofillIsEnabled
 
   val biometricSignInConfigIsEnabled: Boolean
-    get() = testBiometricSignInIsEnabled ?: Clerk.biometricSignInIsEnabled
+    get() = config.biometricSignInIsEnabled
 
   fun getKeyboardType(isPhoneNumberFieldActive: Boolean): KeyboardType {
     return if (isPhoneNumberFieldActive) {
@@ -114,9 +118,6 @@ internal class AuthStartViewHelper {
     }
   }
 
-  private val applicationName: String?
-    get() = testApplicationName ?: Clerk.applicationName
-
   fun shouldStartOnPhoneNumber(authStartPhoneNumber: String, authStartIdentifier: String): Boolean {
     val identifierFieldIsEnabled = emailIsEnabled || usernameIsEnabled
 
@@ -133,7 +134,7 @@ internal class AuthStartViewHelper {
     return when (authMode) {
       AuthMode.SignIn,
       AuthMode.SignInOrUp -> {
-        val appName = applicationName
+        val appName = config.applicationName
         if (appName != null) {
           stringResource(R.string.continue_to, appName)
         } else {
@@ -175,33 +176,6 @@ internal class AuthStartViewHelper {
       (!emailIsEnabled && usernameIsEnabled) -> stringResource(R.string.enter_your_username)
       else -> stringResource(R.string.enter_your_email_or_username)
     }
-  }
-
-  @VisibleForTesting
-  internal fun setTestValues(
-    enabledFirstFactorAttributes: List<String>? = null,
-    socialProviders: List<OAuthProvider>? = null,
-    applicationName: String? = null,
-    passkeyIsEnabled: Boolean? = null,
-    passkeyAutofillIsEnabled: Boolean? = null,
-    biometricSignInIsEnabled: Boolean? = null,
-  ) {
-    testEnabledFirstFactorAttributes = enabledFirstFactorAttributes
-    testSocialProviders = socialProviders
-    testApplicationName = applicationName
-    testPasskeyIsEnabled = passkeyIsEnabled
-    testPasskeyAutofillIsEnabled = passkeyAutofillIsEnabled
-    testBiometricSignInIsEnabled = biometricSignInIsEnabled
-  }
-
-  @VisibleForTesting
-  internal fun clearTestValues() {
-    testEnabledFirstFactorAttributes = null
-    testSocialProviders = null
-    testApplicationName = null
-    testPasskeyIsEnabled = null
-    testPasskeyAutofillIsEnabled = null
-    testBiometricSignInIsEnabled = null
   }
 }
 

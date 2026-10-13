@@ -28,12 +28,14 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
 import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -62,7 +64,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  */
 @Composable
 @Suppress("LongParameterList", "UNUSED_PARAMETER")
-fun OrganizationListView(
+public fun OrganizationListView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   hidePersonalAccount: Boolean = false,
@@ -72,20 +74,24 @@ fun OrganizationListView(
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   onAccountSelected: ((String?) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
-          OrganizationListViewImpl(
-            modifier = Modifier.fillMaxSize(),
-            clerkTheme = clerkTheme,
-            hidePersonalAccount = hidePersonalAccount,
-            isDismissible = isDismissible,
-            skipPostCreateInviteFlow = skipPostCreateInviteFlow,
-            onDismissRequest = onDismissRequest,
-            onCreateOrganization = onCreateOrganization,
-            onAccountSelected = onAccountSelected,
-          )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          DevelopmentModeWarningBox(
+            modifier = modifier.fillMaxSize().clerkTestTagsAsResourceIds()
+          ) {
+            OrganizationListViewImpl(
+              modifier = Modifier.fillMaxSize(),
+              clerkTheme = clerkTheme,
+              hidePersonalAccount = hidePersonalAccount,
+              isDismissible = isDismissible,
+              skipPostCreateInviteFlow = skipPostCreateInviteFlow,
+              onDismissRequest = onDismissRequest,
+              onCreateOrganization = onCreateOrganization,
+              onAccountSelected = onAccountSelected,
+            )
+          }
         }
       }
     }
@@ -239,7 +245,9 @@ private fun OrganizationListFullScreenPage(onDismiss: () -> Unit, content: @Comp
       color = ClerkMaterialTheme.colors.background,
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
-      DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) { content() }
+      DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds()) {
+        content()
+      }
     }
   }
 }

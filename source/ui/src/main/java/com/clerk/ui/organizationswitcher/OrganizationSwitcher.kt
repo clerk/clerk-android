@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -49,7 +50,9 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
@@ -61,6 +64,7 @@ import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
@@ -78,35 +82,37 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * avatar-sized account trigger. Use [normal] or [compact] when a custom trigger avatar size is
  * needed.
  */
-sealed class OrganizationSwitcherDisplayMode
+public sealed class OrganizationSwitcherDisplayMode
 private constructor(
   internal val isCompact: Boolean,
   /** Base visual size used by the switcher trigger. */
-  val size: Dp,
+  public val size: Dp,
 ) {
   /** Shows the account avatar, organization or account name, and disclosure chevron. */
-  data object Normal : OrganizationSwitcherDisplayMode(isCompact = false, size = dp36)
+  public data object Normal : OrganizationSwitcherDisplayMode(isCompact = false, size = dp36)
 
   /** Shows only the account avatar-sized trigger. */
-  data object Compact : OrganizationSwitcherDisplayMode(isCompact = true, size = dp36)
+  public data object Compact : OrganizationSwitcherDisplayMode(isCompact = true, size = dp36)
 
   private class Custom(isCompact: Boolean, size: Dp) :
     OrganizationSwitcherDisplayMode(isCompact = isCompact, size = size)
 
-  companion object {
+  public companion object {
     /**
      * Shows the account avatar, organization or account name, and disclosure chevron.
      *
      * @param size Base avatar size used to scale the trigger.
      */
-    fun normal(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = false, size = size)
+    public fun normal(size: Dp): OrganizationSwitcherDisplayMode =
+      Custom(isCompact = false, size = size)
 
     /**
      * Shows only the account avatar-sized trigger.
      *
      * @param size Base avatar size used for the compact trigger.
      */
-    fun compact(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = true, size = size)
+    public fun compact(size: Dp): OrganizationSwitcherDisplayMode =
+      Custom(isCompact = true, size = size)
   }
 }
 
@@ -133,7 +139,7 @@ private constructor(
  *   switcher's default [OrganizationProfileView].
  */
 @Composable
-fun OrganizationSwitcher(
+public fun OrganizationSwitcher(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onOrganizationChanged: (() -> Unit)? = null,
@@ -144,20 +150,22 @@ fun OrganizationSwitcher(
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        OrganizationSwitcherImpl(
-          modifier = modifier,
-          clerkTheme = clerkTheme,
-          onOrganizationChanged = onOrganizationChanged,
-          hidePersonal = hidePersonal,
-          displayMode = displayMode,
-          onManageOrganization = onManageOrganization,
-          onCreateOrganization = onCreateOrganization,
-          organizationProfileCustomRows = organizationProfileCustomRows,
-          organizationProfileCustomDestination = organizationProfileCustomDestination,
-        )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          OrganizationSwitcherImpl(
+            modifier = modifier,
+            clerkTheme = clerkTheme,
+            onOrganizationChanged = onOrganizationChanged,
+            hidePersonal = hidePersonal,
+            displayMode = displayMode,
+            onManageOrganization = onManageOrganization,
+            onCreateOrganization = onCreateOrganization,
+            organizationProfileCustomRows = organizationProfileCustomRows,
+            organizationProfileCustomDestination = organizationProfileCustomDestination,
+          )
+        }
       }
     }
   }
@@ -187,7 +195,7 @@ fun OrganizationSwitcher(
  *   switcher's default [OrganizationProfileView].
  */
 @Composable
-fun OrganizationSwitcher(
+public fun OrganizationSwitcher(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onOrganizationChanged: (() -> Unit)? = null,
@@ -199,21 +207,23 @@ fun OrganizationSwitcher(
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        OrganizationSwitcherImpl(
-          modifier = modifier,
-          clerkTheme = clerkTheme,
-          onOrganizationChanged = onOrganizationChanged,
-          hidePersonal = hidePersonal,
-          displayMode = displayMode,
-          triggerContent = triggerContent,
-          onManageOrganization = onManageOrganization,
-          onCreateOrganization = onCreateOrganization,
-          organizationProfileCustomRows = organizationProfileCustomRows,
-          organizationProfileCustomDestination = organizationProfileCustomDestination,
-        )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          OrganizationSwitcherImpl(
+            modifier = modifier,
+            clerkTheme = clerkTheme,
+            onOrganizationChanged = onOrganizationChanged,
+            hidePersonal = hidePersonal,
+            displayMode = displayMode,
+            triggerContent = triggerContent,
+            onManageOrganization = onManageOrganization,
+            onCreateOrganization = onCreateOrganization,
+            organizationProfileCustomRows = organizationProfileCustomRows,
+            organizationProfileCustomDestination = organizationProfileCustomDestination,
+          )
+        }
       }
     }
   }
@@ -714,7 +724,7 @@ private fun OrganizationSwitcherFullScreenPage(
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
       DevelopmentModeWarningBox(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds(),
         showWarning = showDevelopmentModeWarning,
       ) {
         content()
@@ -774,9 +784,11 @@ internal fun OrganizationSwitcherCustomTrigger(
   val openOrganizationSwitcherDescription = stringResource(R.string.open_organization_switcher)
   Box(
     modifier =
-      modifier.clickable(enabled = !isLoading, onClick = onClick).semantics {
-        contentDescription = openOrganizationSwitcherDescription
-      }
+      modifier
+        .clerkTestTagsAsResourceIds()
+        .testTag(ClerkTestTags.OrganizationSwitcher.triggerButton)
+        .clickable(enabled = !isLoading, onClick = onClick)
+        .semantics { contentDescription = openOrganizationSwitcherDescription }
   ) {
     content()
   }
@@ -802,9 +814,11 @@ internal fun OrganizationSwitcherButton(
     }
   val openOrganizationSwitcherDescription = stringResource(R.string.open_organization_switcher)
   val clickableModifier =
-    modifier.clickable(enabled = !isLoading, onClick = onClick).semantics {
-      contentDescription = openOrganizationSwitcherDescription
-    }
+    modifier
+      .clerkTestTagsAsResourceIds()
+      .testTag(ClerkTestTags.OrganizationSwitcher.triggerButton)
+      .clickable(enabled = !isLoading, onClick = onClick)
+      .semantics { contentDescription = openOrganizationSwitcherDescription }
 
   if (displayMode.isCompact) {
     CompactOrganizationSwitcherButton(

@@ -2,9 +2,7 @@ package com.clerk.api.auth
 
 import android.net.Uri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_CODE
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.PHONE_CODE
+import com.clerk.api.auth.builders.CodeChannel
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
 import com.clerk.api.auth.builders.SignInWithIdTokenBuilder
@@ -13,7 +11,7 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
-import com.clerk.api.biometriccredential.BiometricCredentials
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
@@ -28,7 +26,8 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.map
+import com.clerk.api.network.serialization.suspendingFlatMap
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
@@ -38,7 +37,7 @@ import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.toMap
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -77,7 +76,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  * ```
  */
 @Suppress("TooManyFunctions")
-class Auth internal constructor() {
+public class Auth internal constructor() {
 
   private val _events = MutableSharedFlow<AuthEvent>(extraBufferCapacity = 64)
 
@@ -87,7 +86,7 @@ class Auth internal constructor() {
    * Subscribe to this flow to receive notifications about authentication state changes, including
    * sign-in, sign-out, session changes, and errors.
    */
-  val events: Flow<AuthEvent> = _events.asSharedFlow()
+  public val events: Flow<AuthEvent> = _events.asSharedFlow()
 
   internal fun send(event: AuthEvent) {
     val emitted = _events.tryEmit(event)
@@ -96,7 +95,7 @@ class Auth internal constructor() {
     }
   }
 
-  private fun emitAuthError(failure: ClerkResult.Failure<ClerkErrorResponse>) {
+  internal fun emitAuthError(failure: ClerkResult.Failure<ClerkErrorResponse>) {
     send(AuthEvent.Error(message = failure.errorMessage, throwable = failure.throwable))
   }
 
@@ -117,7 +116,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  val currentSignIn: SignIn?
+  public val currentSignIn: SignIn?
     get() = if (Clerk.clientInitialized) Clerk.client.signIn else null
 
   /**
@@ -134,11 +133,11 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  val currentSignUp: SignUp?
+  public val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
 
   /** Native magic-link manager for PKCE-bound email link flows. */
-  val nativeMagicLink: NativeMagicLinkManager
+  public val nativeMagicLink: NativeMagicLinkManager
     get() = NativeMagicLinkService
 
   /**
@@ -147,7 +146,7 @@ class Auth internal constructor() {
    * In multi-session mode this can include sessions for multiple accounts. The current session is
    * the one whose ID matches [Client.lastActiveSessionId].
    */
-  val sessions: List<Session>
+  public val sessions: List<Session>
     get() = if (Clerk.clientInitialized) Clerk.client.sessions else emptyList()
 
   // endregion
@@ -172,18 +171,14 @@ class Auth internal constructor() {
    * signIn.verifyCode("123456")
    * ```
    */
-  suspend fun signIn(
+  public suspend fun signIn(
     block: SignInIdentifierBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInIdentifierBuilder().apply(block)
-    builder.validate()
-
-    val params =
-      mapOf("identifier" to builder.getIdentifier(), "locale" to Clerk.locale.value.orEmpty())
-
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      SignInIdentifierBuilder().apply(block).resolvedIdentifier().suspendingFlatMap { identifier ->
+        createSignIn(SignIn.CreateParams.Strategy.Identifier(identifier = identifier))
+      }
+    }
   }
 
   /**
@@ -201,7 +196,7 @@ class Auth internal constructor() {
    *   activation fails. When the user dismisses the browser or another flow supersedes this one,
    *   the failure's throwable is a [HostedAuthCancellationException].
    */
-  suspend fun startHostedAuth(
+  public suspend fun startHostedAuth(
     mode: HostedAuthMode? = null,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
   ): ClerkResult<Session, ClerkErrorResponse> {
@@ -233,23 +228,19 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signInWithPassword(
+  public suspend fun signInWithPassword(
     block: SignInWithPasswordBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithPasswordBuilder().apply(block)
-    builder.validate()
-
-    val params =
-      mapOf(
-        "identifier" to builder.identifier!!,
-        "password" to builder.password!!,
-        "strategy" to PASSWORD,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      SignInWithPasswordBuilder().apply(block).credentials().suspendingFlatMap { credentials ->
+        createSignIn(
+          SignIn.CreateParams.Strategy.Password(
+            identifier = credentials.identifier,
+            password = credentials.password,
+          )
+        )
+      }
+    }
   }
 
   /**
@@ -268,49 +259,73 @@ class Auth internal constructor() {
    * signIn.verifyCode("123456")
    * ```
    */
-  suspend fun signInWithOtp(
+  public suspend fun signInWithOtp(
     block: SignInWithOtpBuilder.() -> Unit
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val builder = SignInWithOtpBuilder().apply(block)
-    builder.validate()
-
-    val identifier = builder.email ?: builder.phone!!
-    val strategy = if (builder.email != null) EMAIL_CODE else PHONE_CODE
-
-    val params =
-      mapOf(
-        "identifier" to identifier,
-        "strategy" to strategy,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      SignInWithOtpBuilder().apply(block).channel().suspendingFlatMap { channel ->
+        createSignIn(
+          when (channel) {
+            is CodeChannel.Email ->
+              SignIn.CreateParams.Strategy.EmailCode(identifier = channel.value)
+            is CodeChannel.Phone ->
+              SignIn.CreateParams.Strategy.PhoneCode(identifier = channel.value)
+          }
+        )
+      }
+    }
   }
 
   /**
    * Signs in with OAuth provider.
    *
    * @param provider The OAuth provider to use for authentication.
+   * @param transferable Whether the flow may turn into a sign-up when the provider account has no
+   *   Clerk user yet. When `false`, that case fails instead. Defaults to `true`.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+   *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+   *   in the application manifest. [handle] only completes OAuth callbacks with a `clerk` scheme.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
+   *   failure. The result holds a sign-up instead of a sign-in when the flow transferred.
    *
    * ### Example usage:
    * ```kotlin
    * val result = clerk.auth.signInWithOAuth(OAuthProvider.GOOGLE)
    * ```
    */
-  suspend fun signInWithOAuth(
-    provider: OAuthProvider
+  public suspend fun signInWithOAuth(
+    provider: OAuthProvider,
+    transferable: Boolean = true,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result =
-      SSOService.authenticateWithRedirect(
-        strategy = provider.strategy,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-      )
-    result.onFailure { emitAuthError(it) }
-    return result
+    return authenticateSignInWithRedirect(
+      SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider, redirectUrl = redirectUrl),
+      transferable = transferable,
+    )
+  }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  public suspend fun signInWithOAuth(
+    provider: OAuthProvider
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> = signInWithOAuth(provider, transferable = true)
+
+  /**
+   * Signs in with Google One Tap (Credential Manager's Sign in with Google).
+   *
+   * @param transferable Whether the flow may turn into a sign-up when the Google account has no
+   *   Clerk user yet. Defaults to `true`.
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+   *   failure.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val result = clerk.auth.signInWithGoogleOneTap()
+   * ```
+   */
+  public suspend fun signInWithGoogleOneTap(
+    transferable: Boolean = true
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    return reportingFailures { GoogleSignInService().signInWithGoogle(transferable) }
   }
 
   /**
@@ -328,28 +343,27 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signInWithIdToken(
+  public suspend fun signInWithIdToken(
     block: SignInWithIdTokenBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val builder = SignInWithIdTokenBuilder().apply(block)
-    builder.validate()
-
-    val result =
-      when (builder.provider!!) {
-        IdTokenProvider.GOOGLE -> {
-          when (val result = ClerkApi.signIn.authenticateWithGoogle(token = builder.token!!)) {
-            is ClerkResult.Success -> ClerkResult.success(OAuthResult(signIn = result.value))
-            is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-          }
+    return reportingFailures {
+      SignInWithIdTokenBuilder().apply(block).idToken().suspendingFlatMap { idToken ->
+        when (idToken.provider) {
+          IdTokenProvider.GOOGLE ->
+            ClerkApi.signIn.authenticateWithGoogle(token = idToken.token).map {
+              OAuthResult(signIn = it)
+            }
         }
       }
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   /**
    * Signs in with passkey.
    *
+   * @param preferImmediatelyAvailableCredentials Whether the credential provider should only return
+   *   credentials available without extra provider UI. Use `true` for sign-in attempts the user did
+   *   not ask for, such as offering a passkey when a screen opens. Defaults to `false`.
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
    *   failure.
    *
@@ -358,11 +372,19 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithPasskey()
    * ```
    */
-  suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result = PasskeyService.signInWithPasskey()
-    result.onFailure { emitAuthError(it) }
-    return result
+  public suspend fun signInWithPasskey(
+    preferImmediatelyAvailableCredentials: Boolean = false
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return reportingFailures {
+      PasskeyService.signInWithPasskey(
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
+      )
+    }
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  public suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> =
+    signInWithPasskey(preferImmediatelyAvailableCredentials = false)
 
   /**
    * Silently signs in with a Google Play restore credential transferred from another device.
@@ -370,10 +392,10 @@ class Auth internal constructor() {
    * When no restore credential is available, the returned failure can be ignored and the app can
    * continue with its normal sign-in experience.
    */
-  suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result = RestoreCredentials.signIn()
-    result.onFailure { emitAuthError(it) }
-    return result
+  public suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
+    return reportingFailures {
+      RestoreCredentials.signIn()
+    }
   }
 
   /**
@@ -395,26 +417,27 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithBiometrics()
    * ```
    */
-  suspend fun signInWithBiometrics(
+  public suspend fun signInWithBiometrics(
     id: String? = null,
     identifierHint: String? = null,
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result =
-      BiometricCredentials.signIn(
+    return createSignIn(
+      SignIn.CreateParams.Strategy.BiometricCredential(
         id = id,
         identifierHint = identifierHint,
         promptTitle = promptTitle,
         promptSubtitle = promptSubtitle,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    )
   }
 
   /**
    * Signs in with Enterprise SSO.
    *
+   * @param transferable Whether the flow may turn into a sign-up when the user has no Clerk account
+   *   yet. Defaults to `true`.
    * @param block Builder block to configure the Enterprise SSO options.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
    *   failure.
@@ -424,21 +447,29 @@ class Auth internal constructor() {
    * val result = clerk.auth.signInWithEnterpriseSSO { email = "user@company.com" }
    * ```
    */
-  suspend fun signInWithEnterpriseSso(
-    block: EnterpriseSsoBuilder.() -> Unit
+  public suspend fun signInWithEnterpriseSso(
+    transferable: Boolean = true,
+    block: EnterpriseSsoBuilder.() -> Unit,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
-    val result =
-      SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-        emailAddress = builder.email,
-      )
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      builder.emailAddress().suspendingFlatMap { email ->
+        authenticateSignInWithRedirect(
+          SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
+            redirectUrl = builder.redirectUrl,
+            emailAddress = email,
+          ),
+          transferable = transferable,
+        )
+      }
+    }
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  public suspend fun signInWithEnterpriseSso(
+    block: EnterpriseSsoBuilder.() -> Unit
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    signInWithEnterpriseSso(transferable = true, block = block)
 
   /**
    * Signs in with a ticket.
@@ -452,17 +483,22 @@ class Auth internal constructor() {
    * val signIn = clerk.auth.signInWithTicket(ticket)
    * ```
    */
-  suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
-    val params =
-      mapOf(
-        "strategy" to com.clerk.api.Constants.Strategy.TICKET,
-        "ticket" to ticket,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
+  public suspend fun signInWithTicket(ticket: String): ClerkResult<SignIn, ClerkErrorResponse> {
+    return createSignIn(SignIn.CreateParams.Strategy.Ticket(ticket = ticket))
+  }
 
-    val result = ClerkApi.signIn.createSignIn(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+  /**
+   * Turns the current sign-up into a sign-in for its already existing account.
+   *
+   * The OAuth and Google One Tap flows do this on their own when `transferable` is `true`. Call it
+   * after a flow that doesn't, such as [signUpWithIdToken], when the sign-up's external account
+   * belongs to an existing user.
+   *
+   * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
+   *   failure.
+   */
+  public suspend fun transferToSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
+    return createSignIn(SignIn.CreateParams.Strategy.Transfer())
   }
 
   /**
@@ -471,19 +507,21 @@ class Auth internal constructor() {
    * The flow sends only a code challenge to Clerk and expects completion through a deep-link
    * callback carrying `flow_id` and `approval_token`.
    */
-  suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError> {
+  public suspend fun startEmailLinkSignIn(
+    email: String
+  ): ClerkResult<SignIn, NativeMagicLinkError> {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
   /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
-  suspend fun handleMagicLinkDeepLink(
+  public suspend fun handleMagicLinkDeepLink(
     uri: Uri
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     return nativeMagicLink.handleMagicLinkDeepLink(uri)
   }
 
   /** Completes a pending native magic-link flow using callback values from the deep link. */
-  suspend fun completeMagicLink(
+  public suspend fun completeMagicLink(
     flowId: String,
     approvalToken: String,
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
@@ -511,50 +549,61 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signUp(block: SignUpBuilder.() -> Unit): ClerkResult<SignUp, ClerkErrorResponse> {
+  public suspend fun signUp(
+    block: SignUpBuilder.() -> Unit
+  ): ClerkResult<SignUp, ClerkErrorResponse> {
     val builder = SignUpBuilder().apply(block)
 
-    val params =
+    return createSignUp(
       SignUp.CreateParams.Standard(
-          emailAddress = builder.email,
-          phoneNumber = builder.phone,
-          password = builder.password,
-          firstName = builder.firstName,
-          lastName = builder.lastName,
-          username = builder.username,
-          legalAccepted = builder.legalAccepted,
-          unsafeMetadata = builder.unsafeMetadata,
-        )
-        .toMap() + ("locale" to Clerk.locale.value.orEmpty())
-
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+        emailAddress = builder.email,
+        phoneNumber = builder.phone,
+        password = builder.password,
+        firstName = builder.firstName,
+        lastName = builder.lastName,
+        username = builder.username,
+        legalAccepted = builder.legalAccepted,
+        unsafeMetadata = builder.unsafeMetadata,
+      )
+    )
   }
 
   /**
    * Signs up with OAuth provider.
    *
    * @param provider The OAuth provider to use for sign-up.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
+   *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
+   *   in the application manifest. [handle] only completes OAuth callbacks with a `clerk` scheme.
+   * @param unsafeMetadata Custom metadata attached to the created user. Clerk does not validate it,
+   *   so it must not hold sensitive information.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
+   *   failure. The result holds a sign-in instead of a sign-up when the account already existed.
    *
    * ### Example usage:
    * ```kotlin
    * val result = clerk.auth.signUpWithOAuth(OAuthProvider.GOOGLE)
    * ```
    */
-  suspend fun signUpWithOAuth(
-    provider: OAuthProvider
+  public suspend fun signUpWithOAuth(
+    provider: OAuthProvider,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    unsafeMetadata: Map<String, Any>? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result =
-      SSOService.authenticateSignUpWithRedirect(
-        strategy = provider.strategy,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    return authenticateSignUpWithRedirect(
+      SignUp.AuthenticateWithRedirectParams.OAuth(
+        provider = provider,
+        redirectUrl = redirectUrl,
+        unsafeMetadata = unsafeMetadata,
       )
-    result.onFailure { emitAuthError(it) }
-    return result
+    )
   }
+
+  @Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+  public suspend fun signUpWithOAuth(
+    provider: OAuthProvider
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> =
+    signUpWithOAuth(provider, redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL)
 
   /**
    * Signs up with Google One Tap.
@@ -570,10 +619,8 @@ class Auth internal constructor() {
    * val result = clerk.auth.signUpWithGoogleOneTap()
    * ```
    */
-  suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result = SignIn.authenticateWithGoogleOneTap(transferable = true)
-    result.onFailure { emitAuthError(it) }
-    return result
+  public suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    return signInWithGoogleOneTap(transferable = true)
   }
 
   /**
@@ -593,7 +640,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun signUpWithIdToken(
+  public suspend fun signUpWithIdToken(
     token: String,
     provider: IdTokenProvider,
     block: SignUpWithIdTokenBuilder.() -> Unit = {},
@@ -602,20 +649,17 @@ class Auth internal constructor() {
 
     val strategy =
       when (provider) {
-        IdTokenProvider.GOOGLE -> "google_one_tap"
+        IdTokenProvider.GOOGLE -> Strategy.GoogleOneTap.value
       }
 
-    val params = buildMap {
-      put("strategy", strategy)
-      put("token", token)
-      builder.firstName?.let { put("first_name", it) }
-      builder.lastName?.let { put("last_name", it) }
-      put("locale", Clerk.locale.value.orEmpty())
-    }
-
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+    return postSignUp(
+      buildMap {
+        put("strategy", strategy)
+        put("token", token)
+        builder.firstName?.let { put("first_name", it) }
+        builder.lastName?.let { put("last_name", it) }
+      }
+    )
   }
 
   /**
@@ -630,20 +674,20 @@ class Auth internal constructor() {
    * val result = clerk.auth.signUpWithEnterpriseSso { email = "user@company.com" }
    * ```
    */
-  suspend fun signUpWithEnterpriseSso(
+  public suspend fun signUpWithEnterpriseSso(
     block: EnterpriseSsoBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val builder = EnterpriseSsoBuilder().apply(block)
-    builder.validate()
-
-    val result =
-      SSOService.authenticateWithRedirect(
-        strategy = com.clerk.api.Constants.Strategy.ENTERPRISE_SSO,
-        redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-        emailAddress = builder.email,
-      )
-    result.onFailure { emitAuthError(it) }
-    return result
+    return reportingFailures {
+      builder.emailAddress().suspendingFlatMap { email ->
+        authenticateSignUpWithRedirect(
+          SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(
+            redirectUrl = builder.redirectUrl,
+            emailAddress = email,
+          )
+        )
+      }
+    }
   }
 
   /**
@@ -658,13 +702,21 @@ class Auth internal constructor() {
    * val signUp = clerk.auth.signUpWithTicket(ticket)
    * ```
    */
-  suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
-    val params =
-      mapOf("strategy" to "ticket", "ticket" to ticket, "locale" to Clerk.locale.value.orEmpty())
+  public suspend fun signUpWithTicket(ticket: String): ClerkResult<SignUp, ClerkErrorResponse> {
+    return createSignUp(SignUp.CreateParams.Ticket(ticket = ticket))
+  }
 
-    val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
+  /**
+   * Turns the current sign-in into a sign-up when its external account has no Clerk user yet.
+   *
+   * The OAuth and Google One Tap flows do this on their own when `transferable` is `true`. Call it
+   * after a flow that doesn't, such as [signInWithIdToken].
+   *
+   * @return A [ClerkResult] containing the [SignUp] object on success, or a [ClerkErrorResponse] on
+   *   failure.
+   */
+  public suspend fun transferToSignUp(): ClerkResult<SignUp, ClerkErrorResponse> {
+    return createSignUp(SignUp.CreateParams.Transfer)
   }
 
   // endregion
@@ -684,8 +736,8 @@ class Auth internal constructor() {
    * clerk.auth.signOut(sessionId = Clerk.session?.id) // sign out the current account only
    * ```
    */
-  suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
-    val result =
+  public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
+    return reportingFailures {
       if (sessionId != null) {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
           is ClerkResult.Success -> {
@@ -694,44 +746,45 @@ class Auth internal constructor() {
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
-          is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
+          is ClerkResult.Failure -> result
         }
       } else {
         SignOutService.signOut()
       }
-    result.onFailure { emitAuthError(it) }
-    return result
+    }
   }
 
   private fun removeSessionLocally(sessionId: String) {
-    if (!Clerk.clientInitialized) return
-
-    val client = Clerk.client
-    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
-    val lastActiveSessionId =
-      if (client.lastActiveSessionId == sessionId) {
-        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
-          ?: remainingSessions.firstOrNull()?.id
-      } else {
-        client.lastActiveSessionId
-      }
-
-    Clerk.updateClient(
+    Clerk.mutateClient { client ->
+      val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+      val lastActiveSessionId =
+        if (client.lastActiveSessionId == sessionId) {
+          remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+            ?: remainingSessions.firstOrNull()?.id
+        } else {
+          client.lastActiveSessionId
+        }
       client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
-    )
+    }
   }
 
   private suspend fun refreshClientAfterSessionMutation(
     activeSessionFallbackId: String? = null,
     fallbackClient: Client? = null,
   ) {
+    val updateCountAtStart = Clerk.clientUpdateCount
     when (val clientResult = Client.get()) {
       is ClerkResult.Success ->
-        Clerk.updateClient(
-          clientResult.value.withActiveSessionFallback(
-            activeSessionFallbackId = activeSessionFallbackId,
-            fallbackClient = fallbackClient,
-          )
+        Clerk.updateClientIfUnchangedSince(
+          expectedUpdateCount = updateCountAtStart,
+          fetched =
+            ClerkResult.success(
+                clientResult.value.withActiveSessionFallback(
+                  activeSessionFallbackId = activeSessionFallbackId,
+                  fallbackClient = fallbackClient,
+                )
+              )
+              .withTags(clientResult.tags),
         )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
@@ -804,7 +857,7 @@ class Auth internal constructor() {
    * clerk.auth.setActive(sessionId, organizationId)
    * ```
    */
-  suspend fun setActive(
+  public suspend fun setActive(
     sessionId: String,
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
@@ -846,12 +899,15 @@ class Auth internal constructor() {
     sourceClient: Client? = null,
     activeOrganizationId: String? = null,
   ) {
-    val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
-    val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
-    if (sessions.none { it.id == sessionId }) return
-
-    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
+    Clerk.mutateClient { current ->
+      val client = current.takeIf { it.hasSession(sessionId) } ?: sourceClient ?: current
+      val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
+      if (sessions.none { it.id == sessionId }) null
+      else client.copy(sessions = sessions, lastActiveSessionId = sessionId)
+    }
   }
+
+  private fun Client.hasSession(sessionId: String): Boolean = sessions.any { it.id == sessionId }
 
   private fun List<Session>.withUpdatedSession(
     activeSession: Session?,
@@ -901,17 +957,16 @@ class Auth internal constructor() {
    * val token = clerk.auth.getToken(GetTokenOptions(template = "my-template"))
    * ```
    */
-  suspend fun getToken(options: GetTokenOptions? = null): ClerkResult<String, ClerkErrorResponse> {
+  public suspend fun getToken(
+    options: GetTokenOptions? = null
+  ): ClerkResult<String, ClerkErrorResponse> {
     val session =
       Clerk.session
         ?: return ClerkResult.apiFailure(
           ClerkErrorResponse(errors = emptyList(), clerkTraceId = "no-session")
         )
 
-    return when (val result = session.fetchToken(options ?: GetTokenOptions())) {
-      is ClerkResult.Success -> ClerkResult.success(result.value.jwt)
-      is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-    }
+    return session.fetchToken(options ?: GetTokenOptions()).map { it.jwt }
   }
 
   /**
@@ -925,11 +980,8 @@ class Auth internal constructor() {
    * clerk.auth.revokeSession(session)
    * ```
    */
-  suspend fun revokeSession(session: Session): ClerkResult<Unit, ClerkErrorResponse> {
-    return when (val result = session.revoke()) {
-      is ClerkResult.Success -> ClerkResult.success(Unit)
-      is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
-    }
+  public suspend fun revokeSession(session: Session): ClerkResult<Unit, ClerkErrorResponse> {
+    return session.revoke().map {}
   }
 
   // endregion
@@ -957,7 +1009,7 @@ class Auth internal constructor() {
    * }
    * ```
    */
-  suspend fun handle(uri: Uri?): Boolean {
+  public suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
     val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
     if (handledByMagicLink) {

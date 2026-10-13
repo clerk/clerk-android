@@ -55,7 +55,12 @@ internal fun UserProfileExternalAccountRow(
   externalAccount: ExternalAccount,
   modifier: Modifier = Modifier,
   isInteractive: Boolean = true,
-  viewModel: AddConnectedAccountViewModel? = if (isInteractive) viewModel() else null,
+  viewModel: AddConnectedAccountViewModel? =
+    if (isInteractive) {
+      viewModel(key = "user-profile-external-account-row-${externalAccount.id}")
+    } else {
+      null
+    },
   loadRemoteLogo: Boolean = true,
   onError: (String) -> Unit,
 ) {

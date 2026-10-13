@@ -104,22 +104,23 @@ class UserButtonBehaviorTest {
   }
 
   @Test
-  fun `forced mfa auth dismisses when mfa is resolved`() {
+  fun `forced mfa auth dismisses when the session is gone`() {
     assertTrue(
-      shouldDismissAuthWhenMfaResolved(
-        authMode = UserButtonAuthMode.ForcedMfa,
-        requiresForcedMfa = false,
-      )
+      shouldDismissForcedMfaAuth(authMode = UserButtonAuthMode.ForcedMfa, hasSession = false)
     )
   }
 
   @Test
-  fun `add account auth stays open when mfa is not required`() {
+  fun `forced mfa auth stays open while there is a session`() {
     assertFalse(
-      shouldDismissAuthWhenMfaResolved(
-        authMode = UserButtonAuthMode.AddAccount,
-        requiresForcedMfa = false,
-      )
+      shouldDismissForcedMfaAuth(authMode = UserButtonAuthMode.ForcedMfa, hasSession = true)
+    )
+  }
+
+  @Test
+  fun `add account auth stays open when there is no session`() {
+    assertFalse(
+      shouldDismissForcedMfaAuth(authMode = UserButtonAuthMode.AddAccount, hasSession = false)
     )
   }
 

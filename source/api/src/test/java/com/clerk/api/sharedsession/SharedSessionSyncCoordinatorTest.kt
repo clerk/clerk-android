@@ -114,6 +114,20 @@ class SharedSessionSyncCoordinatorTest {
   }
 
   @Test
+  fun `late notification from an older store revision does not overwrite a newer snapshot`() {
+    val transport = FakeTransport()
+    val coordinator = coordinator(transport)
+    coordinator.start()
+
+    coordinator.handleClientChange(Client(id = "newer"), serverFetchAtMillis = 200, revision = 2)
+    coordinator.handleClientChange(Client(id = "older"), serverFetchAtMillis = 100, revision = 1)
+
+    assertEquals("newer", transport.local?.auth?.client?.id)
+    assertEquals(1, transport.notificationCount)
+    coordinator.close()
+  }
+
+  @Test
   fun `sibling device token is copied into encrypted local storage`() = runTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "local-token")
     val transport =
@@ -162,6 +176,23 @@ class SharedSessionSyncCoordinatorTest {
     assertNull(transport.local?.deviceToken?.value)
     assertTrue(setVersion != transport.local?.deviceToken?.version)
     assertEquals(2, transport.notificationCount)
+    coordinator.close()
+  }
+
+  @Test
+  fun `late device token notification does not publish a token that was since replaced`() {
+    val transport = FakeTransport()
+    val coordinator = coordinator(transport)
+    coordinator.start()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "newer-token")
+    val publishedVersion = transport.local?.deviceToken?.version
+
+    // A writer that stored "stale-token" before "newer-token" is notified only now.
+    StorageHelper.valueChangeListener?.invoke(StorageKey.DEVICE_TOKEN, "older-token", "stale-token")
+
+    assertEquals("newer-token", transport.local?.deviceToken?.value)
+    assertEquals(publishedVersion, transport.local?.deviceToken?.version)
+    assertEquals(1, transport.notificationCount)
     coordinator.close()
   }
 

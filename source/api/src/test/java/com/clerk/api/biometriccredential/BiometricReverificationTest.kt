@@ -1,7 +1,7 @@
 package com.clerk.api.biometriccredential
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
@@ -343,7 +343,7 @@ class BiometricReverificationTest {
         null,
         Verification(strategy = "passkey", biometricCredentialChallenge = challenge),
         Verification(
-          strategy = TRUSTED_DEVICE,
+          strategy = Strategy.TrustedDevice.value,
           biometricCredentialChallenge = challenge.copy(biometricCredentialId = "td_other"),
         ),
       )) {
@@ -460,7 +460,7 @@ class BiometricReverificationTest {
   }
 
   private fun prepareParams() =
-    mapOf("strategy" to TRUSTED_DEVICE, "trusted_device_id" to credential.id)
+    mapOf("strategy" to Strategy.TrustedDevice.value, "trusted_device_id" to credential.id)
 
   private fun attemptParams() =
     prepareParams() +
@@ -471,7 +471,11 @@ class BiometricReverificationTest {
       )
 
   private fun prepared(level: SessionVerification.Level): SessionVerification {
-    val factor = Verification(strategy = TRUSTED_DEVICE, biometricCredentialChallenge = challenge)
+    val factor =
+      Verification(
+        strategy = Strategy.TrustedDevice.value,
+        biometricCredentialChallenge = challenge,
+      )
     return if (level == SessionVerification.Level.SECOND_FACTOR) {
       decodedVerification(SessionVerification.Status.NEEDS_SECOND_FACTOR)
         .copy(secondFactorVerification = factor)

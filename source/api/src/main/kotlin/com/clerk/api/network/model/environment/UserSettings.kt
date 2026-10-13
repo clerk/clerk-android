@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * @property passkeySettings Configuration for passkey authentication (optional)
  */
 @Serializable
-data class UserSettings(
+public data class UserSettings(
   /** Configuration for user attributes (email, phone, username, etc.) */
   val attributes: Map<String, AttributesConfig>,
 
@@ -51,7 +51,7 @@ data class UserSettings(
    * @property verifyAtSignUp Whether this attribute must be verified during the sign-up process
    */
   @Serializable
-  data class AttributesConfig(
+  public data class AttributesConfig(
     /** Whether this attribute is enabled for the application */
     val enabled: Boolean,
 
@@ -92,7 +92,7 @@ data class UserSettings(
    * @property legalConsentEnabled Whether legal consent is required during sign-up
    */
   @Serializable
-  data class SignUpUserSettings(
+  public data class SignUpUserSettings(
     /** Whether a custom action is required during sign-up */
     @SerialName("custom_action_required") val customActionRequired: Boolean,
 
@@ -121,7 +121,7 @@ data class UserSettings(
    * @property logoUrl The URL of the provider's logo image (optional)
    */
   @Serializable
-  data class SocialConfig(
+  public data class SocialConfig(
     /** Whether this social provider is enabled */
     val enabled: Boolean,
 
@@ -154,7 +154,7 @@ data class UserSettings(
    * @property createOrganization Whether users can create organizations
    */
   @Serializable
-  data class Actions(
+  public data class Actions(
     /** Whether users can delete their own accounts */
     @SerialName("delete_self") val deleteSelf: Boolean = false,
 
@@ -172,7 +172,7 @@ data class UserSettings(
    * @property showSignInButton Whether to show a dedicated passkey sign-in button
    */
   @Serializable
-  data class PasskeySettings(
+  public data class PasskeySettings(
     /** Whether passkey autofill is allowed */
     @SerialName("allow_autofill") val allowAutofill: Boolean,
 

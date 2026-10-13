@@ -1,0 +1,19 @@
+- config:
+    id: clerk/e2e/auth-phone-code-sign-up
+    target: clerk-e2e
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - e2e
+      - prebuilt-ui
+      - auth-phone
+- tools:
+    - launchApp:
+        appId: com.clerk.e2e
+        launchMode: REINSTALL
+- prompts:
+    - verify: The e2e host shows the signed-out marker.
+    - step: Start the prebuilt sign-up with the prefilled test phone number 555-555-0160 and continue.
+    - step: Enter the phone verification code 424242.
+    - verify: The e2e host shows a signed-in user with an active session.
+    - step: Delete the test account from the e2e host and verify it is signed out.

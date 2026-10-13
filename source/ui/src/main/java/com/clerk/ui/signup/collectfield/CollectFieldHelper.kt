@@ -6,12 +6,6 @@ import androidx.compose.ui.res.stringResource
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 
-/**
- * A helper class for providing UI-related information for different [CollectField] types.
- *
- * This class contains methods to retrieve localized strings for titles, subtitles, and labels, as
- * well as a method to determine if a field is optional based on the Clerk configuration.
- */
 @Stable
 internal class CollectFieldHelper {
   @Composable

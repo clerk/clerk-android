@@ -14,7 +14,6 @@ internal val String.formattedAsPhoneNumberIfPossible: String
     val util = PhoneNumberUtil.getInstance()
     val region = defaultRegion()
 
-    // 1) Try a real parse -> canonical formatting (with '+' prefix)
     try {
       val parsed = util.parse(this, region)
       if (util.isValidNumber(parsed)) {
@@ -25,7 +24,6 @@ internal val String.formattedAsPhoneNumberIfPossible: String
       // fall through to partial
     }
 
-    // 2) Fallback: as-you-type (keeps user’s current input vibe)
     val formatter: AsYouTypeFormatter = util.getAsYouTypeFormatter(region)
     var out = ""
     for (c in this) {

@@ -8,7 +8,7 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp4
 
 /** Contains default values for Clerk buttons. */
-object ClerkButtonDefaults {
+public object ClerkButtonDefaults {
 
   /**
    * Creates a [ClerkButtonIcons] configuration for a button.
@@ -22,12 +22,12 @@ object ClerkButtonDefaults {
    * @return A [ClerkButtonIcons] instance.
    */
   @Composable
-  fun icons(
+  public fun icons(
     trailingIconColor: Color? = null,
     leadingIconColor: Color? = null,
     @DrawableRes trailingIcon: Int? = null,
     @DrawableRes leadingIcon: Int? = null,
-  ) =
+  ): ClerkButtonIcons =
     ClerkButtonIcons(
       trailingIconColor = trailingIconColor,
       leadingIconColor = leadingIconColor,
@@ -44,12 +44,12 @@ object ClerkButtonDefaults {
    * @param backgroundColorOverride an optional background color override
    * @return A [ClerkButtonConfiguration] instance.
    */
-  fun configuration(
+  public fun configuration(
     style: ClerkButtonConfiguration.ButtonStyle = ClerkButtonConfiguration.ButtonStyle.Primary,
     emphasis: ClerkButtonConfiguration.Emphasis = ClerkButtonConfiguration.Emphasis.High,
     size: ClerkButtonConfiguration.Size = ClerkButtonConfiguration.Size.Large,
     backgroundColorOverride: Color? = null,
-  ) =
+  ): ClerkButtonConfiguration =
     ClerkButtonConfiguration(
       style = style,
       emphasis = emphasis,
@@ -64,7 +64,8 @@ object ClerkButtonDefaults {
    * @param vertical The vertical padding.
    * @return A [ClerkButtonPadding] instance.
    */
-  fun padding(horizontal: Dp = dp12, vertical: Dp = dp4) = ClerkButtonPadding(horizontal, vertical)
+  public fun padding(horizontal: Dp = dp12, vertical: Dp = dp4): ClerkButtonPadding =
+    ClerkButtonPadding(horizontal, vertical)
 }
 
 /**
@@ -75,7 +76,7 @@ object ClerkButtonDefaults {
  * @property trailingIconColor The color of the trailing icon.
  * @property leadingIconColor The color of the leading icon.
  */
-data class ClerkButtonIcons(
+public data class ClerkButtonIcons(
   @field:DrawableRes val trailingIcon: Int?,
   @field:DrawableRes val leadingIcon: Int?,
   val trailingIconColor: Color?,
@@ -90,27 +91,27 @@ data class ClerkButtonIcons(
  * @param size The size of the button.
  * @param backgroundColorOverride an optional background color override
  */
-data class ClerkButtonConfiguration(
+public data class ClerkButtonConfiguration(
   val style: ButtonStyle = ButtonStyle.Primary,
   val emphasis: Emphasis = Emphasis.High,
   val size: Size = Size.Large,
   val backgroundColorOverride: Color? = null,
 ) {
   /** Defines the visual prominence of the button. */
-  enum class Emphasis {
+  public enum class Emphasis {
     None,
     Low,
     High,
   }
 
   /** Defines the size of the button, affecting its height and text style. */
-  enum class Size {
+  public enum class Size {
     Small,
     Large,
   }
 
   /** Defines the color palette and overall style of the button. */
-  enum class ButtonStyle {
+  public enum class ButtonStyle {
     Primary,
     Secondary,
     Negative,
@@ -123,4 +124,4 @@ data class ClerkButtonConfiguration(
  * @property horizontal The horizontal padding.
  * @property vertical The vertical padding.
  */
-data class ClerkButtonPadding(val horizontal: Dp, val vertical: Dp)
+public data class ClerkButtonPadding(val horizontal: Dp, val vertical: Dp)

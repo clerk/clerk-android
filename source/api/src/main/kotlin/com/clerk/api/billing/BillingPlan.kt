@@ -1,5 +1,8 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,11 +11,16 @@ import kotlinx.serialization.Serializable
  *
  * Each Plan is exclusively created for either individual users or Organizations.
  */
-@Serializable
-enum class BillingPayerResourceType {
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = BillingPayerResourceType.Serializer::class)
+public enum class BillingPayerResourceType {
   @SerialName("org") ORG,
   @SerialName("user") USER,
-  @SerialName("unknown") UNKNOWN,
+  @SerialName("unknown") UNKNOWN;
+
+  internal object Serializer :
+    UnknownFallbackEnumSerializer<BillingPayerResourceType>(generatedSerializer(), UNKNOWN)
 }
 
 /**
@@ -24,7 +32,7 @@ enum class BillingPayerResourceType {
  * @property feePerBlock The fee charged for each block in this tier.
  */
 @Serializable
-data class BillingPlanUnitPriceTier(
+public data class BillingPlanUnitPriceTier(
   val id: String? = null,
   val startsAtBlock: Int,
   val endsAfterBlock: Int? = null,
@@ -39,7 +47,7 @@ data class BillingPlanUnitPriceTier(
  * @property tiers Tiers that define how each block range is priced.
  */
 @Serializable
-data class BillingPlanUnitPrice(
+public data class BillingPlanUnitPrice(
   val name: String,
   val blockSize: Int,
   val tiers: List<BillingPlanUnitPriceTier> = emptyList(),
@@ -56,7 +64,7 @@ data class BillingPlanUnitPrice(
  * @property unitPrices The individual unit prices applicable to this price.
  */
 @Serializable
-data class BillingPlanPrice(
+public data class BillingPlanPrice(
   val id: String,
   val fee: BillingMoneyAmount? = null,
   val annualMonthlyFee: BillingMoneyAmount? = null,
@@ -90,7 +98,7 @@ data class BillingPlanPrice(
  * @property freeTrialEnabled Whether the Plan has a free trial.
  */
 @Serializable
-data class BillingPlan(
+public data class BillingPlan(
   val id: String,
   val name: String,
   val fee: BillingMoneyAmount? = null,

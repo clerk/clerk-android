@@ -34,7 +34,7 @@ import com.clerk.ui.theme.DefaultColors
  * @param onClick Lambda to be invoked when the button is clicked.
  */
 @Composable
-fun ClerkTextButton(
+public fun ClerkTextButton(
   text: String,
   modifier: Modifier = Modifier,
   textColor: Color? = null,

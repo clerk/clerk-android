@@ -1,12 +1,15 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.session.Session
+import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -19,20 +22,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import okhttp3.Interceptor
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
+import okio.BufferedSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ClientSyncingMiddlewareTest {
@@ -42,6 +49,7 @@ class ClientSyncingMiddlewareTest {
     unmockkAll()
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    Clerk.stateStore.reset()
   }
 
   @Test
@@ -128,9 +136,11 @@ class ClientSyncingMiddlewareTest {
 
       middleware.intercept(chain)
 
+      val completion = Clerk.pendingAuthFlowCompletion
       assertEquals(Session.SessionStatus.ACTIVE, Clerk.session?.status)
       assertFalse(Clerk.isAuthFlowComplete)
-      assertNotNull(Clerk.pendingAuthFlowCompletion)
+      assertTrue(completion is AuthEvent.SignInCompleted)
+      assertEquals("si_123", (completion as AuthEvent.SignInCompleted).signIn.id)
     } finally {
       registration.close()
     }
@@ -339,6 +349,49 @@ class ClientSyncingMiddlewareTest {
   }
 
   @Test
+  fun `intercept preserves response body when piggybacked client fails to decode`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val originalClient = Client(id = "client_original")
+    Clerk.updateClient(originalClient)
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/hosted_auth")
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    val rawBody =
+      """
+      {
+        "response": {
+          "object": "hosted_auth",
+          "url": "https://example.accounts.dev/sign-in"
+        },
+        "client": {
+          "id": "client_malformed",
+          "sessions": [{ "id": "sess_missing_required_fields" }]
+        }
+      }
+      """
+        .trimIndent()
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(rawBody.toResponseBody("application/json".toMediaType()))
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    val result = middleware.intercept(chain)
+
+    assertEquals(rawBody, result.body.string())
+    assertEquals(originalClient, Clerk.client)
+  }
+
+  @Test
   fun `intercept leaves manually synced client response unapplied`() {
     val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
     val originalClient = Client(id = "client_original")
@@ -420,6 +473,120 @@ class ClientSyncingMiddlewareTest {
 
     assertEquals("client_server", Clerk.client.id)
     assertEquals(1_783_965_600_000L, Clerk.lastClientServerFetchAtMillis)
+  }
+
+  @Test
+  fun `intercept applies piggybacked client when the device token is unchanged while reading`() {
+    val applied =
+      interceptWhileDeviceTokenChanges(
+        request = hostedAuthRequest(),
+        body = piggybackedClientBody("client_response"),
+        tokenAfterRead = null,
+      )
+
+    assertEquals("client_response", applied)
+  }
+
+  @Test
+  fun `intercept skips piggybacked client when the device token changes while reading`() {
+    val applied =
+      interceptWhileDeviceTokenChanges(
+        request = hostedAuthRequest(),
+        body = piggybackedClientBody("client_response"),
+        tokenAfterRead = "device_token_newer",
+      )
+
+    assertEquals("client_original", applied)
+  }
+
+  @Test
+  fun `intercept skips guarded direct client when the device token changes while reading`() {
+    val applied =
+      interceptWhileDeviceTokenChanges(
+        request =
+          Request.Builder()
+            .url("https://api.clerk.com/v1/client")
+            .tag(ResponseGuard::class.java, ResponseGuard.always)
+            .build(),
+        body = """{ "object": "client", "id": "client_response", "sessions": [] }""",
+        tokenAfterRead = "device_token_newer",
+      )
+
+    assertEquals("client_original", applied)
+  }
+
+  /**
+   * Sends [request] with the stored device token and returns the in-memory client id after the
+   * middleware runs. When [tokenAfterRead] is set, the stored token is replaced while the response
+   * body is read, after the middleware's up-front staleness check has passed.
+   */
+  private fun interceptWhileDeviceTokenChanges(
+    request: Request,
+    body: String,
+    tokenAfterRead: String?,
+  ): String? {
+    val context = RuntimeEnvironment.getApplication()
+    StorageHelper.reset(context)
+    try {
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_request")
+      Clerk.updateClient(Client(id = "client_original"))
+      val authorizedRequest =
+        request.newBuilder().header(AUTHORIZATION_HEADER, "device_token_request").build()
+      val response =
+        Response.Builder()
+          .request(authorizedRequest)
+          .protocol(Protocol.HTTP_1_1)
+          .code(200)
+          .message("OK")
+          .body(
+            SideEffectOnReadBody(body) {
+              tokenAfterRead?.let { StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, it) }
+            }
+          )
+          .build()
+      val chain = mockk<Interceptor.Chain>()
+      every { chain.request() } returns authorizedRequest
+      every { chain.proceed(authorizedRequest) } returns response
+
+      ClientSyncingMiddleware(json = ClerkApi.json).intercept(chain)
+
+      return Clerk.clientFlow.value?.id
+    } finally {
+      StorageHelper.resetToUninitializedForTesting()
+    }
+  }
+
+  private fun hostedAuthRequest(): Request =
+    Request.Builder()
+      .url("https://api.clerk.com/v1/client/hosted_auth")
+      .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+      .build()
+
+  private fun piggybackedClientBody(clientId: String): String =
+    """
+    {
+      "response": { "object": "hosted_auth", "url": "https://example.accounts.dev/sign-in" },
+      "client": { "id": "$clientId", "sessions": [] }
+    }
+    """
+      .trimIndent()
+
+  /** A JSON body that runs [onRead] the first time it is read. */
+  private class SideEffectOnReadBody(private val json: String, private val onRead: () -> Unit) :
+    ResponseBody() {
+    private var read = false
+
+    override fun contentType(): MediaType = "application/json".toMediaType()
+
+    override fun contentLength(): Long = -1
+
+    override fun source(): BufferedSource {
+      if (!read) {
+        read = true
+        onRead()
+      }
+      return Buffer().writeUtf8(json)
+    }
   }
 
   private fun testSession(id: String): Session =

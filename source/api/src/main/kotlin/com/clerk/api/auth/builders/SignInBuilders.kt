@@ -1,12 +1,14 @@
 package com.clerk.api.auth.builders
 
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 
 /**
  * Builder for sign-in with identifier.
  *
  * Use this builder to specify the identifier for starting a sign-in flow. Only one of [email],
- * [phone], or [username] should be set.
+ * [phone], [username], or [identifier] should be set.
  *
  * ### Example usage:
  * ```kotlin
@@ -18,24 +20,35 @@ import com.clerk.api.auth.types.IdTokenProvider
  * ```
  */
 @ClerkDsl
-class SignInIdentifierBuilder {
+public class SignInIdentifierBuilder {
   /** The email address to sign in with. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number to sign in with. */
-  var phone: String? = null
+  public var phone: String? = null
 
   /** The username to sign in with. */
-  var username: String? = null
+  public var username: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null || username != null) {
-      "At least one of email, phone, or username must be provided"
+  /**
+   * An identifier of any type, such as text a user typed into a single "email, phone or username"
+   * field. Clerk works out which kind it is.
+   */
+  public var identifier: String? = null
+
+  internal fun resolvedIdentifier(): ClerkResult<String, ClerkErrorResponse> {
+    val typed = email ?: phone ?: username
+    val identifier = identifier
+    return when {
+      identifier != null && (email != null || phone != null || username != null) ->
+        invalidBuilderArguments("identifier cannot be combined with email, phone, or username")
+      identifier != null -> ClerkResult.success(identifier)
+      typed != null -> ClerkResult.success(typed)
+      else ->
+        invalidBuilderArguments(
+          "At least one of email, phone, username, or identifier must be provided"
+        )
     }
-  }
-
-  internal fun getIdentifier(): String {
-    return email ?: phone ?: username ?: error("No identifier provided")
   }
 }
 
@@ -51,17 +64,24 @@ class SignInIdentifierBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithPasswordBuilder {
+public class SignInWithPasswordBuilder {
   /** The identifier (email, phone, or username) to sign in with. */
-  var identifier: String? = null
+  public var identifier: String? = null
 
   /** The password for authentication. */
-  var password: String? = null
+  public var password: String? = null
 
-  internal fun validate() {
-    require(identifier != null) { "Identifier must be provided" }
-    require(password != null) { "Password must be provided" }
+  internal fun credentials(): ClerkResult<PasswordCredentials, ClerkErrorResponse> {
+    val identifier = identifier
+    val password = password
+    return when {
+      identifier == null -> invalidBuilderArguments("Identifier must be provided")
+      password == null -> invalidBuilderArguments("Password must be provided")
+      else -> ClerkResult.success(PasswordCredentials(identifier = identifier, password = password))
+    }
   }
+
+  internal data class PasswordCredentials(val identifier: String, val password: String)
 }
 
 /**
@@ -78,19 +98,14 @@ class SignInWithPasswordBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithOtpBuilder {
+public class SignInWithOtpBuilder {
   /** The email address to send the OTP to. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number to send the OTP to. */
-  var phone: String? = null
+  public var phone: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null) { "Either email or phone must be provided" }
-    require(email == null || phone == null) {
-      "Only one of email or phone should be provided, not both"
-    }
-  }
+  internal fun channel(): ClerkResult<CodeChannel, ClerkErrorResponse> = codeChannel(email, phone)
 }
 
 /**
@@ -107,15 +122,22 @@ class SignInWithOtpBuilder {
  * ```
  */
 @ClerkDsl
-class SignInWithIdTokenBuilder {
+public class SignInWithIdTokenBuilder {
   /** The ID token from the identity provider. */
-  var token: String? = null
+  public var token: String? = null
 
   /** The identity provider that issued the token. */
-  var provider: IdTokenProvider? = null
+  public var provider: IdTokenProvider? = null
 
-  internal fun validate() {
-    require(token != null) { "Token must be provided" }
-    require(provider != null) { "Provider must be provided" }
+  internal fun idToken(): ClerkResult<IdToken, ClerkErrorResponse> {
+    val token = token
+    val provider = provider
+    return when {
+      token == null -> invalidBuilderArguments("Token must be provided")
+      provider == null -> invalidBuilderArguments("Provider must be provided")
+      else -> ClerkResult.success(IdToken(token = token, provider = provider))
+    }
   }
+
+  internal data class IdToken(val token: String, val provider: IdTokenProvider)
 }

@@ -7,11 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
-import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.auth.SignInFactorScreen
+import com.clerk.ui.auth.clientTrustScreen
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -36,16 +38,15 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param onAuthComplete Callback invoked when authentication is complete.
  */
 @Composable
-fun SignInClientTrustView(
+public fun SignInClientTrustView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    when (factor.strategy) {
-      StrategyKeys.PHONE_CODE,
-      StrategyKeys.EMAIL_CODE ->
+    when (clientTrustScreen(factor.strategyType)) {
+      SignInFactorScreen.Code ->
         SignInFactorCodeView(
           factor = factor,
           isSecondFactor = true,
@@ -53,23 +54,20 @@ fun SignInClientTrustView(
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      StrategyKeys.PASSKEY ->
+      SignInFactorScreen.Passkey ->
         SignInFactorTwoPasskeyView(
           factor = factor,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
-      else -> SignInGetHelpView(modifier = modifier)
+      SignInFactorScreen.Password,
+      SignInFactorScreen.EmailLink,
+      SignInFactorScreen.BackupCode,
+      SignInFactorScreen.GetHelp -> SignInGetHelpView(modifier = modifier)
     }
   }
 }
 
-/**
- * A composable that displays a warning message for device trust verification.
- *
- * This message informs the user that they are signing in from a new device and explains why
- * additional verification is being requested.
- */
 @Composable
 internal fun ClientTrustWarningMessage(modifier: Modifier = Modifier) {
   Text(
@@ -86,7 +84,7 @@ internal fun ClientTrustWarningMessage(modifier: Modifier = Modifier) {
 private fun Preview() {
   PreviewAuthStateProvider {
     SignInClientTrustView(
-      factor = Factor(StrategyKeys.EMAIL_CODE, safeIdentifier = "user@example.com"),
+      factor = Factor(Strategy.EmailCode.value, safeIdentifier = "user@example.com"),
       onAuthComplete = {},
     )
   }

@@ -110,7 +110,7 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * @param clerkTheme Optional Clerk theme override for this component
  */
 @Composable
-fun ClerkPhoneNumberField(
+public fun ClerkPhoneNumberField(
   value: String,
   onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
@@ -132,10 +132,6 @@ fun ClerkPhoneNumberField(
   )
 }
 
-/**
- * Finds the best matching country for a given phone number value. For cases where multiple
- * countries share the same prefix (like +1), prioritizes US as the default for +1.
- */
 private fun findMatchingCountry(value: String, defaultCountry: CountryInfo): CountryInfo {
   if (value.isEmpty()) return defaultCountry
 
@@ -146,13 +142,11 @@ private fun findMatchingCountry(value: String, defaultCountry: CountryInfo): Cou
     matchingCountries.isEmpty() -> defaultCountry
     matchingCountries.size == 1 -> matchingCountries.first()
     else -> {
-      // Multiple matches - prioritize US for +1, otherwise take first
       matchingCountries.find { it.countryShortName == "US" } ?: matchingCountries.first()
     }
   }
 }
 
-/** Handles country auto-detection and initialization effects. */
 @Composable
 private fun CountryAutoDetectionEffect(
   value: String,
@@ -162,7 +156,6 @@ private fun CountryAutoDetectionEffect(
   val context = LocalContext.current
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
 
-  // Update selected country when value changes externally
   LaunchedEffect(value) {
     if (value.isNotEmpty()) {
       val matchingCountry = findMatchingCountry(value, defaultCountry)
@@ -172,7 +165,6 @@ private fun CountryAutoDetectionEffect(
     }
   }
 
-  // Auto-detect country on first load
   LaunchedEffect(Unit) {
     val detectedCountry = PhoneInputUtils.detectCountry(context)
     if (detectedCountry != null && value.isEmpty()) {
@@ -205,6 +197,7 @@ internal fun ClerkPhoneNumberFieldImpl(
   onValueChange: (String) -> Unit,
   value: String,
   modifier: Modifier = Modifier,
+  inputModifier: Modifier = Modifier,
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -259,6 +252,7 @@ internal fun ClerkPhoneNumberFieldImpl(
 
       Column(modifier = Modifier.weight(1f)) {
         PhoneNumberInput(
+          modifier = inputModifier,
           computedColors = computedColors,
           value = value,
           onValueChange = onValueChange,
@@ -297,6 +291,7 @@ private fun PhoneNumberInput(
   value: String,
   onValueChange: (String) -> Unit,
   countryCode: String,
+  modifier: Modifier = Modifier,
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -307,7 +302,7 @@ private fun PhoneNumberInput(
 
   Column {
     OutlinedTextField(
-      modifier = Modifier.semantics { contentType = ContentType.PhoneNumber },
+      modifier = modifier.semantics { contentType = ContentType.PhoneNumber },
       colors =
         OutlinedTextFieldDefaults.colors(
           unfocusedBorderColor = computedColors.inputBorder,
@@ -322,7 +317,6 @@ private fun PhoneNumberInput(
       interactionSource = interactionSource,
       value = value,
       onValueChange = { newValue ->
-        // Filter and cap the input, ensuring it maintains proper format
         val filtered = PhoneInputUtils().keepDialableCapped(newValue)
         onValueChange(filtered)
       },
@@ -376,20 +370,6 @@ private fun PhoneNumberInputError(errorText: String?) {
   }
 }
 
-/**
- * Country selection component with dropdown menu.
- *
- * This composable provides a clickable country selector that displays:
- * - Selected country flag and code
- * - Expandable dropdown with all available countries
- * - Auto-detected default country at the top
- * - Proper theming and accessibility
- *
- * @param selectedCountry Currently selected country
- * @param modifier [Modifier] to be applied to the component
- * @param enabled Whether the selector can be opened and changed
- * @param onSelect Callback when a country is selected
- */
 @Composable
 private fun CountrySelector(
   selectedCountry: CountryInfo,
@@ -427,19 +407,6 @@ private fun CountrySelector(
   }
 }
 
-/**
- * Dropdown menu content for country selection.
- *
- * This composable renders the expandable dropdown menu containing:
- * - Auto-detected default country (if available) at the top
- * - Horizontal divider separating default from full list
- * - Complete list of all supported countries
- * - Proper height constraints based on screen size
- *
- * @param isExpanded Whether the dropdown menu is currently expanded
- * @param onDismissRequest Callback to dismiss the dropdown menu
- * @param onSelect Callback when a country is selected from the dropdown
- */
 @Composable
 private fun CountryDropdownContent(
   isExpanded: Boolean,
@@ -463,7 +430,6 @@ private fun CountryDropdownContent(
     val allCountries = PhoneInputUtils.getAllCountries()
     val detectedCountry = PhoneInputUtils.detectCountry(context)
 
-    // Show detected country first if it exists
     if (detectedCountry != null) {
       Text(
         modifier = Modifier.padding(start = dp12),
@@ -486,7 +452,6 @@ private fun CountryDropdownContent(
       )
     }
 
-    // Show all countries
     allCountries.forEach { country ->
       DropdownMenuItem(
         text = { Text(text = country.getSelectorText) },
@@ -499,19 +464,6 @@ private fun CountryDropdownContent(
   }
 }
 
-/**
- * Country selector display with flag, code, and dropdown icon.
- *
- * This composable renders the clickable country selection button showing:
- * - Country flag emoji
- * - Country code (e.g., "US", "GB")
- * - Chevron down icon
- * - Proper border styling based on focus state
- *
- * @param selectedCountry Currently selected country information
- * @param isExpanded Whether the dropdown is currently expanded (affects border styling)
- * @param modifier [Modifier] to be applied to the component
- */
 @Composable
 private fun TextWithIcon(
   selectedCountry: CountryInfo,
@@ -561,16 +513,12 @@ private fun PreviewPhoneInput() {
           .padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12),
     ) {
-      // Empty phone number - should show country picker with default country
       ClerkPhoneNumberField(value = "", onValueChange = {})
 
-      // Phone number with US country code
       ClerkPhoneNumberField(value = "+1 5551234567", onValueChange = {})
 
-      // Phone number with UK country code
       ClerkPhoneNumberField(value = "+44 20 1234 5678", onValueChange = {})
 
-      // Error state
       ClerkPhoneNumberField(
         value = "+1 555",
         onValueChange = {},

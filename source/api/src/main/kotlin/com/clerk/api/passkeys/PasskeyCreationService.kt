@@ -2,6 +2,7 @@ package com.clerk.api.passkeys
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.exceptions.CreateCredentialException
 import com.clerk.api.Clerk
@@ -11,45 +12,23 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.catchingClerkResult
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * Service responsible for creating new passkeys for users.
- *
- * This service handles the complete passkey creation flow including:
- * - Initiating passkey creation with the Clerk API to get the challenge
- * - Using Android's CredentialManager to create the passkey credential
- * - Verifying the created passkey with the Clerk API
- */
 internal object PasskeyCreationService {
 
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
-  /**
-   * Sets the credential manager for testing purposes.
-   *
-   * @param manager The credential manager implementation to use
-   */
+  @VisibleForTesting
   internal fun setCredentialManager(manager: PasskeyCredentialManager) {
     credentialManager = manager
   }
 
-  /**
-   * Creates a new passkey for the current user.
-   *
-   * This method performs the following steps:
-   * 1. Requests passkey creation from the Clerk API to get the challenge
-   * 2. Uses Android's CredentialManager to create the passkey credential
-   * 3. Parses the credential response from the system
-   * 4. Sends the credential data back to Clerk for verification and storage
-   *
-   * The method handles both success and failure cases, logging appropriate messages. On failure
-   * during the initial API request, the method returns early. On success, it proceeds with the full
-   * credential creation and verification flow.
-   */
   @SuppressLint("PublicKeyCredential")
   suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
     val activity = Clerk.credentialActivity()
@@ -64,38 +43,54 @@ internal object PasskeyCreationService {
         createPasskeyResult
       }
       is ClerkResult.Success -> {
-        try {
-          val createPublicKeyCredentialRequest =
-            CreatePublicKeyCredentialRequest(
-              requestJson = createPasskeyResult.value.verification?.nonce!!
-            )
-          val result =
-            credentialManager.createCredential(
-              context = activity,
-              request = createPublicKeyCredentialRequest,
-            )
-          val passkeyData = parsePasskeyDataDirectFromBundle(result.data)
-          val verificationResult =
-            ClerkApi.user.attemptPasskeyVerification(
-              passkeyId = createPasskeyResult.value.id,
-              publicKeyCredential = ClerkApi.json.encodeToString(passkeyData),
-            )
-          verificationResult
-            .onSuccess { ClerkLog.d("Passkey created successfully: ${it}") }
-            .onFailure { ClerkLog.e("Passkey creation failed: ${it}") }
-          ClerkLog.d("Passkey creation result: ${result.data}")
-          verificationResult
-        } catch (e: CreateCredentialException) {
-          ClerkLog.e("Passkey creation failed with exception: ${e.message}")
-          classifyCreateCredentialFailure(e)
-        } catch (e: CredentialFlowException) {
-          ClerkLog.e("Passkey creation cannot start: ${e.message}")
-          ClerkResult.unknownFailure(e)
-        } catch (e: Exception) {
-          ClerkLog.e("Passkey creation failed with exception: ${e.message}")
-          ClerkResult.unknownFailure(e)
+        val nonce = createPasskeyResult.value.verification?.nonce
+        if (nonce == null) {
+          ClerkLog.e("Passkey creation failed: missing verification nonce")
+          localFailure(
+            code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+            longMessage = "Passkey creation response is missing the nonce",
+          )
+        } else {
+          catchingClerkResult(
+            onException = { ClerkLog.e("Passkey creation failed with exception: ${it.message}") }
+          ) {
+            registerPasskey(activity, createPasskeyResult.value.id, nonce)
+          }
         }
       }
+    }
+  }
+
+  @SuppressLint("PublicKeyCredential")
+  private suspend fun registerPasskey(
+    activity: android.app.Activity,
+    passkeyId: String,
+    nonce: String,
+  ): ClerkResult<Passkey, ClerkErrorResponse> {
+    return try {
+      val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson = nonce)
+      val result =
+        credentialManager.createCredential(
+          context = activity,
+          request = createPublicKeyCredentialRequest,
+        )
+      val passkeyData = parsePasskeyDataDirectFromBundle(result.data)
+      val verificationResult =
+        ClerkApi.user.attemptPasskeyVerification(
+          passkeyId = passkeyId,
+          publicKeyCredential = ClerkApi.json.encodeToString(passkeyData),
+        )
+      verificationResult
+        .onSuccess { ClerkLog.d("Passkey created successfully: ${it}") }
+        .onFailure { ClerkLog.e("Passkey creation failed: ${it}") }
+      ClerkLog.d("Passkey creation result: ${result.data}")
+      verificationResult
+    } catch (e: CreateCredentialException) {
+      ClerkLog.e("Passkey creation failed with exception: ${e.message}")
+      classifyCreateCredentialFailure(e)
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Passkey creation cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e)
     }
   }
 
@@ -116,7 +111,6 @@ internal object PasskeyCreationService {
    * @throws IllegalArgumentException if the registration response JSON is not found in the bundle
    */
   private fun parsePasskeyDataDirectFromBundle(result: Bundle): PublicKeyCredentialData {
-    // Extract JSON string from the Bundle
     val jsonString =
       result.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
         ?: throw IllegalArgumentException("No registration response JSON found in bundle")
@@ -124,7 +118,6 @@ internal object PasskeyCreationService {
     val json = Json { ignoreUnknownKeys = true }
     val fullResponse = json.decodeFromString<FullPasskeyResponse>(jsonString)
 
-    // Convert response JsonObject to Map<String, String> with only the required fields
     val responseMap =
       mapOf(
         "attestationObject" to

@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** ViewModel driving the post-auth biometric credential enrollment prompt. */
 internal class BiometricCredentialEnrollmentViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)

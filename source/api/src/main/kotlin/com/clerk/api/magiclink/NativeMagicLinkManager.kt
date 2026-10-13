@@ -4,7 +4,7 @@ package com.clerk.api.magiclink
 
 import android.net.Uri
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.EMAIL_LINK
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.ApiParams
@@ -125,9 +125,11 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   internal suspend fun prepareSignInEmailLink(
     signIn: SignIn,
     emailAddressId: String,
+    customRedirectUri: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val redirectUri =
-      resolveNativeEmailLinkRedirectUri()
+      customRedirectUri?.takeIf { it.isNotBlank() }
+        ?: resolveNativeEmailLinkRedirectUri()
         ?: return ClerkResult.apiFailure(nativeRedirectUriRequiredError())
 
     return prepareSignInEmailLink(signIn, emailAddressId, redirectUri)
@@ -191,7 +193,7 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     val pkcePair = PkceUtil.generatePair()
     val fields =
       mapOf(
-        ApiParams.STRATEGY to EMAIL_LINK,
+        ApiParams.STRATEGY to Strategy.EmailLink.value,
         ApiParams.REDIRECT_URI to redirectUri,
         ApiParams.CODE_CHALLENGE to pkcePair.challenge,
         ApiParams.CODE_CHALLENGE_METHOD to NativeMagicLinkPrepareRequest.PKCE_METHOD_S256,
@@ -306,9 +308,8 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   }
 
   private suspend fun refreshClientState() {
-    when (val clientResult = Client.get()) {
-      is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
-      is ClerkResult.Failure -> ClerkLog.w("event=native_magic_link_client_refresh_failure")
+    if (Clerk.fetchAndApplyClient { Client.get() } is ClerkResult.Failure) {
+      ClerkLog.w("event=native_magic_link_client_refresh_failure")
     }
   }
 
@@ -316,7 +317,13 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     createdSessionId: String?
   ): ClerkResult<Unit, NativeMagicLinkError> {
     createdSessionId ?: return ClerkResult.success(Unit)
-    return when (val activationResult = Clerk.auth.setActive(createdSessionId)) {
+    val organizationId = runCatching {
+      Clerk.client.sessions
+    }
+      .getOrNull()
+      ?.firstOrNull { it.id == createdSessionId }
+      ?.lastActiveOrganizationId
+    return when (val activationResult = Clerk.auth.setActive(createdSessionId, organizationId)) {
       is ClerkResult.Success -> ClerkResult.success(Unit)
       is ClerkResult.Failure -> {
         refreshClientState()
@@ -348,7 +355,7 @@ private fun nativeRedirectUriRequiredError(): ClerkErrorResponse {
 }
 
 public fun interface NativeMagicLinkAttestationProvider {
-  suspend fun attestation(): String?
+  public suspend fun attestation(): String?
 }
 
 @Serializable
@@ -478,7 +485,7 @@ internal fun queryOrFragmentParam(uri: Uri, key: String): String? {
 
 private fun SignIn.emailLinkAddressId(): String? {
   return supportedFirstFactors
-    ?.firstOrNull { it.strategy == EMAIL_LINK && it.emailAddressId != null }
+    ?.firstOrNull { it.strategyType == Strategy.EmailLink && it.emailAddressId != null }
     ?.emailAddressId
 }
 
@@ -503,7 +510,7 @@ private fun nativeMagicLinkFailure(
 
 private fun currentTimeMillis(): Long = System.currentTimeMillis()
 
-class NativeMagicLinkError(val reasonCode: String, val message: String? = null)
+public class NativeMagicLinkError(public val reasonCode: String, public val message: String? = null)
 
 internal enum class NativeMagicLinkReason(val code: String) {
   APPROVAL_TOKEN_CONSUMED("approval_token_consumed"),

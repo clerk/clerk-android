@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -55,8 +56,10 @@ import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp12
@@ -66,6 +69,7 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
@@ -92,7 +96,7 @@ import kotlinx.coroutines.launch
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
-fun UserButton(
+public fun UserButton(
   clerkTheme: ClerkTheme? = null,
   treatPendingAsSignedOut: Boolean = false,
   routeToAuthWhenForcedMfa: Boolean = true,
@@ -100,15 +104,17 @@ fun UserButton(
   customDestination: (@Composable (String) -> Unit)? = null,
   onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    TelemetryProvider {
-      UserButtonPresenter(
-        treatPendingAsSignedOut = treatPendingAsSignedOut,
-        routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-        customRows = customRows,
-        customDestination = customDestination,
-        onRequiresForcedMfaClick = onRequiresForcedMfaClick,
-      )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      TelemetryProvider {
+        UserButtonPresenter(
+          treatPendingAsSignedOut = treatPendingAsSignedOut,
+          routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+          customRows = customRows,
+          customDestination = customDestination,
+          onRequiresForcedMfaClick = onRequiresForcedMfaClick,
+        )
+      }
     }
   }
 }
@@ -139,7 +145,7 @@ private fun UserButtonPresenter(
     shouldShowButton = resolved.shouldShowButton,
     user = user,
     hasPendingNonMfaTask = hasPendingNonMfaTask,
-    requiresForcedMfa = requiresForcedMfa,
+    hasSession = effectiveSession != null,
     authMode = authMode,
     telemetry = telemetry,
     onDismissPendingSessionSheet = { showPendingSessionSheet = false },
@@ -207,7 +213,7 @@ private fun ObserveUserButtonState(
   shouldShowButton: Boolean,
   user: User?,
   hasPendingNonMfaTask: Boolean,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   telemetry: TelemetryCollector,
   onDismissPendingSessionSheet: () -> Unit,
@@ -217,8 +223,8 @@ private fun ObserveUserButtonState(
     if (shouldShowButton) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
   }
   LaunchedEffect(hasPendingNonMfaTask) { if (!hasPendingNonMfaTask) onDismissPendingSessionSheet() }
-  DismissAuthWhenMfaResolved(
-    requiresForcedMfa = requiresForcedMfa,
+  DismissForcedMfaAuthWhenSignedOut(
+    hasSession = hasSession,
     authMode = authMode,
     onDismissAuth = onDismissAuth,
   )
@@ -303,7 +309,11 @@ private fun handleUserButtonClick(
 private fun UserAvatarButtonContent(imageUrl: String?, onClick: () -> Unit) {
   val context = LocalContext.current
   val profilePainter = painterResource(id = R.drawable.ic_profile)
-  IconButton(onClick = onClick) {
+  IconButton(
+    onClick = onClick,
+    modifier =
+      Modifier.clerkTestTagsAsResourceIds().testTag(ClerkTestTags.UserButton.profileButton),
+  ) {
     Box(
       modifier =
         Modifier.size(dp36).clip(CircleShape).semantics {
@@ -343,13 +353,13 @@ private data class UserButtonClickCallbacks(
 )
 
 @Composable
-private fun DismissAuthWhenMfaResolved(
-  requiresForcedMfa: Boolean,
+private fun DismissForcedMfaAuthWhenSignedOut(
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   onDismissAuth: () -> Unit,
 ) {
-  LaunchedEffect(requiresForcedMfa, authMode) {
-    if (shouldDismissAuthWhenMfaResolved(authMode, requiresForcedMfa)) {
+  LaunchedEffect(hasSession, authMode) {
+    if (shouldDismissForcedMfaAuth(authMode, hasSession)) {
       onDismissAuth()
     }
   }
@@ -576,11 +586,11 @@ internal enum class UserButtonAuthMode(
   ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
 }
 
-internal fun shouldDismissAuthWhenMfaResolved(
+internal fun shouldDismissForcedMfaAuth(
   authMode: UserButtonAuthMode?,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
 ): Boolean {
-  return authMode == UserButtonAuthMode.ForcedMfa && !requiresForcedMfa
+  return authMode == UserButtonAuthMode.ForcedMfa && !hasSession
 }
 
 internal fun userButtonClickAction(

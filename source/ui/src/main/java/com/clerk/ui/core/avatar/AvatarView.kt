@@ -300,10 +300,9 @@ internal fun OrganizationLogo(
   }
 }
 
-/** Width cap relative to logo height, so wide logos stay bounded as the height scales. */
 private const val LOGO_MAX_WIDTH_TO_HEIGHT_RATIO = 4
 
-enum class AvatarSize {
+public enum class AvatarSize {
   SMALL,
   MEDIUM,
   LARGE,

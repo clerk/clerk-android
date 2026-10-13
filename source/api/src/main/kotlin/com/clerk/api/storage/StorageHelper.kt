@@ -3,23 +3,19 @@ package com.clerk.api.storage
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLog
 
-/**
- * Helper class to manage secure storage of data. SharedPreferences are used as the persistence
- * backend, while values are encrypted before they are written to disk.
- */
+@Suppress("TooManyFunctions")
 internal object StorageHelper {
   private const val ENCRYPTED_VALUE_PREFIX = "clerk:v1:"
 
   @Volatile private var secureStorage: SharedPreferences? = null
   @Volatile private var storageCipher: StorageCipher? = null
+  @Volatile private var preparedContext: Context? = null
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
-  /** Receives encrypted-storage changes that affect coordinated SDK state. */
   @Volatile
   internal var valueChangeListener:
     ((key: StorageKey, previous: String?, value: String?) -> Unit)? =
@@ -31,13 +27,6 @@ internal object StorageHelper {
    */
   @Synchronized
   fun initialize(context: Context) {
-    if (secureStorage == null) {
-      secureStorage =
-        context.applicationContext.getSharedPreferences(
-          CLERK_PREFERENCES_FILE_NAME,
-          Context.MODE_PRIVATE,
-        )
-    }
     if (storageCipher == null) {
       storageCipher =
         runCatching { storageCipherFactoryOverride?.invoke() ?: StorageCipherFactory.create() }
@@ -46,41 +35,115 @@ internal object StorageHelper {
           }
           .getOrNull()
     }
+    if (secureStorage == null) {
+      secureStorage =
+        context.applicationContext.getSharedPreferences(
+          CLERK_PREFERENCES_FILE_NAME,
+          Context.MODE_PRIVATE,
+        )
+    }
   }
 
-  /** Save value of string type to [secureStorage] */
+  fun prepare(context: Context) {
+    preparedContext = context.applicationContext
+  }
+
+  private fun initializeIfPrepared() {
+    if (secureStorage == null) {
+      preparedContext?.let(::initialize)
+    }
+  }
+
+  /** Guards device-token read-compare-write sequences; listeners are notified outside it. */
+  private val deviceTokenLock = Any()
+
   internal fun saveValue(key: StorageKey, value: String) {
+    if (key != StorageKey.DEVICE_TOKEN) {
+      writeValue(key, value)
+      return
+    }
+    val previousValue: String?
+    val saved: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      saved = writeValue(key, value)
+    }
+    if (saved) notifyDeviceTokenChange(previousValue, value)
+  }
+
+  /**
+   * Atomically replaces the device token with [value] (deleting it when null) only if the stored
+   * token equals [expected]. Returns true when the stored token equals [value] after this call.
+   *
+   * [onChangedLocked] runs inside the device-token lock, only when the stored token actually
+   * changed, so callers can publish side effects (such as a response fence) atomically with the
+   * swap. It must be cheap and must not take other locks.
+   */
+  internal fun compareAndSetDeviceToken(
+    expected: String?,
+    value: String?,
+    onChangedLocked: () -> Unit = {},
+  ): Boolean {
+    val key = StorageKey.DEVICE_TOKEN
+    val previousValue: String?
+    val swapped: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      swapped =
+        when {
+          previousValue != expected -> false
+          previousValue == value -> true
+          value == null -> removeValue(key)
+          else -> writeValue(key, value)
+        }
+      if (swapped && previousValue != value) onChangedLocked()
+    }
+    if (swapped) notifyDeviceTokenChange(previousValue, value)
+    return swapped
+  }
+
+  private fun writeValue(key: StorageKey, value: String): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     val cipher = storageCipher
-    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
 
-    when {
+    return when {
       prefs == null -> {
         ClerkLog.w(
           "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
         )
+        false
       }
-      value.isEmpty() -> Unit
+      value.isEmpty() -> false
       cipher == null -> {
         ClerkLog.w("Encrypted storage is unavailable, ignoring save for key: ${key.name}")
+        false
       }
       else -> {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
-          .onSuccess { encryptedValue ->
-            prefs.edit(commit = true) { putString(key.name, encryptedValue) }
-            if (key == StorageKey.DEVICE_TOKEN && previousValue != value) {
-              valueChangeListener?.invoke(key, previousValue, value)
-            }
-          }
           .onFailure { error ->
             ClerkLog.w("Failed to encrypt value for key ${key.name}: ${error.message}")
           }
+          .map { encryptedValue ->
+            commit(prefs, key, cachedDeviceToken = value) { putString(key.name, encryptedValue) }
+          }
+          .getOrDefault(false)
       }
     }
   }
 
-  /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
+    initializeIfPrepared()
+    return if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.getOrLoad(load = { readValue(key) }, canCache = ::isEncryptedStorageReady)
+    } else {
+      readValue(key)
+    }
+  }
+
+  private fun isEncryptedStorageReady(): Boolean = secureStorage != null && storageCipher != null
+
+  private fun readValue(key: StorageKey): String? {
     val prefs = secureStorage
     val storedValue = prefs?.getString(key.name, null)
     val cipher = storageCipher
@@ -94,7 +157,7 @@ internal object StorageHelper {
       }
       storedValue == null -> null
       !storedValue.startsWith(ENCRYPTED_VALUE_PREFIX) -> {
-        migrateLegacyPlaintextValue(key, storedValue)
+        migrateLegacyPlaintextValue(prefs, key, storedValue)
         storedValue
       }
       cipher == null -> {
@@ -105,52 +168,100 @@ internal object StorageHelper {
         runCatching { cipher.decrypt(storedValue.removePrefix(ENCRYPTED_VALUE_PREFIX)) }
           .onFailure { error ->
             ClerkLog.w("Failed to decrypt stored value for key ${key.name}: ${error.message}")
-            prefs.edit(commit = true) { remove(key.name) }
+            replaceIfStillStored(prefs, key, storedValue, cachedDeviceToken = null) {
+              remove(key.name)
+            }
           }
           .getOrNull()
       }
     }
   }
 
-  /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
+    if (key != StorageKey.DEVICE_TOKEN) {
+      removeValue(key)
+      return
+    }
+    val previousValue: String?
+    val removed: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      removed = removeValue(key)
+    }
+    if (removed) notifyDeviceTokenChange(previousValue, null)
+  }
+
+  private fun removeValue(key: StorageKey): Boolean {
+    initializeIfPrepared()
     val prefs = secureStorage
     if (prefs == null) {
       ClerkLog.w(
         "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
       )
-      return
+      return false
     }
-    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
-    prefs.edit(commit = true) { remove(key.name) }
-    if (key == StorageKey.DEVICE_TOKEN && previousValue != null) {
-      valueChangeListener?.invoke(key, previousValue, null)
-    }
+    return commit(prefs, key, cachedDeviceToken = null) { remove(key.name) }
   }
 
-  /**
-   * Resets the storage helper for testing purposes. This method should only be used in tests.
-   * Clears all stored values. To test uninitialized state, tests should call this and then test
-   * methods before calling initialize().
-   */
-  @VisibleForTesting
-  internal fun reset(context: Context? = null) {
-    valueChangeListener = null
-    val prefs = secureStorage
-    if (prefs != null) {
-      prefs.edit().clear().commit()
-    }
-    storageCipher = null
-    if (context != null) {
-      // Reinitialize to ensure clean state
-      initialize(context)
+  private inline fun replaceIfStillStored(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    storedValue: String,
+    cachedDeviceToken: String?,
+    crossinline edit: SharedPreferences.Editor.() -> Unit,
+  ): Boolean {
+    val isStillStored = { prefs.getString(key.name, null) == storedValue }
+    val commit = { commitEdit(prefs, key) { edit() } }
+    return if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.writeIf(isStillStored, cachedDeviceToken, commit)
     } else {
-      // Allow tests to simulate uninitialized state.
-      secureStorage = null
+      isStillStored() && commit()
     }
   }
 
-  private fun migrateLegacyPlaintextValue(key: StorageKey, value: String) {
+  private inline fun commit(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    cachedDeviceToken: String?,
+    crossinline edit: SharedPreferences.Editor.() -> Unit,
+  ): Boolean =
+    if (key == StorageKey.DEVICE_TOKEN) {
+      DeviceTokenCache.write(cachedDeviceToken) { commitEdit(prefs, key) { edit() } }
+    } else {
+      commitEdit(prefs, key, edit)
+    }
+
+  private fun notifyDeviceTokenChange(previousValue: String?, value: String?) {
+    if (previousValue != value) {
+      valueChangeListener?.invoke(StorageKey.DEVICE_TOKEN, previousValue, value)
+    }
+  }
+
+  @VisibleForTesting
+  internal fun reset(context: Context) {
+    clearStoredState()
+    initialize(context)
+  }
+
+  @VisibleForTesting
+  internal fun resetToUninitializedForTesting() {
+    clearStoredState()
+    secureStorage = null
+    preparedContext = null
+  }
+
+  private fun clearStoredState() {
+    valueChangeListener = null
+    secureStorage?.edit()?.clear()?.commit()
+    storageCipher = null
+    DeviceTokenCache.invalidate()
+  }
+
+  private fun migrateLegacyPlaintextValue(
+    prefs: SharedPreferences,
+    key: StorageKey,
+    value: String,
+  ) {
     if (value.isEmpty()) {
       return
     }
@@ -158,11 +269,65 @@ internal object StorageHelper {
     val cipher = storageCipher ?: return
     runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
       .onSuccess { encryptedValue ->
-        secureStorage?.edit(commit = true) { putString(key.name, encryptedValue) }
+        replaceIfStillStored(prefs, key, storedValue = value, cachedDeviceToken = value) {
+          putString(key.name, encryptedValue)
+        }
       }
       .onFailure { error ->
         ClerkLog.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
       }
+  }
+}
+
+/** Commits synchronously and reports whether the write reached disk. */
+private inline fun commitEdit(
+  prefs: SharedPreferences,
+  key: StorageKey,
+  edit: SharedPreferences.Editor.() -> Unit,
+): Boolean {
+  val committed = prefs.edit().apply(edit).commit()
+  if (!committed) ClerkLog.w("Failed to commit storage change for key: ${key.name}")
+  return committed
+}
+
+private object DeviceTokenCache {
+  private class Entry(val value: String?)
+
+  private val lock = Any()
+  @Volatile private var entry: Entry? = null
+  @Volatile private var generation = 0L
+
+  fun getOrLoad(load: () -> String?, canCache: () -> Boolean): String? {
+    entry?.let {
+      return it.value
+    }
+    val readGeneration = generation
+    val readStartedCacheable = canCache()
+    val value = load()
+    synchronized(lock) {
+      if (readStartedCacheable && readGeneration == generation) {
+        entry = Entry(value)
+      }
+    }
+    return value
+  }
+
+  fun write(value: String?, commit: () -> Boolean): Boolean =
+    synchronized(lock) {
+      val committed = commit()
+      generation += 1
+      entry = if (committed) Entry(value) else null
+      committed
+    }
+
+  fun writeIf(condition: () -> Boolean, value: String?, commit: () -> Boolean): Boolean =
+    synchronized(lock) { condition() && write(value, commit) }
+
+  fun invalidate() {
+    synchronized(lock) {
+      generation += 1
+      entry = null
+    }
   }
 }
 

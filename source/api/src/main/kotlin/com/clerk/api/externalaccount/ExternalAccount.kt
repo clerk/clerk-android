@@ -5,6 +5,8 @@ import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.user.User
 import kotlinx.serialization.SerialName
@@ -19,7 +21,7 @@ import kotlinx.serialization.Serializable
  * process.
  */
 @Serializable
-data class ExternalAccount(
+public data class ExternalAccount(
   /** The unique identifier for this external account. */
   val id: String,
 
@@ -69,14 +71,16 @@ data class ExternalAccount(
  * endpoint.
  *
  * @return A [ClerkResult] containing the updated [Verification] object on success, or a
- *   [ClerkErrorResponse] on failure
- * @throws IllegalArgumentException if the external verification redirect URL is null
+ *   [ClerkErrorResponse] on failure, including when this account has no external verification
+ *   redirect URL.
  */
-suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+public suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErrorResponse> {
   val redirectUrl =
-    requireNotNull(this.verification?.externalVerificationRedirectUrl) {
-      "External verification redirect URL is null"
-    }
+    this.verification?.externalVerificationRedirectUrl
+      ?: return localFailure(
+        code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+        longMessage = "External verification redirect URL is missing",
+      )
   return ClerkApi.user.reauthorizeExternalAccount(
     externalAccountId = this.id,
     redirectUrl = redirectUrl,
@@ -93,7 +97,7 @@ suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErr
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteExternalAccount(externalAccountId = this.id)
 }
 
@@ -110,11 +114,11 @@ suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorRespo
  * @return A [ClerkResult] containing the updated [User] object on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse> {
+public suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.revokeExternalAccountTokens(externalAccountId = this.id)
 }
 
-val ExternalAccount.oauthProviderType: OAuthProvider
+public val ExternalAccount.oauthProviderType: OAuthProvider
   get() {
     val strategy = provider.takeIf { it.startsWith("oauth_") } ?: "oauth_$provider"
     return OAuthProvider.fromStrategy(strategy)

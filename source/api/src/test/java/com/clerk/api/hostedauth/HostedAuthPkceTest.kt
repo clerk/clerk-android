@@ -24,6 +24,7 @@ class HostedAuthPkceTest {
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       pkce.codeVerifier,
     )
+    assertEquals(hostedAuthCodeChallenge(pkce.codeVerifier), pkce.codeChallenge)
     assertEquals(43, pkce.codeChallenge.length)
     assertFalse(pkce.codeChallenge.contains('+'))
     assertFalse(pkce.codeChallenge.contains('/'))

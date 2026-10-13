@@ -18,7 +18,6 @@ internal val Color.isDark: Boolean
 private val LIGHT_SHADES = listOf("400", "300", "200", "150", "100", "50", "25")
 private val DARK_SHADES = listOf("600", "700", "750", "800", "850", "900", "950")
 
-// ——— Domain constants (magic numbers → names) ———
 private const val OPAQUE = 1f
 private const val ZERO = 0f
 private const val ONE = 1f
@@ -26,12 +25,10 @@ private const val HALF = 0.5f
 private const val TWO = 2f
 private const val SIX = 6f
 
-// Hue fractions commonly used in HSL → RGB conversion
 private const val ONE_THIRD = 1f / 3f
 private const val ONE_SIXTH = 1f / 6f
 private const val TWO_THIRDS = 2f / 3f
 
-// Lightness targets for your scale
 private const val TARGET_L_25 = 0.97f
 private const val TARGET_L_900 = 0.12f
 
@@ -39,7 +36,6 @@ private data class HSL(val h: Float, val s: Float, val l: Float)
 
 private fun clamp01(x: Float): Float = max(ZERO, min(ONE, x))
 
-// @Suppress("MagicNumber") // <- Optional: keep off if the constants above are enough.
 private fun rgbToHsl(c: Color): HSL {
   val r = c.red
   val g = c.green
@@ -64,7 +60,6 @@ private fun rgbToHsl(c: Color): HSL {
   return HSL(h, s, l)
 }
 
-// @Suppress("MagicNumber") // <- Optional suppression if your Detekt config is extra strict.
 private fun hsla(h: Float, s: Float, l: Float, a: Float): Color {
   if (s == 0f) return Color(l, l, l, a)
 
@@ -93,7 +88,6 @@ private fun hsla(h: Float, s: Float, l: Float, a: Float): Color {
 internal fun Color.generateDangerPaletteHsl(): DangerPalette {
   val base = rgbToHsl(this)
 
-  // Step sizes are derived from list lengths (no hidden numbers).
   val lightStep = (TARGET_L_25 - base.l) / LIGHT_SHADES.size
   val darkStep = (base.l - TARGET_L_900) / DARK_SHADES.size
 
@@ -126,7 +120,6 @@ internal fun Color.generateDangerPaletteHsl(): DangerPalette {
     danger800 = shade("800"),
     danger850 = shade("850"),
     danger900 = shade("900"),
-    // Should align with your deepest target; tune TARGET_L_900 if you want #350808 precisely.
     danger950 = shade("950"),
   )
 }
