@@ -24,6 +24,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -242,6 +243,161 @@ class SSOServiceTest {
     assertEquals("true", transferParams.captured["transfer"])
     assertFalse(SSOService.hasPendingAuthentication())
   }
+
+  @Test
+  fun `bare callback transfers to sign up when the reloaded sign in is transferable`() = runTest {
+    val currentSignIn = createdSignIn()
+    val transferableSignIn =
+      SignIn(
+        id = SIGN_IN_ID,
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        firstFactorVerification = Verification(status = Verification.Status.TRANSFERABLE),
+      )
+    val createdSignUp = testSignUp(status = SignUp.Status.COMPLETE)
+    val transferParams = slot<Map<String, String>>()
+    every { auth.currentSignIn } returns currentSignIn
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns
+      ClerkResult.success(transferableSignIn)
+    coEvery { signUpApi.createSignUp(capture(transferParams)) } returns
+      ClerkResult.success(createdSignUp)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+    val result = (pendingResult.await() as ClerkResult.Success).value
+    assertSame(createdSignUp, result.signUp)
+    assertNull(result.signIn)
+    assertEquals("true", transferParams.captured["transfer"])
+    assertFalse(SSOService.hasPendingAuthentication())
+  }
+
+  @Test
+  fun `bare callback cancels when the reloaded sign in is not transferable`() = runTest {
+    val currentSignIn = createdSignIn()
+    every { auth.currentSignIn } returns currentSignIn
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns ClerkResult.success(currentSignIn)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse(SSOService.hasPendingAuthentication())
+    coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
+  @Test
+  fun `provider error callback cancels without reloading the sign in`() = runTest {
+    every { auth.currentSignIn } returns createdSignIn()
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse("$CALLBACK_URL?error=access_denied"))
+
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    coVerify(exactly = 0) { signInApi.fetchSignIn(any(), any()) }
+    coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
+  @Test
+  fun `bare callback completes with the external account error when transfer is not allowed`() =
+    runTest {
+      val transferableSignIn =
+        SignIn(
+          id = SIGN_IN_ID,
+          status = SignIn.Status.NEEDS_FIRST_FACTOR,
+          firstFactorVerification = Verification(status = Verification.Status.TRANSFERABLE),
+        )
+      every { auth.currentSignIn } returns createdSignIn()
+      coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns
+        ClerkResult.success(transferableSignIn)
+
+      val pendingResult =
+        async(start = CoroutineStart.UNDISPATCHED) {
+          SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, transferable = false)
+        }
+
+      SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+      assertEquals("external_account_not_found", failure.error?.errors?.single()?.code)
+      assertFalse(SSOService.hasPendingAuthentication())
+      coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+    }
+
+  @Test
+  fun `bare callback returns the reload failure instead of cancelling`() = runTest {
+    val cause = IOException("offline")
+    every { auth.currentSignIn } returns createdSignIn()
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns ClerkResult.unknownFailure(cause)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+      }
+
+    SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+    val failure = pendingResult.await() as ClerkResult.Failure
+    assertSame(cause, failure.throwable)
+    assertFalse(SSOService.hasPendingAuthentication())
+    coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
+  @Test
+  fun `bare sign up callback transfers to sign in when the reloaded sign up is transferable`() =
+    runTest {
+      val createdSignUp =
+        testSignUp(
+          verifications =
+            mapOf(
+              "external_account" to
+                Verification(externalVerificationRedirectUrl = AUTHORIZATION_URL)
+            )
+        )
+      val transferableSignUp =
+        testSignUp(
+          verifications =
+            mapOf("external_account" to Verification(status = Verification.Status.TRANSFERABLE))
+        )
+      val transferredSignIn = SignIn(id = SIGN_IN_ID, status = SignIn.Status.COMPLETE)
+      val transferParams = slot<Map<String, String>>()
+      coEvery { signUpApi.createSignUp(any()) } returns ClerkResult.success(createdSignUp)
+      coEvery { signUpApi.fetchSignUp(SIGN_UP_ID, null) } returns
+        ClerkResult.success(transferableSignUp)
+      coEvery { signInApi.createSignIn(capture(transferParams)) } returns
+        ClerkResult.success(transferredSignIn)
+
+      val pendingResult =
+        async(start = CoroutineStart.UNDISPATCHED) {
+          SSOService.authenticateSignUpWithRedirect(
+            strategy = "oauth_google",
+            redirectUrl = REDIRECT_URL,
+          )
+        }
+
+      SSOService.completeAuthenticateWithRedirect(Uri.parse(CALLBACK_URL))
+
+      val result = (pendingResult.await() as ClerkResult.Success).value
+      assertSame(transferredSignIn, result.signIn)
+      assertNull(result.signUp)
+      assertEquals("true", transferParams.captured["transfer"])
+      assertFalse(SSOService.hasPendingAuthentication())
+      coVerify(exactly = 1) { signUpApi.fetchSignUp(SIGN_UP_ID, null) }
+    }
 
   private fun createdSignIn() =
     SignIn(
