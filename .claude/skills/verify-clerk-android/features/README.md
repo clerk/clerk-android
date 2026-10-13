@@ -6,7 +6,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 Clerk's test mode makes all of this safe to type into the real app.
 
-- Emails. Any address that contains `+clerk_test@` is a test address. Clerk sends no mail and accepts the code below. The fixture mints an address such as `1412107c1e0dab+clerk_test@example.com` per run, through `host.newEmail()` or `host.seedUser()`. It starts with the time and the last four characters of the run id, here `r20261002-141210-7c1e`, and ends in four random characters.
+- Emails. Any address that contains `+clerk_test@` is a test address. Clerk sends no mail and accepts the code below. The fixture mints an address such as `1412107c1ek3x9+clerk_test@example.com` per run, through `host.newEmail()` or `host.seedUser()`. It starts with the time and the last four characters of the run id, here `r20261002-141210-7c1e`, and ends in four random characters.
 - Phones. US numbers 555-0100 to 555-0199 are test numbers. Get one from `host.seedUser({ phone: true })`, or from `host.newPhone()` for a number no user holds. Both give `+1` and the ten digits, such as `+12015550142`. AuthView's phone field takes the ten digits, `nationalDigits(phone)` from `specs/phone.ts`. The host's own fields take the whole number.
 - One-time code. `424242` verifies every email and SMS code for test addresses and phones. Specs use the constant `CLERK_TEST_CODE`.
 - Authenticator code. Read the key from the `Add authenticator application` screen and pass it to `totp(key, Date.now() / 1000)` from `specs/totp.ts`, which gives the six digits an authenticator would show.
