@@ -12,7 +12,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.quickstart"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.compileSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     val isCI = System.getenv("CI")?.toBoolean() == true
