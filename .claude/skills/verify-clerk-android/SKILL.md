@@ -122,7 +122,7 @@ The home is the host's own screen. With no active session it shows `Signed out` 
 
 The host has a small flow of its own only where the SDK has no view for one. `Sign in` and `Sign in full screen` show `AuthView`, `Custom sign-in` opens a form built on the SDK's API, and `Sign out` calls `Clerk.auth.signOut()`. When a change needs a fact or a flow that no SDK view covers, add it to the home as a real app would show it, such as a button and its visible result, and assert on that.
 
-Locate with test tags, `screen.getByTestId('clerk.auth.start.identifier')`. The SDK's tags start with `clerk.`, and `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt` lists them. The host's own tags start with `e2e.`, except those of the custom sign-in form, which start with `verify.customSignIn.`, and `e2e/src/main/java/com/clerk/e2e/E2ETags.kt` lists them. All of these tags are internal test hooks and may change. Fall back to visible text only where nothing is tagged. Every spec keeps at least one exact assertion on a test tag or on visible text.
+Locate with test tags, `screen.getByTestId('clerk.auth.start.identifier')`. The SDK's tags start with `clerk.`, and `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt` lists them. The host's own tags start with `e2e.`, except those of the custom sign-in form, which start with `verify.customSignIn.`, and `e2e/src/main/java/com/clerk/e2e/E2ETags.kt` lists them. All of these tags are internal test hooks and may change. Fall back to visible text only where nothing is tagged. Every spec keeps at least one exact assertion on a test tag or on visible text. To assert on the text of a node, use `await expect(locator).toHaveText('...')`.
 
 ### Signing in
 
@@ -145,13 +145,13 @@ A spec names no instance. Most specs run on the standard settings and declare no
 
 ### Golden and explored specs
 
-Golden specs under `specs/golden/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the golden specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). The release workflow runs every one of them unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a golden spec already covers, that spec is your proof: run it. Run another feature's specs yourself when you changed code that feature shares, because nothing else runs them until a release, and a failure there stops the release.
+Golden specs under `specs/golden/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the golden specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). The release workflow runs every one of them unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a golden spec already covers, that spec is your proof: run it. A spec covers a behavior only when it asserts on it. A spec that passes through the screen you changed without checking what you changed is not your proof. Run another feature's specs yourself when you changed code that feature shares, because nothing else runs them until a release, and a failure there stops the release.
 
 For new work, write a spec under `specs/explored/`, which is gitignored and does not exist in a fresh worktree. Run it, read the screen it ended on with `screen`, and fix locators from that output until it passes. A failing spec prints `FAIL`, the first assertion message, and the path of its failure page, which lists every step, the screen tree at the failure, and a screenshot. `run` exits 1.
 
 With `--retries`, a test that fails and then passes prints `flaky` and the error of its failed attempt, and a `flaky` line under the results counts such tests. `run.json` records the test as `flaky` with its `attempts`, never as passed, and `run` exits 0. The failure page of the failed attempt and the files of every attempt stay in the run directory. A test that fails on every attempt prints `FAIL`, and `run` exits 1.
 
-When the change adds or changes a user-facing behavior, the PR commits the spec into `specs/golden/<feature>/`, with its settings file if it has one, and updates the feature file. A golden spec sits one folder deeper, so its import of the fixture changes with the move:
+When the change adds or changes what the SDK does, the PR commits the spec into `specs/golden/<feature>/`, with its settings file if it has one, and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a golden spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A golden spec sits one folder deeper, so its import of the fixture changes with the move:
 
 ```console
 $ mkdir -p e2e-tests/specs/golden/<feature> && mv e2e-tests/specs/explored/probe.e2e.ts e2e-tests/specs/golden/<feature>/
@@ -204,6 +204,8 @@ When this machine cannot attach and there is no session to hand the files to, or
 `attach` refuses a run that is tainted, failed, or whose `app.log` names a user that the run did not create.
 
 Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the PR video shows only the behavior the change is about. If you ran other golden specs too, cite that run's id in the PR.
+
+On a local emulator, work in this order: commit, `run` the spec of your change, `git push`, open the pull request, `attach`, then `down`. Commit first, so that the line `attach` writes names a commit the pull request holds. In the pull request, name the run id and the specs you ran, and say what you did not run.
 
 ## Cleanup
 
