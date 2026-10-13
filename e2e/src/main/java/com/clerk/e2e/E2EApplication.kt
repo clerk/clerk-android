@@ -97,7 +97,12 @@ class VerifyHost(activity: Activity, val config: VerifyLaunchConfig) {
   private suspend fun launch() {
     val environmentLoaded = config.publishableKeyFailure == null && awaitEnvironment()
     val signInTicket = config.signInTicket ?: return
-    ticket.value = if (environmentLoaded) signIn(signInTicket) else VerifyTicket.Failed
+    ticket.value =
+      when {
+        !environmentLoaded -> VerifyTicket.Failed
+        Clerk.session != null -> VerifyTicket.None
+        else -> signIn(signInTicket)
+      }
   }
 
   private suspend fun awaitEnvironment(): Boolean {
