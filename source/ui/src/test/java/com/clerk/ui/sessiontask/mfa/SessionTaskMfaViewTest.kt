@@ -184,6 +184,41 @@ class SessionTaskMfaViewTest {
     assertEquals(1, authCompletions.get())
   }
 
+  @Test
+  fun `another session awaiting MFA starts at the method list, without the first session's codes`() {
+    showBackupCodes()
+
+    session.value = session(awaitingMfaSetup = true, id = "sess_456")
+    composeTestRule.waitUntilExactlyOneExists(
+      hasText("Set up two-step verification"),
+      TIMEOUT_MILLIS,
+    )
+
+    composeTestRule.onNodeWithText(BACKUP_CODES.first()).assertDoesNotExist()
+    assertEquals(0, authCompletions.get())
+  }
+
+  @Test
+  fun `another session with MFA set up completes the task, without the first session's codes`() {
+    showBackupCodes()
+
+    session.value = session(awaitingMfaSetup = false, id = "sess_456")
+    composeTestRule.waitUntil(TIMEOUT_MILLIS) { authCompletions.get() == 1 }
+
+    composeTestRule.onNodeWithText(BACKUP_CODES.first()).assertDoesNotExist()
+  }
+
+  private fun showBackupCodes() {
+    coEvery { user.attemptTotpVerification(any()) } coAnswers
+      {
+        session.value = session(awaitingMfaSetup = false)
+        ClerkResult.success(totp(backupCodes = BACKUP_CODES))
+      }
+    showTask()
+    enterAuthenticatorCode()
+    composeTestRule.waitUntilExactlyOneExists(hasText(BACKUP_CODES.first()), TIMEOUT_MILLIS)
+  }
+
   private fun showTask() {
     composeTestRule.setContent {
       SessionTaskMfaView(onAuthComplete = { authCompletions.incrementAndGet() })
@@ -209,9 +244,9 @@ class SessionTaskMfaViewTest {
         verification = Verification(status = Verification.Status.VERIFIED),
       )
 
-    fun session(awaitingMfaSetup: Boolean) =
+    fun session(awaitingMfaSetup: Boolean, id: String = "sess_123") =
       Session(
-        id = "sess_123",
+        id = id,
         status =
           if (awaitingMfaSetup) Session.SessionStatus.PENDING else Session.SessionStatus.ACTIVE,
         expireAt = 0L,
