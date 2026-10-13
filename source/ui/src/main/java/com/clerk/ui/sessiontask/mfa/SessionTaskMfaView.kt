@@ -43,8 +43,8 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
-  var taskIsDone by remember { mutableStateOf(false) }
+  var flowStep by remember(session?.id) { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
   val showStep = { step: FlowStep ->
     if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
@@ -54,7 +54,7 @@ internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: (
     }
   }
 
-  LaunchedEffect(session?.requiresForcedMfa) { showStep(flowStep) }
+  LaunchedEffect(session?.id, session?.requiresForcedMfa) { showStep(flowStep) }
   LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
   BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }
 
