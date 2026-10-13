@@ -18,7 +18,6 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -109,15 +108,7 @@ internal fun SignInFactorOnePasskeyViewImpl(
     )
     Spacers.Vertical.Spacer16()
     ClerkTextButton(
-      onClick = {
-        val destination =
-          if (isSecondFactor) {
-            AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
-          } else {
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          }
-        authState.navigateTo(destination)
-      },
+      onClick = { authState.navigateToAlternativeMethods(factor, isSecondFactor) },
       text = stringResource(R.string.use_a_different_method),
     )
   }

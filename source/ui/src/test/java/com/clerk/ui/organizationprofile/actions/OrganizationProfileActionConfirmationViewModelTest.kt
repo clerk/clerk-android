@@ -21,6 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -171,6 +172,47 @@ class OrganizationProfileActionConfirmationViewModelTest {
   }
 
   @Test
+  fun `refresh exception after a successful action still completes`() = runTest {
+    val organization = organization()
+    coEvery { organization.delete() } returns
+      ClerkResult.success(
+        DeletedObject(objectType = "organization", id = organization.id, deleted = true)
+      )
+
+    val viewModel = viewModel(refreshClient = { error("refresh failed") })
+    viewModel.setConfirmationText("Acme Inc.")
+    viewModel.confirm(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership(organization),
+    )
+    advanceUntilIdle()
+
+    assertTrue(viewModel.state.value.isComplete)
+    assertFalse(viewModel.state.value.isLoading)
+  }
+
+  @Test
+  fun `cancelled refresh does not mark the action complete`() = runTest {
+    val organization = organization()
+    coEvery { organization.delete() } returns
+      ClerkResult.success(
+        DeletedObject(objectType = "organization", id = organization.id, deleted = true)
+      )
+
+    val viewModel = viewModel(refreshClient = { throw CancellationException("cleared") })
+    viewModel.setConfirmationText("Acme Inc.")
+    viewModel.confirm(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership(organization),
+    )
+    advanceUntilIdle()
+
+    assertFalse(viewModel.state.value.isComplete)
+  }
+
+  @Test
   fun `leave without membership remains open and shows error`() = runTest {
     val viewModel = viewModel()
     viewModel.setConfirmationText("Acme Inc.")
@@ -188,12 +230,16 @@ class OrganizationProfileActionConfirmationViewModelTest {
     )
   }
 
-  private fun viewModel(): OrganizationProfileActionConfirmationViewModel {
+  private fun viewModel(
+    refreshClient: suspend () -> ClerkResult<Client, ClerkErrorResponse> = {
+      ClerkResult.success(Client())
+    }
+  ): OrganizationProfileActionConfirmationViewModel {
     return OrganizationProfileActionConfirmationViewModel(
       dispatcher = dispatcher,
       refreshClient = {
         clientRefreshCount++
-        ClerkResult.success(Client())
+        refreshClient()
       },
     )
   }

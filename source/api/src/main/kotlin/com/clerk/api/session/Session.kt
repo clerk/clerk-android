@@ -269,20 +269,16 @@ public suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
  * Fetches a fresh JWT for the session.
  *
  * @param options The options to use when fetching the token.
- * @return The [ClerkResult] containing the [TokenResource] if successful, or [ClerkErrorResponse]
- *   if failed.
+ * @return The [ClerkResult] containing the [TokenResource] if successful. On failure it carries the
+ *   API error, the exception that interrupted the request, or a local error with code
+ *   `session_pending` (the session has tasks to complete) or `session_token_request_superseded`
+ *   (sign-out, reinitialization or reverification invalidated the request).
  * @see GetTokenOptions
  */
 public suspend fun Session.fetchToken(
   options: GetTokenOptions = GetTokenOptions()
-): ClerkResult<TokenResource, ClerkErrorResponse> {
-  val token = SessionTokenFetcher.shared.getToken(this, options)
-  return if (token != null) {
-    ClerkResult.success(token)
-  } else {
-    ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList(), clerkTraceId = "local-error"))
-  }
-}
+): ClerkResult<TokenResource, ClerkErrorResponse> =
+  SessionTokenFetcher.shared.getTokenResult(this, options)
 
 /**
  * Revokes the current session.

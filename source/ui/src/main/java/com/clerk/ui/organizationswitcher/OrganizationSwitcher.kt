@@ -64,6 +64,7 @@ import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
@@ -149,20 +150,22 @@ public fun OrganizationSwitcher(
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        OrganizationSwitcherImpl(
-          modifier = modifier,
-          clerkTheme = clerkTheme,
-          onOrganizationChanged = onOrganizationChanged,
-          hidePersonal = hidePersonal,
-          displayMode = displayMode,
-          onManageOrganization = onManageOrganization,
-          onCreateOrganization = onCreateOrganization,
-          organizationProfileCustomRows = organizationProfileCustomRows,
-          organizationProfileCustomDestination = organizationProfileCustomDestination,
-        )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          OrganizationSwitcherImpl(
+            modifier = modifier,
+            clerkTheme = clerkTheme,
+            onOrganizationChanged = onOrganizationChanged,
+            hidePersonal = hidePersonal,
+            displayMode = displayMode,
+            onManageOrganization = onManageOrganization,
+            onCreateOrganization = onCreateOrganization,
+            organizationProfileCustomRows = organizationProfileCustomRows,
+            organizationProfileCustomDestination = organizationProfileCustomDestination,
+          )
+        }
       }
     }
   }
@@ -204,21 +207,23 @@ public fun OrganizationSwitcher(
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkMaterialTheme {
-      TelemetryProvider {
-        OrganizationSwitcherImpl(
-          modifier = modifier,
-          clerkTheme = clerkTheme,
-          onOrganizationChanged = onOrganizationChanged,
-          hidePersonal = hidePersonal,
-          displayMode = displayMode,
-          triggerContent = triggerContent,
-          onManageOrganization = onManageOrganization,
-          onCreateOrganization = onCreateOrganization,
-          organizationProfileCustomRows = organizationProfileCustomRows,
-          organizationProfileCustomDestination = organizationProfileCustomDestination,
-        )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      ClerkMaterialTheme {
+        TelemetryProvider {
+          OrganizationSwitcherImpl(
+            modifier = modifier,
+            clerkTheme = clerkTheme,
+            onOrganizationChanged = onOrganizationChanged,
+            hidePersonal = hidePersonal,
+            displayMode = displayMode,
+            triggerContent = triggerContent,
+            onManageOrganization = onManageOrganization,
+            onCreateOrganization = onCreateOrganization,
+            organizationProfileCustomRows = organizationProfileCustomRows,
+            organizationProfileCustomDestination = organizationProfileCustomDestination,
+          )
+        }
       }
     }
   }

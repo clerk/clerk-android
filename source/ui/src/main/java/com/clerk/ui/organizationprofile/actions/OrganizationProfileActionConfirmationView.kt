@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -43,8 +42,6 @@ internal fun OrganizationProfileActionConfirmationView(
   viewModel: OrganizationProfileActionConfirmationViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
-
-  DisposableEffect(action, organization.id) { onDispose { viewModel.reset() } }
 
   LaunchedEffect(state.isComplete) {
     if (state.isComplete) {

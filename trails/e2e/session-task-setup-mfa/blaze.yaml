@@ -1,0 +1,22 @@
+- config:
+    id: clerk/e2e/session-task-setup-mfa
+    target: clerk-e2e
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - e2e
+      - prebuilt-ui
+      - session-task-setup-mfa
+- tools:
+    - launchApp:
+        appId: com.clerk.e2e
+        launchMode: REINSTALL
+- prompts:
+    - verify: The e2e host shows the signed-out marker.
+    - step: Start the prebuilt sign-up with the generated test email and continue.
+    - step: Enter the email verification code 424242.
+    - verify: The new session is pending with the setup-mfa task.
+    - step: Choose the authenticator application on the two-step verification setup screen.
+    - step: Copy the TOTP secret, continue, and type the current TOTP code with the e2e host helper.
+    - verify: Completing MFA setup activates the session.
+    - step: Delete the test account from the e2e host and verify it is signed out.

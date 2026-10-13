@@ -1,5 +1,9 @@
 package com.clerk.api.auth.builders
 
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.sso.RedirectConfiguration
 
 /**
@@ -31,12 +35,7 @@ public class SendCodeBuilder {
   /** The phone number to send the verification code to. */
   public var phone: String? = null
 
-  internal fun validate() {
-    require(email != null || phone != null) { "Either email or phone must be provided" }
-    require(email == null || phone == null) {
-      "Only one of email or phone should be provided, not both"
-    }
-  }
+  internal fun channel(): ClerkResult<CodeChannel, ClerkErrorResponse> = codeChannel(email, phone)
 }
 
 /**
@@ -62,7 +61,30 @@ public class EnterpriseSsoBuilder {
    */
   public var redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL
 
-  internal fun validate() {
-    require(email != null) { "Email must be provided for Enterprise SSO" }
-  }
+  internal fun emailAddress(): ClerkResult<String, ClerkErrorResponse> =
+    email?.let { ClerkResult.success(it) }
+      ?: invalidBuilderArguments("Email must be provided for Enterprise SSO")
 }
+
+internal sealed interface CodeChannel {
+  val value: String
+
+  data class Email(override val value: String) : CodeChannel
+
+  data class Phone(override val value: String) : CodeChannel
+}
+
+internal fun codeChannel(
+  email: String?,
+  phone: String?,
+): ClerkResult<CodeChannel, ClerkErrorResponse> =
+  when {
+    email != null && phone != null ->
+      invalidBuilderArguments("Only one of email or phone should be provided, not both")
+    email != null -> ClerkResult.success(CodeChannel.Email(email))
+    phone != null -> ClerkResult.success(CodeChannel.Phone(phone))
+    else -> invalidBuilderArguments("Either email or phone must be provided")
+  }
+
+internal fun invalidBuilderArguments(message: String): ClerkResult.Failure<ClerkErrorResponse> =
+  localFailure(code = LocalFailureCodes.INVALID_ARGUMENTS, longMessage = message)

@@ -69,6 +69,7 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.ClerkViewModelStoreScope
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
@@ -103,15 +104,17 @@ public fun UserButton(
   customDestination: (@Composable (String) -> Unit)? = null,
   onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
-  ClerkThemeOverrideProvider(clerkTheme) {
-    TelemetryProvider {
-      UserButtonPresenter(
-        treatPendingAsSignedOut = treatPendingAsSignedOut,
-        routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-        customRows = customRows,
-        customDestination = customDestination,
-        onRequiresForcedMfaClick = onRequiresForcedMfaClick,
-      )
+  ClerkViewModelStoreScope {
+    ClerkThemeOverrideProvider(clerkTheme) {
+      TelemetryProvider {
+        UserButtonPresenter(
+          treatPendingAsSignedOut = treatPendingAsSignedOut,
+          routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+          customRows = customRows,
+          customDestination = customDestination,
+          onRequiresForcedMfaClick = onRequiresForcedMfaClick,
+        )
+      }
     }
   }
 }
@@ -142,7 +145,7 @@ private fun UserButtonPresenter(
     shouldShowButton = resolved.shouldShowButton,
     user = user,
     hasPendingNonMfaTask = hasPendingNonMfaTask,
-    requiresForcedMfa = requiresForcedMfa,
+    hasSession = effectiveSession != null,
     authMode = authMode,
     telemetry = telemetry,
     onDismissPendingSessionSheet = { showPendingSessionSheet = false },
@@ -210,7 +213,7 @@ private fun ObserveUserButtonState(
   shouldShowButton: Boolean,
   user: User?,
   hasPendingNonMfaTask: Boolean,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   telemetry: TelemetryCollector,
   onDismissPendingSessionSheet: () -> Unit,
@@ -220,8 +223,8 @@ private fun ObserveUserButtonState(
     if (shouldShowButton) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
   }
   LaunchedEffect(hasPendingNonMfaTask) { if (!hasPendingNonMfaTask) onDismissPendingSessionSheet() }
-  DismissAuthWhenMfaResolved(
-    requiresForcedMfa = requiresForcedMfa,
+  DismissForcedMfaAuthWhenSignedOut(
+    hasSession = hasSession,
     authMode = authMode,
     onDismissAuth = onDismissAuth,
   )
@@ -350,13 +353,13 @@ private data class UserButtonClickCallbacks(
 )
 
 @Composable
-private fun DismissAuthWhenMfaResolved(
-  requiresForcedMfa: Boolean,
+private fun DismissForcedMfaAuthWhenSignedOut(
+  hasSession: Boolean,
   authMode: UserButtonAuthMode?,
   onDismissAuth: () -> Unit,
 ) {
-  LaunchedEffect(requiresForcedMfa, authMode) {
-    if (shouldDismissAuthWhenMfaResolved(authMode, requiresForcedMfa)) {
+  LaunchedEffect(hasSession, authMode) {
+    if (shouldDismissForcedMfaAuth(authMode, hasSession)) {
       onDismissAuth()
     }
   }
@@ -583,11 +586,11 @@ internal enum class UserButtonAuthMode(
   ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
 }
 
-internal fun shouldDismissAuthWhenMfaResolved(
+internal fun shouldDismissForcedMfaAuth(
   authMode: UserButtonAuthMode?,
-  requiresForcedMfa: Boolean,
+  hasSession: Boolean,
 ): Boolean {
-  return authMode == UserButtonAuthMode.ForcedMfa && !requiresForcedMfa
+  return authMode == UserButtonAuthMode.ForcedMfa && !hasSession
 }
 
 internal fun userButtonClickAction(

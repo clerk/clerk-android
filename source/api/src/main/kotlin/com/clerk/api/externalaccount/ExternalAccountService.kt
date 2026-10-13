@@ -9,7 +9,9 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.redirect.RedirectState
@@ -32,24 +34,30 @@ internal object ExternalAccountService {
       }
       is ClerkResult.Success -> {
         ClerkLog.d("External account creation initiated: $initialResult")
-        val externalUrl =
-          requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
-            "External verification redirect URL is missing"
-          }
-        val context =
-          Clerk.applicationContext?.get()
-            ?: return ClerkResult.unknownFailure(
+        val externalUrl = initialResult.value.verification?.externalVerificationRedirectUrl
+        val context = Clerk.applicationContext?.get()
+        when {
+          externalUrl == null ->
+            localFailure(
+              code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+              longMessage = "External verification redirect URL is missing",
+            )
+          context == null ->
+            ClerkResult.unknownFailure(
               IllegalStateException(
                 "Clerk must be initialized before connecting an external account"
               )
             )
-        val pendingConnection =
-          PendingRedirect.ExternalAccountConnection(
-            expectedState = state,
-            externalAccountId = initialResult.value.id,
-          )
-        RedirectCoordinator.begin(pendingConnection)
-        RedirectCoordinator.launchAndAwait(pendingConnection, context, externalUrl.toUri())
+          else -> {
+            val pendingConnection =
+              PendingRedirect.ExternalAccountConnection(
+                expectedState = state,
+                externalAccountId = initialResult.value.id,
+              )
+            RedirectCoordinator.begin(pendingConnection)
+            RedirectCoordinator.launchAndAwait(pendingConnection, context, externalUrl.toUri())
+          }
+        }
       }
     }
   }
@@ -108,13 +116,10 @@ internal object ExternalAccountService {
     when (initialResult.errorType) {
       ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
       ClerkResult.Failure.ErrorType.HTTP ->
-        ClerkResult.Companion.httpFailure(
-          code = initialResult.code ?: -1,
-          error = initialResult.error,
-        )
-
-      ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
+        initialResult.code?.let { code ->
+          ClerkResult.Companion.httpFailure(code = code, error = initialResult.error)
+        } ?: initialResult
+      ClerkResult.Failure.ErrorType.UNKNOWN -> initialResult
     }
 
   private const val REDIRECT_URL = "redirect_url"

@@ -11,7 +11,9 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.PendingRedirect.RedirectFlow
 import com.clerk.api.redirect.RedirectCoordinator
@@ -59,8 +61,9 @@ internal object SSOService {
     RedirectCoordinator.supersedePending()
     val resolvedStrategy =
       strategy
-        ?: return ClerkResult.unknownFailure(
-          Exception("Strategy cannot be null for redirect authentication")
+        ?: return localFailure(
+          code = LocalFailureCodes.INVALID_ARGUMENTS,
+          longMessage = "Strategy cannot be null for redirect authentication",
         )
 
     val initialResult =
@@ -95,18 +98,22 @@ internal object SSOService {
             prepareResult.signInToOAuthResult()
           }
           is ClerkResult.Success -> {
-            val externalUrl =
-              requireNotNull(
-                prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl
-              ) {
-                "External URL cannot be null"
-              }
-
-            authenticateWithPreparedRedirect(externalUrl, transferable)
+            prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl?.let {
+              externalUrl ->
+              authenticateWithPreparedRedirect(externalUrl, transferable)
+            } ?: missingExternalUrlFailure()
           }
         }
       }
     }
+  }
+
+  private fun missingExternalUrlFailure(): ClerkResult.Failure<ClerkErrorResponse> {
+    ClerkLog.e("Redirect authentication response is missing the external verification URL")
+    return localFailure(
+      code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+      longMessage = "Redirect authentication response is missing the external verification URL",
+    )
   }
 
   private fun firstFactorParams(
@@ -153,11 +160,8 @@ internal object SSOService {
       is ClerkResult.Success -> {
         val signUp = initialResult.value
         val externalUrl =
-          requireNotNull(
-            signUp.verifications["external_account"]?.externalVerificationRedirectUrl
-          ) {
-            "External URL cannot be null"
-          }
+          signUp.verifications["external_account"]?.externalVerificationRedirectUrl
+            ?: return missingExternalUrlFailure()
         RedirectState.remember(externalUrl, state)
 
         authenticateWithPreparedRedirect(

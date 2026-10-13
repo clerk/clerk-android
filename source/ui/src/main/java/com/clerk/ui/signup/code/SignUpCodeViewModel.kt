@@ -32,14 +32,12 @@ internal class SignUpCodeViewModel : ViewModel() {
       return
     }
     viewModelScope.launch {
-      val signUp =
+      val codeSent =
         when (field) {
           is SignUpCodeField.Email -> signUp.sendEmailCode()
           is SignUpCodeField.Phone -> signUp.sendPhoneCode()
         }
-      signUp
-        .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
+      codeSent.onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
     }
   }
 

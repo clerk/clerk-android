@@ -159,9 +159,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
   val density = LocalDensity.current
   val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
   val isCompact = widthDp < 360.dp
-  val onUseAnotherMethod = {
-    authState.navigateTo(AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
-  }
+  val onUseAnotherMethod = { authState.navigateToAlternativeMethods(factor) }
   val onForgotPassword = {
     Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
       authState.navigateTo(AuthDestination.SignInForgotPassword)

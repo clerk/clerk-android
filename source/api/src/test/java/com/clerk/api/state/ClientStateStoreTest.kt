@@ -208,6 +208,35 @@ class ClientStateStoreTest {
   }
 
   @Test
+  fun `cache restores are committed as restored from cache and live writes are not`() {
+    val store = store()
+    val clientRestores = mutableListOf<Boolean>()
+    val environmentRestores = mutableListOf<Boolean>()
+    store.listener =
+      object : ClientStateStore.Listener {
+        override fun onClientCommittedAfterWriteLock(commit: ClientStateStore.ClientCommit) {
+          clientRestores += commit.restoredFromCache
+        }
+
+        override fun onEnvironmentCommittedAfterWriteLock(
+          previous: Environment?,
+          current: Environment,
+          restoredFromCache: Boolean,
+        ) {
+          environmentRestores += restoredFromCache
+        }
+      }
+
+    store.replaceClientIfUnset(Client(id = "client_cached"), serverFetchAtMillis = 100)
+    store.applyEnvironmentIfUnset(testEnvironment())
+    store.applyClient(Client(id = "client_live"))
+    store.applyEnvironment(testEnvironment())
+
+    assertEquals(listOf(true, false), clientRestores)
+    assertEquals(listOf(true, false), environmentRestores)
+  }
+
+  @Test
   fun `environment restore applies only while the environment is unset`() {
     val store = store()
     val live = testEnvironment()

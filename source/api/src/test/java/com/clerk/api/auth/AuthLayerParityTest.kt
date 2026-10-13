@@ -12,6 +12,7 @@ import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.attemptSecondFactor
@@ -167,9 +168,12 @@ class AuthLayerParityTest {
 
   @Test
   fun `sign-up update rejects unsafe metadata it cannot send`() = runTest {
-    val error = runCatching { signUp.update { unsafeMetadata = mapOf("plan" to "pro") } }
+    val result = signUp.update { unsafeMetadata = mapOf("plan" to "pro") }
 
-    assertTrue(error.exceptionOrNull() is IllegalArgumentException)
+    assertEquals(
+      LocalFailureCodes.INVALID_ARGUMENTS,
+      (result as ClerkResult.Failure).error?.errors?.firstOrNull()?.code,
+    )
     assertTrue(signUpRequests.isEmpty())
   }
 

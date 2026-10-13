@@ -18,6 +18,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".E2ECleanupReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.clerk.e2e.action.CLEANUP_ACCOUNT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
