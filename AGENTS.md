@@ -1,8 +1,8 @@
 ## Strings
 
-User-facing text is in `source/ui/src/main/res/values/strings.xml`. Each language has its translations in `source/ui/src/main/res/values-<language>/strings.xml`, under the same names.
+User-facing text is in `source/ui/src/main/res/values/strings.xml`. Each language has its translations in a `values-<qualifier>/strings.xml` next to it (such as `values-de` or `values-zh-rCN`), under the same names.
 
-When you change English text, update the string of the same name in every language to say what the new text says. When you add a string, add it to every language. A string that a language lacks shows in English.
+When you change English text, update the string of the same name in every language to say what the new text says. When you add a string, add it to every language, unless it is marked `translatable="false"`. A string that a language lacks shows in English.
 
 ## Comments
 
