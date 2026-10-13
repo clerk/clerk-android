@@ -16,7 +16,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.compileSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
     versionCode = 6
     versionName = "-debug"
 
