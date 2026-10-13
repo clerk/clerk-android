@@ -16,6 +16,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 class E2ECleanupReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action != ACTION_CLEANUP_ACCOUNT) return
+    if (Clerk.publishableKey == null) {
+      Clerk.initialize(context.applicationContext, BuildConfig.E2E_CLERK_PUBLISHABLE_KEY)
+    }
     val pendingResult = goAsync()
     CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
       var status: CleanupStatus = CleanupStatus.Failed("Account cleanup was cancelled.")
