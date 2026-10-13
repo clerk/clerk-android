@@ -6,10 +6,6 @@ test('signs in with the email code', async ({ host, screen }) => {
   await host.tap(host.app.signInFullScreen);
   await host.fill(screen.getByTestId('clerk.auth.start.identifier'), user.email);
   await host.tap(screen.getByTestId('clerk.auth.start.continue'));
-  const anotherMethod = screen.getByTestId('clerk.auth.signIn.useAnotherMethod');
-  await expect(anotherMethod).toBeVisible({ timeout: 20_000 });
-  await host.tap(anotherMethod);
-  await host.tap(screen.getByTestId('clerk.auth.signIn.alternativeMethod.email_code'));
   const code = screen.getByTestId('clerk.auth.signIn.code');
   await expect(code).toBeVisible({ timeout: 20_000 });
   await new Promise((resolve) => setTimeout(resolve, 3000));

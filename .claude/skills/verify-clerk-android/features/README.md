@@ -29,7 +29,7 @@ Clerk's test mode makes all of this safe to type into the real app.
 
 The names come from `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt`. They are internal test hooks and may change.
 
-On the standard instance an email sign-in starts on the email-link screen ("Check your email"), so a spec switches to the email code through `Use another method`. For a phone sign-in, tap `clerk.auth.start.identifierSwitcher`, fill `clerk.auth.start.phoneNumber` with the ten digits of the seeded user's phone, and continue. A user with a password sees the password screen first and reaches the SMS code through `Use another method`. For sign-up, launch with `authMode: 'signUp'`, fill the email from `host.newEmail()` into `clerk.auth.start.identifier`, continue, fill the run password into `clerk.auth.signUp.password`, continue, then type the code into `clerk.auth.signUp.code`.
+On the standard instance an email sign-in for a user with no password goes straight to the email code screen ("Check your email"). The email link is off there. For a phone sign-in, tap `clerk.auth.start.identifierSwitcher`, fill `clerk.auth.start.phoneNumber` with the ten digits of the seeded user's phone, and continue. A user with a password sees the password screen first and reaches the SMS code through `Use another method`. For sign-up, launch with `authMode: 'signUp'`, fill the email from `host.newEmail()` into `clerk.auth.start.identifier`, continue, fill the run password into `clerk.auth.signUp.password`, continue, then type the code into `clerk.auth.signUp.code`.
 
 ## Feature entry contract
 
@@ -46,4 +46,4 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Session tasks](./session-tasks.md) covers the setup-MFA and choose-organization tasks after sign-in, the setup-MFA task after sign-up, and finishing the setup-MFA task with an authenticator code.
 - [Organizations](./organizations.md) covers creating an organization from OrganizationSwitcher.
 
-Not mapped: a password sign-in past the password screen, completing the setup-MFA task with an SMS code, social providers (no real OAuth on emulators), passkeys, and biometrics.
+Not mapped: a password sign-in past the password screen, the email link (off on the standard instance), completing the setup-MFA task with an SMS code, social providers (no real OAuth on emulators), passkeys, and biometrics.
