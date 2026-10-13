@@ -23,7 +23,6 @@ jobs:
     env:
       PACKAGE: e2e-tests
       CLI: e2e-tests/bin/control-clerk-android
-      # A cancelled job can end before it deletes its Clerk application. A later run of the CLI deletes it after this many hours, and two is the minimum.
       VERIFY_THROWAWAY_HOURS: "2"
     steps:
       - name: Check that the end-to-end tests can run

@@ -66,6 +66,7 @@ internal fun UserProfileSecurityView() {
 @Composable
 private fun UserProfileSecurityViewImpl(
   viewModel: UserProfileSecurityViewModel = viewModel(),
+  backupCodesViewModel: PendingBackupCodesViewModel = viewModel(),
   isPasswordEnabled: Boolean = false,
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
@@ -73,6 +74,7 @@ private fun UserProfileSecurityViewImpl(
   isBiometricCredentialEnabled: Boolean = false,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val pendingBackupCodes by backupCodesViewModel.pending.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val errorMessage = (state as? UserProfileSecurityViewModel.State.Error)?.message
   LaunchedEffect(errorMessage) {
@@ -103,6 +105,9 @@ private fun UserProfileSecurityViewImpl(
               .orEmpty()
               .toImmutableList(),
           onSignOutDevice = viewModel::signOut,
+          pendingBackupCodes = pendingBackupCodes,
+          onShowBackupCodes = backupCodesViewModel::show,
+          onClearBackupCodes = backupCodesViewModel::clear,
         )
       }
     }
@@ -121,6 +126,9 @@ private fun UserProfileSecurityMainContent(
   snackbarHostState: SnackbarHostState,
   sessions: ImmutableList<Session>,
   onSignOutDevice: (Session, (String?) -> Unit) -> Unit,
+  pendingBackupCodes: PendingBackupCodes?,
+  onShowBackupCodes: (List<String>, MfaType) -> Unit,
+  onClearBackupCodes: () -> Unit,
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
@@ -179,11 +187,16 @@ private fun UserProfileSecurityMainContent(
       },
     )
     BottomSheetContent(
-      showBottomSheet = showBottomSheet,
-      currentSheetType = currentSheetType,
+      showBottomSheet = showBottomSheet || pendingBackupCodes != null,
+      currentSheetType =
+        pendingBackupCodes?.let { BottomSheetType.BackupCodes(it.codes, it.mfaType) }
+          ?: currentSheetType,
       callbacks =
         BottomSheetCallbacks(
-          onDismiss = { showBottomSheet = false },
+          onDismiss = {
+            showBottomSheet = false
+            onClearBackupCodes()
+          },
           onClickMfaType = {
             showBottomSheet = false
             currentSheetType = BottomSheetType.AddMfa(it)
@@ -199,11 +212,7 @@ private fun UserProfileSecurityMainContent(
             currentSheetType = BottomSheetType.AddPhoneNumber
             showBottomSheet = true
           },
-          onNavigateToBackupCodes = { codes, mfaType ->
-            showBottomSheet = false
-            currentSheetType = BottomSheetType.BackupCodes(codes, mfaType)
-            showBottomSheet = true
-          },
+          onNavigateToBackupCodes = onShowBackupCodes,
           onVerify = {
             showBottomSheet = false
             currentSheetType = BottomSheetType.Verify(it)

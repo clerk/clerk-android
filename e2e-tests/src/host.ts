@@ -2,6 +2,7 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run } from './core/exec.ts';
+import { withoutClerkKeys } from './core/keys.ts';
 import { remoteBackend } from './core/remote/backend.ts';
 import { VerifyFailure, type HostAdapter, type ScratchPath } from './core/types.ts';
 import { localAndroidBackend } from './platform/android/local.ts';
@@ -23,7 +24,7 @@ export const host: HostAdapter = {
   async build(platform, key, into) {
     const java = resolveJavaHome();
     if (!java.ok) throw new VerifyFailure('NOT_READY', java.detail, java.fix);
-    const result = await run('./gradlew', ASSEMBLE_HOST, { cwd: WORKTREE, env: { ...process.env, JAVA_HOME: java.home, ANDROID_HOME: sdkRoot() } });
+    const result = await run('./gradlew', ASSEMBLE_HOST, { cwd: WORKTREE, env: { ...withoutClerkKeys(process.env), JAVA_HOME: java.home, ANDROID_HOME: sdkRoot() } });
     if (result.code !== 0) {
       const tail = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => line.trim().length > 0).slice(-15).join('\n');
       throw new VerifyFailure('BUILD_FAILED', `./gradlew :e2e:assembleDebug exited ${result.code}:\n${tail}`, 'fix the build error above, then rerun {cli} up');

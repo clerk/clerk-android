@@ -1,3 +1,4 @@
+import { tapMiddle } from '../../compose.ts';
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
 import { totp } from '../../totp.ts';
 
@@ -23,6 +24,8 @@ test('a sign-up on an MFA-required instance moves straight into the setup-MFA ta
   await host.tap(screen.getByText('Continue'));
   await expect(screen.getByText('Verify authenticator app')).toBeVisible({ timeout: 20_000 });
   await host.fill(screen.getByRole('textbox'), totp(secret, Date.now() / 1000));
+  await expect(screen.getByText('Backup codes')).toBeVisible({ timeout: 20_000 });
+  await tapMiddle(screen.getByLabel('Close'));
   await host.expectSignedInAs(email, 30_000);
   await host.screenshot('sign-up-task-complete');
 });
