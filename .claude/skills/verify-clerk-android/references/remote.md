@@ -105,7 +105,7 @@ If the description has no evidence a few minutes after `down`, read the newest r
 
 The default label is `ubuntu-24.04`, a GitHub-hosted runner that costs nothing for a public repository. It names the Ubuntu version, so a new `ubuntu-latest` image cannot change the machine under the emulator. The session's 60 minutes start when the runner starts, so about 50 are left after `up`.
 
-`--runner blacksmith-4vcpu-ubuntu-2404` uses a Blacksmith runner instead, which is billed by the minute. Any Linux x64 label with KVM, the Android SDK command-line tools, and `sudo` works. A held session keeps its label, and `--runner` with another label fails until `down`.
+`--runner blacksmith-4vcpu-ubuntu-2404` uses a Blacksmith runner instead, which is billed by the minute. `verify-remote.yml` starts a session only on `ubuntu-24.04`, `ubuntu-latest`, or `blacksmith-4vcpu-ubuntu-2404`, and fails its first job for any other label. To add a label, add it to the `Check the runner label` step there; it needs Linux x64 with KVM, the Android SDK command-line tools, and `sudo`. A held session keeps its label, and `--runner` with another label fails until `down`.
 
 Before the session's runner starts, a job of a few seconds reads the request. That job runs on `ubuntu-latest`, a free GitHub-hosted label, whatever the session's label.
 

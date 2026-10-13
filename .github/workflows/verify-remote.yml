@@ -45,6 +45,18 @@ jobs:
           VERIFY_REQUEST: ${{ inputs.request }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node "$PACKAGE/src/core/remote/session-agent.ts" plan
+      - name: Check the runner label
+        if: steps.plan.outputs.mode == 'session'
+        env:
+          RUNNER_LABEL: ${{ steps.plan.outputs.runner }}
+        run: |
+          case "$RUNNER_LABEL" in
+            ubuntu-24.04 | ubuntu-latest | blacksmith-4vcpu-ubuntu-2404) ;;
+            *)
+              echo "::error title=verify-remote::no session started: the runner label $RUNNER_LABEL is not ubuntu-24.04, ubuntu-latest, or blacksmith-4vcpu-ubuntu-2404"
+              exit 1
+              ;;
+          esac
 
   session:
     needs: plan
