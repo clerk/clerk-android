@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,7 +40,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.user.User
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -85,7 +88,7 @@ internal fun OrganizationSwitcherModalSheet(
     contentColor = ClerkMaterialTheme.colors.foreground,
     contentWindowInsets = { WindowInsets(0) },
   ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().clerkTestTagsAsResourceIds()) {
       when (destination) {
         OrganizationSwitcherSheetDestination.Overview -> {
           if (activeMembership == null) {
@@ -162,6 +165,7 @@ internal fun OrganizationSwitcherOverviewSheetContent(
       OrganizationSwitcherActionRow(
         text = stringResource(R.string.manage_organization),
         icon = R.drawable.ic_cog,
+        testTag = ClerkTestTags.OrganizationSwitcher.manageOrganizationButton,
         onClick = it,
       )
       Spacer(modifier = Modifier.size(dp12))
@@ -169,6 +173,7 @@ internal fun OrganizationSwitcherOverviewSheetContent(
     OrganizationSwitcherActionRow(
       text = stringResource(R.string.switch_account),
       icon = R.drawable.ic_switch,
+      testTag = ClerkTestTags.OrganizationSwitcher.switchAccountButton,
       onClick = onSwitchAccount,
     )
     Spacer(modifier = Modifier.size(dp18))
@@ -238,9 +243,14 @@ private fun SheetTitle(text: String) {
 }
 
 @Composable
-private fun OrganizationSwitcherActionRow(text: String, icon: Int, onClick: () -> Unit) {
+private fun OrganizationSwitcherActionRow(
+  text: String,
+  icon: Int,
+  testTag: String,
+  onClick: () -> Unit,
+) {
   Surface(
-    modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+    modifier = Modifier.fillMaxWidth().testTag(testTag).clickable(onClick = onClick),
     shape = ClerkMaterialTheme.shape,
     color = ClerkMaterialTheme.colors.background,
     border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),

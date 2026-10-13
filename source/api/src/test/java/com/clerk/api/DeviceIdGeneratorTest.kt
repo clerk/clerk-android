@@ -1,6 +1,5 @@
 package com.clerk.api
 
-/** Number of threads to use for concurrency testing */
 import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import com.clerk.api.configuration.DeviceIdGenerator
 import com.clerk.api.storage.StorageHelper
@@ -26,10 +25,8 @@ class DeviceIdGeneratorTest {
 
   @Before
   fun setup() {
-    // Mock StorageHelper to control its behavior
     mockkObject(StorageHelper)
 
-    // Clear cached device ID to ensure clean state for each test
     DeviceIdGenerator.clearCache()
   }
 
@@ -40,24 +37,19 @@ class DeviceIdGeneratorTest {
 
   @Test
   fun `initialize and getDeviceId returns existing device ID when one exists`() {
-    // Given
     val existingDeviceId = "existing-device-id-123"
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns existingDeviceId
 
-    // When
     DeviceIdGenerator.initialize()
     val result = DeviceIdGenerator.getDeviceId()
 
-    // Then
     assertEquals(existingDeviceId, result)
-    // Only one read; never a save
     verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
     verify(exactly = 0) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }
 
   @Test
   fun `initialize is thread safe and generates only one device ID`() {
-    // Given - Simulate no existing device ID in storage
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
     val savedDeviceIds = mutableListOf<String>()
     every { StorageHelper.saveValue(StorageKey.DEVICE_ID, capture(savedDeviceIds)) } returns Unit
@@ -66,7 +58,6 @@ class DeviceIdGeneratorTest {
     val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
     val results = mutableListOf<String>()
 
-    // When - Execute multiple threads simultaneously
     repeat(CONCURRENCY_TEST_THREAD_COUNT) {
       executor.submit {
         try {
@@ -79,11 +70,9 @@ class DeviceIdGeneratorTest {
       }
     }
 
-    // Wait for all threads to complete
     latch.await()
     executor.shutdown()
 
-    // Then
     assertEquals(
       "All threads should return a device ID",
       CONCURRENCY_TEST_THREAD_COUNT,

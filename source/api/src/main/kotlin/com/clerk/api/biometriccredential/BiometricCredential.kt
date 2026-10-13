@@ -1,6 +1,9 @@
 package com.clerk.api.biometriccredential
 
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -28,7 +31,7 @@ import kotlinx.serialization.encoding.Encoder
  */
 @Serializable(with = BiometricCredentialSerializer::class)
 @ConsistentCopyVisibility
-data class BiometricCredential
+public data class BiometricCredential
 private constructor(
   /** The unique identifier of the biometric credential. */
   val id: String,
@@ -67,7 +70,7 @@ private constructor(
   val statusRawValue: String,
 ) {
 
-  constructor(
+  public constructor(
     id: String,
     platform: Platform = Platform.UNKNOWN,
     appIdentifier: String,
@@ -93,7 +96,7 @@ private constructor(
     statusRawValue = status.serializedValue,
   )
 
-  fun copy(
+  public fun copy(
     id: String = this.id,
     platform: Platform = this.platform,
     appIdentifier: String = this.appIdentifier,
@@ -122,11 +125,16 @@ private constructor(
     )
 
   /** The platform a biometric credential belongs to. */
-  @Serializable
-  enum class Platform(internal val serializedValue: String) {
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Platform.Serializer::class)
+  public enum class Platform(internal val serializedValue: String) {
     @SerialName("ios") IOS("ios"),
     @SerialName("android") ANDROID("android"),
-    UNKNOWN("unknown");
+    @SerialName("unknown") UNKNOWN("unknown");
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Platform>(generatedSerializer(), UNKNOWN)
 
     internal companion object {
       private val entriesBySerializedValue: Map<String, Platform> =
@@ -137,11 +145,16 @@ private constructor(
   }
 
   /** The server-side biometric credential status. */
-  @Serializable
-  enum class Status(internal val serializedValue: String) {
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
+  public enum class Status(internal val serializedValue: String) {
     @SerialName("active") ACTIVE("active"),
     @SerialName("revoked") REVOKED("revoked"),
-    UNKNOWN("unknown");
+    @SerialName("unknown") UNKNOWN("unknown");
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
 
     internal companion object {
       private val entriesBySerializedValue: Map<String, Status> =
@@ -151,9 +164,9 @@ private constructor(
     }
   }
 
-  companion object {
+  public companion object {
     /** The signature algorithm used by biometric credentials on Android. */
-    const val ES256_ALGORITHM: String = "ES256"
+    public const val ES256_ALGORITHM: String = "ES256"
 
     internal fun fromPayload(payload: BiometricCredentialPayload): BiometricCredential =
       BiometricCredential(

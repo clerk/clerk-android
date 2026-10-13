@@ -80,4 +80,18 @@ class HostedAuthRedirectUrlTest {
 
     assertFalse(callbackUri.matchesHostedAuthRedirectUrl("clerk://com.example.app.callback"))
   }
+
+  @Test
+  fun callbackUriRejectsPercentEncodedAuthority() {
+    val callbackUri = Uri.parse("clerk://com%2Eexample.app.callback?state=abc")
+
+    assertFalse(callbackUri.matchesHostedAuthRedirectUrl("clerk://com.example.app.callback"))
+  }
+
+  @Test
+  fun callbackUriRejectsPercentEncodedPath() {
+    val callbackUri = Uri.parse("myapp:///hosted%2Dauth-callback?state=abc")
+
+    assertFalse(callbackUri.matchesHostedAuthRedirectUrl("myapp:///hosted-auth-callback"))
+  }
 }

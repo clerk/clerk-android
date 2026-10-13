@@ -21,6 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -32,6 +33,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
 
   private val dispatcher = StandardTestDispatcher()
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(dispatcher)
+  private var clientRefreshCount = 0
 
   @BeforeTest
   fun setUp() {
@@ -97,6 +99,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
     advanceUntilIdle()
 
     coVerify(exactly = 1) { organization.delete() }
+    assertEquals(1, clientRefreshCount)
     assertTrue(viewModel.state.value.isComplete)
     assertFalse(viewModel.state.value.isLoading)
     assertNull(viewModel.state.value.errorMessage)
@@ -144,6 +147,7 @@ class OrganizationProfileActionConfirmationViewModelTest {
     assertEquals("boom", viewModel.state.value.errorMessage)
     assertFalse(viewModel.state.value.isLoading)
     assertFalse(viewModel.state.value.isComplete)
+    assertEquals(0, clientRefreshCount)
   }
 
   @Test
@@ -160,10 +164,52 @@ class OrganizationProfileActionConfirmationViewModelTest {
       membership = membership(organization),
     )
     advanceUntilIdle()
+    assertEquals("boom", viewModel.state.value.errorMessage)
     viewModel.clearError()
 
     assertEquals("Acme Inc.", viewModel.state.value.confirmationText)
     assertNull(viewModel.state.value.errorMessage)
+  }
+
+  @Test
+  fun `refresh exception after a successful action still completes`() = runTest {
+    val organization = organization()
+    coEvery { organization.delete() } returns
+      ClerkResult.success(
+        DeletedObject(objectType = "organization", id = organization.id, deleted = true)
+      )
+
+    val viewModel = viewModel(refreshClient = { error("refresh failed") })
+    viewModel.setConfirmationText("Acme Inc.")
+    viewModel.confirm(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership(organization),
+    )
+    advanceUntilIdle()
+
+    assertTrue(viewModel.state.value.isComplete)
+    assertFalse(viewModel.state.value.isLoading)
+  }
+
+  @Test
+  fun `cancelled refresh does not mark the action complete`() = runTest {
+    val organization = organization()
+    coEvery { organization.delete() } returns
+      ClerkResult.success(
+        DeletedObject(objectType = "organization", id = organization.id, deleted = true)
+      )
+
+    val viewModel = viewModel(refreshClient = { throw CancellationException("cleared") })
+    viewModel.setConfirmationText("Acme Inc.")
+    viewModel.confirm(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership(organization),
+    )
+    advanceUntilIdle()
+
+    assertFalse(viewModel.state.value.isComplete)
   }
 
   @Test
@@ -184,10 +230,17 @@ class OrganizationProfileActionConfirmationViewModelTest {
     )
   }
 
-  private fun viewModel(): OrganizationProfileActionConfirmationViewModel {
+  private fun viewModel(
+    refreshClient: suspend () -> ClerkResult<Client, ClerkErrorResponse> = {
+      ClerkResult.success(Client())
+    }
+  ): OrganizationProfileActionConfirmationViewModel {
     return OrganizationProfileActionConfirmationViewModel(
       dispatcher = dispatcher,
-      refreshClient = { ClerkResult.success(Client()) },
+      refreshClient = {
+        clientRefreshCount++
+        refreshClient()
+      },
     )
   }
 

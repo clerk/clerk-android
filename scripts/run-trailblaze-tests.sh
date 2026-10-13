@@ -20,7 +20,7 @@ if ! command -v trailblaze >/dev/null 2>&1; then
 fi
 
 install_task="${TRAILBLAZE_INSTALL_TASK:-:e2e:installDebug}"
-trails_dir="${TRAILBLAZE_TRAILS_DIR:-trails/e2e}"
+trails_dir="${TRAILBLAZE_TRAILS_DIR:-trails/e2e/sign-in-profile-sign-out}"
 device="${TRAILBLAZE_DEVICE:-android}"
 trailblaze_attempts="${TRAILBLAZE_ATTEMPTS:-1}"
 if ! [[ "$trailblaze_attempts" =~ ^[0-9]+$ ]] || [[ "$trailblaze_attempts" -lt 1 ]]; then
@@ -110,11 +110,16 @@ if [[ "${TRAILBLAZE_WARN_PLACEHOLDER_KEY:-1}" == "1" ]] &&
   echo "The e2e app may remain on its loading state until a real Clerk test key is set."
 fi
 
+adb_serial="$(adb_serial_from_device)"
+if [[ -n "$adb_serial" ]]; then
+  # Without this, installDebug installs onto every connected device.
+  export ANDROID_SERIAL="$adb_serial"
+fi
+
 if [[ "${TRAILBLAZE_INSTALL_APP:-1}" == "1" ]]; then
   ./gradlew "$install_task"
 fi
 
-adb_serial="$(adb_serial_from_device)"
 wait_for_android_device "$adb_serial"
 
 trail_files=()

@@ -9,6 +9,7 @@ import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import io.mockk.unmockkAll
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,14 +34,14 @@ class StorageHelperTest {
   fun setup() {
     context = RuntimeEnvironment.getApplication()
     StorageHelper.storageCipherFactoryOverride = { TestStorageCipher() }
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     preferences().edit { clear() }
   }
 
   @After
   fun tearDown() {
     unmockkAll()
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = null
     preferences().edit { clear() }
   }
@@ -61,18 +62,15 @@ class StorageHelperTest {
 
   @Test
   fun `initialize called concurrently from multiple threads initializes exactly once with no exceptions`() {
-    // Given
     val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
     val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
     val exceptions = mutableListOf<Throwable>()
     val initializedPreferences = mutableSetOf<SharedPreferences>()
 
-    // When - Execute multiple threads calling initialize() simultaneously
     repeat(CONCURRENCY_TEST_THREAD_COUNT) {
       executor.submit {
         try {
           StorageHelper.initialize(context)
-          // Capture the initialized SharedPreferences instance
           val field = StorageHelper::class.java.getDeclaredField("secureStorage")
           field.isAccessible = true
           val prefs = field.get(StorageHelper) as? SharedPreferences
@@ -87,35 +85,66 @@ class StorageHelperTest {
       }
     }
 
-    // Wait for all threads to complete
     latch.await()
     executor.shutdown()
 
-    // Then
     assertTrue("No exceptions should occur", exceptions.isEmpty())
     assertEquals(
       "All threads should reference the same SharedPreferences instance",
       1,
       initializedPreferences.size,
     )
-    // Verify storage is initialized and functional
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test-value")
     assertEquals("test-value", StorageHelper.loadValue(StorageKey.DEVICE_ID))
   }
 
   @Test
+  fun `a read racing initialize waits for the cipher instead of seeing storage without it`() {
+    preferences().edit(commit = true) {
+      putString(
+        StorageKey.DEVICE_TOKEN.name,
+        ENCRYPTED_VALUE_PREFIX + TestStorageCipher().encrypt("stored-token"),
+      )
+    }
+    val cipherRequested = CountDownLatch(1)
+    val releaseCipher = CountDownLatch(1)
+    StorageHelper.storageCipherFactoryOverride = {
+      cipherRequested.countDown()
+      releaseCipher.await(5, TimeUnit.SECONDS)
+      TestStorageCipher()
+    }
+    StorageHelper.prepare(context)
+    val initializer = Thread { StorageHelper.initialize(context) }.apply { start() }
+    assertTrue(cipherRequested.await(5, TimeUnit.SECONDS))
+
+    var loaded: String? = null
+    val reader = Thread { loaded = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) }
+    reader.start()
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+    while (
+      reader.state != Thread.State.BLOCKED &&
+        reader.state != Thread.State.TERMINATED &&
+        System.nanoTime() < deadline
+    ) {
+      Thread.yield()
+    }
+    releaseCipher.countDown()
+    initializer.join(5_000)
+    reader.join(5_000)
+
+    assertEquals("stored-token", loaded)
+  }
+
+  @Test
   fun `saveValue with empty string does not write to SharedPreferences`() {
-    // Given
     StorageHelper.initialize(context)
     val testKey = StorageKey.DEVICE_ID
     val testValue = "initial-value"
     StorageHelper.saveValue(testKey, testValue)
     assertEquals("Initial value should be saved", testValue, StorageHelper.loadValue(testKey))
 
-    // When - Save empty string
     StorageHelper.saveValue(testKey, "")
 
-    // Then - Value should remain unchanged (empty strings are not saved)
     assertEquals(
       "Empty string should not overwrite existing value",
       testValue,
@@ -140,14 +169,11 @@ class StorageHelperTest {
 
   @Test
   fun `saveValue with empty string when no existing value does not write to SharedPreferences`() {
-    // Given
     StorageHelper.initialize(context)
     val testKey = StorageKey.DEVICE_TOKEN
 
-    // When - Save empty string to a key with no existing value
     StorageHelper.saveValue(testKey, "")
 
-    // Then - Value should remain null
     assertNull("Empty string should not be saved", StorageHelper.loadValue(testKey))
   }
 
@@ -170,7 +196,7 @@ class StorageHelperTest {
 
   @Test
   fun `loadValue deletes malformed encrypted values and returns null`() {
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = {
       object : StorageCipher {
         override fun encrypt(plaintext: String): String = plaintext
@@ -196,7 +222,6 @@ class StorageHelperTest {
 
   @Test
   fun `after initialize isInitialized returns true and values can be saved loaded and deleted`() {
-    // Given
     StorageHelper.initialize(context)
     val testKey = StorageKey.DEVICE_ID
     val testValue = "test-device-id-123"
@@ -208,65 +233,50 @@ class StorageHelperTest {
     field.isAccessible = false
     assertNotNull("secureStorage should be initialized", prefs)
 
-    // When - Save value
     StorageHelper.saveValue(testKey, testValue)
 
-    // Then - Value should be saved
     assertEquals("Value should be saved", testValue, StorageHelper.loadValue(testKey))
 
-    // When - Update value
     val updatedValue = "updated-device-id-456"
     StorageHelper.saveValue(testKey, updatedValue)
 
-    // Then - Value should be updated
     assertEquals("Value should be updated", updatedValue, StorageHelper.loadValue(testKey))
 
-    // When - Delete value
     StorageHelper.deleteValue(testKey)
 
-    // Then - Value should be deleted
     assertNull("Value should be deleted", StorageHelper.loadValue(testKey))
   }
 
   @Test
   fun `multiple save and load operations work correctly after initialization`() {
-    // Given
     StorageHelper.initialize(context)
     val deviceIdKey = StorageKey.DEVICE_ID
     val deviceTokenKey = StorageKey.DEVICE_TOKEN
 
-    // When - Save multiple values
     StorageHelper.saveValue(deviceIdKey, "device-id-1")
     StorageHelper.saveValue(deviceTokenKey, "device-token-1")
 
-    // Then - Both values should be retrievable
     assertEquals("device-id-1", StorageHelper.loadValue(deviceIdKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
 
-    // When - Update one value
     StorageHelper.saveValue(deviceIdKey, "device-id-2")
 
-    // Then - Updated value should be new, other value unchanged
     assertEquals("device-id-2", StorageHelper.loadValue(deviceIdKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
 
-    // When - Delete one value
     StorageHelper.deleteValue(deviceIdKey)
 
-    // Then - Deleted value should be null, other value unchanged
     assertNull(StorageHelper.loadValue(deviceIdKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
   }
 
   @Test
   fun `load save and delete never throw when racing with initialize`() {
-    // Given
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
     val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
     val exceptions = mutableListOf<Throwable>()
 
-    // When
     repeat(CONCURRENCY_TEST_THREAD_COUNT) { index ->
       executor.submit {
         try {
@@ -290,7 +300,136 @@ class StorageHelperTest {
     latch.await()
     executor.shutdown()
 
-    // Then
     assertTrue("No exceptions should occur", exceptions.isEmpty())
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken lets exactly one concurrent writer replace the expected token`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-initial")
+    val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
+    val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
+    val winners = mutableListOf<String>()
+
+    // When
+    repeat(CONCURRENCY_TEST_THREAD_COUNT) { index ->
+      executor.submit {
+        try {
+          val token = "token-$index"
+          if (StorageHelper.compareAndSetDeviceToken(expected = "token-initial", value = token)) {
+            synchronized(winners) { winners.add(token) }
+          }
+        } finally {
+          latch.countDown()
+        }
+      }
+    }
+
+    latch.await()
+    executor.shutdown()
+
+    // Then
+    assertEquals(1, winners.size)
+    assertEquals(winners.single(), StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken notifies the change listener only when the token changes`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+
+    // When
+    StorageHelper.compareAndSetDeviceToken(expected = "token-stale", value = "token-x")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-a")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-b")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-b", value = null)
+
+    // Then
+    assertEquals(listOf("token-a" to "token-b", "token-b" to null), changes)
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken reports failure without side effects when the commit fails`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    // When
+    val replaced =
+      try {
+        StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-b") {
+          onChangedCalls += 1
+        }
+      } finally {
+        restoreCommits()
+      }
+
+    // Then
+    assertFalse(replaced)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertEquals("token-a", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken reports failure without side effects when a delete commit fails`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+    val restoreCommits = StorageHelper.failCommitsForTesting()
+
+    // When
+    val cleared =
+      try {
+        StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = null) {
+          onChangedCalls += 1
+        }
+      } finally {
+        restoreCommits()
+      }
+
+    // Then
+    assertFalse(cleared)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertEquals("token-a", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken treats a swap to the current token as a successful no-op`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+    var onChangedCalls = 0
+
+    // When
+    val sameToken =
+      StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-a") {
+        onChangedCalls += 1
+      }
+    StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    changes.clear()
+    val bothAbsent =
+      StorageHelper.compareAndSetDeviceToken(expected = null, value = null) { onChangedCalls += 1 }
+
+    // Then
+    assertTrue(sameToken)
+    assertTrue(bothAbsent)
+    assertEquals(0, onChangedCalls)
+    assertEquals(emptyList<Pair<String?, String?>>(), changes)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 }

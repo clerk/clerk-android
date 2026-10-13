@@ -8,6 +8,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -15,9 +16,10 @@ class RequestLoggingMiddlewareTest {
   @Test
   fun `sensitive request bypasses body logging`() {
     val logs = mutableListOf<String>()
-    val loggingInterceptor =
-      HttpLoggingInterceptor { message -> logs += message }
-        .apply { level = HttpLoggingInterceptor.Level.BODY }
+    val loggingInterceptor = HttpLoggingInterceptor { message ->
+      logs += message
+    }
+      .apply { level = HttpLoggingInterceptor.Level.BODY }
     val client =
       OkHttpClient.Builder()
         .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))
@@ -41,14 +43,16 @@ class RequestLoggingMiddlewareTest {
     client.newCall(request).execute().close()
 
     assertTrue(logs.isEmpty())
+    assertFalse(logs.any { it.contains("secret_verifier") })
   }
 
   @Test
   fun `ordinary request uses body logging`() {
     val logs = mutableListOf<String>()
-    val loggingInterceptor =
-      HttpLoggingInterceptor { message -> logs += message }
-        .apply { level = HttpLoggingInterceptor.Level.BODY }
+    val loggingInterceptor = HttpLoggingInterceptor { message ->
+      logs += message
+    }
+      .apply { level = HttpLoggingInterceptor.Level.BODY }
     val client =
       OkHttpClient.Builder()
         .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))
@@ -70,6 +74,6 @@ class RequestLoggingMiddlewareTest {
 
     client.newCall(request).execute().close()
 
-    assertTrue(logs.isNotEmpty())
+    assertTrue(logs.any { it.contains("ordinary_field=ordinary_value") })
   }
 }

@@ -12,6 +12,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -88,6 +89,7 @@ class UserProfileVerifyViewModelTest {
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified(), awaitItem())
     }
+    coVerify(exactly = 1) { email.attemptVerification("123456") }
   }
 
   @Test
@@ -111,7 +113,7 @@ class UserProfileVerifyViewModelTest {
     every { Clerk.user } returns user
     val totpResource =
       mockk<com.clerk.api.network.model.totp.TOTPResource>(relaxed = true) {
-        every { backupCodes } returns null
+        every { backupCodes } returns listOf("code-1", "code-2")
       }
     coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.success(totpResource)
 
@@ -120,8 +122,12 @@ class UserProfileVerifyViewModelTest {
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
       viewModel.attemptTotp("654321")
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified(), awaitItem())
+      assertEquals(
+        UserProfileVerifyViewModel.VerificationTextState.Verified(listOf("code-1", "code-2")),
+        awaitItem(),
+      )
     }
+    coVerify(exactly = 1) { user.attemptTotpVerification("654321") }
   }
 
   @Test

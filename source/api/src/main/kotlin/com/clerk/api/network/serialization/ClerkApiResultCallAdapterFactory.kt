@@ -12,11 +12,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 
-/**
- * A custom [CallAdapter.Factory] for [ClerkResult] calls. This creates a delegating adapter for
- * suspend function calls that return [ClerkResult]. This facilitates returning all error types
- * through a single [ClerkResult.Failure] type.
- */
 internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
   @Suppress("ReturnCount")
   override fun get(
@@ -83,8 +78,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 response: Response<ClerkResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
-                  // Repackage the initial result with new tags with this call's request + response
-                  val tags = mapOf(okhttp3.Response::class to response.raw())
+                  val tags: Map<KClass<*>, Any> = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {
                       is ClerkResult.Success -> result.withTags(result.tags + tags)
@@ -94,13 +88,12 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                           (responseCode == NO_CONTENT || responseCode == RESET_CONTENT) &&
                             apiResultType.actualTypeArguments[0] == Unit::class.java
                         ) {
-                          @Suppress("UNCHECKED_CAST")
-                          ClerkResult.success(Unit).withTags(tags as Map<KClass<*>, Any>)
+                          ClerkResult.success(Unit).withTags(tags)
                         } else {
-                          null
+                          emptyBodyFailure(responseCode, tags)
                         }
                       }
-                      else -> null
+                      else -> result
                     }
                   callback.onResponse(call, Response.success(withTag))
                 } else {
@@ -109,15 +102,25 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     // Don't try to decode empty bodies
                     // Unknown length bodies (i.e. -1L) are fine
                     if (responseBody.contentLength() == 0L) return@let
+                    if (!ClerkResult.hasHttpErrorBody(response.code())) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
-                    val statusCode = createStatusCode(response.code())
-                    val nextAnnotations = annotations + statusCode
+                    // This runs inside Retrofit's callback.onResponse, which only rethrows
+                    // fatal errors (throwIfFatal) and logs and swallows everything else. An
+                    // uncaught non-fatal Throwable would leave the suspending caller hanging,
+                    // so rethrow the same fatal errors Retrofit does and map the rest to a
+                    // failure.
                     @Suppress("TooGenericExceptionCaught")
                     errorBody =
                       try {
                         retrofit
-                          .responseBodyConverter<Any>(errorType, nextAnnotations)
+                          .responseBodyConverter<Any>(errorType, annotations)
                           .convert(responseBody)
+                      } catch (e: VirtualMachineError) {
+                        throw e
+                      } catch (@Suppress("DEPRECATION") e: ThreadDeath) {
+                        throw e
+                      } catch (e: LinkageError) {
+                        throw e
                       } catch (e: Throwable) {
                         @Suppress("UNCHECKED_CAST")
                         callback.onResponse(
@@ -157,5 +160,18 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
     override fun responseType(): Type = apiResultType
   }
 }
+
+/**
+ * A successful response without a body cannot satisfy a non-[Unit] result. Report it as a failure
+ * instead of handing Retrofit a null body, which it throws as a KotlinNullPointerException from the
+ * suspending call.
+ */
+private fun emptyBodyFailure(code: Int, tags: Map<KClass<*>, Any>): ClerkResult.Failure<Nothing> =
+  ClerkResult.Failure(
+    error = null,
+    throwable = IllegalStateException("HTTP $code response has no body"),
+    errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
+    tags = tags,
+  )
 
 private class ApiException(public val error: Any?) : Exception()

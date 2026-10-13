@@ -1,10 +1,11 @@
 package com.clerk.api.network
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
+import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.ClientApi
-import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.api.EnvironmentApi
 import com.clerk.api.network.api.MagicLinkApi
 import com.clerk.api.network.api.OrganizationApi
@@ -25,11 +26,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-/** Singleton responsible for configuring and exposing the Clerk API service. */
 internal object ClerkApi {
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -65,10 +64,6 @@ internal object ClerkApi {
   val user: UserApi
     get() = _user ?: error("ClerkApi is not configured.")
 
-  private var _deviceAttestation: DeviceAttestationApi? = null
-  val deviceAttestation: DeviceAttestationApi
-    get() = _deviceAttestation ?: error("ClerkApi is not configured.")
-
   private var _organization: OrganizationApi? = null
   val organization: OrganizationApi
     get() = _organization ?: error("ClerkApi is not configured.")
@@ -81,17 +76,22 @@ internal object ClerkApi {
   val biometricCredential: BiometricCredentialApi
     get() = _biometricCredential ?: error("ClerkApi is not configured.")
 
-  // Exposed for internal testing/verification
+  private var _billing: BillingApi? = null
+  val billing: BillingApi
+    get() = _billing ?: error("ClerkApi is not configured.")
+
+  @VisibleForTesting
   internal var configuredBaseUrl: String? = null
     private set
 
+  @VisibleForTesting
   internal var configuredUrlWithVersion: String? = null
     private set
 
+  @VisibleForTesting
   internal var configuredCustomHeaders: Map<String, String> = emptyMap()
     private set
 
-  /** Initializes the API client with the given [baseUrl]. */
   @Suppress("UnusedParameter")
   fun configure(
     baseUrl: String,
@@ -108,13 +108,12 @@ internal object ClerkApi {
     _signIn = retrofit.create(SignInApi::class.java)
     _signUp = retrofit.create(SignUpApi::class.java)
     _user = retrofit.create(UserApi::class.java)
-    _deviceAttestation = retrofit.create(DeviceAttestationApi::class.java)
     _organization = retrofit.create(OrganizationApi::class.java)
     _magicLink = retrofit.create(MagicLinkApi::class.java)
     _biometricCredential = retrofit.create(BiometricCredentialApi::class.java)
+    _billing = retrofit.create(BillingApi::class.java)
   }
 
-  /** Clears all configured Retrofit services. */
   fun reset() {
     _client = null
     _environment = null
@@ -122,16 +121,15 @@ internal object ClerkApi {
     _signIn = null
     _signUp = null
     _user = null
-    _deviceAttestation = null
     _organization = null
     _magicLink = null
     _biometricCredential = null
+    _billing = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
     configuredCustomHeaders = emptyMap()
   }
 
-  /** Builds and configures the Retrofit instance. */
   private fun buildRetrofit(baseUrl: String, customHeaders: Map<String, String>): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion
@@ -145,11 +143,7 @@ internal object ClerkApi {
           addInterceptor(UrlAppendingMiddleware())
 
           if (Clerk.debugMode) {
-            addInterceptor(
-              RequestLoggingMiddleware(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-              )
-            )
+            addInterceptor(RequestLoggingMiddleware.create())
           }
 
           addInterceptor(ProtectOkHttpInterceptor())

@@ -69,79 +69,7 @@ class AuthStateForceMfaTest {
   }
 
   @Test
-  fun `postAuthCompletionAction routes to mfa when session is unresolved for created session id`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = true,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_MFA, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to reset password when session requires password reset`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to choose organization when session requires it`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to choose organization for forced organization selection`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = true,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction prioritizes pending task over forced organization selection`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = true,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction completes auth when no task and no unresolved created session`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.COMPLETE_AUTH, action)
-  }
-
-  @Test
-  fun `resolveCorrespondingSession does not fallback when created session id is present but missing`() {
+  fun `resolveCorrespondingSession uses fallback not an unrelated session when created session is missing`() {
     val fallback =
       session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
     val sessions =
@@ -155,6 +83,31 @@ class AuthStateForceMfaTest {
       )
 
     assertEquals(fallback, resolved)
+  }
+
+  @Test
+  fun `resolveCorrespondingSession prefers the created session over the fallback`() {
+    val fallback =
+      session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
+    val created =
+      session(
+        id = "sess_target",
+        status = Session.SessionStatus.PENDING,
+        tasks = listOf(SessionTask("setup-mfa")),
+      )
+
+    val resolved =
+      resolveCorrespondingSession(
+        createdSessionId = "sess_target",
+        sessions =
+          listOf(
+            session(id = "sess_other", status = Session.SessionStatus.ACTIVE, tasks = emptyList()),
+            created,
+          ),
+        fallbackSession = fallback,
+      )
+
+    assertEquals(created, resolved)
   }
 
   private fun session(

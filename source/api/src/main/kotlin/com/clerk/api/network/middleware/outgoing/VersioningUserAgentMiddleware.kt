@@ -12,12 +12,6 @@ import okhttp3.Response
 internal const val INTERNAL_HEADER_SKIP_CLIENT_ID = "X-Clerk-SDK-Skip-Client-Id"
 internal const val INTERNAL_HEADER_TRUE = "1"
 
-/**
- * HeaderMiddleware is an OkHttp interceptor that adds custom clerk specific headers to outgoing
- * requests.
- *
- * This is never intended to be used directly by the user.
- */
 internal class VersioningUserAgentMiddleware(customHeaders: Map<String, String> = emptyMap()) :
   Interceptor {
   private val customHeaders = customHeaders.toMap()

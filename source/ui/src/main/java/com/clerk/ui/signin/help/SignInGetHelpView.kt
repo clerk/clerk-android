@@ -24,7 +24,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignInGetHelpView(modifier: Modifier = Modifier) {
+public fun SignInGetHelpView(modifier: Modifier = Modifier) {
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()

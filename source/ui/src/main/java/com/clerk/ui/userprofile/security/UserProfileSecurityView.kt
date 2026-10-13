@@ -53,20 +53,20 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun UserProfileSecurityView() {
   LaunchedEffect(Unit) { Clerk.refreshClient() }
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileSecurityViewImpl(
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
-    isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    isBiometricCredentialEnabled =
-      Clerk.biometricSignInIsEnabled &&
-        Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
+    isDeleteSelfEnabled = user?.deleteSelfEnabled == true,
+    isBiometricCredentialEnabled = Clerk.biometricSignInIsEnabled,
   )
 }
 
 @Composable
 private fun UserProfileSecurityViewImpl(
   viewModel: UserProfileSecurityViewModel = viewModel(),
+  backupCodesViewModel: PendingBackupCodesViewModel = viewModel(),
   isPasswordEnabled: Boolean = false,
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
@@ -74,6 +74,7 @@ private fun UserProfileSecurityViewImpl(
   isBiometricCredentialEnabled: Boolean = false,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val pendingBackupCodes by backupCodesViewModel.pending.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val errorMessage = (state as? UserProfileSecurityViewModel.State.Error)?.message
   LaunchedEffect(errorMessage) {
@@ -103,6 +104,10 @@ private fun UserProfileSecurityViewImpl(
               ?.sessions
               .orEmpty()
               .toImmutableList(),
+          onSignOutDevice = viewModel::signOut,
+          pendingBackupCodes = pendingBackupCodes,
+          onShowBackupCodes = backupCodesViewModel::show,
+          onClearBackupCodes = backupCodesViewModel::clear,
         )
       }
     }
@@ -120,6 +125,10 @@ private fun UserProfileSecurityMainContent(
   isBiometricCredentialEnabled: Boolean,
   snackbarHostState: SnackbarHostState,
   sessions: ImmutableList<Session>,
+  onSignOutDevice: (Session, (String?) -> Unit) -> Unit,
+  pendingBackupCodes: PendingBackupCodes?,
+  onShowBackupCodes: (List<String>, MfaType) -> Unit,
+  onClearBackupCodes: () -> Unit,
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
@@ -152,6 +161,7 @@ private fun UserProfileSecurityMainContent(
           isDeleteSelfEnabled = isDeleteSelfEnabled,
           isBiometricCredentialEnabled = isBiometricCredentialEnabled,
         ),
+      onSignOutDevice = onSignOutDevice,
       onAdd = {
         showBottomSheet = true
         currentSheetType = BottomSheetType.ChooseMfa
@@ -177,11 +187,16 @@ private fun UserProfileSecurityMainContent(
       },
     )
     BottomSheetContent(
-      showBottomSheet = showBottomSheet,
-      currentSheetType = currentSheetType,
+      showBottomSheet = showBottomSheet || pendingBackupCodes != null,
+      currentSheetType =
+        pendingBackupCodes?.let { BottomSheetType.BackupCodes(it.codes, it.mfaType) }
+          ?: currentSheetType,
       callbacks =
         BottomSheetCallbacks(
-          onDismiss = { showBottomSheet = false },
+          onDismiss = {
+            showBottomSheet = false
+            onClearBackupCodes()
+          },
           onClickMfaType = {
             showBottomSheet = false
             currentSheetType = BottomSheetType.AddMfa(it)
@@ -197,11 +212,7 @@ private fun UserProfileSecurityMainContent(
             currentSheetType = BottomSheetType.AddPhoneNumber
             showBottomSheet = true
           },
-          onNavigateToBackupCodes = {
-            showBottomSheet = false
-            currentSheetType = BottomSheetType.BackupCodes(it)
-            showBottomSheet = true
-          },
+          onNavigateToBackupCodes = onShowBackupCodes,
           onVerify = {
             showBottomSheet = false
             currentSheetType = BottomSheetType.Verify(it)
@@ -216,6 +227,7 @@ private fun UserProfileSecurityMainContent(
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun UserProfileSecurityContent(
   innerPadding: PaddingValues,
   configuration: SecurityContentConfiguration,
@@ -223,6 +235,7 @@ private fun UserProfileSecurityContent(
   onClickDeleteAccount: () -> Unit,
   onClickAddPassword: (PasswordAction) -> Unit,
   onAdd: () -> Unit,
+  onSignOutDevice: (Session, (String?) -> Unit) -> Unit,
 ) {
   val scrollState = rememberScrollState()
   Column(
@@ -239,7 +252,6 @@ private fun UserProfileSecurityContent(
     }
     if (configuration.isBiometricCredentialEnabled) {
       UserProfileBiometricCredentialsSection(onError = onError)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
       UserProfilePasskeySection(onError = onError)
@@ -250,7 +262,10 @@ private fun UserProfileSecurityContent(
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-      UserProfileDevicesSection(devices = configuration.sessions)
+      UserProfileDevicesSection(
+        devices = configuration.sessions,
+        onSignOut = { onSignOutDevice(it, onError) },
+      )
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isDeleteSelfEnabled) {

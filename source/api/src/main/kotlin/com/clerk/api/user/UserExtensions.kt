@@ -14,7 +14,7 @@ import com.clerk.api.sso.OAuthProvider
  *
  * @return List of [OAuthProvider] that the user can still connect to their account
  */
-val User.unconnectedProviders: List<OAuthProvider>
+public val User.unconnectedProviders: List<OAuthProvider>
   get() {
     val socialProviders = Clerk.environment?.allSocialProviders.orEmpty()
     val verifiedExternalProviders = this.verifiedExternalAccounts.map { it.oauthProviderType }
@@ -29,7 +29,7 @@ val User.unconnectedProviders: List<OAuthProvider>
  *
  * @return The user's full name as a string, or a string with null values if names are not set
  */
-fun User.fullName(): String {
+public fun User.fullName(): String {
   val parts =
     listOfNotNull(firstName?.takeIf { it.isNotBlank() }, lastName?.takeIf { it.isNotBlank() })
   return parts.joinToString(separator = " ")

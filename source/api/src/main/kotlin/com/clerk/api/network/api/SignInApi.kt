@@ -1,5 +1,6 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -15,25 +16,19 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 internal interface SignInApi {
-  /**
-   * @param params The parameters for the sign in. @see [SignIn.SignInCreateParams]
-   * @see SignIn.create
-   */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun createSignIn(
     @FieldMap params: Map<String, String>
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  /** @see SignIn.authenticateWithRedirect */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithGoogle(
-    @Field(ApiParams.STRATEGY) strategy: String = "google_one_tap",
+    @Field(ApiParams.STRATEGY) strategy: String = Strategy.GoogleOneTap.value,
     @Field("token") token: String,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  /** @see SignIn.authenticateWithRedirect */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithRedirect(
@@ -78,12 +73,6 @@ internal interface SignInApi {
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  /**
-   * Prepare the second factor for a sign in.
-   *
-   * @param id The session id.
-   * @param params The parameters for the second factor. @see [SignIn.PrepareSecondFactorParams]
-   */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
@@ -91,15 +80,6 @@ internal interface SignInApi {
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  /**
-   * Reset the password for a sign in.
-   *
-   * The request body should contain the reset password fields as key-value pairs. The expected
-   *
-   * @param id The session id.
-   * @param password The new password.
-   * @param signOutOfOtherSessions Whether to sign out of other sessions.
-   */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.RESET_PASSWORD)
   suspend fun resetPassword(

@@ -1,6 +1,7 @@
 package com.clerk.ui.signin.password.reset
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,6 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
@@ -51,7 +54,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignInSetNewPasswordView(
+public fun SignInSetNewPasswordView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -80,16 +83,11 @@ internal fun SessionTaskResetPasswordView(
   }
 }
 
-/**
- * The internal implementation of the [SignInSetNewPasswordView].
- *
- * @param modifier The [Modifier] to be applied to the view.
- */
 @Composable
 private fun SignInSetNewPasswordViewImpl(
   mode: ResetPasswordMode,
   modifier: Modifier = Modifier,
-  viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey()),
+  viewModel: ResetPasswordViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -144,7 +142,8 @@ private fun SignInSetNewPasswordViewImpl(
       onClick = onResetPassword,
       isLoading = state is AuthenticationViewState.Loading,
       text = stringResource(R.string.reset_password),
-      modifier = Modifier.fillMaxWidth(),
+      modifier =
+        Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.submitButton),
       isEnabled = isButtonEnabled,
     )
   }
@@ -163,47 +162,46 @@ private fun ResetPasswordMode.subtitle(): String? {
 private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubmit: () -> Unit) {
   val showPasswordMismatchError = authState.signInConfirmNewPassword.isNotBlank() && !passwordsMatch
   val confirmFocusRequester = remember { FocusRequester() }
-  ClerkTextField(
-    value = authState.signInNewPassword,
-    onValueChange = { authState.signInNewPassword = it },
-    visualTransformation = PasswordVisualTransformation(),
-    label = stringResource(R.string.new_password),
-    inputContentType = ContentType.Password,
-    keyboardOptions =
-      KeyboardOptions(
-        keyboardType = KeyboardType.Password,
-        imeAction = ImeAction.Next,
-        autoCorrectEnabled = false,
-      ),
-    keyboardActions = KeyboardActions(onNext = { confirmFocusRequester.requestFocus() }),
-  )
-  Spacers.Vertical.Spacer24()
-  ClerkTextField(
-    modifier = Modifier.focusRequester(confirmFocusRequester),
-    value = authState.signInConfirmNewPassword,
-    onValueChange = { authState.signInConfirmNewPassword = it },
-    label = stringResource(R.string.confirm_password),
-    visualTransformation = PasswordVisualTransformation(),
-    inputContentType = ContentType.Password,
-    isError = showPasswordMismatchError,
-    supportingText =
-      if (showPasswordMismatchError) stringResource(R.string.passwords_dont_match) else null,
-    keyboardOptions =
-      KeyboardOptions(
-        keyboardType = KeyboardType.Password,
-        imeAction = ImeAction.Done,
-        autoCorrectEnabled = false,
-      ),
-    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-  )
+  Column {
+    ClerkTextField(
+      modifier = Modifier.testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.newPassword),
+      value = authState.signInNewPassword,
+      onValueChange = { authState.signInNewPassword = it },
+      visualTransformation = PasswordVisualTransformation(),
+      label = stringResource(R.string.new_password),
+      inputContentType = ContentType.NewPassword,
+      keyboardOptions =
+        KeyboardOptions(
+          keyboardType = KeyboardType.Password,
+          imeAction = ImeAction.Next,
+          autoCorrectEnabled = false,
+        ),
+      keyboardActions = KeyboardActions(onNext = { confirmFocusRequester.requestFocus() }),
+    )
+    Spacers.Vertical.Spacer24()
+    ClerkTextField(
+      modifier =
+        Modifier.focusRequester(confirmFocusRequester)
+          .testTag(ClerkTestTags.Auth.SessionTask.ResetPassword.confirmPassword),
+      value = authState.signInConfirmNewPassword,
+      onValueChange = { authState.signInConfirmNewPassword = it },
+      label = stringResource(R.string.confirm_password),
+      visualTransformation = PasswordVisualTransformation(),
+      inputContentType = ContentType.NewPassword,
+      isError = showPasswordMismatchError,
+      supportingText =
+        if (showPasswordMismatchError) stringResource(R.string.passwords_dont_match) else null,
+      keyboardOptions =
+        KeyboardOptions(
+          keyboardType = KeyboardType.Password,
+          imeAction = ImeAction.Done,
+          autoCorrectEnabled = false,
+        ),
+      keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+    )
+  }
 }
 
-/**
- * A row containing a label and a [Switch] to toggle signing out of other devices.
- *
- * @param signOutOtherDevices The current state of the switch.
- * @param onCheckChange A callback to be invoked when the switch is toggled.
- */
 @Composable
 private fun SignOutOfOtherDevicesRow(
   signOutOtherDevices: Boolean,

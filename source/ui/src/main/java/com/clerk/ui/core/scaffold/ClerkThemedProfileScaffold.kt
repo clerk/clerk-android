@@ -106,7 +106,7 @@ private fun Preview() {
     ClerkThemedProfileScaffold(
       title = "Security",
       backgroundColor = ClerkMaterialTheme.colors.muted,
-      content = { /* Content goes here */ },
+      content = {},
     )
   }
 }

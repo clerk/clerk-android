@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.user.fullName
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -217,12 +219,14 @@ private fun ProfileSectionRows(
               UserProfileIconActionRow(
                 iconResId = R.drawable.ic_user,
                 text = stringResource(R.string.manage_account),
+                modifier = Modifier.testTag(ClerkTestTags.UserProfile.Row.manageAccount),
                 onClick = { onClick(UserProfileAction.Profile) },
               )
             UserProfileRow.Security ->
               UserProfileIconActionRow(
                 iconResId = R.drawable.ic_lock,
                 text = stringResource(R.string.security),
+                modifier = Modifier.testTag(ClerkTestTags.UserProfile.Row.security),
                 onClick = { onClick(UserProfileAction.Security) },
               )
             UserProfileRow.SwitchAccount,
@@ -268,6 +272,7 @@ private fun AccountSectionRows(
               backgroundColor = ClerkMaterialTheme.colors.background,
               iconResId = R.drawable.ic_switch,
               text = stringResource(R.string.switch_account),
+              modifier = Modifier.testTag(ClerkTestTags.UserProfile.Row.switchAccount),
               onClick = { onClick(UserProfileAction.SwitchAccount) },
             )
           UserProfileRow.AddAccount ->
@@ -275,6 +280,7 @@ private fun AccountSectionRows(
               backgroundColor = ClerkMaterialTheme.colors.background,
               iconResId = R.drawable.ic_plus,
               text = stringResource(R.string.add_account),
+              modifier = Modifier.testTag(ClerkTestTags.UserProfile.Row.addAccount),
               onClick = { onClick(UserProfileAction.AddAccount) },
             )
           UserProfileRow.SignOut ->
@@ -282,6 +288,7 @@ private fun AccountSectionRows(
               backgroundColor = ClerkMaterialTheme.colors.background,
               iconResId = R.drawable.ic_sign,
               text = stringResource(R.string.sign_out),
+              modifier = Modifier.testTag(ClerkTestTags.UserProfile.Row.signOut),
               onClick = { onClick(UserProfileAction.SignOut) },
             )
           UserProfileRow.ManageAccount,

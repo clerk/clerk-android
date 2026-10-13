@@ -275,14 +275,51 @@ class SessionVerificationTest {
     val verification = testVerification(status = SessionVerification.Status.COMPLETE)
     val allowedCredentialIds = listOf("credential_123")
     mockkObject(PasskeyService)
-    coEvery { PasskeyService.verifySessionWithPasskey(session, allowedCredentialIds) } returns
-      ClerkResult.success(verification)
+    coEvery {
+      PasskeyService.verifySessionWithPasskey(
+        session,
+        allowedCredentialIds,
+        SessionVerification.Level.FIRST_FACTOR,
+      )
+    } returns ClerkResult.success(verification)
 
     val result = session.verifyWithPasskey(allowedCredentialIds = allowedCredentialIds)
 
     assertTrue(result is ClerkResult.Success)
     assertSame(verification, (result as ClerkResult.Success).value)
-    coVerify(exactly = 1) { PasskeyService.verifySessionWithPasskey(session, allowedCredentialIds) }
+    coVerify(exactly = 1) {
+      PasskeyService.verifySessionWithPasskey(
+        session,
+        allowedCredentialIds,
+        SessionVerification.Level.FIRST_FACTOR,
+      )
+    }
+  }
+
+  @Test
+  fun `verify with passkey delegates second factor level to passkey service`() = runTest {
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    mockkObject(PasskeyService)
+    coEvery {
+      PasskeyService.verifySessionWithPasskey(
+        session,
+        emptyList(),
+        SessionVerification.Level.SECOND_FACTOR,
+      )
+    } returns ClerkResult.success(verification)
+
+    val result = session.verifyWithPasskey(level = SessionVerification.Level.SECOND_FACTOR)
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      PasskeyService.verifySessionWithPasskey(
+        session,
+        emptyList(),
+        SessionVerification.Level.SECOND_FACTOR,
+      )
+    }
   }
 
   @Test

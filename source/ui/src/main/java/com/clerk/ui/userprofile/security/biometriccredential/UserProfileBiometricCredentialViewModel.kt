@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** ViewModel backing the biometric sign-in toggle in the user-profile security screen. */
 internal class UserProfileBiometricCredentialViewModel(
   private val workDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
@@ -25,11 +24,13 @@ internal class UserProfileBiometricCredentialViewModel(
   val state: StateFlow<State> = _state.asStateFlow()
   private var availabilityRequestGeneration = 0
 
-  /** Refreshes availability locally first, then reconciles with the server. */
   fun refreshAvailability() {
     val requestGeneration = ++availabilityRequestGeneration
     _state.update {
-      it.copy(isEnabled = Clerk.biometricCredentials.currentUserLocalAvailability().isAvailable)
+      it.copy(
+        isEnabled = Clerk.biometricCredentials.currentUserLocalAvailability().isAvailable,
+        canEnroll = Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
+      )
     }
     viewModelScope.launch(workDispatcher) {
       val availability = Clerk.biometricCredentials.currentUserAvailability()
@@ -55,6 +56,7 @@ internal class UserProfileBiometricCredentialViewModel(
   ) {
     val current = _state.value
     if (current.isLoading || current.isEnabled == enabled) return
+    if (enabled && !Clerk.biometricCredentials.deviceSupportsBiometricAuthentication) return
     availabilityRequestGeneration += 1
     _state.value = current.copy(isEnabled = enabled, isLoading = true)
 
@@ -84,6 +86,7 @@ internal class UserProfileBiometricCredentialViewModel(
         _state.value =
           State(
             isEnabled = availability.isAvailable,
+            canEnroll = Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
             isLoading = false,
             error =
               failure?.takeUnless { it.isBiometricCredentialCancellation }?.let { it.errorMessage },
@@ -98,6 +101,7 @@ internal class UserProfileBiometricCredentialViewModel(
 
   internal data class State(
     val isEnabled: Boolean = false,
+    val canEnroll: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
   )

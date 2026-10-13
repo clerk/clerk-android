@@ -42,3 +42,7 @@ include(
 )
 
 include(":samples:prebuilt-ui")
+
+include(":detekt-rules")
+
+project(":detekt-rules").projectDir = file("config/detekt-rules")

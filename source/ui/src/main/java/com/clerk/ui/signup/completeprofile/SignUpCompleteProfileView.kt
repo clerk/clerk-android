@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
@@ -40,13 +42,9 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Public, production-friendly wrapper that pulls enablement from Clerk and owns its own state. Use
- * [SignUpCompleteProfileView] in the app, and [SignUpCompleteProfileImpl] in previews/tests to
- * inject specific values and flags.
- */
+/** Public wrapper that pulls field enablement from Clerk and owns its own state. */
 @Composable
-fun SignUpCompleteProfileView(
+public fun SignUpCompleteProfileView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -56,7 +54,6 @@ fun SignUpCompleteProfileView(
   }
 }
 
-/** Internal enum for focus tracking & label logic. */
 internal enum class CompleteProfileField {
   FirstName,
   LastName,
@@ -64,13 +61,10 @@ internal enum class CompleteProfileField {
 
 private const val LEGAL_ACCEPTED_FIELD = "legal_accepted"
 
-/** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  firstName: String = "",
-  lastName: String = "",
   firstNameEnabled: Boolean = false,
   lastNameEnabled: Boolean = false,
   legalConsentMissing: Boolean = false,
@@ -91,13 +85,6 @@ private fun SignUpCompleteProfileImpl(
   val privacyPolicyUrl = Clerk.privacyPolicyUrl
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
   val showLegalConsent = legalConsentRequired && hasLegalUrls
-
-  // Initialize authState values only once when provided (for previews/tests)
-  // This uses LaunchedEffect to prevent resetting user input on recomposition
-  androidx.compose.runtime.LaunchedEffect(Unit) {
-    if (firstName.isNotEmpty()) authState.signUpFirstName = firstName
-    if (lastName.isNotEmpty()) authState.signUpLastName = lastName
-  }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -174,7 +161,8 @@ private fun SignUpCompleteProfileImpl(
       }
 
       ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+          Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignUp.completeProfileContinueButton),
         isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabelRes()),
         isLoading = state is AuthenticationViewState.Loading,
@@ -200,8 +188,6 @@ private fun InputRow(
   val bothEnabled = firstEnabled && lastEnabled
   val lastNameFocusRequester = remember { FocusRequester() }
 
-  // When both fields are shown, first→Next moves focus; last→Done submits.
-  // When only one field is shown, Done submits directly.
   val firstNameImeAction = if (bothEnabled) ImeAction.Next else ImeAction.Done
   val firstNameKeyboardActions =
     if (bothEnabled) {
@@ -224,7 +210,8 @@ private fun InputRow(
       ) {
         if (firstEnabled) {
           ClerkTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+              Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.SignUp.completeProfileFirstName),
             value = first,
             inputContentType = ContentType.PersonFirstName,
             onValueChange = onFirstChange,
@@ -237,7 +224,10 @@ private fun InputRow(
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.fillMaxWidth().focusRequester(lastNameFocusRequester),
+            modifier =
+              Modifier.fillMaxWidth()
+                .focusRequester(lastNameFocusRequester)
+                .testTag(ClerkTestTags.Auth.SignUp.completeProfileLastName),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
@@ -257,7 +247,8 @@ private fun InputRow(
       ) {
         if (firstEnabled) {
           ClerkTextField(
-            modifier = Modifier.weight(1f),
+            modifier =
+              Modifier.weight(1f).testTag(ClerkTestTags.Auth.SignUp.completeProfileFirstName),
             value = first,
             inputContentType = ContentType.PersonFirstName,
             onValueChange = onFirstChange,
@@ -270,7 +261,10 @@ private fun InputRow(
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.weight(1f).focusRequester(lastNameFocusRequester),
+            modifier =
+              Modifier.weight(1f)
+                .focusRequester(lastNameFocusRequester)
+                .testTag(ClerkTestTags.Auth.SignUp.completeProfileLastName),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
@@ -286,83 +280,73 @@ private fun InputRow(
   }
 }
 
-@PreviewLightDark
 @Composable
-private fun Preview_BothEnabled_Filled() {
+private fun CompleteProfilePreview(
+  firstNameEnabled: Boolean,
+  lastNameEnabled: Boolean,
+  firstName: String = "",
+  lastName: String = "",
+  legalConsentMissing: Boolean = false,
+) {
   PreviewAuthStateProvider {
+    val authState = LocalAuthState.current
+    remember(authState) {
+      authState.signUpFirstName = firstName
+      authState.signUpLastName = lastName
+    }
     ClerkMaterialTheme {
       SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
+        firstNameEnabled = firstNameEnabled,
+        lastNameEnabled = lastNameEnabled,
+        legalConsentMissing = legalConsentMissing,
         onAuthComplete = {},
       )
     }
   }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview_BothEnabled_Filled() {
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+  )
 }
 
 @Preview(widthDp = 200)
 @Composable
 private fun Preview_BothEnabled_Filled_Small_Screen() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+  )
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyFirstEnabled_Empty() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = false,
-        firstName = "",
-        lastName = "",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(firstNameEnabled = true, lastNameEnabled = false)
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyLastEnabled_Partial() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = false,
-        lastNameEnabled = true,
-        firstName = "",
-        lastName = "Daniels",
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(firstNameEnabled = false, lastNameEnabled = true, lastName = "Daniels")
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_WithLegalConsent() {
-  PreviewAuthStateProvider {
-    ClerkMaterialTheme {
-      SignUpCompleteProfileImpl(
-        firstNameEnabled = true,
-        lastNameEnabled = true,
-        firstName = "Cal",
-        lastName = "Raleigh",
-        legalConsentMissing = true,
-        onAuthComplete = {},
-      )
-    }
-  }
+  CompleteProfilePreview(
+    firstNameEnabled = true,
+    lastNameEnabled = true,
+    firstName = "Cal",
+    lastName = "Raleigh",
+    legalConsentMissing = true,
+  )
 }

@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonObject
 
 /** Represents an error response from the Clerk API. */
 @Serializable
-data class ClerkErrorResponse(
+public data class ClerkErrorResponse(
   /** An array of `ClerkAPIError` objects, each describing an individual error. */
   val errors: List<Error>,
   /** An object containing additional information about the error response. */
@@ -16,7 +16,7 @@ data class ClerkErrorResponse(
 )
 
 @Serializable
-data class Error(
+public data class Error(
   /** A message that describes the error. */
   val message: String? = null,
   /** A more detailed message that describes the error. */
@@ -27,4 +27,4 @@ data class Error(
   val meta: JsonObject? = null,
 )
 
-fun ClerkErrorResponse.firstMessage(): String? = this.errors.firstOrNull()?.message
+public fun ClerkErrorResponse.firstMessage(): String? = this.errors.firstOrNull()?.message

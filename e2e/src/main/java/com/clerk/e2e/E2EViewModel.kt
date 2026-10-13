@@ -3,15 +3,16 @@ package com.clerk.e2e
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.verifyCode
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.attemptVerification
 import com.clerk.api.signup.sendEmailCode
 import com.clerk.api.signup.sendPhoneCode
+import com.clerk.api.signup.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -120,9 +121,7 @@ class E2EViewModel : ViewModel() {
       return
     }
 
-    when (
-      val result = signUp.attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
-    ) {
+    when (val result = signUp.verifyCode(code, VerificationType.PHONE)) {
       is ClerkResult.Success -> completeVerifiedSignUp(result.value, code)
       is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
     }
@@ -145,12 +144,7 @@ class E2EViewModel : ViewModel() {
   private suspend fun verifySignUpEmail(signUp: SignUp, code: String) {
     when (val prepareResult = signUp.sendEmailCode()) {
       is ClerkResult.Success -> {
-        when (
-          val result =
-            prepareResult.value.attemptVerification(
-              SignUp.AttemptVerificationParams.EmailCode(code)
-            )
-        ) {
+        when (val result = prepareResult.value.verifyCode(code, VerificationType.EMAIL)) {
           is ClerkResult.Success -> completeVerifiedSignUp(result.value, code)
           is ClerkResult.Failure ->
             _customOtpState.value = CustomOtpState.Error(result.errorMessage)

@@ -5,7 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 
 /** Starts an in-session reverification flow. */
-suspend fun Session.startVerification(
+public suspend fun Session.startVerification(
   level: SessionVerification.Level
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.startVerification(
@@ -14,7 +14,6 @@ suspend fun Session.startVerification(
   )
 }
 
-/** Prepares the first factor of an in-session reverification flow. */
 internal suspend fun Session.prepareFirstFactorVerification(
   strategy: String,
   emailAddressId: String? = null,
@@ -33,21 +32,18 @@ internal suspend fun Session.prepareFirstFactorVerification(
   )
 }
 
-/** Prepares the first factor of an in-session reverification flow. */
 internal suspend fun Session.prepareFirstFactorVerification(
   params: Session.PrepareFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.prepareFirstFactorVerification(sessionId = id, params = params.toMap())
 }
 
-/** Attempts the first factor of an in-session reverification flow. */
 internal suspend fun Session.attemptFirstFactorVerification(
   params: Session.AttemptFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.attemptFirstFactorVerification(sessionId = id, params = params.toMap())
 }
 
-/** Attempts the first factor of an in-session reverification flow. */
 internal suspend fun Session.attemptFirstFactorVerification(
   strategy: String,
   code: String? = null,
@@ -66,25 +62,42 @@ internal suspend fun Session.attemptFirstFactorVerification(
   return attemptFirstFactorVerification(params)
 }
 
-/** Prepares the second factor of an in-session reverification flow. */
 internal suspend fun Session.prepareSecondFactorVerification(
   strategy: String,
   phoneNumberId: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.prepareSecondFactorVerification(
-    sessionId = id,
-    params =
-      Session.PrepareSecondFactorParams(strategy = strategy, phoneNumberId = phoneNumberId).toMap(),
+  return prepareSecondFactorVerification(
+    Session.PrepareSecondFactorParams(strategy = strategy, phoneNumberId = phoneNumberId)
   )
 }
 
-/** Attempts the second factor of an in-session reverification flow. */
+internal suspend fun Session.prepareSecondFactorVerification(
+  params: Session.PrepareSecondFactorParams
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return ClerkApi.session.prepareSecondFactorVerification(
+    sessionId = id,
+    params = params.toMap(),
+  )
+}
+
 internal suspend fun Session.attemptSecondFactorVerification(
   strategy: String,
-  code: String,
+  code: String? = null,
+  publicKeyCredential: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptSecondFactorVerification(
-    sessionId = id,
-    params = Session.AttemptSecondFactorParams(strategy = strategy, code = code).toMap(),
-  )
+  val params =
+    when {
+      publicKeyCredential != null ->
+        Session.AttemptSecondFactorParams.Passkey(publicKeyCredential = publicKeyCredential)
+      code != null -> Session.AttemptSecondFactorParams.Code(strategy = strategy, code = code)
+      else -> error("One of code or publicKeyCredential is required")
+    }
+
+  return attemptSecondFactorVerification(params)
+}
+
+internal suspend fun Session.attemptSecondFactorVerification(
+  params: Session.AttemptSecondFactorParams
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return ClerkApi.session.attemptSecondFactorVerification(sessionId = id, params = params.toMap())
 }

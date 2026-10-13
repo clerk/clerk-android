@@ -12,6 +12,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.createPasskey
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -76,19 +77,20 @@ class UserProfilePasskeyViewModelTest {
   }
 
   @Test
-  fun createPasskey_success_setsSuccessState() = runTest {
+  fun createPasskey_success_goesFromIdleStraightToSuccess() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns ClerkResult.success(mockk())
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      // No explicit Loading for createPasskey; just assert success eventually
-      awaitItem() // initial Idle
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       advanceUntilIdle()
       assertEquals(UserProfilePasskeyViewModel.State.Success, awaitItem())
+      expectNoEvents()
     }
+    coVerify(exactly = 1) { user.createPasskey() }
   }
 
   @Test
@@ -97,14 +99,16 @@ class UserProfilePasskeyViewModelTest {
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
-      awaitItem() // initial Idle
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.createPasskey()
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
     }
   }
 
   @Test
-  fun createPasskey_cancellation_resetsToIdle() = runTest {
+  fun createPasskey_cancellation_runsTheFlowAndStaysIdle() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns
@@ -117,6 +121,8 @@ class UserProfilePasskeyViewModelTest {
       advanceUntilIdle()
       expectNoEvents()
     }
+    coVerify(exactly = 1) { user.createPasskey() }
+    assertEquals(UserProfilePasskeyViewModel.State.Idle, viewModel.state.value)
   }
 
   @Test

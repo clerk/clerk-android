@@ -106,24 +106,24 @@ internal class ContentProviderSharedSessionSyncTransport(context: Context) :
     }
   }
 
-  private fun querySnapshot(uri: Uri): SharedSessionSyncSnapshot? =
-    runCatching {
-        resolver
-          .query(uri, arrayOf(SharedSessionSyncContract.SNAPSHOT_COLUMN), null, null, null)
-          ?.use { cursor ->
-            if (!cursor.moveToFirst()) return@use null
-            val columnIndex = cursor.getColumnIndex(SharedSessionSyncContract.SNAPSHOT_COLUMN)
-            if (columnIndex < 0 || cursor.isNull(columnIndex)) return@use null
-            cursor.getString(columnIndex).decodeSnapshot()
-          }
+  private fun querySnapshot(uri: Uri): SharedSessionSyncSnapshot? = runCatching {
+    resolver
+      .query(uri, arrayOf(SharedSessionSyncContract.SNAPSHOT_COLUMN), null, null, null)
+      ?.use { cursor ->
+        if (!cursor.moveToFirst()) return@use null
+        val columnIndex = cursor.getColumnIndex(SharedSessionSyncContract.SNAPSHOT_COLUMN)
+        if (columnIndex < 0 || cursor.isNull(columnIndex)) return@use null
+        cursor.getString(columnIndex).decodeSnapshot()
       }
-      .onFailure { error ->
-        ClerkLog.w("Failed to read shared Clerk state from $uri: ${error.message}")
-      }
-      .getOrNull()
+  }
+    .onFailure { error ->
+      ClerkLog.w("Failed to read shared Clerk state from $uri: ${error.message}")
+    }
+    .getOrNull()
 
-  private fun String.decodeSnapshot(): SharedSessionSyncSnapshot? =
-    runCatching { SharedSessionSyncSnapshot.decode(this) }
-      .onFailure { error -> ClerkLog.w("Failed to decode shared Clerk state: ${error.message}") }
-      .getOrNull()
+  private fun String.decodeSnapshot(): SharedSessionSyncSnapshot? = runCatching {
+    SharedSessionSyncSnapshot.decode(this)
+  }
+    .onFailure { error -> ClerkLog.w("Failed to decode shared Clerk state: ${error.message}") }
+    .getOrNull()
 }

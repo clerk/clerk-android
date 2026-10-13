@@ -9,6 +9,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.Session.SessionStatus
 import com.clerk.api.session.SessionActivity
 import com.clerk.api.session.isThisDevice
+import com.clerk.api.session.revoke
 import com.clerk.api.user.User
 import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -24,7 +25,10 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -110,6 +114,56 @@ class UserProfileSecurityViewModelTest {
       if (item is UserProfileSecurityViewModel.State.Loading) item = awaitItem()
       assertEquals(UserProfileSecurityViewModel.State.Error("fail"), item)
     }
+  }
+
+  @Test
+  fun signOut_success_removesTheRevokedDeviceFromTheList() = runTest {
+    val current = session(id = "current", lastActiveAt = 200L)
+    val other = session(id = "other", lastActiveAt = 100L)
+    val viewModel = loadedViewModel(current, other)
+    coEvery { other.revoke() } returns ClerkResult.success(other)
+    var reportedError: String? = null
+
+    viewModel.signOut(other, onError = { reportedError = it })
+    advanceUntilIdle()
+
+    assertEquals(UserProfileSecurityViewModel.State.Success(listOf(current)), viewModel.state.value)
+    assertNull(reportedError)
+  }
+
+  @Test
+  fun signOut_failure_keepsTheListAndReportsTheError() = runTest {
+    val current = session(id = "current", lastActiveAt = 200L)
+    val other = session(id = "other", lastActiveAt = 100L)
+    val viewModel = loadedViewModel(current, other)
+    coEvery { other.revoke() } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(Error(longMessage = "denied"))))
+    var reportedError: String? = null
+
+    viewModel.signOut(other, onError = { reportedError = it })
+    advanceUntilIdle()
+
+    assertEquals(
+      UserProfileSecurityViewModel.State.Success(listOf(current, other)),
+      viewModel.state.value,
+    )
+    assertEquals("denied", reportedError)
+  }
+
+  private fun TestScope.loadedViewModel(vararg sessions: Session): UserProfileSecurityViewModel {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    sessions.forEachIndexed { index, session ->
+      every { session.isThisDevice } returns (index == 0)
+    }
+    coEvery { user.activeSessions() } returns ClerkResult.success(sessions.toList())
+    val viewModel = UserProfileSecurityViewModel()
+    advanceUntilIdle()
+    assertEquals(
+      UserProfileSecurityViewModel.State.Success(sessions.toList()),
+      viewModel.state.value,
+    )
+    return viewModel
   }
 
   private fun session(id: String, lastActiveAt: Long, hasActivity: Boolean = true): Session =

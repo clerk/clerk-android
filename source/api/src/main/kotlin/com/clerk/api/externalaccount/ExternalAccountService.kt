@@ -12,69 +12,30 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.sso.SSOCancellationException
 import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
-/**
- * Internal service that handles external account connections for the Clerk SDK.
- *
- * This service manages the process of connecting external OAuth accounts (Google, Facebook, GitHub,
- * etc.) to existing user accounts. It allows already signed-in users to link their account with
- * external providers for future authentication.
- *
- * ## Key Features:
- * - External account connection for existing users
- * - OAuth provider authorization flows
- * - Account verification and status checking
- * - Automatic cleanup of pending connection state
- * - Error handling and logging throughout the flow
- *
- * The external provider must be enabled in the Clerk Dashboard settings before it can be used.
- */
 internal object ExternalAccountService {
-  /**
-   * Tracks the current pending external account connection flow. This deferred completes when the
-   * external account connection process finishes.
-   */
   private var currentPendingExternalAccountConnection:
     CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>? =
     null
 
-  /**
-   * Stores the ID of the external account being connected. Internal visibility allows
-   * SSOManagerActivity (which starts in a new task) to check for its presence and determine if
-   * we're in an external connection flow or a sign in/sign up flow.
-   */
   private var currentPendingExternalAccountConnectionId: String? = null
 
-  /**
-   * Initiates the process of connecting an external account to an existing user.
-   *
-   * This method allows already signed-in users to link their account with external providers (such
-   * as Google, Facebook, GitHub, etc.) for future authentication. The external provider must be
-   * enabled in the Clerk Dashboard settings.
-   *
-   * The process involves:
-   * 1. Creating an external account connection request
-   * 2. Redirecting the user to the external provider for authorization
-   * 3. Handling the callback to complete the connection
-   * 4. Verifying the connection was successful
-   *
-   * @param params The parameters for creating the external account connection, including the OAuth
-   *   provider and optional redirect URLs
-   * @return A [ClerkResult] containing the connected [ExternalAccount] on success, or
-   *   [ClerkErrorResponse] on failure
-   */
   suspend fun connectExternalAccount(
     params: User.CreateExternalAccountParams
   ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
     HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
-    // Clear any existing pending external account connections
-    currentPendingExternalAccountConnection = null
+    cancelPendingExternalAccountConnection(EXTERNAL_CONNECTION_SUPERSEDED)
     val initialResult = ClerkApi.user.createExternalAccount(params.toMap())
     return when (initialResult) {
       is ClerkResult.Failure -> {
@@ -83,29 +44,41 @@ internal object ExternalAccountService {
       }
       is ClerkResult.Success -> {
         ClerkLog.d("External account creation initiated: $initialResult")
-        val externalUrl =
-          requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
-            "External verification redirect URL is missing"
-          }
-        val context =
-          Clerk.applicationContext?.get()
-            ?: return ClerkResult.unknownFailure(
+        val externalUrl = initialResult.value.verification?.externalVerificationRedirectUrl
+        val context = Clerk.applicationContext?.get()
+        when {
+          externalUrl == null ->
+            localFailure(
+              code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+              longMessage = "External verification redirect URL is missing",
+            )
+          context == null ->
+            ClerkResult.unknownFailure(
               IllegalStateException(
                 "Clerk must be initialized before connecting an external account"
               )
             )
-        val completableDeferred =
-          CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
-        currentPendingExternalAccountConnection = completableDeferred
-        currentPendingExternalAccountConnectionId = initialResult.value.id
-        val intent =
-          SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
-            addFlags(FLAG_ACTIVITY_NEW_TASK)
-          }
-        context.startActivity(intent)
-        completableDeferred.await()
+          else -> awaitExternalConnection(context, initialResult.value.id, externalUrl)
+        }
       }
     }
+  }
+
+  private suspend fun awaitExternalConnection(
+    context: android.content.Context,
+    externalAccountId: String,
+    externalUrl: String,
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+    val completableDeferred =
+      CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
+    currentPendingExternalAccountConnection = completableDeferred
+    currentPendingExternalAccountConnectionId = externalAccountId
+    val intent =
+      SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
+        addFlags(FLAG_ACTIVITY_NEW_TASK)
+      }
+    context.startActivity(intent)
+    return completableDeferred.await()
   }
 
   /**
@@ -123,23 +96,32 @@ internal object ExternalAccountService {
    *
    * If any step fails, the connection is completed with an appropriate error.
    */
+  @Suppress("TooGenericExceptionCaught")
   suspend fun completeExternalConnection() {
+    ClerkLog.d("Completing external connection")
+
+    // Capture the connection this callback belongs to so a newer connection started while this
+    // completion is suspended is neither completed nor cleared by it.
+    val pendingConnection = currentPendingExternalAccountConnection
+    if (pendingConnection == null) {
+      ClerkLog.e("No pending external account connection found")
+      clearExternalConnectionState()
+      return
+    }
+
     try {
-      ClerkLog.d("Completing external connection")
-
-      val pendingConnection = currentPendingExternalAccountConnection
-      if (pendingConnection == null) {
-        ClerkLog.e("No pending external account connection found")
-        return
-      }
-
       val accountId = currentPendingExternalAccountConnectionId
       if (accountId == null) {
         completeWithError(pendingConnection, "External account ID is null")
         return
       }
 
-      Client.Companion.get().onSuccess { client ->
+      val clientResult = Client.Companion.get()
+      clientResult.onFailure { failure ->
+        ClerkLog.e("Failed to refresh client for external connection: ${failure.errorMessage}")
+        pendingConnection.complete(failure)
+      }
+      clientResult.onSuccess { client ->
         val externalAccount =
           client.sessions
             .find { it.id == client.lastActiveSessionId }
@@ -163,47 +145,37 @@ internal object ExternalAccountService {
           }
         }
       }
+    } catch (e: CancellationException) {
+      // The completing coroutine was cancelled (e.g. the callback activity was recreated). The
+      // user finished the provider flow, so report an interruption rather than hanging the waiter.
+      ClerkLog.w("External connection completion interrupted: ${e.message}")
+      pendingConnection.complete(
+        ClerkResult.Companion.unknownFailure(
+          IllegalStateException(EXTERNAL_CONNECTION_INTERRUPTED, e)
+        )
+      )
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Failed to complete external connection: ${e.message}")
-      currentPendingExternalAccountConnection?.complete(ClerkResult.Companion.unknownFailure(e))
+      pendingConnection.complete(ClerkResult.Companion.unknownFailure(e))
     } finally {
-      clearExternalConnectionState()
+      if (currentPendingExternalAccountConnection === pendingConnection) {
+        clearExternalConnectionState()
+      }
     }
   }
 
-  /**
-   * Checks if there's currently a pending external account connection.
-   *
-   * @return `true` if there's an active external account connection waiting for completion, `false`
-   *   otherwise
-   */
   fun hasPendingExternalAccountConnection(): Boolean {
     return currentPendingExternalAccountConnectionId != null
   }
 
-  /**
-   * Cancels any pending external account connection flow.
-   *
-   * This method completes any pending external account connection with a cancellation error and
-   * clears the connection state. Useful for cleanup when the connection process needs to be aborted
-   * (e.g., user navigates away, app is backgrounded, etc.).
-   */
-  fun cancelPendingExternalAccountConnection() {
+  fun cancelPendingExternalAccountConnection(reason: String = EXTERNAL_CONNECTION_CANCELLED) {
     currentPendingExternalAccountConnection?.complete(
-      ClerkResult.Companion.unknownFailure(Exception("External account connection cancelled"))
+      ClerkResult.Companion.unknownFailure(SSOCancellationException(reason))
     )
     clearExternalConnectionState()
   }
 
-  /**
-   * Completes a pending external account connection with an error result.
-   *
-   * This helper method is used internally to complete failed external account connections with a
-   * standardized error format.
-   *
-   * @param pendingConnection The deferred result to complete with an error
-   * @param message The error message describing what went wrong
-   */
   private fun completeWithError(
     pendingConnection: CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>,
     message: String,
@@ -211,39 +183,28 @@ internal object ExternalAccountService {
     pendingConnection.complete(ClerkResult.Companion.unknownFailure(Exception(message)))
   }
 
-  /**
-   * Clears the internal state related to external account connections.
-   *
-   * This method resets both the pending connection deferred and the connection ID to prepare for
-   * future external account connection attempts.
-   */
   private fun clearExternalConnectionState() {
     currentPendingExternalAccountConnection = null
     currentPendingExternalAccountConnectionId = null
   }
 
-  /**
-   * Maps a generic [ClerkResult.Failure] to a more specific failure type based on the error type.
-   *
-   * This method ensures that error results are properly categorized as API failures, HTTP failures,
-   * or unknown failures, maintaining consistency in error handling throughout the authentication
-   * flow.
-   *
-   * @param initialResult The original failure result to be mapped
-   * @return A properly typed [ClerkResult.Failure] with the appropriate error classification
-   */
   private fun mapErrorToSpecificType(
     initialResult: ClerkResult.Failure<ClerkErrorResponse>
   ): ClerkResult.Failure<ClerkErrorResponse> =
     when (initialResult.errorType) {
       ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
       ClerkResult.Failure.ErrorType.HTTP ->
-        ClerkResult.Companion.httpFailure(
-          code = initialResult.code ?: -1,
-          error = initialResult.error,
-        )
-
-      ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
+        initialResult.code?.let { code ->
+          ClerkResult.Companion.httpFailure(code = code, error = initialResult.error)
+        } ?: initialResult
+      ClerkResult.Failure.ErrorType.UNKNOWN -> initialResult
     }
+
+  private const val EXTERNAL_CONNECTION_CANCELLED = "External account connection cancelled"
+
+  private const val EXTERNAL_CONNECTION_SUPERSEDED =
+    "New external account connection started, cancelling previous attempt"
+
+  private const val EXTERNAL_CONNECTION_INTERRUPTED =
+    "External account connection was interrupted before it could complete. Please try again."
 }

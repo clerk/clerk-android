@@ -1,15 +1,14 @@
 package com.clerk.ui.userprofile.connectedaccount
 
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.reauthorize
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
 import com.clerk.api.user.User
 import com.clerk.api.user.createExternalAccount
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -20,7 +19,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,12 +40,10 @@ class AddConnectedAccountViewModelTest {
     every { Clerk.isGoogleOneTapEnabled } returns false
     mockkStatic("com.clerk.api.user.UserKt")
     mockkStatic("com.clerk.api.externalaccount.ExternalAccountKt")
-    mockkObject(SignIn.Companion)
   }
 
   @After
   fun tearDown() {
-    unmockkObject(SignIn.Companion)
     unmockkStatic("com.clerk.api.externalaccount.ExternalAccountKt")
     unmockkStatic("com.clerk.api.user.UserKt")
     unmockkAll()
@@ -124,12 +120,14 @@ class AddConnectedAccountViewModelTest {
 
   @Test
   fun googleOneTapEnabled_connectsExternalAccountInsteadOfSigningIn() = runTest {
-    val result = mockk<OAuthResult> { every { resultType } returns ResultType.SIGN_IN }
+    val result = OAuthResult(signIn = mockk())
     val user = mockk<User>()
     val account = mockk<ExternalAccount>()
     every { Clerk.user } returns user
     every { Clerk.isGoogleOneTapEnabled } returns true
-    coEvery { SignIn.authenticateWithGoogleOneTap() } returns ClerkResult.success(result)
+    val auth = mockk<Auth>()
+    every { Clerk.auth } returns auth
+    coEvery { auth.signInWithGoogleOneTap(any()) } returns ClerkResult.success(result)
     coEvery { user.createExternalAccount(any()) } returns ClerkResult.success(account)
 
     val viewModel = AddConnectedAccountViewModel()
@@ -144,6 +142,6 @@ class AddConnectedAccountViewModelTest {
       )
     }
     coVerify(exactly = 0) { account.reauthorize() }
-    coVerify(exactly = 0) { SignIn.authenticateWithGoogleOneTap(any()) }
+    coVerify(exactly = 0) { auth.signInWithGoogleOneTap(any()) }
   }
 }

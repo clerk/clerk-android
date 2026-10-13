@@ -53,10 +53,7 @@ internal fun BackupCodesView(
   onDismiss: () -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24)) {
-    BottomSheetTopBar(
-      title = stringResource(R.string.add_authenticator_application),
-      onClosePressed = onDismiss,
-    )
+    BottomSheetTopBar(title = mfaType.title(), onClosePressed = onDismiss)
     Column(
       modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).then(modifier),
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.Top),
@@ -128,7 +125,6 @@ private fun saveLinesToFileCompat(
 ) {
   try {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      // Android 10+
       val resolver = context.contentResolver
       val values =
         ContentValues().apply {
@@ -148,7 +144,6 @@ private fun saveLinesToFileCompat(
       resolver.update(fileUri, values, null, null)
       fileUri
     } else {
-      // Pre-Android 10
       val downloadsDir =
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
       if (!downloadsDir.exists()) downloadsDir.mkdirs()
@@ -197,6 +192,14 @@ internal enum class Origin {
   AuthenticatorApp,
   BackupCodes,
 }
+
+@Composable
+private fun MfaType.title() =
+  when (this) {
+    MfaType.PhoneCode -> stringResource(R.string.add_sms_code_verification)
+    MfaType.AuthenticatorApp -> stringResource(R.string.add_authenticator_application)
+    MfaType.BackupCodes -> stringResource(R.string.backup_codes)
+  }
 
 @Composable
 private fun MfaType.instructions() =

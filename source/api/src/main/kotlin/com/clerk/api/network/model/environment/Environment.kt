@@ -14,6 +14,7 @@ internal data class Environment(
   @SerialName("user_settings") val userSettings: UserSettings,
   @SerialName("organization_settings")
   val organizationSettings: OrganizationSettings = OrganizationSettings(),
+  @SerialName("commerce_settings") val commerceSettings: CommerceSettings = CommerceSettings(),
   @SerialName("protect_config") val protectConfig: JsonObject? = null,
   @SerialName("frontend_api") val frontendApi: String? = null,
 ) {
@@ -92,8 +93,6 @@ internal data class Environment(
         authConfig.nativeSettings.biometricCredentialPromptAfterSignUpEnabled
 
   companion object {
-
-    /** Fetches the environment configuration from the Clerk API. */
     suspend fun get(): ClerkResult<Environment, ClerkErrorResponse> = ClerkApi.environment.get()
   }
 }

@@ -28,12 +28,12 @@ This sample app demonstrates the basic integration of Clerk authentication in an
    ```
 
 2. **Add your Clerk Publishable Key**:
-   
+
    Open the `gradle.properties` file in the project root and add your publishable key:
    ```properties
    QUICKSTART_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
    ```
-   
+
    > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
 
 

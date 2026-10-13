@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonObject
  * challenges remain compatible with older Clerk Android SDK versions.
  */
 @Serializable(with = ProtectCheckResourceSerializer::class)
-class ProtectCheckResource internal constructor(internal val raw: JsonObject) {
+public class ProtectCheckResource internal constructor(internal val raw: JsonObject) {
   override fun equals(other: Any?): Boolean =
     this === other || (other is ProtectCheckResource && raw == other.raw)
 

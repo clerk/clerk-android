@@ -6,6 +6,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.session.Session
+import com.clerk.api.session.revoke
 import com.clerk.api.user.activeSessions
 import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.userprofile.security.device.sortedForDeviceDisplay
@@ -31,6 +32,20 @@ internal class UserProfileSecurityViewModel : ViewModel() {
           .onSuccess { _state.value = State.Success(it.sortedForDeviceDisplay()) }
           .onFailure { _state.value = State.Error(it.errorMessage) }
       }
+    }
+  }
+
+  fun signOut(session: Session, onError: (String?) -> Unit) {
+    viewModelScope.launch {
+      session
+        .revoke()
+        .onSuccess {
+          val current = _state.value
+          if (current is State.Success) {
+            _state.value = State.Success(current.sessions.filterNot { it.id == session.id })
+          }
+        }
+        .onFailure { onError(it.errorMessage) }
     }
   }
 

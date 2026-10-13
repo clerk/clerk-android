@@ -13,6 +13,8 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Fields.STRATEGY
+import com.clerk.api.auth.createSignIn
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
@@ -20,14 +22,23 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
+import com.clerk.api.network.serialization.catchingClerkResult
+import com.clerk.api.network.serialization.localFailure
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.session.attemptFirstFactorVerification
+import com.clerk.api.session.attemptSecondFactorVerification
 import com.clerk.api.session.prepareFirstFactorVerification
+import com.clerk.api.session.prepareSecondFactorVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
+import com.clerk.api.signin.attemptSecondFactorImpl
+import com.clerk.api.signin.prepareSecondFactor
+import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.GoogleCredentialManagerImpl
 import com.clerk.api.sso.GoogleSignInService
+import com.clerk.api.sso.OAuthResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -36,47 +47,22 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * Service responsible for authenticating users with Google credentials and passkeys.
- *
- * This service handles the complete authentication flow for multiple credential types including:
- * - **Passkey authentication**: WebAuthn-based authentication using biometric or device credentials
- * - **Password authentication**: Traditional username/password authentication
- * - **Google authentication**: Sign-in using Google ID tokens through Credential Manager
- *
- * ## Authentication Flow
- * 1. Creates a sign-in session with the appropriate strategy
- * 2. Requests credentials from Android Credential Manager
- * 3. Presents available credentials to the user for selection
- * 4. Processes the selected credential based on its type
- * 5. Completes authentication with the Clerk API
- *
- * The service integrates with Android's Credential Manager API to provide a unified authentication
- * experience across different credential types.
- *
- * @see PasskeyCredentialManager
- * @see GoogleSignInService
- */
 @Suppress("TooManyFunctions")
 internal object GoogleCredentialAuthenticationService {
-
-  /** The credential manager used for passkey operations. */
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
-  /** The Google sign-in service used for Google ID token authentication. */
   private var googleSignInService: GoogleSignInService = GoogleSignInService()
 
-  /** The Google credential manager used for Google ID token operations. */
   private val googleCredentialManager = GoogleCredentialManagerImpl()
 
-  /**
-   * Sets the credential manager for testing purposes.
-   *
-   * @param manager The credential manager implementation to use
-   */
   @VisibleForTesting
   internal fun setCredentialManager(manager: PasskeyCredentialManager) {
     credentialManager = manager
+  }
+
+  @VisibleForTesting
+  internal fun setGoogleSignInService(service: GoogleSignInService) {
+    googleSignInService = service
   }
 
   /**
@@ -98,11 +84,13 @@ internal object GoogleCredentialAuthenticationService {
    *   available credentials will be presented to the user.
    * @param credentialTypes List of credential types to request from the system. Defaults to only
    *   passkey credentials. Can include [SignIn.CredentialType.PASSKEY],
-   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE].
+   *   [SignIn.CredentialType.PASSWORD], and [SignIn.CredentialType.GOOGLE]. A selected saved
+   *   password signs in with a new password-strategy sign-in. A Google account that has no Clerk
+   *   user is transferred to a sign-up; a completed sign-up is returned as a completed [SignIn]
+   *   carrying the new session ID, and an incomplete one returns a failure.
    * @return A [ClerkResult] containing either a successful [SignIn] object on authentication
-   *   success, or a [ClerkErrorResponse] detailing the failure reason.
-   * @throws Exception If credential retrieval fails or an unexpected error occurs during
-   *   authentication.
+   *   success, or a [ClerkErrorResponse] detailing the failure reason. Credential retrieval errors
+   *   are returned as failures; only coroutine cancellation is thrown.
    *
    * ### Example usage:
    * ```kotlin
@@ -128,52 +116,31 @@ internal object GoogleCredentialAuthenticationService {
       "Starting passkey sign-in; preferImmediatelyAvailableCredentials=" +
         preferImmediatelyAvailableCredentials
     )
+    val activity = Clerk.credentialActivity()
     return when {
       credentialTypes.isEmpty() -> {
         ClerkResult.unknownFailure(IllegalStateException("No credential types specified"))
       }
 
-      Clerk.credentialActivity() == null -> {
+      activity == null -> {
         ClerkLog.e("Passkey sign-in requires an active Activity")
         ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
       }
 
       else -> {
-        val activity = Clerk.credentialActivity()!!
         when (val createResult = createSignIn()) {
           is ClerkResult.Success -> {
             val signIn = createResult.value
-            try {
-              val credential =
-                getCredentialFromManager(
-                  activity = activity,
-                  nonce = signIn.firstFactorVerification?.nonce,
-                  allowedCredentialIds = allowedCredentialIds,
-                  credentialRequestTypes = credentialTypes,
-                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
-                )
-              handleCredential(credential, signIn)
-            } catch (e: GetCredentialException) {
-              ClerkLog.e("Passkey sign-in failed: ${e.message}")
-              classifyGetCredentialFailure(e, credentialTypes).also { failure ->
-                clearSuppressedAutomaticSignInAttempt(
-                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
-                  signIn = signIn,
-                  failure = failure,
-                )
-              }
-            } catch (e: CredentialFlowException) {
-              ClerkLog.e("Passkey sign-in cannot start: ${e.message}")
-              ClerkResult.unknownFailure(e).also { failure ->
-                clearSuppressedAutomaticSignInAttempt(
-                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
-                  signIn = signIn,
-                  failure = failure,
-                )
-              }
-            } catch (e: Exception) {
-              ClerkLog.e("Passkey sign-in failed: ${e.message}")
-              ClerkResult.unknownFailure(e)
+            catchingClerkResult(
+              onException = { ClerkLog.e("Passkey sign-in failed: ${it.message}") }
+            ) {
+              signInWithSelectedCredential(
+                activity = activity,
+                signIn = signIn,
+                credentialTypes = credentialTypes,
+                allowedCredentialIds = allowedCredentialIds,
+                preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+              )
             }
           }
           is ClerkResult.Failure -> {
@@ -182,6 +149,138 @@ internal object GoogleCredentialAuthenticationService {
           }
         }
       }
+    }
+  }
+
+  private suspend fun signInWithSelectedCredential(
+    activity: android.app.Activity,
+    signIn: SignIn,
+    credentialTypes: List<SignIn.CredentialType>,
+    allowedCredentialIds: List<String>,
+    preferImmediatelyAvailableCredentials: Boolean,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val nonce = signIn.firstFactorVerification?.nonce
+    if (nonce == null && SignIn.CredentialType.PASSKEY in credentialTypes) {
+      return missingPreparedVerificationNonceFailure("firstFactorVerification")
+    }
+    return try {
+      val credential =
+        getCredentialFromManager(
+          activity = activity,
+          nonce = nonce,
+          allowedCredentialIds = allowedCredentialIds,
+          credentialRequestTypes = credentialTypes,
+          preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+        )
+      handleCredential(credential, signIn)
+    } catch (e: GetCredentialException) {
+      ClerkLog.e("Passkey sign-in failed: ${e.message}")
+      classifyGetCredentialFailure(e, credentialTypes).also { failure ->
+        clearSuppressedAutomaticSignInAttempt(
+          preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+          signIn = signIn,
+          failure = failure,
+        )
+      }
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Passkey sign-in cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e).also { failure ->
+        clearSuppressedAutomaticSignInAttempt(
+          preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+          signIn = signIn,
+          failure = failure,
+        )
+      }
+    }
+  }
+
+  suspend fun authenticateWithPasskey(
+    signIn: SignIn,
+    allowedCredentialIds: List<String> = emptyList(),
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val isSecondFactorStatus =
+      signIn.status == SignIn.Status.NEEDS_SECOND_FACTOR ||
+        signIn.status == SignIn.Status.NEEDS_CLIENT_TRUST
+    val hasPasskeySecondFactor =
+      signIn.supportedSecondFactors?.any { it.strategyType == Strategy.Passkey } == true
+
+    return when {
+      !isSecondFactorStatus || !hasPasskeySecondFactor ->
+        signInWithGoogleCredential(
+          credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+          allowedCredentialIds = allowedCredentialIds,
+        )
+      else -> {
+        val activity =
+          Clerk.credentialActivity()
+            ?: return ClerkResult.unknownFailure(CredentialFlowException.MissingActivity()).also {
+              ClerkLog.e("Passkey second-factor sign-in requires an active Activity")
+            }
+        val prepareResult =
+          signIn.prepareSecondFactor(strategy = SignIn.PrepareSecondFactorStrategy.Passkey)
+        when (prepareResult) {
+          is ClerkResult.Failure -> {
+            ClerkLog.e("Failed to prepare passkey second-factor sign-in: ${prepareResult.error}")
+            prepareResult
+          }
+          is ClerkResult.Success -> {
+            val nonce = prepareResult.value.secondFactorVerification?.nonce
+            if (nonce == null) {
+              missingPreparedVerificationNonceFailure("secondFactorVerification")
+            } else {
+              attemptSignInPasskeySecondFactor(
+                activity = activity,
+                signIn = prepareResult.value,
+                allowedCredentialIds = allowedCredentialIds,
+                nonce = nonce,
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private suspend fun attemptSignInPasskeySecondFactor(
+    activity: android.app.Activity,
+    signIn: SignIn,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> =
+    catchingClerkResult(
+      onException = { ClerkLog.e("Passkey second-factor sign-in failed: ${it.message}") }
+    ) {
+      attemptSignInPasskeySecondFactorOrThrow(activity, signIn, allowedCredentialIds, nonce)
+    }
+
+  private suspend fun attemptSignInPasskeySecondFactorOrThrow(
+    activity: android.app.Activity,
+    signIn: SignIn,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return try {
+      val credential =
+        getCredentialFromManager(
+          activity = activity,
+          nonce = nonce,
+          allowedCredentialIds = allowedCredentialIds,
+          credentialRequestTypes = listOf(SignIn.CredentialType.PASSKEY),
+        )
+
+      if (credential is PublicKeyCredential) {
+        signIn.attemptSecondFactorImpl(
+          SignIn.AttemptSecondFactorParams.Passkey(credential.authenticationResponseJson)
+        )
+      } else {
+        ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
+      }
+    } catch (e: GetCredentialException) {
+      ClerkLog.e("Passkey second-factor sign-in failed: ${e.message}")
+      classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY))
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Passkey second-factor sign-in cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e)
     }
   }
 
@@ -195,10 +294,12 @@ internal object GoogleCredentialAuthenticationService {
     ) {
       return
     }
-    if (!Clerk.clientInitialized || Clerk.client.signIn?.id != signIn.id) return
-
-    ClerkLog.d("Clearing suppressed automatic passkey sign-in attempt ${signIn.id}")
-    Clerk.updateClient(Clerk.client.copy(signIn = null))
+    val cleared = Clerk.mutateClient { client ->
+      client.copy(signIn = null).takeIf { client.signIn?.id == signIn.id }
+    }
+    if (cleared) {
+      ClerkLog.d("Cleared suppressed automatic passkey sign-in attempt ${signIn.id}")
+    }
   }
 
   /**
@@ -210,6 +311,7 @@ internal object GoogleCredentialAuthenticationService {
   suspend fun verifySessionWithPasskey(
     session: Session,
     allowedCredentialIds: List<String> = emptyList(),
+    level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     ClerkLog.d("Starting passkey session reverification")
     val activity =
@@ -218,35 +320,64 @@ internal object GoogleCredentialAuthenticationService {
           ClerkLog.e("Passkey session reverification requires an active Activity")
         }
 
-    return verifySessionWithPasskey(activity, session, allowedCredentialIds)
+    return verifySessionWithPasskey(activity, session, allowedCredentialIds, level)
   }
 
   private suspend fun verifySessionWithPasskey(
     activity: android.app.Activity,
     session: Session,
     allowedCredentialIds: List<String>,
+    level: SessionVerification.Level,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-    val prepareResult = session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
+    if (
+      level != SessionVerification.Level.FIRST_FACTOR &&
+        level != SessionVerification.Level.SECOND_FACTOR
+    ) {
+      return ClerkResult.unknownFailure(
+        IllegalArgumentException("Passkey verification level must be first_factor or second_factor")
+      )
+    }
+
+    val prepareResult =
+      if (level == SessionVerification.Level.SECOND_FACTOR) {
+        session.prepareSecondFactorVerification(Strategy.Passkey.value)
+      } else {
+        session.prepareFirstFactorVerification(Strategy.Passkey.value)
+      }
     return when (prepareResult) {
       is ClerkResult.Failure -> {
         ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
         prepareResult
       }
       is ClerkResult.Success -> {
-        val nonce = prepareResult.value.firstFactorVerification?.nonce
+        val nonce =
+          if (level == SessionVerification.Level.SECOND_FACTOR) {
+            prepareResult.value.secondFactorVerification?.nonce
+          } else {
+            prepareResult.value.firstFactorVerification?.nonce
+          }
         if (nonce == null) {
-          missingPreparedVerificationNonceFailure()
+          missingPreparedVerificationNonceFailure(
+            if (level == SessionVerification.Level.SECOND_FACTOR) {
+              "secondFactorVerification"
+            } else {
+              "firstFactorVerification"
+            }
+          )
         } else {
-          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce)
+          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce, level)
         }
       }
     }
   }
 
-  private fun missingPreparedVerificationNonceFailure(): ClerkResult.Failure<Nothing> {
-    ClerkLog.e("Missing nonce in preparedVerification.firstFactorVerification")
-    return ClerkResult.unknownFailure(
-      IllegalStateException("Missing nonce in prepared verification")
+  private fun missingPreparedVerificationNonceFailure(
+    verificationField: String
+  ): ClerkResult.Failure<ClerkErrorResponse> {
+    ClerkLog.e("Missing nonce in prepared verification $verificationField")
+    return localFailure(
+      code = LocalFailureCodes.MISSING_RESOURCE_DATA,
+      longMessage = "Prepared passkey verification is missing the nonce",
     )
   }
 
@@ -255,6 +386,26 @@ internal object GoogleCredentialAuthenticationService {
     session: Session,
     allowedCredentialIds: List<String>,
     nonce: String,
+    level: SessionVerification.Level,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> =
+    catchingClerkResult(
+      onException = { ClerkLog.e("Passkey session reverification failed: ${it.message}") }
+    ) {
+      attemptSessionPasskeyVerificationOrThrow(
+        activity,
+        session,
+        allowedCredentialIds,
+        nonce,
+        level,
+      )
+    }
+
+  private suspend fun attemptSessionPasskeyVerificationOrThrow(
+    activity: android.app.Activity,
+    session: Session,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+    level: SessionVerification.Level,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     return try {
       val credential =
@@ -268,9 +419,16 @@ internal object GoogleCredentialAuthenticationService {
       if (credential is PublicKeyCredential) {
         ClerkLog.d("Attempting passkey session reverification")
         val result =
-          session.attemptFirstFactorVerification(
-            Session.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
-          )
+          if (level == SessionVerification.Level.SECOND_FACTOR) {
+            session.attemptSecondFactorVerification(
+              strategy = Strategy.Passkey.value,
+              publicKeyCredential = credential.authenticationResponseJson,
+            )
+          } else {
+            session.attemptFirstFactorVerification(
+              Session.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
+            )
+          }
 
         if (result is ClerkResult.Failure) {
           ClerkLog.e("Passkey session reverification failed: ${result.error}")
@@ -286,31 +444,12 @@ internal object GoogleCredentialAuthenticationService {
     } catch (e: CredentialFlowException) {
       ClerkLog.e("Passkey session reverification cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
-    } catch (e: Exception) {
-      ClerkLog.e("Passkey session reverification failed: ${e.message}")
-      ClerkResult.unknownFailure(e)
     }
   }
 
-  /**
-   * Creates a new sign-in session configured for passkey authentication.
-   *
-   * This method initiates a sign-in session with the Clerk API using the passkey strategy. The
-   * returned sign-in object contains the WebAuthn challenge and other authentication data needed
-   * for credential-based authentication.
-   *
-   * The sign-in session includes:
-   * - A unique session identifier
-   * - WebAuthn challenge data in the first factor verification nonce
-   * - Supported authentication factors
-   * - Session status and metadata
-   *
-   * @return A [ClerkResult] containing either a [SignIn] session configured for passkey
-   *   authentication, or a [ClerkErrorResponse] if session creation fails.
-   */
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
     return ClerkApi.signIn.createSignIn(
-      mapOf(STRATEGY to PasskeyHelper.passkeyStrategy, "locale" to Clerk.locale.value.orEmpty())
+      mapOf(STRATEGY to Strategy.Passkey.value, "locale" to Clerk.locale.value.orEmpty())
     )
   }
 
@@ -358,7 +497,7 @@ internal object GoogleCredentialAuthenticationService {
       } catch (e: NoCredentialException) {
         ClerkLog.e("No credential available: ${e.message}")
         throw e
-      } catch (e: Exception) {
+      } catch (e: GetCredentialException) {
         ClerkLog.e("Error getting credential: ${e.message}")
         throw e
       }
@@ -366,26 +505,6 @@ internal object GoogleCredentialAuthenticationService {
     return result.credential
   }
 
-  /**
-   * Builds a credential request for the Android Credential Manager.
-   *
-   * This method constructs a [GetCredentialRequest] that can handle multiple credential types
-   * simultaneously. The request will include options for each requested credential type:
-   * - **Passkey credentials**: Uses WebAuthn parameters from the sign-in session
-   * - **Password credentials**: Requests saved password credentials from the system
-   * - **Google ID credentials**: Requests Google ID token credentials for OAuth authentication
-   *
-   * The credential manager will present all available credentials matching the requested types and
-   * allow the user to select their preferred authentication method.
-   *
-   * @param nonce The JSON-encoded WebAuthn challenge metadata.
-   * @param allowedCredentialIds Optional list of credential IDs to restrict selection to specific
-   *   credentials. If empty, all available credentials of the requested types will be included.
-   * @param credentialRequestTypes List of credential types to include in the request. Each type
-   *   will be converted to the appropriate [CredentialOption] for the credential manager.
-   * @return A [GetCredentialRequest] configured with the appropriate credential options for the
-   *   specified types and restrictions.
-   */
   private fun buildCredentialRequest(
     nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
@@ -403,9 +522,7 @@ internal object GoogleCredentialAuthenticationService {
         SignIn.CredentialType.PASSWORD -> requestOptions.add(GetPasswordOption())
         SignIn.CredentialType.GOOGLE ->
           requestOptions.add(googleCredentialManager.getGoogleIdOption())
-        SignIn.CredentialType.UNKNOWN -> {
-          // Skip unknown credential types
-        }
+        SignIn.CredentialType.UNKNOWN -> {}
       }
     }
 
@@ -450,7 +567,10 @@ internal object GoogleCredentialAuthenticationService {
   ): GetPasskeyRequest {
     val requestJson = Json.parseToJsonElement(requireNotNull(nonce)).jsonObject
     val challenge = requestJson.getValue("challenge").jsonPrimitive.content
-    val rpId = requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()
+    val rpId =
+      checkNotNull(requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()) {
+        "Missing passkey relying party id"
+      }
     val allowCredentials =
       allowedCredentialIds.toAllowCredentials().ifEmpty { requestJson.passkeyAllowCredentials() }
     ClerkLog.d(
@@ -466,19 +586,6 @@ internal object GoogleCredentialAuthenticationService {
     )
   }
 
-  /**
-   * Builds a public key credential option for the credential request.
-   *
-   * This method serializes the WebAuthn request into JSON format and wraps it in a
-   * [GetPublicKeyCredentialOption] for use with the Android Credential Manager. The serialized
-   * request follows the WebAuthn specification format and includes all necessary parameters for
-   * passkey authentication.
-   *
-   * @param webAuthnRequest The WebAuthn request parameters containing the challenge, allowed
-   *   credentials, timeout, and other authentication metadata.
-   * @return A [GetPublicKeyCredentialOption] containing the serialized WebAuthn request in JSON
-   *   format, ready for use with the credential manager.
-   */
   private fun buildPublicKeyCredentialOption(
     webAuthnRequest: GetPasskeyRequest
   ): GetPublicKeyCredentialOption {
@@ -494,8 +601,8 @@ internal object GoogleCredentialAuthenticationService {
    * and routes them to the appropriate authentication handlers:
    * - **[PublicKeyCredential]**: Handles WebAuthn passkey authentication by extracting the
    *   authentication response and completing the first factor verification with Clerk
-   * - **[PasswordCredential]**: Handles password-based authentication (currently returns success
-   *   without processing for demonstration purposes)
+   * - **[PasswordCredential]**: Signs in with the saved identifier and password using a new
+   *   password-strategy sign-in
    * - **[CustomCredential]**: Handles custom credentials such as Google ID tokens by delegating to
    *   specialized handlers like [GoogleSignInService]
    *
@@ -521,8 +628,7 @@ internal object GoogleCredentialAuthenticationService {
       }
 
       is PasswordCredential -> {
-        ClerkLog.d("Handling password credential")
-        ClerkResult.success(signIn)
+        handlePasswordCredential(credential)
       }
 
       is CustomCredential -> {
@@ -535,27 +641,6 @@ internal object GoogleCredentialAuthenticationService {
     }
   }
 
-  /**
-   * Handles authentication with a public key credential (passkey).
-   *
-   * This method processes WebAuthn passkey authentication by extracting the authentication response
-   * from the credential and using it to complete the first factor verification with the Clerk API.
-   * The authentication response contains the cryptographic proof that the user possesses the
-   * private key corresponding to the registered passkey.
-   *
-   * The process involves:
-   * 1. Extracting the authentication response JSON from the credential
-   * 2. Creating a passkey authentication attempt with the response
-   * 3. Submitting the attempt to complete the first factor verification
-   * 4. Processing the result and handling any authentication errors
-   *
-   * @param credential The public key credential containing the WebAuthn authentication response and
-   *   other metadata from the passkey authentication ceremony.
-   * @param signIn The sign-in session to authenticate against. This contains the challenge and
-   *   other session state needed for verification.
-   * @return A [ClerkResult] containing either the updated [SignIn] object with successful
-   *   authentication state, or a [ClerkErrorResponse] if passkey authentication fails.
-   */
   private suspend fun handlePublicKeyCredential(
     credential: PublicKeyCredential,
     signIn: SignIn,
@@ -572,27 +657,6 @@ internal object GoogleCredentialAuthenticationService {
     return result
   }
 
-  /**
-   * Handles authentication with a custom credential.
-   *
-   * This method processes custom credential types that don't fit into the standard credential
-   * categories. Currently, it specifically handles Google ID token credentials by delegating to the
-   * [GoogleSignInService], but the architecture allows for easy extension to support additional
-   * custom credential types.
-   *
-   * The method:
-   * 1. Identifies the type of custom credential received
-   * 2. Routes Google ID token credentials to the appropriate Google sign-in handler
-   * 3. Processes the authentication result and extracts the sign-in object
-   * 4. Returns a consistent [ClerkResult] interface regardless of the custom credential type
-   *
-   * @param credential The custom credential to process. Currently supports
-   *   [GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL] for Google OAuth authentication.
-   *   Additional custom credential types can be added as needed.
-   * @return A [ClerkResult] containing either a successful [SignIn] object extracted from the
-   *   custom credential authentication result, or a [ClerkErrorResponse] if the custom credential
-   *   authentication fails.
-   */
   private suspend fun handleCustomCredential(
     credential: CustomCredential
   ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -601,13 +665,68 @@ internal object GoogleCredentialAuthenticationService {
     }
 
     return when (val result = googleSignInService.handleSignInResult(credential)) {
-      is ClerkResult.Success -> {
-        ClerkResult.success(result.value.signIn!!)
-      }
+      is ClerkResult.Success -> result.value.toSignInResult()
       is ClerkResult.Failure -> {
         ClerkLog.e("Google sign-in failed: ${result.error}")
         result
       }
+    }
+  }
+
+  /**
+   * Signs in with a saved password selected from the Credential Manager.
+   *
+   * The sign-in created up front uses the passkey strategy and cannot be reused for a password
+   * attempt, so a new sign-in is created with the password strategy. Creating it replaces the
+   * client's in-progress passkey sign-in.
+   */
+  private suspend fun handlePasswordCredential(
+    credential: PasswordCredential
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    ClerkLog.d("Attempting password authentication with saved credential")
+    val result =
+      Clerk.auth.createSignIn(
+        SignIn.CreateParams.Strategy.Password(
+          identifier = credential.id,
+          password = credential.password,
+        )
+      )
+
+    if (result is ClerkResult.Failure) {
+      ClerkLog.e("Password authentication failed: ${result.error}")
+    }
+
+    return result
+  }
+
+  /**
+   * Maps a Google ID token result onto this service's [SignIn]-typed result.
+   *
+   * New Google users are transferred to a sign-up, so the result can hold a [SignUp] instead of a
+   * [SignIn]. A completed sign-up has already created a session and is reported as a completed
+   * sign-in carrying that session (its ID is the sign-up's ID, since no sign-in exists). A sign-up
+   * that still needs more fields is reported as a [CredentialFlowException.SignUpIncomplete]
+   * failure; it remains on the client's sign-up so the caller can continue it.
+   */
+  private fun OAuthResult.toSignInResult(): ClerkResult<SignIn, ClerkErrorResponse> {
+    val completedSignIn = signIn
+    val transferredSignUp = signUp
+    return when {
+      completedSignIn != null -> ClerkResult.success(completedSignIn)
+      transferredSignUp != null && transferredSignUp.status == SignUp.Status.COMPLETE ->
+        ClerkResult.success(
+          SignIn(
+            id = transferredSignUp.id,
+            status = SignIn.Status.COMPLETE,
+            identifier = transferredSignUp.emailAddress,
+            createdSessionId = transferredSignUp.createdSessionId,
+          )
+        )
+      transferredSignUp != null -> {
+        ClerkLog.d("Google sign-in transferred to a sign-up that needs more fields")
+        ClerkResult.unknownFailure(CredentialFlowException.SignUpIncomplete())
+      }
+      else -> ClerkResult.unknownFailure(IllegalStateException("Google sign-in returned no result"))
     }
   }
 }
@@ -620,25 +739,25 @@ private fun JsonObject.passkeyRpId(): String? {
 
   return topLevelRpId
     ?: runCatching {
-        this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-      }
+      this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+    }
       .getOrNull()
 }
 
 private fun JsonObject.passkeyAllowCredentials(): List<Map<String, String>> {
   return runCatching {
-      this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
-        val credentialJson = credential.jsonObject
-        val credentialId =
-          credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: return@mapNotNull null
-        val credentialType =
-          credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-            ?: "public-key"
+    this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
+      val credentialJson = credential.jsonObject
+      val credentialId =
+        credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: return@mapNotNull null
+      val credentialType =
+        credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+          ?: "public-key"
 
-        mapOf("type" to credentialType, "id" to credentialId)
-      }
+      mapOf("type" to credentialType, "id" to credentialId)
     }
+  }
     .getOrNull()
     .orEmpty()
 }

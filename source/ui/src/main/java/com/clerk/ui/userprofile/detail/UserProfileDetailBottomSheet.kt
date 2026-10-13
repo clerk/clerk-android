@@ -30,11 +30,13 @@ internal fun UserProfileDetailBottomSheet(
   val scope = rememberCoroutineScope()
 
   fun programmaticDismiss() {
-    scope.launch {
-      sheetState.hide()
-    }.invokeOnCompletion {
-      onDismissRequest()
-    }
+    scope
+      .launch {
+        sheetState.hide()
+      }
+      .invokeOnCompletion {
+        onDismissRequest()
+      }
   }
 
   ModalBottomSheet(

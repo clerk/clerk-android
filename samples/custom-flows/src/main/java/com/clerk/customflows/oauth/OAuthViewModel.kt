@@ -11,7 +11,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.ResultType
+import com.clerk.api.sso.OAuthResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -39,19 +39,19 @@ class OAuthViewModel : ViewModel() {
       Clerk.auth
         .signInWithOAuth(provider)
         .onSuccess {
-          when (it.resultType) {
-            ResultType.SIGN_IN -> {
+          when (val outcome = it.outcome) {
+            is OAuthResult.Outcome.SignIn -> {
               // The OAuth flow resulted in a sign in
-              if (it.signIn?.status == SignIn.Status.COMPLETE) {
+              if (outcome.signIn.status == SignIn.Status.COMPLETE) {
                 _uiState.value = UiState.Authenticated
               } else {
                 // If the status is not complete, check why. User may need to
                 // complete further steps.
               }
             }
-            ResultType.SIGN_UP -> {
+            is OAuthResult.Outcome.SignUp -> {
               // The OAuth flow resulted in a sign up
-              if (it.signUp?.status == SignUp.Status.COMPLETE) {
+              if (outcome.signUp.status == SignUp.Status.COMPLETE) {
                 _uiState.value = UiState.Authenticated
               } else {
                 // If the status is not complete, check why. User may need to
@@ -59,8 +59,8 @@ class OAuthViewModel : ViewModel() {
               }
             }
 
-            ResultType.UNKNOWN -> {
-              ClerkLog.e("Unknown result type after OAuth redirect")
+            OAuthResult.Outcome.Empty -> {
+              ClerkLog.e("OAuth redirect returned neither a sign in nor a sign up")
             }
           }
         }

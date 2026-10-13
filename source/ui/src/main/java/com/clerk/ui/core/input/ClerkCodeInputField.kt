@@ -96,7 +96,7 @@ private const val DEFAULT_OTP_LENGTH = 6
  * @param showResend Whether to show the resend code link and timer. Defaults to `true`.
  */
 @Composable
-fun ClerkCodeInputField(
+public fun ClerkCodeInputField(
   onTextChange: (String) -> Unit,
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
@@ -105,14 +105,9 @@ fun ClerkCodeInputField(
   showResend: Boolean = true,
   clerkTheme: ClerkTheme? = null,
 ) {
-  var timeLeft by remember { mutableIntStateOf(timerDuration) }
+  val resendTimer = remember(timerDuration) { ResendTimerState(timerDuration) }
 
-  LaunchedEffect(Unit) {
-    while (timeLeft > 0) {
-      delay(DEFAULT_DELAY)
-      timeLeft--
-    }
-  }
+  LaunchedEffect(resendTimer, resendTimer.restartCount) { resendTimer.countDown() }
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
@@ -130,13 +125,41 @@ fun ClerkCodeInputField(
 
         SupportingText(verificationState)
         if (showResend) {
-          if (timeLeft > 0) {
-            IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, timeLeft))
+          if (resendTimer.secondsRemaining > 0) {
+            IconTextRow(
+              text =
+                stringResource(R.string.didn_t_receive_a_code_resend, resendTimer.secondsRemaining)
+            )
           } else {
-            ResendCodeText(onClick = onClickResend)
+            ResendCodeText(
+              onClick = {
+                resendTimer.restart()
+                onClickResend()
+              }
+            )
           }
         }
       }
+    }
+  }
+}
+
+internal class ResendTimerState(private val durationSeconds: Int) {
+  var secondsRemaining by mutableIntStateOf(durationSeconds)
+    private set
+
+  var restartCount by mutableIntStateOf(0)
+    private set
+
+  fun restart() {
+    secondsRemaining = durationSeconds
+    restartCount++
+  }
+
+  suspend fun countDown() {
+    while (secondsRemaining > 0) {
+      delay(DEFAULT_DELAY)
+      secondsRemaining--
     }
   }
 }
@@ -186,11 +209,6 @@ private fun OtpField(
   )
 }
 
-/**
- * Displays supporting text based on the [VerificationState] of the OTP input.
- *
- * @param verificationState The current state of the verification process.
- */
 @Composable
 private fun SupportingText(verificationState: VerificationState) {
   when (verificationState) {
@@ -218,11 +236,6 @@ private fun SupportingText(verificationState: VerificationState) {
   }
 }
 
-/**
- * Displays a link to resend the verification code.
- *
- * @param onClick Callback invoked when the resend link is clicked.
- */
 @Composable
 private fun ResendCodeText(onClick: () -> Unit) {
   val annotatedString = buildAnnotatedString {
@@ -241,7 +254,6 @@ private fun ResendCodeText(onClick: () -> Unit) {
   )
 }
 
-/** Displays a row indicating that the verification code is being verified. */
 @Composable
 private fun VerifyingCodeRow() {
   Row(
@@ -262,7 +274,6 @@ private fun VerifyingCodeRow() {
   }
 }
 
-/** Returns the text selection colors for the OTP input field. */
 @Composable
 private fun rememberSelectionColors(): TextSelectionColors {
   return TextSelectionColors(
@@ -271,15 +282,6 @@ private fun rememberSelectionColors(): TextSelectionColors {
   )
 }
 
-/**
- * Displays a row with an icon and text.
- *
- * @param text The text to display.
- * @param modifier Optional [Modifier] to be applied to the component.
- * @param leadingIconTint The color of the leading icon.
- * @param leadingIconResId The resource ID of the leading icon.
- * @param textColor The color of the text.
- */
 @Composable
 private fun IconTextRow(
   text: String,
@@ -300,14 +302,6 @@ private fun IconTextRow(
   }
 }
 
-/**
- * Displays a row of boxes for the OTP input.
- *
- * @param otpText The current OTP text.
- * @param isFocused Whether the OTP input field is focused.
- * @param innerTextField The inner text field.
- * @param isError Whether an error occurred.
- */
 @Composable
 private fun OtpBoxRow(
   otpText: String,
@@ -340,14 +334,6 @@ private fun OtpBoxRow(
   }
 }
 
-/**
- * Displays a single box for the OTP input.
- *
- * @param modifier The modifier for the box.
- * @param char The character to display in the box.
- * @param isCurrentBox Whether this box is the current one.
- * @param isError Whether an error occurred.
- */
 @Composable
 private fun OtpBox(
   char: String,
@@ -383,7 +369,6 @@ private fun OtpBox(
   }
 }
 
-/** Displays a blinking caret in the OTP box. */
 @Composable
 private fun BlinkingCaret() {
   val blinkAlpha by

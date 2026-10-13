@@ -1,12 +1,14 @@
 package com.clerk.api.organizations
 
 import com.clerk.api.Clerk
+import com.clerk.api.billing.BillingPaymentMethod
 import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.user.currentSessionId
 import java.io.File
@@ -41,7 +43,7 @@ import kotlinx.serialization.json.JsonElement
  *   be set only from the Backend API.
  */
 @Serializable
-data class Organization(
+public data class Organization(
   val id: String,
   val name: String,
   val slug: String?,
@@ -55,7 +57,7 @@ data class Organization(
   val updatedAt: Long,
   val publicMetadata: JsonElement,
 ) {
-  companion object {
+  public companion object {
     /**
      * Creates a new organization with the specified name.
      *
@@ -63,7 +65,7 @@ data class Organization(
      * @return A [ClerkResult] containing the created [Organization] on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(
+    public suspend fun create(
       name: String,
       slug: String? = null,
     ): ClerkResult<Organization, ClerkErrorResponse> {
@@ -81,7 +83,7 @@ data class Organization(
      * @return A [ClerkResult] containing the [Organization] on success, or a [ClerkErrorResponse]
      *   on failure.
      */
-    suspend fun get(id: String): ClerkResult<Organization, ClerkErrorResponse> {
+    public suspend fun get(id: String): ClerkResult<Organization, ClerkErrorResponse> {
       return ClerkApi.organization.getOrganization(id, sessionId = currentSessionId())
     }
   }
@@ -95,7 +97,7 @@ data class Organization(
  * @return A [ClerkResult] containing the updated [Organization] on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.update(
+public suspend fun Organization.update(
   name: String? = null,
   slug: String? = null,
 ): ClerkResult<Organization, ClerkErrorResponse> {
@@ -116,7 +118,7 @@ suspend fun Organization.update(
  * @return A [ClerkResult] containing a [DeletedObject] confirmation on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.organization.deleteOrganization(
     organizationId = this.id,
     sessionId = currentSessionId(),
@@ -133,7 +135,9 @@ suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse
  * @return A [ClerkResult] containing the updated [Organization] with the new logo on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.updateLogo(file: File): ClerkResult<Organization, ClerkErrorResponse> {
+public suspend fun Organization.updateLogo(
+  file: File
+): ClerkResult<Organization, ClerkErrorResponse> {
   val body = ImageService().createMultipartBody(file)
   return ClerkApi.organization.updateOrganizationLogo(
     organizationId = this.id,
@@ -151,7 +155,7 @@ suspend fun Organization.updateLogo(file: File): ClerkResult<Organization, Clerk
  * @return A [ClerkResult] containing the updated [Organization] without a logo on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErrorResponse> {
+public suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErrorResponse> {
   return ClerkApi.organization.deleteOrganizationLogo(this.id, sessionId = currentSessionId())
 }
 
@@ -161,17 +165,15 @@ suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErrorRespo
  *
  * This keeps [Clerk.organization] and other active organization UI in sync after profile updates.
  */
-suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse> {
-  return when (val clientResult = Client.get()) {
+public suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse> {
+  return when (val clientResult = Clerk.fetchAndApplyClient { Client.get() }) {
     is ClerkResult.Success -> {
-      Clerk.updateClient(clientResult.value)
       val updated =
-        Clerk.organization?.takeIf { it.id == id }
-          ?: clientResult.value.sessions
-            .asSequence()
-            .flatMap { it.user?.organizationMemberships.orEmpty().asSequence() }
-            .map { it.organization }
-            .firstOrNull { it.id == id }
+        clientResult.value.sessions
+          .asSequence()
+          .flatMap { it.user?.organizationMemberships.orEmpty().asSequence() }
+          .map { it.organization }
+          .firstOrNull { it.id == id }
 
       if (updated != null) {
         ClerkResult.success(updated)
@@ -198,7 +200,7 @@ suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse>
  * @return A [ClerkResult] containing a list of [Role] objects on success, or a [ClerkErrorResponse]
  *   on failure.
  */
-suspend fun Organization.getRoles(
+public suspend fun Organization.getRoles(
   offset: Int = 0,
   limit: Int = 20,
 ): ClerkResult<List<Role>, ClerkErrorResponse> {
@@ -223,7 +225,7 @@ suspend fun Organization.getRoles(
  * @return A [ClerkResult] containing a paginated response of [Role] objects on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.getRolesPaginated(
+public suspend fun Organization.getRolesPaginated(
   offset: Int = 0,
   limit: Int = 20,
 ): ClerkResult<ClerkPaginatedResponse<Role>, ClerkErrorResponse> {
@@ -246,7 +248,7 @@ suspend fun Organization.getRolesPaginated(
  * @return A [ClerkResult] containing the created [OrganizationDomain] on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.createDomain(
+public suspend fun Organization.createDomain(
   name: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return ClerkApi.organization.createOrganizationDomain(
@@ -266,7 +268,7 @@ suspend fun Organization.createDomain(
  * @return A [ClerkResult] containing a paginated response of [OrganizationDomain] objects on
  *   success, or a [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.getDomains(
+public suspend fun Organization.getDomains(
   limit: Int = 20,
   offset: Int = 0,
   enrollmentMode: String? = null,
@@ -287,7 +289,7 @@ suspend fun Organization.getDomains(
  * @return A [ClerkResult] containing the [OrganizationDomain] on success, or a [ClerkErrorResponse]
  *   on failure.
  */
-suspend fun Organization.getDomain(
+public suspend fun Organization.getDomain(
   domainId: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return ClerkApi.organization.getOrganizationDomain(
@@ -307,7 +309,7 @@ suspend fun Organization.getDomain(
  * @return A [ClerkResult] containing a [DeletedObject] confirmation on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.deleteDomain(
+public suspend fun Organization.deleteDomain(
   domainId: String
 ): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.organization.deleteOrganizationDomain(
@@ -331,7 +333,7 @@ suspend fun Organization.deleteDomain(
  * @return A [ClerkResult] containing a paginated response of [OrganizationMembership] objects on
  *   success, or a [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.getOrganizationMemberships(
+public suspend fun Organization.getOrganizationMemberships(
   query: String? = null,
   role: String? = null,
   limit: Int = 20,
@@ -359,7 +361,7 @@ suspend fun Organization.getOrganizationMemberships(
  * @return A [ClerkResult] containing the created [OrganizationMembership] on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.createMembership(
+public suspend fun Organization.createMembership(
   role: String,
   userId: String,
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
@@ -378,7 +380,7 @@ suspend fun Organization.createMembership(
  * @return A [ClerkResult] containing the removed [OrganizationMembership] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun Organization.removeMember(
+public suspend fun Organization.removeMember(
   userId: String
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
   return ClerkApi.organization.removeMember(
@@ -395,7 +397,7 @@ suspend fun Organization.removeMember(
  * @param role The role that will be assigned to the user after joining. This can be one of the
  *   predefined roles "org:admin", "org:member" or a custom role.
  */
-suspend fun Organization.createInvitation(
+public suspend fun Organization.createInvitation(
   emailAddress: String,
   role: String,
 ): ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
@@ -413,13 +415,30 @@ suspend fun Organization.createInvitation(
  *
  * @param limit
  * @param offset
- * @param status
+ * @param status The status to filter by. [OrganizationInvitation.Status.Unknown] only stands for
+ *   statuses this SDK version does not recognize and cannot be sent as a filter, so passing it
+ *   fails without contacting Clerk.
  */
-suspend fun Organization.getInvitations(
+public suspend fun Organization.getInvitations(
   limit: Int = 20,
   offset: Int = 0,
   status: OrganizationInvitation.Status,
 ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+  if (status == OrganizationInvitation.Status.Unknown) {
+    return ClerkResult.apiFailure(
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              message = "is invalid",
+              longMessage =
+                "OrganizationInvitation.Status.Unknown cannot be used as a status filter",
+              code = "invitation_status_invalid",
+            )
+          )
+      )
+    )
+  }
   return ClerkApi.organization.getAllInvitations(
     organizationId = this.id,
     limit = limit,
@@ -438,7 +457,7 @@ suspend fun Organization.getInvitations(
  * @param role The role that will be assigned to each of the users after joining. This can be one of
  *   the predefined roles (org:admin, org:basic_member) or a custom role.
  */
-suspend fun Organization.bulkCreateInvitations(
+public suspend fun Organization.bulkCreateInvitations(
   emailAddresses: List<String>,
   role: String,
 ): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse> {
@@ -464,7 +483,7 @@ suspend fun Organization.bulkCreateInvitations(
  * @return A [ClerkResult] containing a paginated response of [OrganizationMembershipRequest]
  *   objects on success, or a [ClerkErrorResponse] on failure.
  */
-suspend fun Organization.getMembershipRequests(
+public suspend fun Organization.getMembershipRequests(
   limit: Int = 20,
   offset: Int = 0,
   status: String,
@@ -474,6 +493,24 @@ suspend fun Organization.getMembershipRequests(
     limit = limit,
     offset = offset,
     status = status,
+    sessionId = currentSessionId(),
+  )
+}
+
+/**
+ * Lists the Organization's saved payment methods. Requires the `org:sys_billing:read` Permission.
+ *
+ * @param limit The maximum number of payment methods to return.
+ * @param offset The number of payment methods to skip.
+ */
+public suspend fun Organization.getPaymentMethods(
+  limit: Int = 20,
+  offset: Int = 0,
+): ClerkResult<ClerkPaginatedResponse<BillingPaymentMethod>, ClerkErrorResponse> {
+  return ClerkApi.billing.getOrganizationPaymentMethods(
+    organizationId = id,
+    offset = offset,
+    limit = limit,
     sessionId = currentSessionId(),
   )
 }

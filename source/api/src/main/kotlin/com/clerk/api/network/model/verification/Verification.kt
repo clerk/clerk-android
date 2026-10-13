@@ -1,13 +1,17 @@
 package com.clerk.api.network.model.verification
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialChallenge
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** The state of the verification process of a sign-in or sign-up attempt. */
 @Serializable
-data class Verification(
+public data class Verification(
   /** The state of the verification. */
   val status: Status = Status.UNKNOWN,
   /** The strategy pertaining to the parent sign-up or sign-in attempt. */
@@ -22,18 +26,27 @@ data class Verification(
   val externalVerificationRedirectUrl: String? = null,
   /** The nonce pertaining to the verification. */
   val nonce: String? = null,
-  /** The challenge payload for biometric-credential sign-in verifications. */
+  /** The challenge payload for biometric sign-in or session reverification. */
   @SerialName("trusted_device_challenge")
   val biometricCredentialChallenge: BiometricCredentialChallenge? = null,
 ) {
+  /** The typed form of [strategy], or null if there is none. */
+  val strategyType: Strategy?
+    get() = strategy?.let(Strategy::from)
+
   /** The state of the verification. */
-  @Serializable
-  enum class Status {
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = Status.Serializer::class)
+  public enum class Status {
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
     @SerialName("transferable") TRANSFERABLE,
-    @SerialName("expired") FAILED,
-    @SerialName("failed") EXPIRED,
-    @SerialName("state_unknown") UNKNOWN,
+    @SerialName("failed") FAILED,
+    @SerialName("expired") EXPIRED,
+    @SerialName("state_unknown") UNKNOWN;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<Status>(generatedSerializer(), UNKNOWN)
   }
 }

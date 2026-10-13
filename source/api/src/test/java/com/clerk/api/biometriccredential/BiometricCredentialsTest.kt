@@ -4,28 +4,45 @@ import android.util.Base64
 import com.clerk.api.Clerk
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.storage.StorageCipher
 import com.clerk.api.storage.StorageHelper
+import com.clerk.api.user.User
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
+import java.io.File
+import java.io.IOException
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -33,16 +50,20 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class BiometricCredentialsTest {
 
-  private lateinit var previousCredentialStore: BiometricCredentialLocalCredentialStore
+  @get:Rule val temporaryFolder = TemporaryFolder()
+
+  private lateinit var previousCredentialStore: BiometricCredentialLocalStore
   private lateinit var previousKeyManager: BiometricCredentialKeyManager
   private lateinit var credentialStore: InMemoryCredentialStore
   private lateinit var keyManager: FakeKeyManager
   private lateinit var previousLocale: Locale
+  private lateinit var previousStorageDispatcher: CoroutineDispatcher
 
   @Before
   fun setUp() {
     previousCredentialStore = BiometricCredentials.credentialStore
     previousKeyManager = BiometricCredentials.keyManager
+    previousStorageDispatcher = BiometricCredentials.storageDispatcher
     previousLocale = Locale.getDefault()
     credentialStore = InMemoryCredentialStore()
     keyManager = FakeKeyManager()
@@ -51,19 +72,23 @@ class BiometricCredentialsTest {
     Clerk.applicationId = APP_IDENTIFIER
     StorageHelper.storageCipherFactoryOverride = { PassthroughStorageCipher() }
     StorageHelper.reset(RuntimeEnvironment.getApplication())
+    BiometricCredentialStorage.fileStore =
+      BiometricCredentialFileStore(File(temporaryFolder.root, "clerk"))
   }
 
   @After
   fun tearDown() {
     BiometricCredentials.credentialStore = previousCredentialStore
     BiometricCredentials.keyManager = previousKeyManager
+    BiometricCredentials.storageDispatcher = previousStorageDispatcher
     Clerk.applicationId = null
     Clerk.environment = null
     Clerk.updateClient(com.clerk.api.network.model.client.Client())
     Locale.setDefault(previousLocale)
     LocaleProvider.cleanup()
-    StorageHelper.reset()
+    StorageHelper.resetToUninitializedForTesting()
     StorageHelper.storageCipherFactoryOverride = null
+    BiometricCredentialStorage.fileStore = null
     unmockkAll()
   }
 
@@ -80,6 +105,79 @@ class BiometricCredentialsTest {
 
     assertEquals(setOf("td_keep", "td_other"), credentialStore.credentials.map { it.id }.toSet())
     assertEquals(listOf("tdlk_td_old"), keyManager.deletedKeyIds)
+  }
+
+  @Test
+  fun `enrollment defaults to a strict key and persists that policy`() = runTest {
+    verifyEnrollmentPolicy(requestedPolicy = null)
+  }
+
+  @Test
+  fun `explicit PIN capable enrollment remains available for sign in`() = runTest {
+    verifyEnrollmentPolicy(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+  }
+
+  @Test
+  fun `enrollment fails and revokes the credential when the local save fails`() = runTest {
+    credentialStore.saveFails = true
+    val api = mockEnrollment()
+    coEvery { api.revoke(any(), any()) } returns ClerkResult.success(biometricCredential("td_1"))
+
+    val result = BiometricCredentials.enroll()
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `enrollment cancelled while saving rolls back the credential, record and key`() = runTest {
+    val api = mockEnrollment()
+    var revokeCompleted = false
+    coEvery { api.revoke(any(), any()) } coAnswers
+      {
+        suspendLikeANetworkCall()
+        revokeCompleted = true
+        ClerkResult.success(biometricCredential("td_1"))
+      }
+
+    val job = launchEnrollmentCancelledDuringSave()
+
+    assertTrue(job.isCancelled)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertTrue(revokeCompleted, "revoke must run to completion despite cancellation")
+    assertEquals(listOf("td_1"), credentialStore.deletedIds)
+    assertTrue(credentialStore.credentials.isEmpty())
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+  }
+
+  @Test
+  fun `enrollment cancelled while saving still removes the record and key when revoke fails`() =
+    runTest {
+      val api = mockEnrollment()
+      coEvery { api.revoke(any(), any()) } coAnswers
+        {
+          yield()
+          throw IOException("revoke failed")
+        }
+
+      val job = launchEnrollmentCancelledDuringSave()
+
+      assertTrue(job.isCancelled)
+      coVerify(exactly = 1) { api.revoke("td_1", any()) }
+      assertEquals(listOf("td_1"), credentialStore.deletedIds)
+      assertTrue(credentialStore.credentials.isEmpty())
+      assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+    }
+
+  @Test
+  fun `default enrollment availability requires strong biometrics`() {
+    keyManager.supportedPolicies = setOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+    assertFalse(BiometricCredentials.deviceSupportsBiometricAuthentication)
+
+    keyManager.supportedPolicies = setOf(BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
+    assertTrue(BiometricCredentials.deviceSupportsBiometricAuthentication)
   }
 
   @Test
@@ -128,6 +226,50 @@ class BiometricCredentialsTest {
   }
 
   @Test
+  fun `revoking the current credential works when biometrics are unavailable`() = runTest {
+    credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+    keyManager.supportedPolicies = emptySet()
+    val api = mockRevoke(ClerkResult.success(biometricCredential("td_1")))
+
+    val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `revoking the current credential works when the local key is missing`() = runTest {
+    credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+    keyManager.hasKeys = false
+    val api = mockRevoke(ClerkResult.success(biometricCredential("td_1")))
+
+    val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) { api.revoke("td_1", any()) }
+    assertTrue(credentialStore.credentials.isEmpty())
+  }
+
+  @Test
+  fun `revoking the current credential forgets a credential already revoked on the server`() =
+    runTest {
+      credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+      mockRevoke(
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(message = "not found", code = "resource_not_found"))
+          )
+        )
+      )
+
+      val result = BiometricCredentials.revokeCurrentBiometricCredential()
+
+      assertTrue(result is ClerkResult.Success)
+      assertTrue(credentialStore.credentials.isEmpty())
+    }
+
+  @Test
   fun `biometric credential sign in includes the configured locale`() = runTest {
     credentialStore.credentials += credential(id = "td_1", userId = "user_1")
     Clerk.environment =
@@ -168,11 +310,88 @@ class BiometricCredentialsTest {
     val result = BiometricCredentials.signIn()
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(LocaleProvider.locale.value.orEmpty(), createParams.captured["locale"])
+    assertEquals("fr-CA", createParams.captured["locale"])
+    assertEquals(
+      listOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE),
+      keyManager.signingPolicies,
+    )
+  }
+
+  private suspend fun verifyEnrollmentPolicy(requestedPolicy: BiometricCredentialPolicy?) {
+    mockEnrollment()
+
+    val result =
+      if (requestedPolicy == null) BiometricCredentials.enroll()
+      else BiometricCredentials.enroll(policy = requestedPolicy)
+
+    val expectedPolicy = requestedPolicy ?: BiometricCredentialPolicy.BIOMETRY_CURRENT_SET
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(listOf(expectedPolicy), keyManager.creationPolicies)
+    assertEquals(listOf(expectedPolicy), keyManager.signingPolicies)
+    assertEquals(expectedPolicy, credentialStore.credentials.single().policy)
+  }
+
+  private suspend fun suspendLikeANetworkCall() = yield()
+
+  private suspend fun TestScope.launchEnrollmentCancelledDuringSave(): Job {
+    BiometricCredentials.storageDispatcher = StandardTestDispatcher(testScheduler)
+    lateinit var job: Job
+    credentialStore.onSave = { job.cancel() }
+    job = launch { BiometricCredentials.enroll() }
+    job.join()
+    return job
+  }
+
+  private fun mockEnrollment(): BiometricCredentialApi {
+    val api = mockk<BiometricCredentialApi>()
+    val session =
+      mockk<Session> {
+        every { id } returns "sess_1"
+        every { status } returns Session.SessionStatus.ACTIVE
+      }
+    mockkObject(Clerk, ClerkApi)
+    every { Clerk.session } returns session
+    every { Clerk.user } returns mockk<User> { every { id } returns "user_1" }
+    every { Clerk.applicationId } returns APP_IDENTIFIER
+    every { Clerk.environment } returns
+      mockk<Environment> {
+        every { authConfig } returns
+          AuthConfig(
+            singleSessionMode = false,
+            nativeSettings =
+              AuthConfig.NativeSettings(apiEnabled = true, biometricSignInEnabled = true),
+          )
+      }
+    every { ClerkApi.biometricCredential } returns api
+    coEvery { api.prepareEnrollment(any(), any(), any(), any(), any(), any()) } returns
+      ClerkResult.success(
+        BiometricCredentialChallenge(
+          challenge = "challenge",
+          challengeId = "challenge_1",
+          clientData = "client-data",
+          expiresAt = 1_000,
+        )
+      )
+    coEvery {
+      api.attemptEnrollment(any(), any(), any(), any(), any(), any(), any(), any())
+    } returns ClerkResult.success(biometricCredential("td_1"))
+    return api
+  }
+
+  private fun mockRevoke(
+    result: ClerkResult<BiometricCredential, ClerkErrorResponse>
+  ): BiometricCredentialApi {
+    val api = mockEnrollment()
+    coEvery { api.list(any()) } returns
+      ClerkResult.success(
+        listOf(biometricCredential("td_1").copy(status = BiometricCredential.Status.ACTIVE))
+      )
+    coEvery { api.revoke(any(), any()) } returns result
+    return api
   }
 
   private fun credential(id: String, userId: String) =
-    BiometricCredentialLocalCredential(
+    BiometricCredentialLocalRecord(
       id = id,
       localKeyId = "tdlk_$id",
       userId = userId,
@@ -184,36 +403,45 @@ class BiometricCredentialsTest {
   private fun biometricCredential(id: String) =
     BiometricCredential(id = id, appIdentifier = APP_IDENTIFIER, createdAt = 1, updatedAt = 1)
 
-  private class InMemoryCredentialStore : BiometricCredentialLocalCredentialStore {
-    val credentials = mutableListOf<BiometricCredentialLocalCredential>()
+  private class InMemoryCredentialStore : BiometricCredentialLocalStore {
+    val credentials = mutableListOf<BiometricCredentialLocalRecord>()
     var deleteFails = false
+    var saveFails = false
+    val deletedIds = mutableListOf<String>()
+    var onSave: (() -> Unit)? = null
 
-    override fun all(): List<BiometricCredentialLocalCredential> = credentials.toList()
+    override fun all(): List<BiometricCredentialLocalRecord> = credentials.toList()
 
-    override fun save(credential: BiometricCredentialLocalCredential) {
+    override fun save(credential: BiometricCredentialLocalRecord) {
+      if (saveFails) throw IOException("save failed")
       credentials.removeAll { it.id == credential.id }
       credentials += credential
+      onSave?.invoke()
     }
 
     override fun delete(id: String) {
       check(!deleteFails) { "delete failed" }
       credentials.removeAll { it.id == id }
-    }
-
-    override fun deleteAll() {
-      credentials.clear()
+      deletedIds += id
     }
   }
 
   private class FakeKeyManager : BiometricCredentialKeyManager {
     val deletedKeyIds = mutableListOf<String>()
     val deleteAttempts = mutableListOf<String>()
+    val creationPolicies = mutableListOf<BiometricCredentialPolicy>()
+    val signingPolicies = mutableListOf<BiometricCredentialPolicy>()
+    var supportedPolicies = BiometricCredentialPolicy.entries.toSet()
     var deleteFailuresRemaining = 0
+    var hasKeys = true
 
-    override fun isSupported(policy: BiometricCredentialPolicy): Boolean = true
+    override fun isSupported(policy: BiometricCredentialPolicy): Boolean =
+      policy in supportedPolicies
 
-    override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey =
-      error("Not used")
+    override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey {
+      creationPolicies += policy
+      return BiometricCredentialLocalKey("key_1", "public-key", policy = policy)
+    }
 
     override suspend fun sign(
       clientData: String,
@@ -221,10 +449,12 @@ class BiometricCredentialsTest {
       policy: BiometricCredentialPolicy,
       promptTitle: String,
       promptSubtitle: String?,
-    ): BiometricCredentialKeySignature =
-      BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
+    ): BiometricCredentialKeySignature {
+      signingPolicies += policy
+      return BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
+    }
 
-    override fun hasKey(localKeyId: String): Boolean = true
+    override fun hasKey(localKeyId: String): Boolean = hasKeys
 
     override fun deleteKey(localKeyId: String) {
       deleteAttempts += localKeyId

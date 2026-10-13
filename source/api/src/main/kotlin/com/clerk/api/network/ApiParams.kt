@@ -1,13 +1,6 @@
 package com.clerk.api.network
 
-/**
- * Common parameter names used in API paths and requests.
- *
- * This object contains constants for parameter names that are frequently used across different API
- * endpoints. Using these constants ensures consistency and reduces the risk of typos.
- */
 internal object ApiParams {
-  // Path parameters
   internal const val ID = "id"
   internal const val SESSION_ID = "session_id"
   internal const val EMAIL_ID = "email_id"
@@ -21,7 +14,6 @@ internal object ApiParams {
   internal const val SUGGESTION_ID = "suggestion_id"
   internal const val TEMPLATE = "template"
 
-  // Request parameters
   internal const val STRATEGY = "strategy"
   internal const val CODE = "code"
   internal const val REDIRECT_URL = "redirect_url"
@@ -35,7 +27,9 @@ internal object ApiParams {
 
   internal const val STATUS = "status"
 
-  // Query parameters
   internal const val LIMIT = "limit"
   internal const val OFFSET = "offset"
+  internal const val PAYER_TYPE = "payer_type"
+  internal const val ORG_ID = "org_id"
+  internal const val MIN_SEATS = "min_seats"
 }

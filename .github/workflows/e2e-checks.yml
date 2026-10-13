@@ -1,0 +1,50 @@
+name: E2E Checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "e2e/**"
+      - "trails/**"
+      - "scripts/run-e2e-shard.sh"
+      - "scripts/run-trailblaze-tests.sh"
+      - "scripts/e2e/**"
+      - ".github/workflows/e2e-checks.yml"
+      - ".github/workflows/trailblaze-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-checks:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check trail, host tag, phone number, and shard contracts
+        run: python3 scripts/e2e/check_e2e_contracts.py
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: "zulu"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Run e2e host unit tests
+        run: ./gradlew :e2e:testDebugUnitTest --build-cache
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results
+          path: |
+            e2e/build/test-results/**
+            e2e/build/reports/tests/**
+          if-no-files-found: warn

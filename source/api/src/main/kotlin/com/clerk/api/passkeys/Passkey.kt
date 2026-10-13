@@ -1,14 +1,12 @@
 package com.clerk.api.passkeys
 
-import com.clerk.api.Constants.Strategy.PASSKEY as PASSKEY_STRATEGY
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
-
-/** The verification strategy constant used for passkey verification. */
 
 /**
  * An object that represents a passkey associated with a user.
@@ -18,7 +16,7 @@ import kotlinx.serialization.Serializable
  * experience using biometrics, device PINs, or other local authentication methods.
  */
 @Serializable
-data class Passkey(
+public data class Passkey(
   /** The unique identifier of the passkey. */
   val id: String,
 
@@ -38,7 +36,7 @@ data class Passkey(
   val lastUsedAt: Long? = null,
 ) {
 
-  companion object {
+  public companion object {
     /**
      * Creates a new passkey for the current user or the user with the given session ID.
      *
@@ -49,7 +47,7 @@ data class Passkey(
      * @return A [ClerkResult] containing the created [Passkey] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun create(): ClerkResult<Passkey, ClerkErrorResponse> {
+    public suspend fun create(): ClerkResult<Passkey, ClerkErrorResponse> {
       return PasskeyService.createPasskey()
     }
   }
@@ -65,7 +63,7 @@ data class Passkey(
  * @return A [ClerkResult] containing the updated [Passkey] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun Passkey.update(name: String? = null): ClerkResult<Passkey, ClerkErrorResponse> {
+public suspend fun Passkey.update(name: String? = null): ClerkResult<Passkey, ClerkErrorResponse> {
   return ClerkApi.user.updatePasskey(passkeyId = this.id, name = name)
 }
 
@@ -79,7 +77,7 @@ suspend fun Passkey.update(name: String? = null): ClerkResult<Passkey, ClerkErro
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun Passkey.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+public suspend fun Passkey.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deletePasskey(passkeyId = this.id)
 }
 
@@ -94,12 +92,12 @@ suspend fun Passkey.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the verified [Passkey] on success, or a [ClerkErrorResponse]
  *   on failure
  */
-suspend fun Passkey.attemptVerification(
+public suspend fun Passkey.attemptVerification(
   publicKeyCredential: String
 ): ClerkResult<Passkey, ClerkErrorResponse> {
   return ClerkApi.user.attemptPasskeyVerification(
     passkeyId = this.id,
-    strategy = PASSKEY_STRATEGY,
+    strategy = Strategy.Passkey.value,
     publicKeyCredential = publicKeyCredential,
   )
 }

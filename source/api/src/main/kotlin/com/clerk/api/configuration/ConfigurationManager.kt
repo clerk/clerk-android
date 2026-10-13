@@ -1,14 +1,14 @@
 package com.clerk.api.configuration
 
 import android.content.Context
+import com.auth0.android.jwt.JWT
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
-import com.clerk.api.Constants.Config.EXPONENTIAL_BACKOFF_SHIFT
-import com.clerk.api.Constants.Config.MAX_INITIALIZATION_RETRIES
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
+import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.hostedauth.HostedAuthService
@@ -28,16 +28,20 @@ import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,42 +51,24 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
-/**
- * Internal configuration manager responsible for Clerk SDK initialization and lifecycle management.
- *
- * This class handles:
- * - API client configuration and base URL extraction
- * - Storage initialization for session persistence
- * - Concurrent client and environment data fetching
- * - Application lifecycle monitoring for state refresh
- * - Context memory leak prevention through weak references
- */
-internal class ConfigurationManager {
+internal class ConfigurationManager(
+  private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+) {
   private companion object {
+    const val MAX_INITIALIZATION_RETRY_DELAY_SECONDS = 60L
     const val LIFECYCLE_REFRESH_DEFER_STEP_MS = 100L
     const val LIFECYCLE_REFRESH_MAX_DEFER_MS = 5_000L
   }
 
-  /**
-   * Coroutine scope with SupervisorJob for parallel API requests.
-   *
-   * Uses SupervisorJob to ensure that if one coroutine fails, others continue running. This is
-   * essential for handling concurrent client and environment requests independently.
-   */
-  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val refreshMutex = Mutex()
 
-  /** Weak reference to application context to prevent memory leaks. */
   internal var context: WeakReference<Context>? = null
     set(value) {
       field = value
-      // Don't initialize storage immediately - do it lazily when needed
     }
 
-  /** Track if storage has been initialized to avoid duplicate initialization */
   private var storageInitialized = false
 
-  /** Internal mutable state flow for initialization status. */
   private val _isInitialized = MutableStateFlow(false)
 
   /**
@@ -92,45 +78,27 @@ internal class ConfigurationManager {
    */
   val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
-  /** Internal mutable state flow for initialization errors. */
   private val _initializationError = MutableStateFlow<Throwable?>(null)
 
-  /**
-   * Public read-only state flow for initialization errors.
-   *
-   * Emits the last error that occurred during initialization, or null if no error. This allows apps
-   * to detect and handle initialization failures gracefully.
-   */
   val initializationError: StateFlow<Throwable?> = _initializationError.asStateFlow()
 
-  /**
-   * The publishable key from Clerk Dashboard used for API authentication.
-   *
-   * This key determines the API base URL and connects the app to the correct Clerk instance.
-   */
   internal lateinit var publishableKey: String
 
-  /** Flag to track if configuration has been started to prevent duplicate initialization. */
   @Volatile private var hasConfigured = false
 
-  /** Stored configuration options for use in retry attempts. */
   private var storedOptions: ClerkConfigurationOptions? = null
 
-  /**
-   * Internal job reference for ongoing refresh token operations.
-   *
-   * Used to cancel ongoing refresh operations if needed.
-   */
   private var refreshJob: Job? = null
 
-  /** Internal job reference for ongoing initialization operations. */
   private var initializationJob: Job? = null
+
+  /** Pending retry, replaced when another refresh starts. */
+  private var initializationRetryJob: Job? = null
 
   /** Monotonic token used to ignore stale refreshes from an older configuration. */
   @Volatile private var configurationVersion = 0
 
-  /** Monotonic fence used to discard responses started with an older shared device token. */
-  @Volatile private var sharedDeviceTokenFenceGeneration = 0
+  private val sharedDeviceTokenFenceGeneration = AtomicInteger()
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -139,52 +107,36 @@ internal class ConfigurationManager {
 
   private data class RefreshAttempt(
     val options: ClerkConfigurationOptions?,
-    val retryCount: Int,
+    val retryDelaySeconds: Long,
     val expectedConfigurationVersion: Int,
   ) {
-    fun nextRetry(): RefreshAttempt = copy(retryCount = retryCount + 1)
+    fun nextRetry(): RefreshAttempt =
+      copy(
+        retryDelaySeconds =
+          (retryDelaySeconds * 2).coerceIn(
+            BACKOFF_BASE_DELAY_SECONDS,
+            MAX_INITIALIZATION_RETRY_DELAY_SECONDS,
+          )
+      )
   }
 
-  /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
     if (!storageInitialized) {
       context?.get()?.let { context ->
         StorageHelper.initialize(context)
+        BiometricCredentialStorage.initialize(context)
         storageInitialized = true
         ClerkLog.d("Storage initialized")
       }
     }
   }
 
-  /** Restores a complete, matching client/environment snapshot before the network refresh runs. */
   private fun hydrateCachedStateIfNeeded(baseUrl: String) {
-    if (Clerk.clientFlow.value == null && Clerk.environment == null) {
-      val cachedState = loadCachedState()
-      when {
-        cachedState == null -> Unit
-        !cachedState.matchesConfiguration(publishableKey = publishableKey, baseUrl = baseUrl) ->
-          ClerkLog.d("Ignoring cached Clerk state for a different configuration")
-        else -> hydrateCachedState(cachedState)
-      }
+    val cachedState = CachedClerkState.loadIfNeeded(publishableKey, baseUrl) ?: return
+    if (cachedState.restoreMissingState()) {
+      _isInitialized.value = true
+      _initializationError.value = null
     }
-  }
-
-  private fun hydrateCachedState(cachedState: CachedClerkState) {
-    Clerk.updateClient(
-      client = cachedState.client,
-      serverFetchAtMillis = cachedState.clientServerFetchAtMillis,
-    )
-    Clerk.updateEnvironment(cachedState.environment)
-    _isInitialized.value = true
-    _initializationError.value = null
-    ClerkLog.d("Hydrated client and environment from cache")
-  }
-
-  private fun loadCachedState(): CachedClerkState? {
-    val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE) ?: return null
-    return runCatching { ClerkApi.json.decodeFromString(CachedClerkState.serializer(), cachedJson) }
-      .onFailure { error -> ClerkLog.w("Failed to decode cached Clerk state: ${error.message}") }
-      .getOrNull()
   }
 
   /**
@@ -194,11 +146,13 @@ internal class ConfigurationManager {
    * 1. Stores application context safely using WeakReference
    * 2. Extracts API base URL from publishable key (synchronous - fast)
    * 3. Configures the Clerk API client (synchronous - fast)
-   * 4. Initiates background client and environment data refresh (async)
-   * 5. Sets up application lifecycle monitoring (async)
+   * 4. Initializes storage and restores cached client/environment state (async)
+   * 5. Initiates background client and environment data refresh (async)
+   * 6. Sets up application lifecycle monitoring (async)
    *
-   * Storage initialization and device ID generation are moved to background to optimize startup
-   * time and avoid blocking the main thread.
+   * Storage initialization (Keystore), cached state decryption, and device ID generation run in the
+   * background so this method does not block the calling thread. Observe [isInitialized] for
+   * readiness, including readiness restored from the cached snapshot.
    *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
@@ -249,13 +203,13 @@ internal class ConfigurationManager {
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
 
-    ensureStorageInitialized()
-    hydrateCachedStateIfNeeded(baseUrl)
+    StorageHelper.prepare(context.applicationContext)
     Clerk.configureSharedSessionSync(
       context = context.applicationContext,
       publishableKey = publishableKey,
       config = options?.sharedSessionSync,
     )
+    BiometricCredentialStorage.initialize(context.applicationContext)
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -273,9 +227,10 @@ internal class ConfigurationManager {
     val attempt =
       RefreshAttempt(
         options = options,
-        retryCount = 0,
+        retryDelaySeconds = 0,
         expectedConfigurationVersion = configuredVersion,
       )
+    if (!restoreLocalState(configuredVersion)) return@launch
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
@@ -299,17 +254,28 @@ internal class ConfigurationManager {
     dataRefreshJob.await()
   }
 
+  @Synchronized
+  private fun restoreLocalState(configuredVersion: Int): Boolean {
+    if (configuredVersion != configurationVersion || !hasConfigured || context?.get() == null) {
+      return false
+    }
+    ensureStorageInitialized()
+    hydrateCachedStateIfNeeded(Clerk.baseUrl)
+    return true
+  }
+
   fun isConfigured(): Boolean = hasConfigured
 
   @Synchronized
   fun reset() {
     configurationVersion += 1
-    sharedDeviceTokenFenceGeneration += 1
+    sharedDeviceTokenFenceGeneration.incrementAndGet()
     Clerk.stopSharedSessionSync()
     scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
     refreshJob?.cancel()
     initializationJob = null
+    initializationRetryJob = null
     refreshJob = null
     context = null
     storageInitialized = false
@@ -323,7 +289,7 @@ internal class ConfigurationManager {
   }
 
   fun fenceClientResponsesAfterSharedDeviceTokenChange() {
-    sharedDeviceTokenFenceGeneration += 1
+    sharedDeviceTokenFenceGeneration.incrementAndGet()
   }
 
   private fun startTokenRefresh() {
@@ -336,10 +302,9 @@ internal class ConfigurationManager {
       return
     }
 
-    // Cancel any ongoing jobs
     refreshJob?.cancel()
     refreshJob = scope.launch {
-      while (isActive) {
+      while (isActive && !AppLifecycleListener.isInBackground) {
         try {
           val session = Clerk.session
           if (session != null) {
@@ -376,16 +341,41 @@ internal class ConfigurationManager {
     )
   }
 
+  /**
+   * Compare-and-set for framework integrations. A blank [expectedDeviceToken] is treated as null
+   * (no stored token), since storage never holds a blank token. Returns false without touching
+   * storage when Clerk is not configured (for example during reset or re-initialization).
+   */
+  fun setDeviceToken(deviceToken: String?, expectedDeviceToken: String?): Boolean {
+    require(deviceToken == null || deviceToken.isNotBlank()) { "Device token must not be blank" }
+    if (!hasConfigured) {
+      ClerkLog.w("Ignoring setDeviceToken: Clerk is not initialized")
+      return false
+    }
+
+    ensureStorageInitialized()
+    val expected = expectedDeviceToken?.takeIf { it.isNotBlank() }
+    var changed = false
+    val swapped =
+      StorageHelper.compareAndSetDeviceToken(expected = expected, value = deviceToken) {
+        // Fence inside the swap so no refresh can observe the new token with the old fence.
+        fenceClientResponsesAfterSharedDeviceTokenChange()
+        changed = true
+      }
+    if (changed && deviceTokenTargetsDifferentClient(previous = expected, next = deviceToken)) {
+      resetClientStateForDeviceTokenChange()
+      queueRefreshAfterDeviceTokenChange()
+    }
+    return swapped
+  }
+
   suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> {
     val validationError = validateDeviceTokenClear()
     if (validationError != null) return validationError
 
     ensureStorageInitialized()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-    Clerk.updateClient(Client())
-    Clerk.clearSessionAndUserState()
-    SessionTokenFetcher.shared.reset()
-    SessionTokensCache.clear()
+    resetClientStateForDeviceTokenChange()
 
     val result =
       refreshClientAndEnvironment(
@@ -398,25 +388,26 @@ internal class ConfigurationManager {
   }
 
   /**
-   * Refreshes client and environment data by making concurrent API requests.
-   *
-   * This method:
-   * - Performs client and environment requests in parallel for better performance
-   * - Handles errors gracefully with detailed logging
-   * - Updates Clerk state when both requests succeed
-   * - Sets initialization status based on operation success
-   * - Starts token refresh as soon as client data is available
-   * - Retries with exponential backoff on failure (up to MAX_INITIALIZATION_RETRIES)
-   *
-   * The method is safe to call multiple times and will not interfere with ongoing requests.
-   *
-   * @param options Configuration options for the SDK.
-   * @param retryCount Current retry attempt number (0 for initial attempt).
+   * Refreshes client state for the current device token. Keeps initialization semantics (retry with
+   * backoff and error reporting) when [initialization] is set or the SDK has not initialized yet.
+   * Launched separately so it can be called while holding [refreshMutex].
    */
+  private fun queueRefreshAfterDeviceTokenChange(
+    attempt: RefreshAttempt = currentRefreshAttempt(),
+    initialization: Boolean = false,
+  ) {
+    val mode =
+      if (initialization || !_isInitialized.value) RefreshMode.INITIALIZATION
+      else RefreshMode.DEVICE_TOKEN_UPDATE
+    scope.launch {
+      refreshClientAndEnvironment(attempt = attempt, mode = mode, skipClientId = true)
+    }
+  }
+
   private fun currentRefreshAttempt(): RefreshAttempt =
     RefreshAttempt(
       options = storedOptions,
-      retryCount = 0,
+      retryDelaySeconds = 0,
       expectedConfigurationVersion = configurationVersion,
     )
 
@@ -489,16 +480,27 @@ internal class ConfigurationManager {
       val lockedFailure = validateRefreshPreconditions(mode, attempt.expectedConfigurationVersion)
       if (lockedFailure != null) return@withLock lockedFailure
 
+      if (mode == RefreshMode.INITIALIZATION) {
+        initializationRetryJob?.cancel()
+        initializationRetryJob = null
+      }
+
       try {
         if (Clerk.debugMode) {
-          ClerkLog.d("Starting client and environment refresh (attempt ${attempt.retryCount + 1})")
+          ClerkLog.d("Starting client and environment refresh")
         }
 
-        if (attempt.retryCount == 0 && mode == RefreshMode.INITIALIZATION) {
+        if (attempt.retryDelaySeconds == 0L && mode == RefreshMode.INITIALIZATION) {
           _initializationError.value = null
         }
 
         executeRefresh(attempt = attempt, mode = mode, skipClientId = skipClientId)
+      } catch (e: TimeoutCancellationException) {
+        currentCoroutineContext().ensureActive()
+        if (mode == RefreshMode.INITIALIZATION) {
+          handleInitializationFailure(error = e, attempt = attempt)
+        }
+        ClerkResult.unknownFailure(e)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -542,22 +544,23 @@ internal class ConfigurationManager {
     skipClientId: Boolean,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
-      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration
+      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration.get()
+      val clientUpdateCountAtStart = Clerk.clientUpdateCount
       val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
 
       if (attempt.expectedConfigurationVersion != configurationVersion || !hasConfigured) {
         return@withTimeout staleConfigurationFailure()
       }
 
-      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration) {
+      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration.get()) {
         ClerkLog.d("Discarding refresh started before a shared device-token change")
-        scope.launch {
-          refreshClientAndEnvironment(
-            attempt = currentRefreshAttempt(),
-            mode = RefreshMode.DEVICE_TOKEN_UPDATE,
-            skipClientId = true,
-          )
-        }
+        // A discarded initialization must stay an initialization, or a failed follow-up would
+        // leave the SDK uninitialized with no retry and no reported error.
+        val initialization = mode == RefreshMode.INITIALIZATION
+        queueRefreshAfterDeviceTokenChange(
+          attempt = if (initialization) attempt else currentRefreshAttempt(),
+          initialization = initialization,
+        )
         return@withTimeout ClerkResult.success(Unit)
       }
 
@@ -567,7 +570,8 @@ internal class ConfigurationManager {
       when {
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
-            client = clientResult.value,
+            clientResult = clientResult,
+            clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
         else ->
@@ -599,10 +603,13 @@ internal class ConfigurationManager {
     }
 
   private fun handleSuccessfulRefresh(
-    client: Client,
+    clientResult: ClerkResult.Success<Client>,
+    clientUpdateCountAtStart: Long,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
-    updateClerkState(client, environment)
+    initializationRetryJob?.cancel()
+    initializationRetryJob = null
+    updateClerkState(clientResult, clientUpdateCountAtStart, environment)
     _isInitialized.value = true
     _initializationError.value = null
 
@@ -669,13 +676,6 @@ internal class ConfigurationManager {
     }
   }
 
-  /**
-   * Handles initialization failure by setting error state and scheduling retry if within limits.
-   *
-   * @param error The exception that caused the failure.
-   * @param options Configuration options for retry.
-   * @param retryCount Current retry attempt number.
-   */
   private fun handleInitializationFailure(error: Throwable, attempt: RefreshAttempt) {
     if (!hasConfigured || attempt.expectedConfigurationVersion != configurationVersion) {
       return
@@ -689,35 +689,18 @@ internal class ConfigurationManager {
       ClerkLog.w("Initialization refresh failed; continuing with cached Clerk state")
     }
 
-    if (attempt.retryCount < MAX_INITIALIZATION_RETRIES) {
-      scope.launch { retryInitialization(attempt.nextRetry()) }
-    } else {
-      ClerkLog.e(
-        "Max initialization retries ($MAX_INITIALIZATION_RETRIES) reached. " +
-          "Initialization failed permanently. Call Clerk.reinitialize() to retry manually."
-      )
-    }
+    initializationRetryJob = scope.launch { retryInitialization(attempt.nextRetry()) }
   }
 
-  /**
-   * Retries initialization after a delay with exponential backoff.
-   *
-   * @param options Configuration options for the SDK.
-   * @param retryCount Current retry attempt number.
-   */
   private suspend fun retryInitialization(attempt: RefreshAttempt) {
-    // Exponential backoff: 5s, 10s, 20s
-    val delaySeconds =
-      BACKOFF_BASE_DELAY_SECONDS * (EXPONENTIAL_BACKOFF_SHIFT shl (attempt.retryCount - 1))
-    ClerkLog.d("Retrying initialization in ${delaySeconds}s (attempt ${attempt.retryCount})")
+    ClerkLog.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
 
-    delay(delaySeconds.seconds)
+    delay(attempt.retryDelaySeconds.seconds)
 
     if (attempt.expectedConfigurationVersion != configurationVersion) {
       return
     }
 
-    // Retry the initialization
     queueClientAndEnvironmentRefresh(attempt)
   }
 
@@ -747,19 +730,8 @@ internal class ConfigurationManager {
     return true
   }
 
-  /**
-   * Configures the network connectivity monitor to automatically retry initialization when
-   * connectivity is restored.
-   *
-   * This enables proactive initialization without requiring a background/foreground app cycle. When
-   * the device regains internet access after being offline, the SDK will automatically attempt to
-   * initialize if it hasn't completed initialization yet.
-   *
-   * @param context The application context used for ConnectivityManager access.
-   */
   private fun configureConnectivityMonitor(context: Context) {
     NetworkConnectivityMonitor.configure(context) {
-      // Callback invoked when connectivity is restored
       if (!_isInitialized.value && hasConfigured) {
         ClerkLog.d("Connectivity restored - attempting automatic reinitialization")
         scope.launch {
@@ -767,7 +739,6 @@ internal class ConfigurationManager {
           refreshClientAndEnvironment(currentRefreshAttempt(), RefreshMode.INITIALIZATION)
         }
       } else if (_isInitialized.value) {
-        // Already initialized, but connectivity was restored - refresh data
         if (Clerk.debugMode) {
           ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
         }
@@ -778,11 +749,6 @@ internal class ConfigurationManager {
     }
   }
 
-  /**
-   * Handles the client API result with appropriate logging.
-   *
-   * Note: updating clerk state happens in [updateClerkState]
-   */
   private fun handleClientResult(result: ClerkResult<Client, *>) {
     result.fold(
       onSuccess = { client ->
@@ -797,11 +763,6 @@ internal class ConfigurationManager {
     )
   }
 
-  /**
-   * Handles the environment API result with appropriate logging.
-   *
-   * Note: updating clerk state happens in [updateClerkState]
-   */
   private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
@@ -816,7 +777,6 @@ internal class ConfigurationManager {
     )
   }
 
-  /** Logs API errors with appropriate detail based on error type. */
   private fun logApiError(
     operation: String,
     errorType: ClerkResult.Failure.ErrorType,
@@ -834,12 +794,51 @@ internal class ConfigurationManager {
    *
    * This method is called only when both client and environment data have been loaded successfully.
    */
-  private fun updateClerkState(client: Client, environment: Environment) {
-    Clerk.updateClient(client)
+  private fun updateClerkState(
+    clientResult: ClerkResult.Success<Client>,
+    clientUpdateCountAtStart: Long,
+    environment: Environment,
+  ) {
+    Clerk.updateClientIfUnchangedSince(clientUpdateCountAtStart, clientResult)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {
-      ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
+      val current = Clerk.clientFlow.value
+      ClerkLog.d(
+        "Clerk state updated - Client ID: ${current?.id}, Sessions: ${current?.sessions?.size}"
+      )
     }
   }
+}
+
+private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
+
+/**
+ * Whether [next] belongs to a different client than the in-memory state, so that state must be
+ * dropped rather than kept across a same-client rotation. Clearing always counts. For an opaque
+ * token whose client cannot be read, the caller relies on the response fence alone.
+ */
+private fun deviceTokenTargetsDifferentClient(previous: String?, next: String?): Boolean {
+  val nextClientId = deviceTokenClientId(next)
+  return when {
+    next == null -> true
+    nextClientId == null -> false
+    else ->
+      nextClientId !=
+        (deviceTokenClientId(previous) ?: Clerk.clientFlow.value?.id?.takeIf { it.isNotBlank() })
+  }
+}
+
+private fun deviceTokenClientId(token: String?): String? =
+  token
+    ?.let { runCatching { JWT(it).getClaim(DEVICE_TOKEN_CLIENT_ID_CLAIM).asString() } }
+    ?.getOrNull()
+    ?.takeIf { it.isNotBlank() }
+
+/** Drops client, session and token caches that belonged to the previous device token. */
+private fun resetClientStateForDeviceTokenChange() {
+  Clerk.updateClient(Client())
+  Clerk.clearSessionAndUserState()
+  SessionTokenFetcher.shared.reset()
+  SessionTokensCache.clear()
 }

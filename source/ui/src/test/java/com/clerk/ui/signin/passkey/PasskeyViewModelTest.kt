@@ -1,11 +1,14 @@
 package com.clerk.ui.signin.passkey
 
 import app.cash.turbine.test
+import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -21,9 +24,12 @@ class PasskeyViewModelTest {
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
+  private val auth = mockk<Auth>()
+
   @BeforeTest
   fun setUp() {
-    mockkObject(SignIn.Companion)
+    mockkObject(Clerk)
+    every { Clerk.auth } returns auth
   }
 
   @AfterTest
@@ -33,7 +39,7 @@ class PasskeyViewModelTest {
 
   @Test
   fun authenticate_cancellation_resets_to_idle() = runTest {
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
+    coEvery { auth.signInWithPasskey() } returns
       ClerkResult.unknownFailure(credentialFlowThrowable("UserCancelled"))
 
     val viewModel = PasskeyViewModel()
@@ -47,7 +53,7 @@ class PasskeyViewModelTest {
 
   @Test
   fun authenticate_missing_activity_surfaces_retry_message() = runTest {
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
+    coEvery { auth.signInWithPasskey() } returns
       ClerkResult.unknownFailure(credentialFlowThrowable("MissingActivity"))
 
     val viewModel = PasskeyViewModel()
@@ -67,7 +73,7 @@ class PasskeyViewModelTest {
   @Test
   fun authenticate_success_emits_sign_in_success() = runTest {
     val signIn = mockk<SignIn>(relaxed = true)
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns ClerkResult.success(signIn)
+    coEvery { auth.signInWithPasskey() } returns ClerkResult.success(signIn)
 
     val viewModel = PasskeyViewModel()
     viewModel.state.test {

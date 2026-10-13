@@ -1,17 +1,20 @@
 package com.clerk.api.network.serialization
 
+import com.clerk.api.billing.BillingPayment
+import com.clerk.api.billing.BillingPlan
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.session.Session
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-/**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
     type: Type,
@@ -23,11 +26,11 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       return null
     }
 
-    val successType = (type as ParameterizedType).actualTypeArguments[0]
-    val errorType = type.actualTypeArguments[1]
-
-    val errorResultType: Annotation = createResultType(errorType)
-    val nextAnnotations = annotations.toList() + errorResultType
+    // ClerkResult<out T, ...> reaches Retrofit as `? extends T` for suspend functions.
+    val successType =
+      (type as ParameterizedType).actualTypeArguments[0].let {
+        if (it is WildcardType) it.upperBounds.single() else it
+      }
 
     // For List<Session>, don't wrap in ClientPiggybackedResponse - it comes as plain JSON array
     val isSessionList =
@@ -42,7 +45,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         )
         successType
       } else {
-        // Check if the success type should be wrapped in ClientPiggybackedResponse
         val shouldWrap = shouldWrapInClientPiggybackedResponse(successType)
 
         if (shouldWrap) {
@@ -53,20 +55,37 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
       }
 
     val delegateConverter =
-      retrofit.nextResponseBodyConverter<Any>(
-        this,
-        actualSuccessType,
-        nextAnnotations.toTypedArray(),
-      )
+      retrofit.nextResponseBodyConverter<Any>(this, actualSuccessType, annotations)
 
     return ClerkApiResultConverter(delegateConverter)
   }
 
   private fun shouldWrapInClientPiggybackedResponse(successType: Type): Boolean {
+    if (isRawBillingEnvelope(successType)) {
+      return false
+    }
     val rawType = getRawType(successType)
 
-    // Don't wrap the Environment type
     return rawType.name !in getExcludedTypeNames()
+  }
+
+  /**
+   * clerk-js reads these billing GETs from the raw JSON body (`getPlans`, `getPlan`,
+   * `getPaymentAttempts`, `getPaymentAttempt`). The other billing GETs stay in
+   * [ClientPiggybackedResponse].
+   */
+  private fun isRawBillingEnvelope(successType: Type): Boolean {
+    val rawType = getRawType(successType)
+    val paginatedItemType =
+      if (rawType == ClerkPaginatedResponse::class.java && successType is ParameterizedType) {
+        getRawType(successType.actualTypeArguments.single())
+      } else {
+        null
+      }
+    return rawType == BillingPlan::class.java ||
+      rawType == BillingPayment::class.java ||
+      paginatedItemType == BillingPlan::class.java ||
+      paginatedItemType == BillingPayment::class.java
   }
 
   private fun createParameterizedType(rawType: Class<*>, typeArgument: Type): ParameterizedType {
@@ -84,7 +103,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     override fun convert(value: ResponseBody): ClerkResult<*, *>? {
 
       return delegate.convert(value)?.let { result ->
-        // If the result is a ClientPiggybackedResponse, unwrap it
         val unwrappedResult =
           if (result is ClientPiggybackedResponse<*>) {
             result.response

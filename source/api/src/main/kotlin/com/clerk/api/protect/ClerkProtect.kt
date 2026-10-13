@@ -18,18 +18,20 @@ import kotlinx.serialization.json.longOrNull
 
 /** Internal bridge between Clerk Android resources and the Protect dispatcher. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object ClerkProtect {
+public object ClerkProtect {
 
   /** Whether the latest Clerk environment enabled Protect. */
-  val isEnabled: Boolean
+  public val isEnabled: Boolean
     get() = Protect.isEnabled
 
   /** Executes one Protect challenge inside [container] and returns its proof token. */
-  suspend fun executeProtectCheck(check: ProtectCheckResource, container: ViewGroup): String =
-    Protect.executeProtectCheck(check.toProtectCheck(), container.asProtectHost())
+  public suspend fun executeProtectCheck(
+    check: ProtectCheckResource,
+    container: ViewGroup,
+  ): String = Protect.executeProtectCheck(check.toProtectCheck(), container.asProtectHost())
 
   /** Returns Protect's stable error code for [throwable], if it originated in Protect. */
-  fun errorCode(throwable: Throwable): String? = (throwable as? ProtectException)?.code
+  public fun errorCode(throwable: Throwable): String? = (throwable as? ProtectException)?.code
 
   internal fun initialize(environment: Environment, fapiOrigin: String?) {
     val protectEnvironment =

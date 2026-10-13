@@ -45,6 +45,45 @@ internal object TokenFreshness {
     }
   }
 
+  /** Applies the shared snapshot eligibility rule for token fetching and authorization reads. */
+  internal fun eligibleSnapshot(
+    session: Session,
+    cached: TokenResource?,
+    requiresNewerOrigin: Boolean,
+  ): TokenResource? =
+    session.lastActiveToken
+      ?.takeIf { matches(it, session.id, session.lastActiveOrganizationId) }
+      ?.takeIf { !requiresNewerOrigin || hasNewerOrigin(cached, it) }
+
+  /**
+   * Requires a later origin mint, even if an older token was renewed at the edge or is unexpired.
+   * Falls back to issuance time only when neither token has an origin timestamp.
+   */
+  internal fun hasNewerOrigin(existing: TokenResource?, incoming: TokenResource): Boolean {
+    val existingJwt = existing?.let { decode(it.jwt) }
+    val incomingJwt = decode(incoming.jwt)
+    return if (
+      existingJwt == null || incomingJwt == null || !haveMatchingContext(existingJwt, incomingJwt)
+    ) {
+      false
+    } else {
+      val existingOriginIssuedAt = existingJwt.originIssuedAt()
+      val incomingOriginIssuedAt = incomingJwt.originIssuedAt()
+      when {
+        existingOriginIssuedAt != null && incomingOriginIssuedAt != null ->
+          incomingOriginIssuedAt > existingOriginIssuedAt
+        existingOriginIssuedAt == null && incomingOriginIssuedAt == null -> {
+          val existingIssuedAt = existingJwt.issuedAt?.time
+          val incomingIssuedAt = incomingJwt.issuedAt?.time
+          existingIssuedAt != null &&
+            incomingIssuedAt != null &&
+            incomingIssuedAt > existingIssuedAt
+        }
+        else -> false
+      }
+    }
+  }
+
   private fun pickFreshestDecoded(
     existing: DecodedToken,
     incoming: DecodedToken,
@@ -115,10 +154,10 @@ internal object TokenFreshness {
     } catch (_: Exception) {
       null
     }
-
-  private fun JWT.originIssuedAt(): Long? = header["oiat"]?.toLongOrNull()
-
-  private fun JWT.organizationId(): String? =
-    getClaim("org_id").asString()
-      ?: runCatching { getClaim("o").asObject(Map::class.java)?.get("id") as? String }.getOrNull()
 }
+
+private fun JWT.originIssuedAt(): Long? = header["oiat"]?.toLongOrNull()
+
+private fun JWT.organizationId(): String? =
+  getClaim("org_id").asString()
+    ?: runCatching { getClaim("o").asObject(Map::class.java)?.get("id") as? String }.getOrNull()

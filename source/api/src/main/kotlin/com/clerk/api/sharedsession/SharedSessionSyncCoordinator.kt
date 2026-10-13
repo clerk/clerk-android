@@ -34,6 +34,7 @@ internal constructor(
   private val stateLock = Any()
   private var localSnapshot: SharedSessionSyncSnapshot? = null
   private var isApplyingSharedStorage = false
+  private var lastHandledClientRevision = Long.MIN_VALUE
   private val storageListener = { key: StorageKey, previous: String?, value: String? ->
     if (key == StorageKey.DEVICE_TOKEN) {
       handleDeviceTokenChange(previous = previous, value = value)
@@ -55,8 +56,12 @@ internal constructor(
 
   suspend fun reloadFromSharedStorage(): Boolean = withContext(Dispatchers.IO) { reloadBlocking() }
 
-  fun handleClientChange(client: Client, serverFetchAtMillis: Long) {
+  fun handleClientChange(client: Client, serverFetchAtMillis: Long, revision: Long? = null) {
     synchronized(stateLock) {
+      if (revision != null) {
+        if (revision <= lastHandledClientRevision) return
+        lastHandledClientRevision = revision
+      }
       if (isApplyingSharedStorage) return
       val state =
         if (client == Client()) SharedSessionSyncSnapshot.State.CLEARED
@@ -186,9 +191,17 @@ internal constructor(
     return previousToken != incoming.value || localDeviceToken?.version != incoming.version
   }
 
+  @Suppress("ReturnCount")
   private fun handleDeviceTokenChange(previous: String?, value: String?) {
     synchronized(stateLock) {
       if (isApplyingSharedStorage || previous == value) return
+      // Storage notifies outside its device-token lock, so a newer token (for example a sibling's,
+      // applied by reloadBlocking) may already have replaced [value]. Publishing it now would let
+      // peers overwrite the newer token with this stale one.
+      if (StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != value) {
+        ClerkLog.d("Skipping shared publish of a device token that is no longer stored")
+        return
+      }
       val deviceTokenSnapshot =
         SharedSessionSyncSnapshot.DeviceTokenSnapshot(
           state =
@@ -212,8 +225,7 @@ internal constructor(
   }
 
   private fun currentAuthSnapshot(): SharedSessionSyncSnapshot.AuthSnapshot? {
-    val currentClient = Clerk.clientFlow.value
-    val serverFetchAtMillis = Clerk.lastClientServerFetchAtMillis
+    val (currentClient, serverFetchAtMillis) = Clerk.stateStore.clientSnapshot()
     if (currentClient == null && serverFetchAtMillis == null) return null
 
     val state =

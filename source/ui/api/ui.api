@@ -1,0 +1,752 @@
+public final class com/clerk/ui/auth/AuthMode : java/lang/Enum {
+	public static final field SignIn Lcom/clerk/ui/auth/AuthMode;
+	public static final field SignInOrUp Lcom/clerk/ui/auth/AuthMode;
+	public static final field SignUp Lcom/clerk/ui/auth/AuthMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/auth/AuthMode;
+	public static fun values ()[Lcom/clerk/ui/auth/AuthMode;
+}
+
+public final class com/clerk/ui/auth/AuthModeKt {
+	public static final fun getTransferable (Lcom/clerk/ui/auth/AuthMode;)Z
+}
+
+public final class com/clerk/ui/auth/AuthStartViewKt {
+	public static final fun AuthStartView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;ZZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/auth/AuthViewKt {
+	public static final fun AuthView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZZLjava/util/Map;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/clerk/ui/auth/AuthMode;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/clerk/ui/core/avatar/AvatarSize : java/lang/Enum {
+	public static final field LARGE Lcom/clerk/ui/core/avatar/AvatarSize;
+	public static final field MEDIUM Lcom/clerk/ui/core/avatar/AvatarSize;
+	public static final field SMALL Lcom/clerk/ui/core/avatar/AvatarSize;
+	public static final field X_LARGE Lcom/clerk/ui/core/avatar/AvatarSize;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/avatar/AvatarSize;
+	public static fun values ()[Lcom/clerk/ui/core/avatar/AvatarSize;
+}
+
+public final class com/clerk/ui/core/badge/ClerkBadgeKt {
+	public static final fun Badge (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/clerk/ui/core/badge/ClerkBadgeType;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/badge/ClerkBadgeType : java/lang/Enum {
+	public static final field Negative Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static final field Positive Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static final field Primary Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static final field Secondary Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static final field Warning Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/badge/ClerkBadgeType;
+	public static fun values ()[Lcom/clerk/ui/core/badge/ClerkBadgeType;
+}
+
+public final class com/clerk/ui/core/button/social/ClerkSocialButtonKt {
+	public static final fun ClerkSocialButton (Lcom/clerk/api/sso/OAuthProvider;Landroidx/compose/ui/Modifier;ZZLkotlin/jvm/functions/Function1;Lcom/clerk/api/ui/ClerkTheme;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/button/social/ClerkSocialRowKt {
+	public static final fun ClerkSocialRow (Lkotlinx/collections/immutable/ImmutableList;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonConfiguration {
+	public static final field $stable I
+	public fun <init> ()V
+	public synthetic fun <init> (Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public final fun component2 ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public final fun component3 ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+	public final fun component4-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public final fun copy-gP2Z1ig (Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;
+	public static synthetic fun copy-gP2Z1ig$default (Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;ILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColorOverride-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public final fun getEmphasis ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public final fun getSize ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+	public final fun getStyle ()Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle : java/lang/Enum {
+	public static final field Negative Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public static final field Primary Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public static final field Secondary Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+	public static fun values ()[Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis : java/lang/Enum {
+	public static final field High Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public static final field Low Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public static final field None Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+	public static fun values ()[Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size : java/lang/Enum {
+	public static final field Large Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+	public static final field Small Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+	public static fun values ()[Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/core/button/standard/ClerkButtonDefaults;
+	public final fun configuration-gP2Z1ig (Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;
+	public static synthetic fun configuration-gP2Z1ig$default (Lcom/clerk/ui/core/button/standard/ClerkButtonDefaults;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$ButtonStyle;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Emphasis;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration$Size;Landroidx/compose/ui/graphics/Color;ILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;
+	public final fun icons-sXPfWgI (Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/graphics/Color;Ljava/lang/Integer;Ljava/lang/Integer;Landroidx/compose/runtime/Composer;II)Lcom/clerk/ui/core/button/standard/ClerkButtonIcons;
+	public final fun padding-YgX7TsA (FF)Lcom/clerk/ui/core/button/standard/ClerkButtonPadding;
+	public static synthetic fun padding-YgX7TsA$default (Lcom/clerk/ui/core/button/standard/ClerkButtonDefaults;FFILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonPadding;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonIcons {
+	public static final field $stable I
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/graphics/Color;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public final fun component4-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public final fun copy-Ij2XjQ8 (Ljava/lang/Integer;Ljava/lang/Integer;Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/graphics/Color;)Lcom/clerk/ui/core/button/standard/ClerkButtonIcons;
+	public static synthetic fun copy-Ij2XjQ8$default (Lcom/clerk/ui/core/button/standard/ClerkButtonIcons;Ljava/lang/Integer;Ljava/lang/Integer;Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/graphics/Color;ILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonIcons;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLeadingIcon ()Ljava/lang/Integer;
+	public final fun getLeadingIconColor-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public final fun getTrailingIcon ()Ljava/lang/Integer;
+	public final fun getTrailingIconColor-QN2ZGVo ()Landroidx/compose/ui/graphics/Color;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonKt {
+	public static final fun ClerkButton (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/foundation/layout/PaddingValues;Lcom/clerk/ui/core/button/standard/ClerkButtonConfiguration;Lcom/clerk/ui/core/button/standard/ClerkButtonIcons;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonPadding {
+	public static final field $stable I
+	public synthetic fun <init> (FFLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2-D9Ej5fM ()F
+	public final fun copy-YgX7TsA (FF)Lcom/clerk/ui/core/button/standard/ClerkButtonPadding;
+	public static synthetic fun copy-YgX7TsA$default (Lcom/clerk/ui/core/button/standard/ClerkButtonPadding;FFILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonPadding;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHorizontal-D9Ej5fM ()F
+	public final fun getVertical-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkButtonState {
+	public static final field $stable I
+	public fun <init> (ZZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun copy (ZZZ)Lcom/clerk/ui/core/button/standard/ClerkButtonState;
+	public static synthetic fun copy$default (Lcom/clerk/ui/core/button/standard/ClerkButtonState;ZZZILjava/lang/Object;)Lcom/clerk/ui/core/button/standard/ClerkButtonState;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun isEnabled ()Z
+	public final fun isLoading ()Z
+	public final fun isPressedCombined ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/core/button/standard/ClerkTextButtonKt {
+	public static final fun ClerkTextButton-ByhqlGk (Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Color;Landroidx/compose/ui/text/TextStyle;ZJLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/input/ClerkCodeInputFieldKt {
+	public static final fun ClerkCodeInputField (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ILcom/clerk/ui/signin/code/VerificationState;ZLcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/input/ClerkPhoneNumberFieldKt {
+	public static final fun ClerkPhoneNumberField-vZSUB0E (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Ljava/lang/String;ILandroidx/compose/foundation/text/KeyboardActions;ZLcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/core/input/ClerkTextFieldKt {
+	public static final fun ClerkTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZILandroidx/compose/ui/autofill/ContentType;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/clerk/ui/core/input/PasswordKeyboardOptionsKt {
+	public static final fun getPasswordKeyboardOptions ()Landroidx/compose/foundation/text/KeyboardOptions;
+}
+
+public final class com/clerk/ui/navigation/ClerkHostBackActionKt {
+	public static final fun ClerkHostBackActionProvider (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class com/clerk/ui/organizationlist/OrganizationListViewKt {
+	public static final fun OrganizationListView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;ZZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/organizationprofile/OrganizationProfileViewKt {
+	public static final fun OrganizationProfileView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;ZLjava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomNavigator {
+	public static final field $stable I
+	public final fun navigateBack ()V
+	public final fun popToRoot ()V
+	public final fun push (Ljava/lang/String;)V
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomNavigatorKt {
+	public static final fun getLocalOrganizationProfileCustomNavigator ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRow {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;
+	public final fun component4 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRow;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRow;Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRow;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIcon ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon;
+	public final fun getPlacement ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement;
+	public final fun getRouteKey ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement {
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$After : com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;)V
+	public final fun component1 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public final fun copy (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$After;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$After;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$After;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRow ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$Before : com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;)V
+	public final fun component1 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public final fun copy (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$Before;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$Before;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$Before;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRow ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionEnd : com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;)V
+	public final fun component1 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public final fun copy (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionEnd;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionEnd;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionEnd;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSection ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionStart : com/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;)V
+	public final fun component1 ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public final fun copy (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionStart;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionStart;Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileCustomRowPlacement$SectionStart;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSection ()Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileRow : java/lang/Enum {
+	public static final field DeleteOrganization Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public static final field LeaveOrganization Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public static final field Members Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public static final field VerifiedDomains Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+	public static fun values ()[Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRow;
+}
+
+public abstract interface class com/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon {
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Resource : com/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon {
+	public static final field $stable I
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Resource;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Resource;IILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Resource;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResId ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Vector : com/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/ui/graphics/vector/ImageVector;)V
+	public final fun component1 ()Landroidx/compose/ui/graphics/vector/ImageVector;
+	public final fun copy (Landroidx/compose/ui/graphics/vector/ImageVector;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Vector;
+	public static synthetic fun copy$default (Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Vector;Landroidx/compose/ui/graphics/vector/ImageVector;ILjava/lang/Object;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileRowIcon$Vector;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getImageVector ()Landroidx/compose/ui/graphics/vector/ImageVector;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationprofile/custom/OrganizationProfileSection : java/lang/Enum {
+	public static final field Actions Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public static final field Profile Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+	public static fun values ()[Lcom/clerk/ui/organizationprofile/custom/OrganizationProfileSection;
+}
+
+public abstract class com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Companion;
+	public synthetic fun <init> (ZFLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getSize-D9Ej5fM ()F
+}
+
+public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Compact : com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Compact;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Companion {
+	public final fun compact-0680j_4 (F)Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;
+	public final fun normal-0680j_4 (F)Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;
+}
+
+public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Normal : com/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode$Normal;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherKt {
+	public static final fun OrganizationSwitcher (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;ZLcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/List;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun OrganizationSwitcher (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;ZLcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/List;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/SignInFactorOneViewKt {
+	public static final fun SignInFactorOneView (Lcom/clerk/api/network/model/factor/Factor;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/SignInFactorTwoViewKt {
+	public static final fun SignInFactorTwoView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/alternativemethods/SignInFactorAlternativeMethodsViewKt {
+	public static final fun SignInFactorAlternativeMethodsView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;ZLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/backupcode/SigninFactorTwoBackupCodeViewKt {
+	public static final fun SignInFactorTwoBackupCodeView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/clienttrust/SignInClientTrustViewKt {
+	public static final fun SignInClientTrustView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/code/SignInFactorCodeViewKt {
+	public static final fun SignInFactorCodeView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;ZZLcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public abstract interface class com/clerk/ui/signin/code/VerificationState {
+}
+
+public final class com/clerk/ui/signin/code/VerificationState$Default : com/clerk/ui/signin/code/VerificationState {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signin/code/VerificationState$Default;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/signin/code/VerificationState$Error : com/clerk/ui/signin/code/VerificationState {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signin/code/VerificationState$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/signin/code/VerificationState$Success : com/clerk/ui/signin/code/VerificationState {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signin/code/VerificationState$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/signin/code/VerificationState$Verifying : com/clerk/ui/signin/code/VerificationState {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signin/code/VerificationState$Verifying;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/signin/emaillink/SignInFactorOneEmailLinkViewKt {
+	public static final fun SignInFactorOneEmailLinkView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/help/SignInGetHelpViewKt {
+	public static final fun SignInGetHelpView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/passkey/SignInFactorOnePasskeyViewKt {
+	public static final fun SignInFactorOnePasskeyView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/passkey/SignInFactorTwoPasskeyViewKt {
+	public static final fun SignInFactorTwoPasskeyView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/password/forgot/SignInFactorOneForgotPasswordViewKt {
+	public static final fun SignInFactorOneForgotPasswordView (Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/password/reset/SignInSetNewPasswordViewKt {
+	public static final fun SignInSetNewPasswordView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signin/password/set/SignInFactorOnePasswordViewKt {
+	public static final fun SignInFactorOnePasswordView (Lcom/clerk/api/network/model/factor/Factor;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public abstract interface class com/clerk/ui/signup/code/SignUpCodeField {
+	public static final field Companion Lcom/clerk/ui/signup/code/SignUpCodeField$Companion;
+	public abstract fun getValue ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeField$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeField$Email : com/clerk/ui/signup/code/SignUpCodeField {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/ui/signup/code/SignUpCodeField$Email$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/clerk/ui/signup/code/SignUpCodeField$Email;
+	public static synthetic fun copy$default (Lcom/clerk/ui/signup/code/SignUpCodeField$Email;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/ui/signup/code/SignUpCodeField$Email;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/ui/signup/code/SignUpCodeField$Email$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signup/code/SignUpCodeField$Email$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/ui/signup/code/SignUpCodeField$Email;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/ui/signup/code/SignUpCodeField$Email;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeField$Email$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeField$Phone : com/clerk/ui/signup/code/SignUpCodeField {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/ui/signup/code/SignUpCodeField$Phone$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/clerk/ui/signup/code/SignUpCodeField$Phone;
+	public static synthetic fun copy$default (Lcom/clerk/ui/signup/code/SignUpCodeField$Phone;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/ui/signup/code/SignUpCodeField$Phone;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/ui/signup/code/SignUpCodeField$Phone$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/signup/code/SignUpCodeField$Phone$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/ui/signup/code/SignUpCodeField$Phone;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/ui/signup/code/SignUpCodeField$Phone;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeField$Phone$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/signup/code/SignUpCodeViewKt {
+	public static final fun SignUpCodeView (Lcom/clerk/ui/signup/code/SignUpCodeField;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signup/collectfield/CollectField : java/lang/Enum {
+	public static final field Email Lcom/clerk/ui/signup/collectfield/CollectField;
+	public static final field Password Lcom/clerk/ui/signup/collectfield/CollectField;
+	public static final field Phone Lcom/clerk/ui/signup/collectfield/CollectField;
+	public static final field Username Lcom/clerk/ui/signup/collectfield/CollectField;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getRawValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/signup/collectfield/CollectField;
+	public static fun values ()[Lcom/clerk/ui/signup/collectfield/CollectField;
+}
+
+public final class com/clerk/ui/signup/collectfield/SignUpCollectFieldViewKt {
+	public static final fun SignUpCollectFieldView (Lcom/clerk/ui/signup/collectfield/CollectField;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signup/completeprofile/SignUpCompleteProfileViewKt {
+	public static final fun SignUpCompleteProfileView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/signup/emaillink/SignUpEmailLinkViewKt {
+	public static final fun SignUpEmailLinkView (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/userbutton/UserButtonKt {
+	public static final fun UserButton (Lcom/clerk/api/ui/ClerkTheme;ZZLjava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/userprofile/UserProfileViewKt {
+	public static final fun UserProfileView (Lcom/clerk/api/ui/ClerkTheme;Ljava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomNavigator {
+	public static final field $stable I
+	public final fun navigateBack ()V
+	public final fun popToRoot ()V
+	public final fun push (Ljava/lang/String;)V
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomNavigatorKt {
+	public static final fun getLocalUserProfileCustomNavigator ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomRow {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;
+	public final fun component4 ()Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRow;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileCustomRow;Ljava/lang/String;Ljava/lang/String;Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRow;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIcon ()Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon;
+	public final fun getPlacement ()Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement;
+	public final fun getRouteKey ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement {
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$After : com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/userprofile/custom/UserProfileRow;)V
+	public final fun component1 ()Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public final fun copy (Lcom/clerk/ui/userprofile/custom/UserProfileRow;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$After;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$After;Lcom/clerk/ui/userprofile/custom/UserProfileRow;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$After;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRow ()Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$Before : com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/userprofile/custom/UserProfileRow;)V
+	public final fun component1 ()Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public final fun copy (Lcom/clerk/ui/userprofile/custom/UserProfileRow;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$Before;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$Before;Lcom/clerk/ui/userprofile/custom/UserProfileRow;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$Before;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRow ()Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionEnd : com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/userprofile/custom/UserProfileSection;)V
+	public final fun component1 ()Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public final fun copy (Lcom/clerk/ui/userprofile/custom/UserProfileSection;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionEnd;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionEnd;Lcom/clerk/ui/userprofile/custom/UserProfileSection;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionEnd;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSection ()Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionStart : com/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement {
+	public static final field $stable I
+	public fun <init> (Lcom/clerk/ui/userprofile/custom/UserProfileSection;)V
+	public final fun component1 ()Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public final fun copy (Lcom/clerk/ui/userprofile/custom/UserProfileSection;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionStart;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionStart;Lcom/clerk/ui/userprofile/custom/UserProfileSection;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileCustomRowPlacement$SectionStart;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSection ()Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileRow : java/lang/Enum {
+	public static final field AddAccount Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static final field ManageAccount Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static final field Security Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static final field SignOut Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static final field SwitchAccount Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+	public static fun values ()[Lcom/clerk/ui/userprofile/custom/UserProfileRow;
+}
+
+public abstract interface class com/clerk/ui/userprofile/custom/UserProfileRowIcon {
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileRowIcon$Resource : com/clerk/ui/userprofile/custom/UserProfileRowIcon {
+	public static final field $stable I
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Resource;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Resource;IILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Resource;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResId ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileRowIcon$Vector : com/clerk/ui/userprofile/custom/UserProfileRowIcon {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/ui/graphics/vector/ImageVector;)V
+	public final fun component1 ()Landroidx/compose/ui/graphics/vector/ImageVector;
+	public final fun copy (Landroidx/compose/ui/graphics/vector/ImageVector;)Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Vector;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Vector;Landroidx/compose/ui/graphics/vector/ImageVector;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/custom/UserProfileRowIcon$Vector;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getImageVector ()Landroidx/compose/ui/graphics/vector/ImageVector;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/custom/UserProfileSection : java/lang/Enum {
+	public static final field Account Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public static final field Profile Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+	public static fun values ()[Lcom/clerk/ui/userprofile/custom/UserProfileSection;
+}
+
+public final class com/clerk/ui/userprofile/detail/UserProfileDetailViewKt {
+	public static final fun UserProfileDetailView (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+}
+
+public abstract interface class com/clerk/ui/userprofile/verify/Mode {
+	public static final field Companion Lcom/clerk/ui/userprofile/verify/Mode$Companion;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Email : com/clerk/ui/userprofile/verify/Mode {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/ui/userprofile/verify/Mode$Email$Companion;
+	public fun <init> (Lcom/clerk/api/emailaddress/EmailAddress;)V
+	public final fun component1 ()Lcom/clerk/api/emailaddress/EmailAddress;
+	public final fun copy (Lcom/clerk/api/emailaddress/EmailAddress;)Lcom/clerk/ui/userprofile/verify/Mode$Email;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/verify/Mode$Email;Lcom/clerk/api/emailaddress/EmailAddress;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/verify/Mode$Email;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmailAddress ()Lcom/clerk/api/emailaddress/EmailAddress;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/ui/userprofile/verify/Mode$Email$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/userprofile/verify/Mode$Email$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/ui/userprofile/verify/Mode$Email;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/ui/userprofile/verify/Mode$Email;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Email$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Phone : com/clerk/ui/userprofile/verify/Mode {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/ui/userprofile/verify/Mode$Phone$Companion;
+	public fun <init> (Lcom/clerk/api/phonenumber/PhoneNumber;)V
+	public final fun component1 ()Lcom/clerk/api/phonenumber/PhoneNumber;
+	public final fun copy (Lcom/clerk/api/phonenumber/PhoneNumber;)Lcom/clerk/ui/userprofile/verify/Mode$Phone;
+	public static synthetic fun copy$default (Lcom/clerk/ui/userprofile/verify/Mode$Phone;Lcom/clerk/api/phonenumber/PhoneNumber;ILjava/lang/Object;)Lcom/clerk/ui/userprofile/verify/Mode$Phone;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPhoneNumber ()Lcom/clerk/api/phonenumber/PhoneNumber;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/ui/userprofile/verify/Mode$Phone$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/userprofile/verify/Mode$Phone$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/ui/userprofile/verify/Mode$Phone;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/ui/userprofile/verify/Mode$Phone;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Phone$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/ui/userprofile/verify/Mode$Totp : com/clerk/ui/userprofile/verify/Mode {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/ui/userprofile/verify/Mode$Totp;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/ui/userprofile/verify/UserProfileVerifyViewKt {
+	public static final fun UserProfileVerifyView (Lcom/clerk/ui/userprofile/verify/Mode;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+}
+

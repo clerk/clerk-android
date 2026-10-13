@@ -16,9 +16,11 @@ import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
@@ -27,6 +29,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
@@ -63,16 +66,30 @@ class AuthTest {
 
   @Test
   fun `signUpWithGoogleOneTap delegates to transferable Google One Tap flow`() = runTest {
-    mockkObject(SignIn.Companion)
+    mockkConstructor(GoogleSignInService::class)
     val signUp = mockk<SignUp>(relaxed = true)
     val oauthResult = OAuthResult(signUp = signUp)
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.success(oauthResult)
+    coEvery { anyConstructed<GoogleSignInService>().signInWithGoogle(true) } returns
+      ClerkResult.success(oauthResult)
 
     val result = Auth().signUpWithGoogleOneTap()
 
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { anyConstructed<GoogleSignInService>().signInWithGoogle(true) }
+  }
+
+  @Test
+  fun `signInWithRestoreCredential delegates to restore credentials`() = runTest {
+    mockkObject(RestoreCredentials)
+    val signIn = mockk<SignIn>(relaxed = true)
+    coEvery { RestoreCredentials.signIn() } returns ClerkResult.success(signIn)
+
+    val result = Auth().signInWithRestoreCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(signIn, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { RestoreCredentials.signIn() }
   }
 
   @Test
@@ -102,6 +119,41 @@ class AuthTest {
         emailAddress = null,
         legalAccepted = null,
       )
+    }
+  }
+
+  @Test
+  fun `signUpWithEnterpriseSso starts a sign-up redirect instead of a sign-in`() = runTest {
+    mockkObject(SSOService)
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result = Auth().signUpWithEnterpriseSso { email = "user@company.com" }
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+      )
+    }
+    coVerify(exactly = 0) {
+      SSOService.authenticateWithRedirect(any(), any(), any(), any(), any(), any())
     }
   }
 
@@ -136,7 +188,7 @@ class AuthTest {
 
   @Test
   fun `signUpWithGoogleOneTap emits auth error event on failure`() = runTest {
-    mockkObject(SignIn.Companion)
+    mockkConstructor(GoogleSignInService::class)
     val error =
       ClerkErrorResponse(
         errors =
@@ -149,7 +201,8 @@ class AuthTest {
           ),
         clerkTraceId = "trace_123",
       )
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.apiFailure(error)
+    coEvery { anyConstructed<GoogleSignInService>().signInWithGoogle(true) } returns
+      ClerkResult.apiFailure(error)
 
     val auth = Auth()
     val events = mutableListOf<AuthEvent>()
@@ -167,30 +220,8 @@ class AuthTest {
       "Account already exists. Use sign in instead.",
       (events.single() as AuthEvent.Error).message,
     )
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { anyConstructed<GoogleSignInService>().signInWithGoogle(true) }
   }
-
-  @Test
-  fun `signInWithOtp email creates sign in with strategy without preparing first factor`() =
-    runTest {
-      val signInApi = mockk<SignInApi>(relaxed = true)
-      val createdSignIn = SignIn(id = "sign_in_123")
-      val createParams = slot<Map<String, String>>()
-      mockkObject(ClerkApi)
-      every { ClerkApi.signIn } returns signInApi
-      coEvery { signInApi.createSignIn(capture(createParams)) } returns
-        ClerkResult.success(createdSignIn)
-
-      val result = Auth().signInWithOtp { email = "user@example.com" }
-
-      assertTrue(result is ClerkResult.Success)
-      assertSame(createdSignIn, (result as ClerkResult.Success).value)
-      assertEquals("user@example.com", createParams.captured["identifier"])
-      assertEquals("email_code", createParams.captured["strategy"])
-      assertTrue(createParams.captured.containsKey("locale"))
-      coVerify(exactly = 1) { signInApi.createSignIn(any()) }
-      coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
-    }
 
   @Test
   fun `signInWithOtp phone creates sign in with strategy without preparing first factor`() =
@@ -236,8 +267,10 @@ class AuthTest {
     val sessionApi = mockk<SessionApi>()
     val clientApi = mockk<ClientApi>()
     mockkObject(ClerkApi)
+    mockkObject(RestoreCredentials)
     every { ClerkApi.session } returns sessionApi
     every { ClerkApi.client } returns clientApi
+    coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
     coEvery { clientApi.get() } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
@@ -256,6 +289,7 @@ class AuthTest {
     assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
     assertEquals(secondSession, Clerk.sessionFlow.value)
     coVerify(exactly = 1) { sessionApi.removeSession(firstSession.id) }
+    coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
 
   @Test

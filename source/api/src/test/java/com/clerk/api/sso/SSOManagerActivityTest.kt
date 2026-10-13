@@ -2,24 +2,48 @@ package com.clerk.api.sso
 
 import android.app.Activity
 import android.app.Application
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
+import com.clerk.api.auth.createSignUp
+import com.clerk.api.externalaccount.ExternalAccount
+import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.UserApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.signup.SignUp
+import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
+import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.lang.ref.WeakReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,8 +54,12 @@ import org.robolectric.Shadows
 @RunWith(RobolectricTestRunner::class)
 class SSOManagerActivityTest {
 
+  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
+  private val auth: Auth = Clerk.auth
+
   @After
   fun tearDown() {
+    ExternalAccountService.cancelPendingExternalAccountConnection()
     unmockkAll()
   }
 
@@ -60,6 +88,7 @@ class SSOManagerActivityTest {
 
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_OK, shadow.resultCode)
+    coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(responseUri) }
   }
 
   @Test
@@ -139,6 +168,47 @@ class SSOManagerActivityTest {
     assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
     verify(exactly = 1) { HostedAuthService.cancelPendingAuthentication(any()) }
     verify(exactly = 1) { SSOService.cancelPendingAuthentication() }
+  }
+
+  @Test
+  fun authorizationCanceled_failsPendingExternalAccountConnection() = runTest {
+    mockkObject(HostedAuthService)
+    mockkObject(ClerkApi)
+    mockkObject(Clerk)
+    justRun { HostedAuthService.cancelPendingAuthentication(any()) }
+    val userApi = mockk<UserApi>()
+    val verification = mockk<Verification>()
+    val externalAccount = mockk<ExternalAccount>()
+    every { verification.externalVerificationRedirectUrl } returns "https://oauth.example.com/auth"
+    every { externalAccount.verification } returns verification
+    every { externalAccount.id } returns "ext_account_123"
+    every { ClerkApi.user } returns userApi
+    coEvery { userApi.createExternalAccount(any(), any()) } returns
+      ClerkResult.success(externalAccount)
+    every { Clerk.applicationContext } returns WeakReference(mockk(relaxed = true))
+    every { Clerk.debugMode } returns false
+
+    val pendingResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+    }
+    runCurrent()
+    assertTrue(ExternalAccountService.hasPendingExternalAccountConnection())
+
+    // The user dismisses the browser: the manager resumes without a callback URI.
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val intent =
+      SSOManagerActivity.createBaseIntent(app).apply {
+        putExtra(com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED, true)
+      }
+    val activity =
+      Robolectric.buildActivity(SSOManagerActivity::class.java, intent).create().resume().get()
+
+    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+    val failure = withTimeout(5_000L) { pendingResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable is SSOCancellationException)
+    assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
   }
 
   @Test
@@ -258,13 +328,16 @@ class SSOManagerActivityTest {
   }
 
   @Test
-  fun authorizationComplete_setsResultOk_evenWhenServiceThrows() {
+  fun authorizationComplete_setsResultCanceledAndFinishes_whenServiceThrows() {
     mockkObject(SSOService)
     every { SSOService.hasPendingExternalAccountConnection() } returns false
     coEvery { SSOService.completeAuthenticateWithRedirect(any()) } throws RuntimeException("boom")
 
+    // RESULT_CANCELED is also the Activity default, so the uncaught-exception check is what proves
+    // the failure was handled inside authorizationComplete rather than escaping the coroutine.
+    val uncaught = mutableListOf<Throwable>()
     val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
-    Thread.setDefaultUncaughtExceptionHandler { _, _ -> /* swallow coroutine exception */ }
+    Thread.setDefaultUncaughtExceptionHandler { _, throwable -> uncaught += throwable }
     try {
       val app = ApplicationProvider.getApplicationContext<Application>()
       val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
@@ -276,8 +349,10 @@ class SSOManagerActivityTest {
       val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
       val activity = controller.create().resume().get()
 
-      val shadow = Shadows.shadowOf(activity)
-      assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
+      coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(responseUri) }
+      assertEquals(emptyList<Throwable>(), uncaught)
+      assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+      assertTrue(activity.isFinishing)
     } finally {
       Thread.setDefaultUncaughtExceptionHandler(originalHandler)
     }
@@ -339,6 +414,46 @@ class SSOManagerActivityTest {
   }
 
   @Test
+  fun ssoCompletion_interruptedByRecreation_finishesRecreatedActivity() = runTest {
+    mockkObject(Clerk)
+    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
+    every { Clerk.applicationContext } returns WeakReference(mockk(relaxed = true))
+    val neverCompletes = CompletableDeferred<ClerkResult<SignUp, ClerkErrorResponse>>()
+    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
+      {
+        neverCompletes.await()
+      }
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect("https://accounts.example.com/oauth/authorize")
+      }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri =
+      Uri.parse(
+        "clerk://com.example.app.callback" +
+          "?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+      )
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    controller.create().resume()
+    assertFalse(controller.get().isFinishing)
+
+    val nightMode =
+      Configuration(controller.get().resources.configuration).apply {
+        uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+      }
+    controller.configurationChange(nightMode)
+    Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+    val failure = withTimeout(5_000L) { pendingResult.await() } as ClerkResult.Failure
+    assertTrue(failure.throwable?.cause is CancellationException)
+    assertTrue(controller.get().isFinishing)
+    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(controller.get()).resultCode)
+    coVerify(exactly = 1) { auth.createSignUp(SignUp.CreateParams.Transfer) }
+  }
+
+  @Test
   fun nativeMagicLinkFailure_setsResultCanceled() {
     mockkObject(NativeMagicLinkService)
     coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(any()) } returns
@@ -361,5 +476,7 @@ class SSOManagerActivityTest {
 
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
+    coVerify(exactly = 1) { NativeMagicLinkService.handleMagicLinkDeepLink(responseUri) }
+    assertTrue(activity.isFinishing)
   }
 }

@@ -1,6 +1,7 @@
 package com.clerk.api.biometriccredential
 
 import android.content.Context
+import android.hardware.biometrics.BiometricManager.Authenticators
 import android.hardware.biometrics.BiometricPrompt
 import android.os.Build
 import android.os.CancellationSignal
@@ -9,6 +10,7 @@ import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.core.content.ContextCompat
 import com.clerk.api.Clerk
@@ -26,15 +28,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
-/** A locally generated private key and its backend-facing public key material. */
 internal data class BiometricCredentialLocalKey(
   val localKeyId: String,
   val publicKeyJwk: String,
   val algorithm: String = BiometricCredential.ES256_ALGORITHM,
-  val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+  val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
 )
 
-/** A signed biometric-credential challenge payload ready to send to Clerk. */
 internal data class BiometricCredentialKeySignature(
   val clientData: String,
   val signature: String,
@@ -46,13 +46,13 @@ internal data class BiometricCredentialKeySignature(
  *
  * Check [code] to distinguish user cancellation from real failures.
  */
-class BiometricCredentialKeyManagerException
-internal constructor(val code: Code, message: String, cause: Throwable? = null) :
+public class BiometricCredentialKeyManagerException
+internal constructor(public val code: Code, message: String, cause: Throwable? = null) :
   Exception(message, cause) {
 
   /** The category of biometric-credential key management error. */
-  enum class Code {
-    /** Biometric-credential sign-in requires Android 9 (API 28) or later. */
+  public enum class Code {
+    /** Biometric sign-in requires Android 9 (API 28) or later. */
     UNSUPPORTED_PLATFORM,
 
     /** Biometric authentication is not available or not enrolled on this device. */
@@ -80,14 +80,9 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
   }
 }
 
-/** Manager for local, biometric-gated biometric-credential private keys. */
 internal interface BiometricCredentialKeyManager {
-  /**
-   * Whether biometric-credential keys protected by [policy] can be created and used on this device.
-   */
   fun isSupported(policy: BiometricCredentialPolicy): Boolean
 
-  /** Creates a new biometric-gated EC P-256 key pair and returns its public key material. */
   fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey
 
   /**
@@ -102,7 +97,6 @@ internal interface BiometricCredentialKeyManager {
     promptSubtitle: String? = null,
   ): BiometricCredentialKeySignature
 
-  /** Returns whether the private key identified by [localKeyId] exists. */
   fun hasKey(localKeyId: String): Boolean
 
   /** Deletes the private key identified by [localKeyId]. Missing keys are ignored. */
@@ -112,9 +106,7 @@ internal interface BiometricCredentialKeyManager {
 /**
  * Default [BiometricCredentialKeyManager] backed by the Android Keystore.
  *
- * Keys are EC P-256 signing keys requiring per-use user authentication. Challenge signing wraps a
- * [Signature] in a [BiometricPrompt.CryptoObject], so the signature can only be produced after the
- * user passes the system biometric prompt. Requires Android 9 (API 28) for [BiometricPrompt].
+ * Requires Android 9 (API 28) for [BiometricPrompt].
  */
 @Suppress("TooManyFunctions")
 internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyManager {
@@ -152,7 +144,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw BiometricCredentialKeyManagerException(
         BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
+        "Biometric sign-in requires Android 9 (API 28) or later.",
       )
     }
     if (!isSupported(policy)) {
@@ -207,7 +199,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw BiometricCredentialKeyManagerException(
         BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
+        "Biometric sign-in requires Android 9 (API 28) or later.",
       )
     }
 
@@ -279,7 +271,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
       Clerk.credentialActivity()
         ?: throw BiometricCredentialKeyManagerException(
           BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
-          "Biometric-credential sign-in requires an active Activity.",
+          "Biometric sign-in requires an active Activity.",
         )
 
     return withContext(Dispatchers.Main) {
@@ -298,12 +290,11 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         if (allowsDeviceCredential) {
           builder.setAllowedAuthenticators(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or
-              BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
           )
         } else {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            builder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            builder.setAllowedAuthenticators(Authenticators.BIOMETRIC_STRONG)
           }
           builder.setNegativeButton(
             activity.getString(android.R.string.cancel),
@@ -370,7 +361,8 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
   }
 
   @RequiresApi(Build.VERSION_CODES.P)
-  private fun keyGenParameterSpec(
+  @VisibleForTesting
+  internal fun keyGenParameterSpec(
     localKeyId: String,
     policy: BiometricCredentialPolicy,
   ): KeyGenParameterSpec {
