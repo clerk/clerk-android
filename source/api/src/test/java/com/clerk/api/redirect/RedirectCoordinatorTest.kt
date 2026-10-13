@@ -9,11 +9,11 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOCancellationException
 import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -235,15 +235,82 @@ class RedirectCoordinatorTest {
   }
 
   @Test
-  fun `a redirect prepared without state accepts any callback`() = runBlocking {
-    val pending = startSso(EXTERNAL_URL_A, state = null)
+  fun `a redirect prepared without state fails before a flow starts`() = runBlocking {
+    val result = startSso(EXTERNAL_URL_A, state = null)
+
+    val failure = withTimeout(TIMEOUT_MS) { result.await() } as ClerkResult.Failure
+    assertEquals(
+      LocalFailureCodes.REDIRECT_NOT_PREPARED,
+      failure.error?.errors?.single()?.code,
+    )
+    assertEquals(null, RedirectCoordinator.current())
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(FORGED_ERROR_CALLBACK))
+    assertEquals(0, completeCalls.get())
+  }
+
+  @Test
+  fun `retrying a prepared redirect still enforces its state`() = runBlocking {
+    val first = startSso(EXTERNAL_URL_A, state = STATE)
+    RedirectCoordinator.cancelPending()
+    assertTrue(withTimeout(TIMEOUT_MS) { first.await() } is ClerkResult.Failure)
+
+    val retry = startSso(EXTERNAL_URL_A, state = null)
+
+    assertTrue(RedirectCoordinator.current() is PendingRedirect.Sso)
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(FORGED_ERROR_CALLBACK))
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(callback("forged")))
+    assertEquals(
+      ReceiverDelivery.DROP,
+      RedirectCoordinator.receiverDelivery(FORGED_ERROR_CALLBACK),
+    )
+    assertFalse(retry.isCompleted)
+    assertEquals(0, completeCalls.get())
+
+    completionGate.complete(Unit)
+    assertEquals(
+      CallbackOutcome.Completed(success = true),
+      RedirectCoordinator.dispatch(callback(STATE)),
+    )
+    assertTrue(withTimeout(TIMEOUT_MS) { retry.await() } is ClerkResult.Success)
+  }
+
+  @Test
+  fun `a successful redirect forgets its prepared state`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
     completionGate.complete(Unit)
 
-    val outcome = RedirectCoordinator.dispatch(callback(state = null))
+    RedirectCoordinator.dispatch(callback(STATE))
 
-    assertEquals(CallbackOutcome.Completed(success = true), outcome)
-    assertTrue(pending.await() is ClerkResult.Success)
-    coVerify(exactly = 1) { SSOService.completeRedirect(any(), any()) }
+    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Success)
+    assertEquals(null, RedirectState.expectedFor(EXTERNAL_URL_A))
+  }
+
+  @Test
+  fun `an evicted prepared redirect fails instead of accepting any callback`() = runBlocking {
+    RedirectState.remember(EXTERNAL_URL_A, STATE)
+    repeat(EVICTING_PREPARES) { RedirectState.remember("$EXTERNAL_URL_B/$it", "state_$it") }
+
+    val evicted = startSso(EXTERNAL_URL_A, state = null)
+
+    val failure = withTimeout(TIMEOUT_MS) { evicted.await() } as ClerkResult.Failure
+    assertEquals(
+      LocalFailureCodes.REDIRECT_NOT_PREPARED,
+      failure.error?.errors?.single()?.code,
+    )
+    assertEquals(null, RedirectCoordinator.current())
+    assertEquals(CallbackOutcome.Ignored, RedirectCoordinator.dispatch(FORGED_ERROR_CALLBACK))
+    assertEquals(0, completeCalls.get())
+  }
+
+  @Test
+  fun `a recently used prepared redirect survives later prepares`() {
+    RedirectState.remember(EXTERNAL_URL_A, STATE)
+    repeat(EVICTING_PREPARES) {
+      RedirectState.expectedFor(EXTERNAL_URL_A)
+      RedirectState.remember("$EXTERNAL_URL_B/$it", "state_$it")
+    }
+
+    assertEquals(STATE, RedirectState.expectedFor(EXTERNAL_URL_A))
   }
 
   @Test
@@ -288,12 +355,12 @@ class RedirectCoordinatorTest {
   }
 
   @Test
-  fun `a finished flow without state does not claim the app's own deep links`() = runBlocking {
-    val pending = startSso(EXTERNAL_URL_A, state = null)
+  fun `a finished flow does not claim the app's own deep links`() = runBlocking {
+    val pending = startSso(EXTERNAL_URL_A, state = STATE)
     completionGate.complete(Unit)
     assertEquals(
       CallbackOutcome.Completed(success = true),
-      RedirectCoordinator.dispatch(callback(state = null)),
+      RedirectCoordinator.dispatch(callback(STATE)),
     )
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Success)
 
@@ -304,7 +371,7 @@ class RedirectCoordinatorTest {
   }
 
   @Test
-  fun `the app's own deep link is not handled while a stateful flow is pending`() = runBlocking {
+  fun `the app's own deep link is not handled while a flow is pending`() = runBlocking {
     val pending = startSso(EXTERNAL_URL_A, state = STATE)
 
     assertEquals(
@@ -314,21 +381,6 @@ class RedirectCoordinatorTest {
 
     assertFalse(pending.isCompleted)
     assertTrue(RedirectCoordinator.current() is PendingRedirect.Sso)
-    assertEquals(0, completeCalls.get())
-    RedirectCoordinator.cancelPending()
-    assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
-  }
-
-  @Test
-  fun `the app's own deep link does not complete a pending flow without state`() = runBlocking {
-    val pending = startSso(EXTERNAL_URL_A, state = null)
-
-    assertEquals(
-      CallbackOutcome.NotHandled,
-      withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(APP_DEEP_LINK) },
-    )
-
-    assertFalse(pending.isCompleted)
     assertEquals(0, completeCalls.get())
     RedirectCoordinator.cancelPending()
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
@@ -421,7 +473,7 @@ class RedirectCoordinatorTest {
       "myapp://cb?x=1&clerk_redirect_state=s#frag",
       RedirectState.withState("myapp://cb?x=1#frag", "s"),
     )
-    assertSame(null, RedirectState.take("never-prepared"))
+    assertSame(null, RedirectState.expectedFor("never-prepared"))
   }
 
   private suspend fun CoroutineScope.startSso(
@@ -456,7 +508,9 @@ class RedirectCoordinatorTest {
     const val EXTERNAL_URL_A = "https://accounts.example.com/oauth/a"
     const val EXTERNAL_URL_B = "https://accounts.example.com/oauth/b"
     const val STATE = "state_123"
+    const val EVICTING_PREPARES = 4
     val APP_DEEP_LINK: Uri = Uri.parse("myapp://payment?error=declined")
+    val FORGED_ERROR_CALLBACK: Uri = Uri.parse("clerk://com.example.app.callback?error=x")
     val MAGIC_LINK: Uri = Uri.parse("myapp://email-link?flow_id=flow_123&approval_token=tok")
     const val TIMEOUT_MS = 5_000L
     const val POLL_MS = 5L

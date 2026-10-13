@@ -17,6 +17,7 @@ import com.clerk.api.network.serialization.shortErrorMessageOrNull
 import com.clerk.api.redirect.CallbackOutcome
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
+import com.clerk.api.redirect.RedirectState
 import com.clerk.api.signup.SignUp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,6 +59,7 @@ class SSOServiceCancellationTest {
     val application = ApplicationProvider.getApplicationContext<Application>()
     mockkObject(Clerk)
     every { Clerk.applicationContext } returns WeakReference(application)
+    RedirectState.remember(AUTHORIZATION_URL, STATE)
   }
 
   @After
@@ -105,7 +107,7 @@ class SSOServiceCancellationTest {
       }
 
     RedirectCoordinator.dispatch(
-      Uri.parse("$CALLBACK_URL?error=access_denied&error_description=User%20cancelled")
+      Uri.parse("$CALLBACK_URL&error=access_denied&error_description=User%20cancelled")
     )
 
     val failure = pendingResult.await() as ClerkResult.Failure
@@ -124,7 +126,7 @@ class SSOServiceCancellationTest {
 
       RedirectCoordinator.dispatch(
         Uri.parse(
-          "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+          "$CALLBACK_URL&__clerk_status=failed&__clerk_error_code=external_account_not_found"
         )
       )
 
@@ -148,7 +150,7 @@ class SSOServiceCancellationTest {
       }
 
     RedirectCoordinator.dispatch(
-      Uri.parse("$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found")
+      Uri.parse("$CALLBACK_URL&__clerk_status=failed&__clerk_error_code=external_account_not_found")
     )
 
     val result = pendingResult.await() as ClerkResult.Success
@@ -285,8 +287,9 @@ class SSOServiceCancellationTest {
 
   private companion object {
     const val AUTHORIZATION_URL = "https://accounts.example.com/oauth/authorize"
-    const val CALLBACK_URL = "clerk://com.example.app.callback"
+    const val STATE = "state_123"
+    const val CALLBACK_URL = "clerk://com.example.app.callback?clerk_redirect_state=$STATE"
     const val TRANSFER_CALLBACK_URL =
-      "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+      "$CALLBACK_URL&__clerk_status=failed&__clerk_error_code=external_account_not_found"
   }
 }

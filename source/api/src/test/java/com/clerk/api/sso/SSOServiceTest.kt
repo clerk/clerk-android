@@ -125,6 +125,7 @@ class SSOServiceTest {
     coEvery { signInApi.fetchSignIn(SIGN_IN_ID, NONCE) } returns
       ClerkResult.success(completedSignIn)
     val startedIntent = slot<Intent>()
+    RedirectState.remember(AUTHORIZATION_URL, STATE)
 
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
@@ -137,7 +138,9 @@ class SSOServiceTest {
     )
     assertTrue(hasPendingSso())
 
-    RedirectCoordinator.dispatch(Uri.parse("$CALLBACK_URL?rotating_token_nonce=$NONCE"))
+    RedirectCoordinator.dispatch(
+      Uri.parse("$CALLBACK_URL?rotating_token_nonce=$NONCE&${RedirectState.QUERY_PARAMETER}=$STATE")
+    )
 
     val result = (pendingResult.await() as ClerkResult.Success).value
     assertSame(completedSignIn, result.signIn)
@@ -145,6 +148,16 @@ class SSOServiceTest {
     assertFalse(hasPendingSso())
     coVerify(exactly = 1) { signInApi.fetchSignIn(SIGN_IN_ID, NONCE) }
     coVerify(exactly = 0) { signUpApi.createSignUp(any()) }
+  }
+
+  @Test
+  fun `a redirect this process did not prepare fails without launching the browser`() = runTest {
+    val result = SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(LocalFailureCodes.REDIRECT_NOT_PREPARED, failure.error?.errors?.single()?.code)
+    verify(exactly = 0) { context.startActivity(any()) }
+    assertFalse(hasPendingSso())
   }
 
   @Test
@@ -286,6 +299,7 @@ class SSOServiceTest {
     const val SIGN_IN_ID = "sign_in_123"
     const val SIGN_UP_ID = "sign_up_123"
     const val NONCE = "nonce_123"
+    const val STATE = "state_123"
     const val REDIRECT_URL = "clerk://com.example.app.callback"
     const val CALLBACK_URL = REDIRECT_URL
     const val AUTHORIZATION_URL = "https://accounts.example.com/oauth/authorize"

@@ -1,5 +1,6 @@
 package com.clerk.api.sso
 
+import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
@@ -187,28 +188,52 @@ internal object SSOService {
     redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
     signUp: SignUp? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val expectedState = RedirectState.take(externalVerificationRedirectUrl)
-    val context =
-      Clerk.applicationContext?.get()
-        ?: return ClerkResult.unknownFailure(
+    val context = Clerk.applicationContext?.get()
+    val expectedState = RedirectState.expectedFor(externalVerificationRedirectUrl)
+    return when {
+      context == null ->
+        ClerkResult.unknownFailure(
           IllegalStateException("Clerk must be initialized before starting redirect authentication")
         )
-    if (expectedState == null) {
-      ClerkLog.w("Redirect was prepared without a state; its callback cannot be verified")
+      expectedState == null -> redirectNotPreparedFailure()
+      else ->
+        launchPreparedRedirect(
+          context = context,
+          externalVerificationRedirectUrl = externalVerificationRedirectUrl,
+          pendingAuth =
+            PendingRedirect.Sso(
+              expectedState = expectedState,
+              transferable = transferable,
+              redirectFlow = redirectFlow,
+              signUp = signUp,
+            ),
+        )
     }
+  }
 
-    val pendingAuth =
-      PendingRedirect.Sso(
-        expectedState = expectedState,
-        transferable = transferable,
-        redirectFlow = redirectFlow,
-        signUp = signUp,
-      )
+  private suspend fun launchPreparedRedirect(
+    context: Context,
+    externalVerificationRedirectUrl: String,
+    pendingAuth: PendingRedirect.Sso,
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     RedirectCoordinator.begin(pendingAuth)
-    return RedirectCoordinator.launchAndAwait(
-      redirect = pendingAuth,
-      context = context,
-      authorizationUri = externalVerificationRedirectUrl.toUri(),
+    val result =
+      RedirectCoordinator.launchAndAwait(
+        redirect = pendingAuth,
+        context = context,
+        authorizationUri = externalVerificationRedirectUrl.toUri(),
+      )
+    if (result is ClerkResult.Success) RedirectState.forget(externalVerificationRedirectUrl)
+    return result
+  }
+
+  private fun redirectNotPreparedFailure(): ClerkResult.Failure<ClerkErrorResponse> {
+    ClerkLog.e("Redirect was not prepared in this process; its callback cannot be verified")
+    return localFailure(
+      code = LocalFailureCodes.REDIRECT_NOT_PREPARED,
+      longMessage =
+        "This redirect was not prepared in this app session. Prepare the first factor again " +
+          "before continuing the redirect.",
     )
   }
 

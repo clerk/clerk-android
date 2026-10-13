@@ -14,7 +14,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 
 internal sealed class PendingRedirect<T : Any> {
-  abstract val expectedState: String?
+  abstract val expectedState: String
 
   internal val result = CompletableDeferred<ClerkResult<T, ClerkErrorResponse>>()
   internal val completionStarted = AtomicBoolean(false)
@@ -30,7 +30,7 @@ internal sealed class PendingRedirect<T : Any> {
     result.complete(cancellation(reason))
 
   internal class Sso(
-    override val expectedState: String?,
+    override val expectedState: String,
     val transferable: Boolean,
     val redirectFlow: RedirectFlow,
     val signUp: SignUp?,

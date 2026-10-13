@@ -23,6 +23,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.redirect.CallbackOutcome
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
+import com.clerk.api.redirect.RedirectState
 import com.clerk.api.session.Session
 import com.clerk.api.signup.SignUp
 import com.clerk.api.user.User
@@ -350,15 +351,18 @@ class SSOManagerActivityTest {
         gate.await()
         ClerkResult.success(signUp)
       }
+    val authorizationUrl = "https://accounts.example.com/oauth/authorize"
+    RedirectState.remember(authorizationUrl, "state_123")
     val pendingResult =
       async(start = CoroutineStart.UNDISPATCHED) {
-        SSOService.authenticateWithPreparedRedirect("https://accounts.example.com/oauth/authorize")
+        SSOService.authenticateWithPreparedRedirect(authorizationUrl)
       }
 
     val responseUri =
       Uri.parse(
         "clerk://com.example.app.callback" +
-          "?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+          "?__clerk_status=failed&__clerk_error_code=external_account_not_found" +
+          "&${RedirectState.QUERY_PARAMETER}=state_123"
       )
     val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
     val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)

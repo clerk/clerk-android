@@ -2,6 +2,8 @@ package com.clerk.api.redirect
 
 import android.net.Uri
 import com.clerk.api.hostedauth.generateHostedAuthState
+import java.security.MessageDigest
+import kotlin.text.Charsets.UTF_8
 
 /**
  * Per-flow state for OAuth, enterprise SSO and external-account redirects.
@@ -15,10 +17,11 @@ import com.clerk.api.hostedauth.generateHostedAuthState
 internal object RedirectState {
   const val QUERY_PARAMETER = "clerk_redirect_state"
   private const val MAX_PREPARED = 4
+  private const val LOAD_FACTOR = 0.75f
 
   private val lock = Any()
 
-  private val prepared = LinkedHashMap<String, String>()
+  private val prepared = LinkedHashMap<String, String>(MAX_PREPARED, LOAD_FACTOR, true)
 
   fun generate(): String = generateHostedAuthState()
 
@@ -44,7 +47,16 @@ internal object RedirectState {
     }
   }
 
-  fun take(externalUrl: String): String? = synchronized(lock) { prepared.remove(externalUrl) }
+  fun expectedFor(externalUrl: String): String? = synchronized(lock) { prepared[externalUrl] }
+
+  fun forget(externalUrl: String) {
+    synchronized(lock) { prepared.remove(externalUrl) }
+  }
+
+  fun matches(uri: Uri, expected: String): Boolean {
+    val received = of(uri) ?: return false
+    return MessageDigest.isEqual(received.toByteArray(UTF_8), expected.toByteArray(UTF_8))
+  }
 
   fun of(uri: Uri): String? = runCatching {
     uri.getQueryParameters(QUERY_PARAMETER).singleOrNull()

@@ -35,7 +35,7 @@ internal object RedirectCoordinator {
   private val lock = Any()
   private var current: PendingRedirect<*>? = null
 
-  private var recentlyCompletedStatefulFlow: PendingRedirect<*>? = null
+  private var recentlyCompletedFlow: PendingRedirect<*>? = null
   private var recentUntilNanos = 0L
   private var magicLinkCompletion: Pair<String, Deferred<Boolean>>? = null
   private val pending = MutableStateFlow(false)
@@ -52,7 +52,7 @@ internal object RedirectCoordinator {
       synchronized(lock) {
         current.also {
           current = redirect
-          recentlyCompletedStatefulFlow = null
+          recentlyCompletedFlow = null
           pending.value = true
         }
       }
@@ -209,8 +209,7 @@ internal object RedirectCoordinator {
   private fun classify(uri: Uri): CallbackVerdict {
     val (pendingRedirect, recentRedirect) =
       synchronized(lock) {
-        current to
-          recentlyCompletedStatefulFlow?.takeIf { System.nanoTime() - recentUntilNanos < 0 }
+        current to recentlyCompletedFlow?.takeIf { System.nanoTime() - recentUntilNanos < 0 }
       }
     return when {
       canHandleNativeMagicLink(uri) -> CallbackVerdict.MagicLink
@@ -228,8 +227,7 @@ internal object RedirectCoordinator {
       is PendingRedirect.ExternalAccountConnection ->
         when {
           !uri.isClerkScheme() && !RedirectState.isPresentIn(uri) -> CallbackVerdict.Unmatched
-          redirect.expectedState == null || RedirectState.of(uri) == redirect.expectedState ->
-            CallbackVerdict.Accepted(redirect)
+          RedirectState.matches(uri, redirect.expectedState) -> CallbackVerdict.Accepted(redirect)
           RedirectState.isPresentIn(uri) -> CallbackVerdict.Rejected(STATE_MISMATCH)
           else -> CallbackVerdict.Rejected(STATE_MISSING)
         }
@@ -299,9 +297,7 @@ internal object RedirectCoordinator {
     }
 
   private fun clearSlot() {
-    recentlyCompletedStatefulFlow = current?.takeIf {
-      it.completionStarted.get() && it.expectedState != null
-    }
+    recentlyCompletedFlow = current?.takeIf { it.completionStarted.get() }
     recentUntilNanos = System.nanoTime() + RECENT_WINDOW_NANOS
     current = null
     pending.value = false
@@ -318,7 +314,7 @@ internal object RedirectCoordinator {
     cancelPending()
     synchronized(lock) {
       magicLinkCompletion = null
-      recentlyCompletedStatefulFlow = null
+      recentlyCompletedFlow = null
     }
     RedirectState.resetForTests()
   }

@@ -62,6 +62,6 @@ class SignInPrepareFirstFactorTest {
         .getValue("redirect_url")
         .substringAfter("clerk://callback?clerk_redirect_state=")
     assertTrue(state.isNotBlank())
-    assertEquals(state, RedirectState.take(externalUrl))
+    assertEquals(state, RedirectState.expectedFor(externalUrl))
   }
 }
