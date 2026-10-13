@@ -13,6 +13,7 @@ import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.redirect.CallbackOutcome
+import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -108,14 +109,14 @@ internal class SSOManagerActivity : AppCompatActivity() {
         ClerkLog.e("authorizationComplete failed: ${t.message}")
         setResult(RESULT_CANCELED, Intent())
       } finally {
-        // Delivering the callback cleared the Custom Tab, so a flow this callback did not complete
-        // can no longer receive one; fail it rather than leave its caller waiting.
-        if (!lifecycleScopeCancelled && flowThisActivityHosted != null) {
-          RedirectCoordinator.cancelPendingUnlessCompleting(flowThisActivityHosted)
-        }
+        if (!lifecycleScopeCancelled) failHostedFlowIfUnfinished(flowThisActivityHosted)
         finish()
       }
     }
+  }
+
+  private fun failHostedFlowIfUnfinished(flowThisActivityHosted: PendingRedirect<*>?) {
+    flowThisActivityHosted?.let(RedirectCoordinator::cancelPendingUnlessCompleting)
   }
 
   private fun authorizationFailed() {
