@@ -37,3 +37,12 @@ internal sealed interface FlowStep {
 
   data class BackupCodes(val codes: List<String>, val mfaType: MfaType) : FlowStep
 }
+
+internal fun FlowStep.endsDoneTask(enrollmentInFlight: Boolean): Boolean =
+  when (this) {
+    FlowStep.ChooseMethod -> true
+    is FlowStep.BackupCodes -> false
+    is FlowStep.AddMfa,
+    FlowStep.AddPhoneNumber,
+    is FlowStep.Verify -> !enrollmentInFlight
+  }

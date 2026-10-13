@@ -2,6 +2,7 @@ package com.clerk.ui.sessiontask.mfa
 
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.MfaType
+import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -60,5 +61,26 @@ class SessionTaskMfaViewModelTest {
     viewModel.startSession("sess_456")
 
     assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
+  }
+
+  @Test
+  fun endsDoneTask_keepsBackupCodesUp() {
+    val backupCodes = FlowStep.BackupCodes(codes = listOf("code-1"), mfaType = MfaType.PhoneCode)
+
+    assertEquals(false, backupCodes.endsDoneTask(enrollmentInFlight = false))
+  }
+
+  @Test
+  fun endsDoneTask_waitsForAnEnrollmentInFlight() {
+    val verify = FlowStep.Verify(VerifyBottomSheetMode.Totp)
+
+    assertEquals(false, verify.endsDoneTask(enrollmentInFlight = true))
+  }
+
+  @Test
+  fun endsDoneTask_leavesAnIdleSetupStep() {
+    assertEquals(true, FlowStep.AddMfa(ViewType.Sms).endsDoneTask(enrollmentInFlight = false))
+    assertEquals(true, FlowStep.AddPhoneNumber.endsDoneTask(enrollmentInFlight = false))
+    assertEquals(true, FlowStep.ChooseMethod.endsDoneTask(enrollmentInFlight = false))
   }
 }

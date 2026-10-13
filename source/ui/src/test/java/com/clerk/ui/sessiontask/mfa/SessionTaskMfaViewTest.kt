@@ -123,6 +123,32 @@ class SessionTaskMfaViewTest {
   }
 
   @Test
+  fun `the task completes when MFA is set up elsewhere while the authenticator setup is showing`() {
+    showTask()
+    composeTestRule.onNodeWithText("Authenticator application").performClick()
+    composeTestRule.waitUntilExactlyOneExists(hasText("Continue"), TIMEOUT_MILLIS)
+
+    session.value = session(awaitingMfaSetup = false)
+    composeTestRule.waitForIdle()
+
+    assertEquals(1, authCompletions.get())
+  }
+
+  @Test
+  fun `the task completes when MFA is set up elsewhere while the code entry is showing`() {
+    showTask()
+    composeTestRule.onNodeWithText("Authenticator application").performClick()
+    composeTestRule.waitUntilExactlyOneExists(hasText("Continue"), TIMEOUT_MILLIS)
+    composeTestRule.onNodeWithText("Continue").performClick()
+    composeTestRule.waitUntilExactlyOneExists(hasSetTextAction(), TIMEOUT_MILLIS)
+
+    session.value = session(awaitingMfaSetup = false)
+    composeTestRule.waitForIdle()
+
+    assertEquals(1, authCompletions.get())
+  }
+
+  @Test
   fun `system back on the backup codes completes the task`() {
     coEvery { user.attemptTotpVerification(any()) } coAnswers
       {
