@@ -93,7 +93,6 @@ public final class com/clerk/api/Clerk {
 	public final fun reset ()V
 	public final fun setCustomTheme (Lcom/clerk/api/ui/ClerkTheme;)V
 	public final fun setDeviceToken (Ljava/lang/String;Ljava/lang/String;)Z
-	public final fun setProtectAssertion (Ljava/lang/String;)V
 	public final fun setPublishableKey (Ljava/lang/String;)V
 	public final fun setTelemetryEnabled (Z)V
 	public final fun switchConfiguration (Landroid/content/Context;Ljava/lang/String;Lcom/clerk/api/ClerkConfigurationOptions;Lcom/clerk/api/ui/ClerkTheme;)V

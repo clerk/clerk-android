@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
@@ -1018,13 +1019,8 @@ public object Clerk {
   public suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> =
     configurationManager.clearDeviceToken()
 
-  /**
-   * Sets the customer-signed Protect assertion attached to Clerk requests, or clears it with null.
-   *
-   * This is intended for deterministic Protect coverage in application test suites. Assertions
-   * remain subject to the instance's Protect rules and do not directly choose a verdict.
-   */
-  public fun setProtectAssertion(token: String?) {
+  @VisibleForTesting
+  internal fun setProtectAssertion(token: String?) {
     ClerkProtect.setAssertion(token)
   }
 
