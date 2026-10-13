@@ -36,13 +36,11 @@ public object ClerkProtect {
   internal fun initialize(environment: Environment, fapiOrigin: String?) {
     val protectEnvironment =
       buildMap<String, Any?> {
-        runCatching { environment.protectConfig }
-          .getOrNull()
-          ?.let { put("protect_config", it.toAnyMap()) }
-        runCatching { environment.displayConfig.frontendApiUrl }
-          .getOrNull()
-          ?.let { put("display_config", mapOf("frontend_api_url" to it)) }
-        runCatching { environment.frontendApi }.getOrNull()?.let { put("frontend_api", it) }
+        environment.protectConfig?.let { put("protect_config", it.toAnyMap()) }
+        environment.displayConfig.frontendApiUrl?.let {
+          put("display_config", mapOf("frontend_api_url" to it))
+        }
+        environment.frontendApi?.let { put("frontend_api", it) }
       }
     Protect.initialize(protectEnvironment, fapiOrigin)
   }
