@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.ui.ClerkTestTags
@@ -41,20 +42,27 @@ import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+internal fun SessionTaskMfaView(
+  modifier: Modifier = Modifier,
+  viewModel: SessionTaskMfaViewModel = viewModel(),
+  onAuthComplete: () -> Unit,
+) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  var flowStep by remember(session?.id) { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  val flowStep by viewModel.flowStep.collectAsStateWithLifecycle()
   var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
   val showStep = { step: FlowStep ->
     if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
       taskIsDone = true
     } else {
-      flowStep = step
+      viewModel.setFlowStep(step)
     }
   }
 
-  LaunchedEffect(session?.id, session?.requiresForcedMfa) { showStep(flowStep) }
+  LaunchedEffect(session?.id, session?.requiresForcedMfa) {
+    viewModel.startSession(session?.id)
+    showStep(viewModel.flowStep.value)
+  }
   LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
   BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }
 
@@ -235,16 +243,4 @@ private fun BackupCodesStep(step: FlowStep.BackupCodes, onFlowStepChange: (FlowS
     mfaType = step.mfaType,
     onDismiss = { onFlowStepChange(FlowStep.ChooseMethod) },
   )
-}
-
-private sealed interface FlowStep {
-  data object ChooseMethod : FlowStep
-
-  data class AddMfa(val viewType: ViewType) : FlowStep
-
-  data object AddPhoneNumber : FlowStep
-
-  data class Verify(val mode: VerifyBottomSheetMode) : FlowStep
-
-  data class BackupCodes(val codes: List<String>, val mfaType: MfaType) : FlowStep
 }
