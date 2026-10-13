@@ -7,9 +7,11 @@ e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runn
 e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
-e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> [--screenshot <label>]...
+e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> [--screenshot <label>]... [--video] [--before <run-id>]
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
 ```
+
+`attach` takes at least one of `--screenshot` and `--video`, and fails with a usage error without one. `SKILL.md` has the choice under Evidence.
 
 Every verb takes `--json` and then prints one `{ "ok": ... }` object. Exit codes are 0 for ok, 1 for a failed or interrupted spec, 2 for a usage error, and 3 for a failed precondition. A spec that passed on a retry is `flaky` and does not fail the run. Every error carries a `fix`.
 
