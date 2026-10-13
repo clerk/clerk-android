@@ -37,4 +37,28 @@ class SessionTaskMfaViewModelTest {
 
     assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
   }
+
+  @Test
+  fun startSession_keepsFlowStepForTheSameSession() {
+    val viewModel = SessionTaskMfaViewModel()
+    viewModel.startSession("sess_123")
+    viewModel.setFlowStep(FlowStep.AddPhoneNumber)
+
+    viewModel.startSession("sess_123")
+
+    assertEquals(FlowStep.AddPhoneNumber, viewModel.flowStep.value)
+  }
+
+  @Test
+  fun startSession_resetsFlowStepForAnotherSession() {
+    val viewModel = SessionTaskMfaViewModel()
+    viewModel.startSession("sess_123")
+    viewModel.setFlowStep(
+      FlowStep.BackupCodes(codes = listOf("code-1"), mfaType = MfaType.PhoneCode)
+    )
+
+    viewModel.startSession("sess_456")
+
+    assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
+  }
 }

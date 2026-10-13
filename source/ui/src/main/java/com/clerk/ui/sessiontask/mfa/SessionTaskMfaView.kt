@@ -1,5 +1,6 @@
 package com.clerk.ui.sessiontask.mfa
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -45,13 +49,22 @@ internal fun SessionTaskMfaView(
 ) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val flowStep by viewModel.flowStep.collectAsStateWithLifecycle()
-  val isShowingBackupCodes = flowStep is FlowStep.BackupCodes
+  var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
-  LaunchedEffect(session?.requiresForcedMfa, isShowingBackupCodes) {
-    if (session?.requiresForcedMfa == false && !isShowingBackupCodes) {
-      onAuthComplete()
+  val showStep = { step: FlowStep ->
+    if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
+      taskIsDone = true
+    } else {
+      viewModel.setFlowStep(step)
     }
   }
+
+  LaunchedEffect(session?.id, session?.requiresForcedMfa) {
+    viewModel.startSession(session?.id)
+    showStep(viewModel.flowStep.value)
+  }
+  LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
+  BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }
 
   if (!Clerk.mfaPhoneCodeIsEnabled && !Clerk.mfaAuthenticatorAppIsEnabled) {
     SignInGetHelpView(modifier = modifier)
@@ -64,7 +77,7 @@ internal fun SessionTaskMfaView(
     SessionTaskMfaFlowContent(
       modifier = contentModifier,
       flowStep = flowStep,
-      onFlowStepChange = viewModel::setFlowStep,
+      onFlowStepChange = showStep,
     )
   }
 }

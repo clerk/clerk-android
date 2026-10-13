@@ -13,6 +13,14 @@ internal class SessionTaskMfaViewModel : ViewModel() {
   private val _flowStep = MutableStateFlow<FlowStep>(FlowStep.ChooseMethod)
   val flowStep: StateFlow<FlowStep> = _flowStep.asStateFlow()
 
+  private var sessionId: String? = null
+
+  fun startSession(id: String?) {
+    if (id == sessionId) return
+    sessionId = id
+    _flowStep.value = FlowStep.ChooseMethod
+  }
+
   fun setFlowStep(step: FlowStep) {
     _flowStep.value = step
   }
