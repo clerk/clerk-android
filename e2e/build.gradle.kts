@@ -35,7 +35,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.e2e"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.compileSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
 
     val keyValue =
       e2eKeyName?.let(::publishableKeyFromKeysFile)
