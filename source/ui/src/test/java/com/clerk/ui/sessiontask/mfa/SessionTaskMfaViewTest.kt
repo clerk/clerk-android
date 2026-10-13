@@ -1,6 +1,8 @@
 package com.clerk.ui.sessiontask.mfa
 
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -8,10 +10,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
@@ -34,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -208,6 +214,24 @@ class SessionTaskMfaViewTest {
     composeTestRule.onNodeWithText(BACKUP_CODES.first()).assertDoesNotExist()
   }
 
+  @Test
+  fun `no frame shows another session together with the first session's codes`() {
+    showBackupCodes()
+    composeTestRule.mainClock.autoAdvance = false
+
+    session.value = session(awaitingMfaSetup = true, id = "sess_456")
+    repeat(FRAMES_AFTER_A_SESSION_CHANGE) {
+      composeTestRule.mainClock.advanceTimeByFrame()
+      if (isShown("session sess_456")) assertFalse(isShown(BACKUP_CODES.first()))
+    }
+
+    assertTrue(isShown("session sess_456"))
+    assertTrue(isShown("Set up two-step verification"))
+  }
+
+  private fun isShown(text: String): Boolean =
+    composeTestRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+
   private fun showBackupCodes() {
     coEvery { user.attemptTotpVerification(any()) } coAnswers
       {
@@ -221,6 +245,8 @@ class SessionTaskMfaViewTest {
 
   private fun showTask() {
     composeTestRule.setContent {
+      val shownSession by session.collectAsStateWithLifecycle()
+      Text("session ${shownSession?.id}")
       SessionTaskMfaView(onAuthComplete = { authCompletions.incrementAndGet() })
     }
   }
@@ -234,6 +260,7 @@ class SessionTaskMfaViewTest {
 
   private companion object {
     const val TIMEOUT_MILLIS = 5_000L
+    const val FRAMES_AFTER_A_SESSION_CHANGE = 10
 
     val BACKUP_CODES = listOf("backup-code-1", "backup-code-2")
 

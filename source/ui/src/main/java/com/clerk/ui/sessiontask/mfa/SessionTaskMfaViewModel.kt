@@ -10,20 +10,18 @@ import kotlinx.coroutines.flow.asStateFlow
 
 internal class SessionTaskMfaViewModel : ViewModel() {
 
-  private val _flowStep = MutableStateFlow<FlowStep>(FlowStep.ChooseMethod)
-  val flowStep: StateFlow<FlowStep> = _flowStep.asStateFlow()
+  private val _progress =
+    MutableStateFlow(MfaSetupProgress(sessionId = null, FlowStep.ChooseMethod))
+  val progress: StateFlow<MfaSetupProgress> = _progress.asStateFlow()
 
-  private var sessionId: String? = null
-
-  fun startSession(id: String?) {
-    if (id == sessionId) return
-    sessionId = id
-    _flowStep.value = FlowStep.ChooseMethod
+  fun setFlowStep(sessionId: String?, step: FlowStep) {
+    _progress.value = MfaSetupProgress(sessionId, step)
   }
+}
 
-  fun setFlowStep(step: FlowStep) {
-    _flowStep.value = step
-  }
+internal data class MfaSetupProgress(val sessionId: String?, val step: FlowStep) {
+  fun stepFor(sessionId: String?): FlowStep =
+    if (sessionId == this.sessionId) step else FlowStep.ChooseMethod
 }
 
 internal sealed interface FlowStep {
