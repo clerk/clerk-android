@@ -2,16 +2,23 @@ package com.clerk.snapshot.appbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.extensions.withMediumWeight
@@ -85,6 +92,32 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun profileTopBar_placesTrailingActionUsingAndroidSpacing() {
+    snapshotMembersTopBar {
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+          text = "Invite",
+          style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.primary,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun profileTopBar_placesTrailingIconButtonUsingAndroidSpacing() {
+    snapshotMembersTopBar {
+      IconButton(onClick = {}) {
+        Icon(
+          modifier = Modifier.size(24.dp),
+          painter = painterResource(R.drawable.ic_cross),
+          contentDescription = null,
+          tint = ClerkMaterialTheme.colors.foreground,
+        )
+      }
+    }
+  }
+
+  private fun snapshotMembersTopBar(trailingContent: @Composable () -> Unit) {
     paparazzi.snapshot {
       Box(Modifier.size(width = 412.dp, height = 72.dp)) {
         ClerkMaterialTheme {
@@ -92,13 +125,7 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
             onBackPressed = {},
             hasLogo = false,
             title = "Members",
-            trailingContent = {
-              Text(
-                text = "Invite",
-                style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
-                color = ClerkMaterialTheme.colors.primary,
-              )
-            },
+            trailingContent = trailingContent,
           )
         }
       }
