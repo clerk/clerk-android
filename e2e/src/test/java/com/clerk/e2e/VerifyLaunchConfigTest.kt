@@ -36,7 +36,6 @@ class VerifyLaunchConfigTest {
         initialIdentifier = "+12015550100",
         signInTicket = "ticket-1",
         debugLogging = true,
-        hasVerifyInputs = true,
       ),
       config,
     )
@@ -44,7 +43,7 @@ class VerifyLaunchConfigTest {
   }
 
   @Test
-  fun `no extras keeps the BuildConfig key and is not a verify launch`() {
+  fun `no extras keeps the BuildConfig key and shows the home`() {
     assertEquals(
       VerifyLaunchConfig(
         publishableKey = FALLBACK_KEY,
@@ -55,26 +54,9 @@ class VerifyLaunchConfigTest {
         initialIdentifier = null,
         signInTicket = null,
         debugLogging = false,
-        hasVerifyInputs = false,
       ),
       parse(),
     )
-  }
-
-  @Test
-  fun `any single verify input marks a verify launch`() {
-    listOf(
-        "verifyPublishableKey" to EXTRA_KEY,
-        "verifyRunId" to "run",
-        "verifyStorageScope" to "scope",
-        "verifyLaunchId" to "launch",
-        "verifyAuthMode" to "signIn",
-        "verifyInitialIdentifier" to "user@example.com",
-        "verifySignInTicket" to "ticket",
-        "verifyLogLevel" to "debug",
-      )
-      .forEach { assertEquals(true, parse(it).hasVerifyInputs, it.first) }
-    assertEquals(false, parse("verifyRunId" to " ", "unrelated" to "x").hasVerifyInputs)
   }
 
   @Test
