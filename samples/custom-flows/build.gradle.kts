@@ -14,7 +14,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.customflows"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.compileSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty(customFlowsKey) as String?
