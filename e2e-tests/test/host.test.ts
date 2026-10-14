@@ -1,13 +1,14 @@
 import '../testing/git-env.ts';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { selectBackend } from '../src/core/devices.ts';
 import { resolveSpecs } from '../src/core/e2e.ts';
 import { STANDARD, declaredIn, planGroups, readSpecText, settingsOf } from '../src/core/instances/settings.ts';
-import type { InstanceSettings } from '../src/core/types.ts';
+import type { BuildKey, InstanceSettings, ScratchPath, VerifyFailure } from '../src/core/types.ts';
 import { host } from '../src/host.ts';
 import { LANE_FAILED, LANE_READY, LOG_FILTER, RECORD_SIZE } from '../src/platform/android/emulator.ts';
 import { localAndroidBackend } from '../src/platform/android/local.ts';
@@ -17,6 +18,39 @@ import sessionDevice from '../src/platform/android/session-device.ts';
 const PACKAGE_DIR = join(import.meta.dirname, '..');
 const scratch = mkdtempSync(join(tmpdir(), 'verify-host-'));
 const machine = (overrides: Partial<Machine> = {}): Machine => ({ os: 'darwin', arch: 'arm64', home: scratch, env: {}, kvm: join(scratch, 'kvm'), ...overrides });
+
+describe('the clerk-android host build', () => {
+  it('runs gradlew without the Clerk and agent keys of the environment, and with the rest of it', async () => {
+    const work = mkdtempSync(join(tmpdir(), 'verify-host-build-'));
+    const jdk = join(work, 'jdk');
+    mkdirSync(join(jdk, 'bin'), { recursive: true });
+    writeFileSync(join(jdk, 'release'), 'JAVA_VERSION="21.0.0"\n');
+    writeFileSync(join(jdk, 'bin', 'java'), `#!/bin/sh\nenv > '${join(work, 'env')}'\necho "the stand-in for java ran: $*"\nexit 7\n`, { mode: 0o755 });
+    const before = { ...process.env };
+    const set = {
+      CLERK_PLATFORM_API_KEY: 'ak_platform',
+      CLERK_PLATFORM_API_KEY_FILE: '/home/x/key',
+      VERIFY_PLATFORM_KEY_REFERENCE: 'op://vault/item',
+      CLERK_SECRET_KEY: 'sk_test_instance',
+      AI_GATEWAY_API_KEY: 'vck_gateway',
+      AI_GATEWAY_API_KEY_FILE: '/home/x/gateway',
+      VERIFY_HOST_BUILD_MARK: 'kept',
+    };
+    Object.assign(process.env, set, { JAVA_HOME: jdk });
+    try {
+      await assert.rejects(
+        host.build('android', 'android-0000' as BuildKey, join(work, 'build') as ScratchPath, () => {}),
+        (error: VerifyFailure) => error.code === 'BUILD_FAILED' && /^\.\/gradlew :e2e:assembleDebug exited 7:\n.*the stand-in for java ran: .* :e2e:assembleDebug --console=plain --quiet$/s.test(error.message),
+      );
+      const seen = readFileSync(join(work, 'env'), 'utf8').split('\n');
+      assert.deepEqual(seen.filter((line) => Object.keys(set).includes(line.split('=')[0]!)), ['VERIFY_HOST_BUILD_MARK=kept']);
+    } finally {
+      for (const name of Object.keys(process.env)) if (!(name in before)) delete process.env[name];
+      Object.assign(process.env, before);
+      rmSync(work, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('the clerk-android committed specs', () => {
   const MFA: InstanceSettings = { config: { auth_multi_factor: { required_for_sign_up: true } }, environment: { 'user_settings.sign_up.mfa.required': true } };
@@ -60,6 +94,19 @@ describe('the clerk-android host with a remote device', () => {
     assert.ok(workflow.includes(`IMAGE="${systemImage(machine({ os: 'linux', arch: 'x64' }))}"`), 'the runner installs the image the lane AVD names');
     for (const file of [LANE_READY, LANE_FAILED]) assert.ok(workflow.includes(`$VERIFY_SESSION_WORK/${file}`), file);
     assert.ok(workflow.includes('src/platform/android/session-lane.ts" boot "$VERIFY_SESSION_WORK"'));
+  });
+
+  it('has the session workflow start on the three runner labels this repository uses, and fail for any other', () => {
+    const lines = readFileSync(join(PACKAGE_DIR, '..', '.github', 'workflows', 'verify-remote.yml'), 'utf8').split('\n').map((line) => line.trim());
+    const first = lines.indexOf('case "$RUNNER_LABEL" in');
+    const check = lines.slice(first, lines.indexOf('esac', first) + 1).join('\n');
+    const checked = (label: string) => {
+      const ran = spawnSync('bash', ['-c', check], { env: { PATH: process.env.PATH, RUNNER_LABEL: label }, encoding: 'utf8' });
+      return { status: ran.status, stdout: ran.stdout };
+    };
+    assert.ok(first > 0, 'the label check is in the workflow');
+    for (const label of ['ubuntu-24.04', 'ubuntu-latest', 'blacksmith-4vcpu-ubuntu-2404']) assert.deepEqual(checked(label), { status: 0, stdout: '' }, label);
+    assert.deepEqual(checked('macos-15-xlarge'), { status: 1, stdout: '::error title=verify-remote::no session started: the runner label macos-15-xlarge is not ubuntu-24.04, ubuntu-latest, or blacksmith-4vcpu-ubuntu-2404\n' });
   });
 
   describe('in a session', () => {

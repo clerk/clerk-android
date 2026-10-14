@@ -243,6 +243,9 @@ jobs:
       pr_url: ${{ steps.pull_request.outputs.pr_url }}
     env:
       JAVASCRIPT_REPO: clerk/javascript
+      EXPO_BUILD_FILE: packages/expo-native-components/android/build.gradle
+      EXPO_PACKAGE_NAME: "@clerk/expo-native-components"
+      EXPO_COMMIT_SCOPE: expo-native-components
       RAW_ANDROID_VERSION: ${{ needs.publish.outputs.tag_name }}
       RELEASE_URL: ${{ needs.publish.outputs.release_url }}
 
@@ -357,7 +360,7 @@ jobs:
             sleep 30
           done
 
-      - name: Update @clerk/expo Android SDK pin
+      - name: Update Expo Android SDK pin
         id: update
         if: steps.version.outputs.should_open == 'true'
         working-directory: javascript
@@ -368,12 +371,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          build_file="packages/expo/android/build.gradle"
-          current_api_version="$(sed -nE 's/^[[:space:]]*clerkAndroidApiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$build_file" | head -n 1)"
-          current_ui_version="$(sed -nE 's/^[[:space:]]*clerkAndroidUiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$build_file" | head -n 1)"
+          current_api_version="$(sed -nE 's/^[[:space:]]*clerkAndroidApiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$EXPO_BUILD_FILE" | head -n 1)"
+          current_ui_version="$(sed -nE 's/^[[:space:]]*clerkAndroidUiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$EXPO_BUILD_FILE" | head -n 1)"
 
           if [ -z "$current_api_version" ] || [ -z "$current_ui_version" ]; then
-            echo "Could not read clerk-android versions from $build_file"
+            echo "Could not read clerk-android versions from $EXPO_BUILD_FILE"
             exit 1
           fi
 
@@ -381,7 +383,7 @@ jobs:
           echo "current_ui_version=$current_ui_version" >> "$GITHUB_OUTPUT"
 
           if [ "$current_api_version" = "$ANDROID_VERSION" ] && [ "$current_ui_version" = "$ANDROID_VERSION" ]; then
-            echo "@clerk/expo already pins clerk-android $ANDROID_VERSION; no PR needed."
+            echo "$EXPO_PACKAGE_NAME already pins clerk-android $ANDROID_VERSION; no PR needed."
             echo "should_open=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -389,7 +391,7 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
 
-          const buildFile = 'packages/expo/android/build.gradle';
+          const buildFile = process.env.EXPO_BUILD_FILE;
           const androidVersion = process.env.ANDROID_VERSION;
           const source = fs.readFileSync(buildFile, 'utf8');
           const updated = source
@@ -409,8 +411,8 @@ jobs:
           fs.writeFileSync(buildFile, updated);
           NODE
 
-          if ! grep -q "clerkAndroidApiVersion = \"${ANDROID_VERSION}\"" "$build_file" ||
-            ! grep -q "clerkAndroidUiVersion = \"${ANDROID_VERSION}\"" "$build_file"; then
+          if ! grep -q "clerkAndroidApiVersion = \"${ANDROID_VERSION}\"" "$EXPO_BUILD_FILE" ||
+            ! grep -q "clerkAndroidUiVersion = \"${ANDROID_VERSION}\"" "$EXPO_BUILD_FILE"; then
             echo "Failed to update clerk-android Gradle pins."
             exit 1
           fi
@@ -424,7 +426,7 @@ jobs:
           mkdir -p .changeset
           cat > ".changeset/$CHANGESET_FILE" <<EOF
           ---
-          '@clerk/expo': patch
+          '$EXPO_PACKAGE_NAME': patch
           ---
 
           Bump the bundled \`clerk-android\` SDK (\`clerk-android-api\` and \`clerk-android-ui\`) from \`$previous_version\` to \`$ANDROID_VERSION\`. See the Clerk Android release: $RELEASE_URL.
@@ -457,22 +459,22 @@ jobs:
           git config user.name "clerk-cookie"
           git config user.email "cookie@clerk.dev"
           git checkout -B "$BRANCH_NAME"
-          git add packages/expo/android/build.gradle ".changeset/$CHANGESET_FILE"
+          git add "$EXPO_BUILD_FILE" ".changeset/$CHANGESET_FILE"
 
           if git diff --cached --quiet; then
             echo "No changes to commit; no PR needed."
             exit 0
           fi
 
-          git commit -m "chore(expo): bump clerk-android to $ANDROID_VERSION"
+          git commit -m "chore($EXPO_COMMIT_SCOPE): bump clerk-android to $ANDROID_VERSION"
           git push --force-with-lease origin "$BRANCH_NAME"
 
-          pr_title="chore(expo): bump clerk-android to $ANDROID_VERSION"
+          pr_title="chore($EXPO_COMMIT_SCOPE): bump clerk-android to $ANDROID_VERSION"
           pr_body="$(mktemp)"
           cat > "$pr_body" <<EOF
           ## Description
 
-          Bumps the bundled \`clerk-android\` SDK in \`@clerk/expo\` from \`$previous_version\` to \`$ANDROID_VERSION\`.
+          Bumps the bundled \`clerk-android\` SDK in \`$EXPO_PACKAGE_NAME\` from \`$previous_version\` to \`$ANDROID_VERSION\`.
 
           Release: $RELEASE_URL
 

@@ -57,11 +57,12 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 ## Features
 
-- [Auth start](./auth-start.md) covers opening AuthView full screen from the home, and opening it with an initial identifier.
+- [Auth start](./auth-start.md) covers opening AuthView from the home with a close button and full screen, closing it, and opening it with an initial identifier.
 - [Sign in with an email code](./sign-in-email-code.md) covers requesting and entering the email code.
 - [Sign in with an SMS code](./sign-in-phone-code.md) covers requesting and entering the SMS code from the AuthView the home opens.
 - [Custom sign-in flow](./custom-flow-sign-in.md) covers the host's own form on `Clerk.auth.signInWithOtp`.
-- [Sign up](./sign-up.md) covers the password step, requesting the sign-up code, completing sign-up, and signing up with a phone number.
+- [Sign up](./sign-up.md) covers the password step, requesting the sign-up code, completing sign-up in each AuthView the home opens, and signing up with a phone number.
+- [Session persistence](./session-persistence.md) covers a session that survives a restart of the app.
 - [User button and profile](./user-button-and-profile.md) covers UserButton, UserProfileView, its Manage account and Security screens, sign-out, and deleting the account.
 - [Session tasks](./session-tasks.md) covers the setup-MFA and choose-organization tasks after sign-in, the setup-MFA task after sign-up, and finishing the setup-MFA task with an authenticator code.
 - [Organizations](./organizations.md) covers creating an organization from OrganizationSwitcher.
