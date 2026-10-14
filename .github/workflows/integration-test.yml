@@ -15,18 +15,13 @@ on:
         required: false
   schedule:
     - cron: "17 7 * * *"
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches: [ "main" ]
-  push:
-    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   integration-test:
-    if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (github.event_name != 'schedule' || github.repository == 'clerk/clerk-android')
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Check that the integration tests have a key

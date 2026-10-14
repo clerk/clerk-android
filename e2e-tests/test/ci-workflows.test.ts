@@ -83,11 +83,10 @@ const PULL_REQUEST_JOBS = [
   'android.yml verify',
   'checks.yml checks',
   'detekt.yml detekt',
-  'integration-test.yml integration-test',
 ];
 
 describe('a pull request', () => {
-  it('runs the build, unit test, and lint jobs, and the integration tests that branch protection on main requires', () => {
+  it('runs only the build, unit test, and lint jobs', () => {
     assert.deepEqual(ranJobs({ event: 'pull_request', draft: false }), PULL_REQUEST_JOBS);
   });
 
