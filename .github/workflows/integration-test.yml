@@ -74,8 +74,13 @@ jobs:
   notify:
     needs: integration-test
     if: ${{ always() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
     uses: ./.github/workflows/notify-nightly-failure.yml
     with:
       checks: integration tests
+      workflows: integration-test.yml manual-release.yml
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -52,9 +52,9 @@ jobs:
         if: steps.changed.outputs.package == 'true'
         run: npm run typecheck --prefix "$PACKAGE"
 
-      - name: Run the verify-attach script's tests
+      - name: Run the tests of the scripts in .github/scripts
         if: steps.changed.outputs.package == 'true'
-        run: node --test .github/scripts/verify-attach.test.mjs
+        run: node --test .github/scripts/*.test.mjs
 
   test-module:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft

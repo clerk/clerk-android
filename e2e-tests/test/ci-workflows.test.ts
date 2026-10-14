@@ -82,6 +82,10 @@ function ranJobs(context: Context): readonly string[] {
   return ran;
 }
 
+const READ_RUNS_AND_PULLS = ['actions: read', 'contents: read', 'pull-requests: read'];
+
+const permissions = (text: string): string[] => (/^ {4}permissions:\n((?: {6}[\w-]+: \w+\n)+)/m.exec(text)?.[1] ?? '').trim().split('\n').filter(Boolean).map((line) => line.trim());
+
 const PULL_REQUEST_JOBS = [
   'android-test.yml e2e-runner-tests',
   'android-test.yml test-module',
@@ -108,8 +112,8 @@ describe('a pull request', () => {
 
 describe('the nightly run', () => {
   const nightly = [
-    { file: 'integration-test.yml', job: 'integration-test', checks: 'integration tests' },
-    { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests' },
+    { file: 'integration-test.yml', job: 'integration-test', checks: 'integration tests', workflows: 'integration-test.yml manual-release.yml' },
+    { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests', workflows: 'paparazzi-verify.yml' },
   ];
 
   it('runs the integration tests and the Paparazzi screenshot tests at 07:17 UTC in clerk/clerk-android, and nothing in a fork', () => {
@@ -125,11 +129,13 @@ describe('the nightly run', () => {
   });
 
   it('posts to Slack when a scheduled run fails, times out, or is cancelled, and not when it passes, when a person started it, or when a release ran it', () => {
-    for (const { file, job, checks } of nightly) {
+    for (const { file, job, checks, workflows } of nightly) {
       const notify = jobs(read(file)).get('notify') ?? '';
       assert.match(notify, /^ {4}uses: \.\/\.github\/workflows\/notify-nightly-failure\.yml$/m, `${file} notifies Slack`);
       assert.match(notify, new RegExp(`^ {4}needs: ${job}$`, 'm'));
       assert.match(notify, new RegExp(`^ {6}checks: ${checks}$`, 'm'));
+      assert.match(notify, new RegExp(`^ {6}workflows: ${workflows}$`, 'm'));
+      assert.deepEqual(permissions(notify), READ_RUNS_AND_PULLS, `${file} grants the notify workflow what it reads`);
       const condition = /^ {4}if: (.+)$/m.exec(notify)![1]!;
       assert.deepEqual(
         [
@@ -148,14 +154,28 @@ describe('the nightly run', () => {
 });
 
 describe('the Slack message about a failed nightly run', () => {
-  function notified(webhook: string): { status: number | null; stdout: string; posted: unknown } {
-    const text = read('notify-nightly-failure.yml');
-    const script = text.slice(text.indexOf('run: |') + 'run: |'.length).split('\n').map((line) => line.trim()).join('\n');
+  const SINCE = 'Merged since the <https://github.com/clerk/clerk-android/actions/runs/41|last passing run> (2026-10-13 07:17 UTC):\n• <https://github.com/clerk/clerk-android/pull/1097|#1097 Restore Credentials> · swolfand';
+  const HEADLINE = ':red_circle: clerk/clerk-android nightly integration tests failed · <https://github.com/clerk/clerk-android/actions/runs/123|View the run>';
+  const notify = jobs(read('notify-nightly-failure.yml')).get('notify') ?? '';
+  const post = notify.split(/\n(?= {6}- )/).find((step) => step.includes('- name: Notify Slack')) ?? '';
+
+  function notified(webhook: string, script: 'lists' | 'fails' = 'lists'): { status: number | null; stdout: string; node: string; posted: unknown } {
+    const step = post.slice(post.indexOf('run: |') + 'run: |'.length).split('\n').map((line) => line.trim()).join('\n');
     const work = mkdtempSync(join(tmpdir(), 'ci-nightly-notify-'));
     mkdirSync(join(work, 'bin'));
     writeFileSync(join(work, 'bin', 'curl'), `#!/bin/sh\nwhile [ "$#" -gt 1 ]; do [ "$1" = --data ] && printf '%s' "$2" > "${work}/posted"; shift; done\necho "$1" > "${work}/url"\n`, { mode: 0o755 });
-    const ran = spawnSync('bash', ['-c', script], {
-      env: { PATH: `${join(work, 'bin')}:${process.env.PATH}`, SLACK_WEBHOOK_URL: webhook, CHECKS: 'integration tests', GITHUB_SERVER_URL: 'https://github.com', GITHUB_REPOSITORY: 'clerk/clerk-android', GITHUB_RUN_ID: '123' },
+    const node = script === 'lists' ? `printf '%s\\n' '${SINCE}'` : `echo 'GET /actions/workflows/integration-test.yml/runs answered 403' >&2; exit 1`;
+    writeFileSync(join(work, 'bin', 'node'), `#!/bin/sh\necho "$@" > "${work}/node"\n${node}\n`, { mode: 0o755 });
+    const ran = spawnSync('bash', ['-c', step], {
+      env: {
+        PATH: `${join(work, 'bin')}:${process.env.PATH}`,
+        SLACK_WEBHOOK_URL: webhook,
+        CHECKS: 'integration tests',
+        WORKFLOWS: 'integration-test.yml manual-release.yml',
+        GITHUB_SERVER_URL: 'https://github.com',
+        GITHUB_REPOSITORY: 'clerk/clerk-android',
+        GITHUB_RUN_ID: '123',
+      },
       encoding: 'utf8',
       timeout: 20_000,
     });
@@ -163,29 +183,41 @@ describe('the Slack message about a failed nightly run', () => {
     try {
       posted = { url: readFileSync(join(work, 'url'), 'utf8').trim(), payload: JSON.parse(readFileSync(join(work, 'posted'), 'utf8')) };
     } catch {}
+    let args = '';
+    try {
+      args = readFileSync(join(work, 'node'), 'utf8').trim();
+    } catch {}
     rmSync(work, { recursive: true, force: true });
-    return { status: ran.status, stdout: ran.stdout, posted };
+    return { status: ran.status, stdout: ran.stdout, node: args, posted };
   }
 
-  it('names the checks that failed and the repository, and links the run', () => {
+  it('names the checks that failed and the repository, links the run, and lists the pull requests merged since the last passing run', () => {
     assert.deepEqual(notified('https://hooks.slack.test/T/B/x'), {
       status: 0,
       stdout: '',
-      posted: {
-        url: 'https://hooks.slack.test/T/B/x',
-        payload: {
-          text: 'The nightly integration tests failed in clerk/clerk-android',
-          blocks: [
-            { type: 'section', text: { type: 'mrkdwn', text: '*The nightly integration tests failed in clerk/clerk-android*' } },
-            { type: 'context', elements: [{ type: 'mrkdwn', text: '<https://github.com/clerk/clerk-android/actions/runs/123|View the run>' }] },
-          ],
-        },
-      },
+      node: '.github/scripts/nightly-failure-message.mjs integration-test.yml manual-release.yml',
+      posted: { url: 'https://hooks.slack.test/T/B/x', payload: { text: `${HEADLINE}\n${SINCE}`, unfurl_links: false, unfurl_media: false } },
     });
   });
 
+  it('still names the checks and links the run when the list of pull requests cannot be made', () => {
+    assert.deepEqual(notified('https://hooks.slack.test/T/B/x', 'fails'), {
+      status: 0,
+      stdout: '::warning::Could not list the pull requests merged since the last passing run; the message has only its first line\n',
+      node: '.github/scripts/nightly-failure-message.mjs integration-test.yml manual-release.yml',
+      posted: { url: 'https://hooks.slack.test/T/B/x', payload: { text: HEADLINE, unfurl_links: false, unfurl_media: false } },
+    });
+  });
+
+  it('posts even when the checkout of the script fails, and reads the runs and pull requests with only read access', () => {
+    assert.deepEqual(
+      { post: /^ {8}if: (.+)$/m.exec(post)?.[1], token: /^ {10}GITHUB_TOKEN: (.+)$/m.exec(post)?.[1], permissions: permissions(notify) },
+      { post: 'always()', token: '${{ github.token }}', permissions: READ_RUNS_AND_PULLS },
+    );
+  });
+
   it('is skipped with a warning when the webhook secret is empty', () => {
-    assert.deepEqual(notified(''), { status: 0, stdout: '::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification\n', posted: null });
+    assert.deepEqual(notified(''), { status: 0, stdout: '::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification\n', node: '', posted: null });
   });
 });
 
