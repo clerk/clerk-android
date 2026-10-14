@@ -44,10 +44,14 @@ import kotlinx.serialization.Serializable
 public data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
+  /**
+   * When the session reaches its maximum lifetime, in milliseconds since epoch. Zero means the
+   * session has no maximum lifetime; see [hasMaximumLifetime].
+   */
   @SerialName("expire_at") val expireAt: Long,
   /**
-   * When the session will be abandoned due to inactivity. Zero means no abandonment deadline; null
-   * is supported for older responses.
+   * When the session will be abandoned due to inactivity, in milliseconds since epoch. Zero means
+   * the session has no inactivity deadline.
    */
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
@@ -65,7 +69,10 @@ public data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
-  /** Whether the session has a maximum lifetime. A zero [expireAt] means no expiry deadline. */
+  /**
+   * Whether the session has a maximum lifetime. False when [expireAt] is zero. This says nothing
+   * about whether the session is active; use [status] for that.
+   */
   public val hasMaximumLifetime: Boolean
     get() = expireAt > 0
 
