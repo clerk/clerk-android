@@ -122,7 +122,7 @@ describe('the nightly run', () => {
     }
   });
 
-  it('posts to Slack when a scheduled run fails or times out, and not when it passes, when a person cancelled or started it, or when a release ran it', () => {
+  it('posts to Slack when a scheduled run fails, times out, or is cancelled, and not when it passes, when a person started it, or when a release ran it', () => {
     for (const { file, job, checks } of nightly) {
       const notify = jobs(read(file)).get('notify') ?? '';
       assert.match(notify, /^ {4}uses: \.\/\.github\/workflows\/notify-nightly-failure\.yml$/m, `${file} notifies Slack`);
@@ -138,7 +138,7 @@ describe('the nightly run', () => {
           evaluate(condition, { event: 'workflow_dispatch', needs: { [job]: 'failure' } }),
           evaluate(condition, { event: 'release', needs: { [job]: 'failure' } }),
         ],
-        [true, true, false, false, false, false],
+        [true, true, false, true, false, false],
         file,
       );
     }
