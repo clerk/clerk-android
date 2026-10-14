@@ -4,9 +4,9 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.clerk.api.Clerk
 import com.clerk.api.biometriccredential.BiometricCredentialAvailability
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
+import com.clerk.ui.core.log.ClerkLog
 
 internal object BiometricCredentialEnrollmentPrompt {
   @Suppress("ReturnCount")

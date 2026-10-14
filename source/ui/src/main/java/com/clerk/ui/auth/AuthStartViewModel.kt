@@ -9,7 +9,6 @@ import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -21,6 +20,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.core.extensions.isEmailAddress
+import com.clerk.ui.core.log.ClerkLog
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart

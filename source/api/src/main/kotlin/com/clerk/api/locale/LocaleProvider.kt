@@ -1,6 +1,6 @@
 package com.clerk.api.locale
 
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ internal object LocaleProvider {
       val currentLocale = Locale.getDefault().toLanguageTag()
       _locale.value = currentLocale
     } catch (e: Exception) {
-      ClerkLog.e("Failed to refresh locale, ${e.localizedMessage}")
+      ClerkLogger.e("Failed to refresh locale, ${e.localizedMessage}")
     }
   }
 

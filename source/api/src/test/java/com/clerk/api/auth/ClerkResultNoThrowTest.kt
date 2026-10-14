@@ -44,7 +44,7 @@ import org.junit.Test
 class ClerkResultNoThrowTest {
   private val signInApi = mockk<SignInApi>(relaxed = true)
   private val signUpApi = mockk<SignUpApi>(relaxed = true)
-  private val organizationApi = mockk<OrganizationApi>(relaxed = true)
+  @Suppress("DEPRECATION") private val organizationApi = mockk<OrganizationApi>(relaxed = true)
   private val userApi = mockk<UserApi>(relaxed = true)
 
   @Before

@@ -1,7 +1,7 @@
 package com.clerk.api.passkeys
 
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import java.net.URL
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -11,7 +11,7 @@ internal object PasskeyHelper {
     return try {
       URL(Clerk.baseUrl).host?.removePrefix("www.")?.takeIf { it.isNotEmpty() }
     } catch (e: Exception) {
-      ClerkLog.e("Error parsing domain from baseUrl: ${e.message}")
+      ClerkLogger.e("Error parsing domain from baseUrl: ${e.message}")
       null
     }
   }

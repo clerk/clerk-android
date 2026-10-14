@@ -20,7 +20,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable
-public fun SignInFactorOneView(
+internal fun SignInFactorOneView(
   factor: Factor,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,

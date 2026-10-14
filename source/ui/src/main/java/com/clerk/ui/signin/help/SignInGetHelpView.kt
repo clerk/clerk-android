@@ -14,17 +14,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.log.ClerkLog
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
 
 @Composable
-public fun SignInGetHelpView(modifier: Modifier = Modifier) {
+internal fun SignInGetHelpView(modifier: Modifier = Modifier) {
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()

@@ -6,7 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,14 +31,14 @@ internal object NetworkConnectivityMonitor {
     object : ConnectivityManager.NetworkCallback() {
       override fun onAvailable(network: Network) {
         if (Clerk.debugMode) {
-          ClerkLog.d("NetworkConnectivityMonitor: Network available")
+          ClerkLogger.d("NetworkConnectivityMonitor: Network available")
         }
         handleConnectivityChange(true)
       }
 
       override fun onLost(network: Network) {
         if (Clerk.debugMode) {
-          ClerkLog.d("NetworkConnectivityMonitor: Network lost")
+          ClerkLogger.d("NetworkConnectivityMonitor: Network lost")
         }
         val stillConnected = checkCurrentConnectivity()
         if (!stillConnected) {
@@ -51,7 +51,9 @@ internal object NetworkConnectivityMonitor {
           capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
             capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         if (Clerk.debugMode) {
-          ClerkLog.d("NetworkConnectivityMonitor: Capabilities changed, hasInternet=$hasInternet")
+          ClerkLogger.d(
+            "NetworkConnectivityMonitor: Capabilities changed, hasInternet=$hasInternet"
+          )
         }
         handleConnectivityChange(hasInternet)
       }
@@ -59,7 +61,7 @@ internal object NetworkConnectivityMonitor {
 
   fun configure(context: Context, onConnectivityRestored: (() -> Unit)? = null) {
     if (isMonitoring) {
-      ClerkLog.d("NetworkConnectivityMonitor already monitoring. Updating callback only.")
+      ClerkLogger.d("NetworkConnectivityMonitor already monitoring. Updating callback only.")
       this.onConnectivityRestored = onConnectivityRestored
       return
     }
@@ -78,7 +80,9 @@ internal object NetworkConnectivityMonitor {
         wasDisconnected = !initiallyConnected
 
         if (Clerk.debugMode) {
-          ClerkLog.d("NetworkConnectivityMonitor: Initial connectivity state = $initiallyConnected")
+          ClerkLogger.d(
+            "NetworkConnectivityMonitor: Initial connectivity state = $initiallyConnected"
+          )
         }
 
         val networkRequest =
@@ -89,10 +93,10 @@ internal object NetworkConnectivityMonitor {
         cm.registerNetworkCallback(networkRequest, networkCallback)
         isMonitoring = true
 
-        ClerkLog.d("NetworkConnectivityMonitor configured and started")
-      } ?: run { ClerkLog.w("NetworkConnectivityMonitor: ConnectivityManager not available") }
+        ClerkLogger.d("NetworkConnectivityMonitor configured and started")
+      } ?: run { ClerkLogger.w("NetworkConnectivityMonitor: ConnectivityManager not available") }
     } catch (e: Exception) {
-      ClerkLog.e("NetworkConnectivityMonitor: Failed to configure: ${e.message}")
+      ClerkLogger.e("NetworkConnectivityMonitor: Failed to configure: ${e.message}")
     }
   }
 
@@ -106,7 +110,7 @@ internal object NetworkConnectivityMonitor {
       capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     } catch (e: Exception) {
-      ClerkLog.w("NetworkConnectivityMonitor: Error checking connectivity: ${e.message}")
+      ClerkLogger.w("NetworkConnectivityMonitor: Error checking connectivity: ${e.message}")
       false
     }
   }
@@ -116,11 +120,11 @@ internal object NetworkConnectivityMonitor {
     _isConnected.value = connected
 
     if (connected && wasDisconnected) {
-      ClerkLog.d("NetworkConnectivityMonitor: Connectivity restored after being offline")
+      ClerkLogger.d("NetworkConnectivityMonitor: Connectivity restored after being offline")
       wasDisconnected = false
       onConnectivityRestored?.invoke()
     } else if (!connected && previousState) {
-      ClerkLog.d("NetworkConnectivityMonitor: Device went offline")
+      ClerkLogger.d("NetworkConnectivityMonitor: Device went offline")
       wasDisconnected = true
     }
   }
@@ -132,9 +136,9 @@ internal object NetworkConnectivityMonitor {
 
     try {
       connectivityManager?.unregisterNetworkCallback(networkCallback)
-      ClerkLog.d("NetworkConnectivityMonitor stopped")
+      ClerkLogger.d("NetworkConnectivityMonitor stopped")
     } catch (e: Exception) {
-      ClerkLog.w("NetworkConnectivityMonitor: Error stopping: ${e.message}")
+      ClerkLogger.w("NetworkConnectivityMonitor: Error stopping: ${e.message}")
     } finally {
       isMonitoring = false
       connectivityManager = null

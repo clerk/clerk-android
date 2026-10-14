@@ -3,7 +3,6 @@ package com.clerk.ui.organizationlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -21,6 +20,7 @@ import com.clerk.api.user.getOrganizationCreationDefaults
 import com.clerk.api.user.getOrganizationInvitations
 import com.clerk.api.user.getOrganizationMemberships
 import com.clerk.api.user.getOrganizationSuggestions
+import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

@@ -17,7 +17,7 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyCreateCredentialFailure
 import com.clerk.api.credentials.classifyGetCredentialFailure
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -75,12 +75,12 @@ public object RestoreCredentials {
           try {
             createCredentialWithCloudFallback(context, nonce, isCloudBackupEnabled)
           } catch (e: CreateCredentialException) {
-            ClerkLog.e("Restore credential creation failed: ${e.message}")
+            ClerkLogger.e("Restore credential creation failed: ${e.message}")
             return classifyCreateCredentialFailure(e)
           } catch (e: CancellationException) {
             throw e
           } catch (e: Exception) {
-            ClerkLog.e("Restore credential creation failed: ${e.message}")
+            ClerkLogger.e("Restore credential creation failed: ${e.message}")
             return ClerkResult.unknownFailure(e)
           }
 
@@ -158,19 +158,19 @@ public object RestoreCredentials {
       )
       ClerkResult.success(Unit)
     } catch (e: ClearCredentialException) {
-      ClerkLog.w("Failed to clear restore credential: ${e.message}")
+      ClerkLogger.w("Failed to clear restore credential: ${e.message}")
       ClerkResult.unknownFailure(e)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      ClerkLog.w("Failed to clear restore credential: ${e.message}")
+      ClerkLogger.w("Failed to clear restore credential: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
 
   internal suspend fun clearSilently() {
     if (clear() is ClerkResult.Failure) {
-      ClerkLog.w("Restore credential cleanup did not complete.")
+      ClerkLogger.w("Restore credential cleanup did not complete.")
     }
   }
 
@@ -186,7 +186,7 @@ public object RestoreCredentials {
       )
     } catch (e: E2eeUnavailableException) {
       if (!isCloudBackupEnabled) throw e
-      ClerkLog.d(
+      ClerkLogger.d(
         "Encrypted cloud backup is unavailable; retrying restore credential creation without it."
       )
       credentialManager.createCredential(
@@ -214,7 +214,7 @@ public object RestoreCredentials {
         )
       }
     } catch (e: GetCredentialException) {
-      ClerkLog.d("Restore credential sign-in is unavailable: ${e.message}")
+      ClerkLogger.d("Restore credential sign-in is unavailable: ${e.message}")
       classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY)).also {
         clearSignInAttempt(signIn)
       }
@@ -222,7 +222,7 @@ public object RestoreCredentials {
       runCatching { clearSignInAttempt(signIn) }.exceptionOrNull()?.let(e::addSuppressed)
       throw e
     } catch (e: Exception) {
-      ClerkLog.e("Restore credential sign-in failed: ${e.message}")
+      ClerkLogger.e("Restore credential sign-in failed: ${e.message}")
       ClerkResult.unknownFailure(e).also { clearSignInAttempt(signIn) }
     }
 

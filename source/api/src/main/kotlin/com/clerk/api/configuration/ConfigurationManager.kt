@@ -12,7 +12,7 @@ import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.locale.LocaleProvider
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
@@ -126,7 +126,7 @@ internal class ConfigurationManager(
         StorageHelper.initialize(context)
         BiometricCredentialStorage.initialize(context)
         storageInitialized = true
-        ClerkLog.d("Storage initialized")
+        ClerkLogger.d("Storage initialized")
       }
     }
   }
@@ -167,7 +167,7 @@ internal class ConfigurationManager(
     options: ClerkConfigurationOptions?,
   ): Boolean {
     if (hasConfigured) {
-      ClerkLog.w(
+      ClerkLogger.w(
         "ConfigurationManager.configure() called multiple times. Ignoring subsequent calls."
       )
       return false
@@ -177,11 +177,13 @@ internal class ConfigurationManager(
       val configuredVersion = configureSdkState(context, publishableKey, options)
       initializationJob = launchInitialization(options, configuredVersion)
 
-      ClerkLog.d("ConfigurationManager configured successfully - background initialization started")
+      ClerkLogger.d(
+        "ConfigurationManager configured successfully - background initialization started"
+      )
       return true
     } catch (e: Exception) {
       hasConfigured = false
-      ClerkLog.e("Failed to configure ConfigurationManager: ${e.message}")
+      ClerkLogger.e("Failed to configure ConfigurationManager: ${e.message}")
       throw e
     }
   }
@@ -293,12 +295,12 @@ internal class ConfigurationManager(
   }
 
   private fun startTokenRefresh() {
-    ClerkLog.d(
+    ClerkLogger.d(
       "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
     )
 
     if (!hasConfigured) {
-      ClerkLog.w("Cannot start token refresh - not configured")
+      ClerkLogger.w("Cannot start token refresh - not configured")
       return
     }
 
@@ -309,17 +311,17 @@ internal class ConfigurationManager(
           val session = Clerk.session
           if (session != null) {
             if (Clerk.debugMode) {
-              ClerkLog.d("Refreshing token for session: ${session.id}")
+              ClerkLogger.d("Refreshing token for session: ${session.id}")
             }
             // Use async to avoid blocking the refresh loop
             async { session.fetchToken(GetTokenOptions(skipCache = false)) }
           } else {
             if (Clerk.debugMode) {
-              ClerkLog.d("No session available for token refresh")
+              ClerkLogger.d("No session available for token refresh")
             }
           }
         } catch (e: Exception) {
-          ClerkLog.w("Token refresh failed: ${e.message}")
+          ClerkLogger.w("Token refresh failed: ${e.message}")
         }
 
         delay(REFRESH_TOKEN_INTERVAL.seconds)
@@ -349,7 +351,7 @@ internal class ConfigurationManager(
   fun setDeviceToken(deviceToken: String?, expectedDeviceToken: String?): Boolean {
     require(deviceToken == null || deviceToken.isNotBlank()) { "Device token must not be blank" }
     if (!hasConfigured) {
-      ClerkLog.w("Ignoring setDeviceToken: Clerk is not initialized")
+      ClerkLogger.w("Ignoring setDeviceToken: Clerk is not initialized")
       return false
     }
 
@@ -450,7 +452,7 @@ internal class ConfigurationManager(
    */
   private suspend fun deferForegroundRefreshDuringPendingAuth() {
     if (!hasPendingAuthFlow()) return
-    ClerkLog.d("Deferring lifecycle refresh while auth completion is in progress")
+    ClerkLogger.d("Deferring lifecycle refresh while auth completion is in progress")
     withTimeoutOrNull(LIFECYCLE_REFRESH_MAX_DEFER_MS) {
       RedirectCoordinator.hasPendingRedirect.first { pending -> !pending }
     }
@@ -480,7 +482,7 @@ internal class ConfigurationManager(
 
       try {
         if (Clerk.debugMode) {
-          ClerkLog.d("Starting client and environment refresh")
+          ClerkLogger.d("Starting client and environment refresh")
         }
 
         if (attempt.retryDelaySeconds == 0L && mode == RefreshMode.INITIALIZATION) {
@@ -497,7 +499,7 @@ internal class ConfigurationManager(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        ClerkLog.e("Exception during client and environment refresh: ${e.message}")
+        ClerkLogger.e("Exception during client and environment refresh: ${e.message}")
         if (mode == RefreshMode.INITIALIZATION) {
           handleInitializationFailure(error = e, attempt = attempt)
         }
@@ -513,13 +515,13 @@ internal class ConfigurationManager(
     when {
       expectedConfigurationVersion != configurationVersion -> staleConfigurationFailure()
       !hasConfigured -> {
-        ClerkLog.w("Attempted to refresh before configuration. Skipping.")
+        ClerkLogger.w("Attempted to refresh before configuration. Skipping.")
         ClerkResult.unknownFailure(
           IllegalStateException("Clerk must be initialized before refreshing")
         )
       }
       context?.get() == null -> {
-        ClerkLog.w(
+        ClerkLogger.w(
           "Application context no longer available. Cannot refresh client and environment."
         )
         val error = IllegalStateException("Application context no longer available")
@@ -546,7 +548,7 @@ internal class ConfigurationManager(
       }
 
       if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration.get()) {
-        ClerkLog.d("Discarding refresh started before a shared device-token change")
+        ClerkLogger.d("Discarding refresh started before a shared device-token change")
         // A discarded initialization must stay an initialization, or a failed follow-up would
         // leave the SDK uninitialized with no retry and no reported error.
         val initialization = mode == RefreshMode.INITIALIZATION
@@ -609,7 +611,7 @@ internal class ConfigurationManager(
     launchPostRefreshTasks()
 
     if (Clerk.debugMode) {
-      ClerkLog.d("Client and environment refresh completed successfully")
+      ClerkLogger.d("Client and environment refresh completed successfully")
     }
 
     return ClerkResult.success(Unit)
@@ -633,7 +635,7 @@ internal class ConfigurationManager(
       "Failed to refresh client and environment -" +
         " client: ${clientResult.javaClass.simpleName}," +
         " environment: ${environmentResult.javaClass.simpleName}"
-    ClerkLog.e(errorMessage)
+    ClerkLogger.e(errorMessage)
 
     val failure =
       selectRefreshFailure(
@@ -679,14 +681,14 @@ internal class ConfigurationManager(
     _initializationError.value = if (hasUsableState) null else error
 
     if (hasUsableState) {
-      ClerkLog.w("Initialization refresh failed; continuing with cached Clerk state")
+      ClerkLogger.w("Initialization refresh failed; continuing with cached Clerk state")
     }
 
     initializationRetryJob = scope.launch { retryInitialization(attempt.nextRetry()) }
   }
 
   private suspend fun retryInitialization(attempt: RefreshAttempt) {
-    ClerkLog.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
+    ClerkLogger.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
 
     delay(attempt.retryDelaySeconds.seconds)
 
@@ -708,16 +710,16 @@ internal class ConfigurationManager(
    */
   fun reinitialize(): Boolean {
     if (!hasConfigured) {
-      ClerkLog.w("Cannot reinitialize - SDK not configured. Call Clerk.initialize() first.")
+      ClerkLogger.w("Cannot reinitialize - SDK not configured. Call Clerk.initialize() first.")
       return false
     }
 
     if (_isInitialized.value) {
-      ClerkLog.d("SDK already initialized. Skipping reinitialization.")
+      ClerkLogger.d("SDK already initialized. Skipping reinitialization.")
       return false
     }
 
-    ClerkLog.d("Manual reinitialization requested")
+    ClerkLogger.d("Manual reinitialization requested")
     _initializationError.value = null
     queueClientAndEnvironmentRefresh()
     return true
@@ -726,14 +728,14 @@ internal class ConfigurationManager(
   private fun configureConnectivityMonitor(context: Context) {
     NetworkConnectivityMonitor.configure(context) {
       if (!_isInitialized.value && hasConfigured) {
-        ClerkLog.d("Connectivity restored - attempting automatic reinitialization")
+        ClerkLogger.d("Connectivity restored - attempting automatic reinitialization")
         scope.launch {
           _initializationError.value = null
           refreshClientAndEnvironment(currentRefreshAttempt(), RefreshMode.INITIALIZATION)
         }
       } else if (_isInitialized.value) {
         if (Clerk.debugMode) {
-          ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
+          ClerkLogger.d("Connectivity restored - SDK already initialized, refreshing data")
         }
         scope.launch {
           refreshClientAndEnvironment(currentRefreshAttempt(), RefreshMode.INITIALIZATION)
@@ -746,11 +748,11 @@ internal class ConfigurationManager(
     result.fold(
       onSuccess = { client ->
         if (Clerk.debugMode) {
-          ClerkLog.d("Client loaded successfully: ${client.id}")
+          ClerkLogger.d("Client loaded successfully: ${client.id}")
         }
       },
       onFailure = { failure ->
-        ClerkLog.e("Failed to load client: ${failure.error}")
+        ClerkLogger.e("Failed to load client: ${failure.error}")
         logApiError("Client", failure.errorType, failure.error.toString())
       },
     )
@@ -760,11 +762,11 @@ internal class ConfigurationManager(
     result.fold(
       onSuccess = { environment ->
         if (Clerk.debugMode) {
-          ClerkLog.d("Environment loaded successfully: ${environment.authConfig}")
+          ClerkLogger.d("Environment loaded successfully: ${environment.authConfig}")
         }
       },
       onFailure = { failure ->
-        ClerkLog.e("Failed to load environment: ${failure.error}")
+        ClerkLogger.e("Failed to load environment: ${failure.error}")
         logApiError("Environment", failure.errorType, failure.error.toString())
       },
     )
@@ -776,9 +778,9 @@ internal class ConfigurationManager(
     error: String,
   ) {
     when (errorType) {
-      ClerkResult.Failure.ErrorType.API -> ClerkLog.e("$operation API error: $error")
-      ClerkResult.Failure.ErrorType.HTTP -> ClerkLog.e("$operation HTTP error: $error")
-      ClerkResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("$operation unknown error: $error")
+      ClerkResult.Failure.ErrorType.API -> ClerkLogger.e("$operation API error: $error")
+      ClerkResult.Failure.ErrorType.HTTP -> ClerkLogger.e("$operation HTTP error: $error")
+      ClerkResult.Failure.ErrorType.UNKNOWN -> ClerkLogger.e("$operation unknown error: $error")
     }
   }
 
@@ -797,7 +799,7 @@ internal class ConfigurationManager(
 
     if (Clerk.debugMode) {
       val current = Clerk.clientFlow.value
-      ClerkLog.d(
+      ClerkLogger.d(
         "Clerk state updated - Client ID: ${current?.id}, Sessions: ${current?.sessions?.size}"
       )
     }

@@ -27,7 +27,7 @@ import com.clerk.ui.userprofile.security.Origin
 import kotlinx.serialization.Serializable
 
 @Composable
-public fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
+internal fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
   UserProfileVerifyViewImpl(mode = mode, modifier = modifier)
 }
 

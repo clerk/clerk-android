@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.hostedauth.HostedAuthCancellationException
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -424,14 +424,14 @@ class RedirectCoordinatorTest {
 
   @Test
   fun `a background magic link failure is logged and reported as unsuccessful`() = runBlocking {
-    mockkObject(NativeMagicLinkService, ClerkLog)
+    mockkObject(NativeMagicLinkService, ClerkLogger)
     coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(any()) } throws
       IllegalStateException("storage unavailable")
 
     val outcome = withTimeout(TIMEOUT_MS) { RedirectCoordinator.dispatch(MAGIC_LINK) }
 
     assertEquals(CallbackOutcome.Completed(success = false), outcome)
-    verify { ClerkLog.w(match { it.contains("storage unavailable") }) }
+    verify { ClerkLogger.w(match { it.contains("storage unavailable") }) }
   }
 
   @Test
@@ -449,7 +449,7 @@ class RedirectCoordinatorTest {
 
   @Test
   fun `every dropped callback is logged with its reason`() = runBlocking {
-    mockkObject(ClerkLog)
+    mockkObject(ClerkLogger)
     val pending = startSso(EXTERNAL_URL_A, state = STATE)
 
     RedirectCoordinator.dispatch(callback(state = null))
@@ -457,9 +457,9 @@ class RedirectCoordinatorTest {
     RedirectCoordinator.cancelPending()
     RedirectCoordinator.dispatch(callback(STATE))
 
-    verify { ClerkLog.w(match { it.contains("missing clerk_redirect_state") }) }
-    verify { ClerkLog.w(match { it.contains("does not match the pending flow") }) }
-    verify { ClerkLog.w(match { it.contains("no pending redirect flow") }) }
+    verify { ClerkLogger.w(match { it.contains("missing clerk_redirect_state") }) }
+    verify { ClerkLogger.w(match { it.contains("does not match the pending flow") }) }
+    verify { ClerkLogger.w(match { it.contains("no pending redirect flow") }) }
     assertTrue(withTimeout(TIMEOUT_MS) { pending.await() } is ClerkResult.Failure)
   }
 

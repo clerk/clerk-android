@@ -18,7 +18,7 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -53,7 +53,7 @@ internal object GoogleCredentialAuthenticationService {
 
   private var googleSignInService: GoogleSignInService = GoogleSignInService()
 
-  private val googleCredentialManager = GoogleCredentialManagerImpl()
+  @Suppress("DEPRECATION") private val googleCredentialManager = GoogleCredentialManagerImpl()
 
   @VisibleForTesting
   internal fun setCredentialManager(manager: PasskeyCredentialManager) {
@@ -112,7 +112,7 @@ internal object GoogleCredentialAuthenticationService {
     allowedCredentialIds: List<String> = emptyList(),
     preferImmediatelyAvailableCredentials: Boolean = false,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    ClerkLog.d(
+    ClerkLogger.d(
       "Starting passkey sign-in; preferImmediatelyAvailableCredentials=" +
         preferImmediatelyAvailableCredentials
     )
@@ -123,7 +123,7 @@ internal object GoogleCredentialAuthenticationService {
       }
 
       activity == null -> {
-        ClerkLog.e("Passkey sign-in requires an active Activity")
+        ClerkLogger.e("Passkey sign-in requires an active Activity")
         ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
       }
 
@@ -132,7 +132,7 @@ internal object GoogleCredentialAuthenticationService {
           is ClerkResult.Success -> {
             val signIn = createResult.value
             catchingClerkResult(
-              onException = { ClerkLog.e("Passkey sign-in failed: ${it.message}") }
+              onException = { ClerkLogger.e("Passkey sign-in failed: ${it.message}") }
             ) {
               signInWithSelectedCredential(
                 activity = activity,
@@ -144,7 +144,7 @@ internal object GoogleCredentialAuthenticationService {
             }
           }
           is ClerkResult.Failure -> {
-            ClerkLog.e("Failed to create SignIn: ${createResult.error}")
+            ClerkLogger.e("Failed to create SignIn: ${createResult.error}")
             createResult
           }
         }
@@ -174,7 +174,7 @@ internal object GoogleCredentialAuthenticationService {
         )
       handleCredential(credential, signIn)
     } catch (e: GetCredentialException) {
-      ClerkLog.e("Passkey sign-in failed: ${e.message}")
+      ClerkLogger.e("Passkey sign-in failed: ${e.message}")
       classifyGetCredentialFailure(e, credentialTypes).also { failure ->
         clearSuppressedAutomaticSignInAttempt(
           preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
@@ -183,7 +183,7 @@ internal object GoogleCredentialAuthenticationService {
         )
       }
     } catch (e: CredentialFlowException) {
-      ClerkLog.e("Passkey sign-in cannot start: ${e.message}")
+      ClerkLogger.e("Passkey sign-in cannot start: ${e.message}")
       ClerkResult.unknownFailure(e).also { failure ->
         clearSuppressedAutomaticSignInAttempt(
           preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
@@ -214,13 +214,13 @@ internal object GoogleCredentialAuthenticationService {
         val activity =
           Clerk.credentialActivity()
             ?: return ClerkResult.unknownFailure(CredentialFlowException.MissingActivity()).also {
-              ClerkLog.e("Passkey second-factor sign-in requires an active Activity")
+              ClerkLogger.e("Passkey second-factor sign-in requires an active Activity")
             }
         val prepareResult =
           signIn.prepareSecondFactor(strategy = SignIn.PrepareSecondFactorStrategy.Passkey)
         when (prepareResult) {
           is ClerkResult.Failure -> {
-            ClerkLog.e("Failed to prepare passkey second-factor sign-in: ${prepareResult.error}")
+            ClerkLogger.e("Failed to prepare passkey second-factor sign-in: ${prepareResult.error}")
             prepareResult
           }
           is ClerkResult.Success -> {
@@ -248,7 +248,7 @@ internal object GoogleCredentialAuthenticationService {
     nonce: String,
   ): ClerkResult<SignIn, ClerkErrorResponse> =
     catchingClerkResult(
-      onException = { ClerkLog.e("Passkey second-factor sign-in failed: ${it.message}") }
+      onException = { ClerkLogger.e("Passkey second-factor sign-in failed: ${it.message}") }
     ) {
       attemptSignInPasskeySecondFactorOrThrow(activity, signIn, allowedCredentialIds, nonce)
     }
@@ -276,10 +276,10 @@ internal object GoogleCredentialAuthenticationService {
         ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
       }
     } catch (e: GetCredentialException) {
-      ClerkLog.e("Passkey second-factor sign-in failed: ${e.message}")
+      ClerkLogger.e("Passkey second-factor sign-in failed: ${e.message}")
       classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY))
     } catch (e: CredentialFlowException) {
-      ClerkLog.e("Passkey second-factor sign-in cannot start: ${e.message}")
+      ClerkLogger.e("Passkey second-factor sign-in cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
@@ -298,7 +298,7 @@ internal object GoogleCredentialAuthenticationService {
       client.copy(signIn = null).takeIf { client.signIn?.id == signIn.id }
     }
     if (cleared) {
-      ClerkLog.d("Cleared suppressed automatic passkey sign-in attempt ${signIn.id}")
+      ClerkLogger.d("Cleared suppressed automatic passkey sign-in attempt ${signIn.id}")
     }
   }
 
@@ -313,11 +313,11 @@ internal object GoogleCredentialAuthenticationService {
     allowedCredentialIds: List<String> = emptyList(),
     level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-    ClerkLog.d("Starting passkey session reverification")
+    ClerkLogger.d("Starting passkey session reverification")
     val activity =
       Clerk.credentialActivity()
         ?: return ClerkResult.unknownFailure(CredentialFlowException.MissingActivity()).also {
-          ClerkLog.e("Passkey session reverification requires an active Activity")
+          ClerkLogger.e("Passkey session reverification requires an active Activity")
         }
 
     return verifySessionWithPasskey(activity, session, allowedCredentialIds, level)
@@ -346,7 +346,7 @@ internal object GoogleCredentialAuthenticationService {
       }
     return when (prepareResult) {
       is ClerkResult.Failure -> {
-        ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
+        ClerkLogger.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
         prepareResult
       }
       is ClerkResult.Success -> {
@@ -374,7 +374,7 @@ internal object GoogleCredentialAuthenticationService {
   private fun missingPreparedVerificationNonceFailure(
     verificationField: String
   ): ClerkResult.Failure<ClerkErrorResponse> {
-    ClerkLog.e("Missing nonce in prepared verification $verificationField")
+    ClerkLogger.e("Missing nonce in prepared verification $verificationField")
     return localFailure(
       code = LocalFailureCodes.MISSING_RESOURCE_DATA,
       longMessage = "Prepared passkey verification is missing the nonce",
@@ -389,7 +389,7 @@ internal object GoogleCredentialAuthenticationService {
     level: SessionVerification.Level,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> =
     catchingClerkResult(
-      onException = { ClerkLog.e("Passkey session reverification failed: ${it.message}") }
+      onException = { ClerkLogger.e("Passkey session reverification failed: ${it.message}") }
     ) {
       attemptSessionPasskeyVerificationOrThrow(
         activity,
@@ -417,7 +417,7 @@ internal object GoogleCredentialAuthenticationService {
         )
 
       if (credential is PublicKeyCredential) {
-        ClerkLog.d("Attempting passkey session reverification")
+        ClerkLogger.d("Attempting passkey session reverification")
         val result =
           if (level == SessionVerification.Level.SECOND_FACTOR) {
             session.attemptSecondFactorVerification(
@@ -431,7 +431,7 @@ internal object GoogleCredentialAuthenticationService {
           }
 
         if (result is ClerkResult.Failure) {
-          ClerkLog.e("Passkey session reverification failed: ${result.error}")
+          ClerkLogger.e("Passkey session reverification failed: ${result.error}")
         }
 
         result
@@ -439,10 +439,10 @@ internal object GoogleCredentialAuthenticationService {
         ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
       }
     } catch (e: GetCredentialException) {
-      ClerkLog.e("Passkey session reverification failed: ${e.message}")
+      ClerkLogger.e("Passkey session reverification failed: ${e.message}")
       classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY))
     } catch (e: CredentialFlowException) {
-      ClerkLog.e("Passkey session reverification cannot start: ${e.message}")
+      ClerkLogger.e("Passkey session reverification cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
@@ -495,10 +495,10 @@ internal object GoogleCredentialAuthenticationService {
       try {
         credentialManager.getCredential(activity, credentialRequest)
       } catch (e: NoCredentialException) {
-        ClerkLog.e("No credential available: ${e.message}")
+        ClerkLogger.e("No credential available: ${e.message}")
         throw e
       } catch (e: GetCredentialException) {
-        ClerkLog.e("Error getting credential: ${e.message}")
+        ClerkLogger.e("Error getting credential: ${e.message}")
         throw e
       }
 
@@ -531,7 +531,7 @@ internal object GoogleCredentialAuthenticationService {
         preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
       )
       .also {
-        ClerkLog.d(
+        ClerkLogger.d(
           "Built credential request; preferImmediatelyAvailableCredentials=" +
             it.preferImmediatelyAvailableCredentials
         )
@@ -573,7 +573,7 @@ internal object GoogleCredentialAuthenticationService {
       }
     val allowCredentials =
       allowedCredentialIds.toAllowCredentials().ifEmpty { requestJson.passkeyAllowCredentials() }
-    ClerkLog.d(
+    ClerkLogger.d(
       "Created passkey request; rpId=$rpId, allowCredentialsCount=${allowCredentials.size}"
     )
 
@@ -620,7 +620,7 @@ internal object GoogleCredentialAuthenticationService {
     credential: Credential,
     signIn: SignIn,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    ClerkLog.d("Handling credential type: ${credential::class.simpleName}")
+    ClerkLogger.d("Handling credential type: ${credential::class.simpleName}")
 
     return when (credential) {
       is PublicKeyCredential -> {
@@ -646,12 +646,12 @@ internal object GoogleCredentialAuthenticationService {
     signIn: SignIn,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val responseJson = credential.authenticationResponseJson
-    ClerkLog.d("Attempting passkey authentication")
+    ClerkLogger.d("Attempting passkey authentication")
 
     val result = signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.Passkey(responseJson))
 
     if (result is ClerkResult.Failure) {
-      ClerkLog.e("Passkey authentication failed: ${result.error}")
+      ClerkLogger.e("Passkey authentication failed: ${result.error}")
     }
 
     return result
@@ -661,13 +661,13 @@ internal object GoogleCredentialAuthenticationService {
     credential: CustomCredential
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-      ClerkLog.d("Processing Google ID token credential")
+      ClerkLogger.d("Processing Google ID token credential")
     }
 
     return when (val result = googleSignInService.handleSignInResult(credential)) {
       is ClerkResult.Success -> result.value.toSignInResult()
       is ClerkResult.Failure -> {
-        ClerkLog.e("Google sign-in failed: ${result.error}")
+        ClerkLogger.e("Google sign-in failed: ${result.error}")
         result
       }
     }
@@ -683,7 +683,7 @@ internal object GoogleCredentialAuthenticationService {
   private suspend fun handlePasswordCredential(
     credential: PasswordCredential
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    ClerkLog.d("Attempting password authentication with saved credential")
+    ClerkLogger.d("Attempting password authentication with saved credential")
     val result =
       Clerk.auth.createSignIn(
         SignIn.CreateParams.Strategy.Password(
@@ -693,7 +693,7 @@ internal object GoogleCredentialAuthenticationService {
       )
 
     if (result is ClerkResult.Failure) {
-      ClerkLog.e("Password authentication failed: ${result.error}")
+      ClerkLogger.e("Password authentication failed: ${result.error}")
     }
 
     return result
@@ -723,7 +723,7 @@ internal object GoogleCredentialAuthenticationService {
           )
         )
       transferredSignUp != null -> {
-        ClerkLog.d("Google sign-in transferred to a sign-up that needs more fields")
+        ClerkLogger.d("Google sign-in transferred to a sign-up that needs more fields")
         ClerkResult.unknownFailure(CredentialFlowException.SignUpIncomplete())
       }
       else -> ClerkResult.unknownFailure(IllegalStateException("Google sign-in returned no result"))

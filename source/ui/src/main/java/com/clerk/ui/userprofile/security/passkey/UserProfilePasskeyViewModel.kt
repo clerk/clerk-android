@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -12,6 +11,7 @@ import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.delete
 import com.clerk.api.user.createPasskey
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

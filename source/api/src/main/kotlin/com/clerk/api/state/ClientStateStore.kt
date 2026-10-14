@@ -1,7 +1,7 @@
 package com.clerk.api.state
 
 import com.clerk.api.configuration.CachedClerkState
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
@@ -154,7 +154,7 @@ internal class ClientStateStore(
     val commit =
       synchronized(lock) {
         if (state.revision != expectedRevision) {
-          ClerkLog.d(
+          ClerkLogger.d(
             "Dropped client ${client.id} fetched at revision $expectedRevision; " +
               "state is at revision ${state.revision}"
           )
@@ -290,7 +290,7 @@ internal class ClientStateStore(
   private fun writeLatestSnapshot() {
     synchronized(persistLock) {
       runCatching { completeSnapshot()?.let(cacheStorage::save) }
-        .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
+        .onFailure { error -> ClerkLogger.w("Failed to cache Clerk state: ${error.message}") }
     }
   }
 
@@ -298,7 +298,9 @@ internal class ClientStateStore(
     persistPending.set(false)
     synchronized(persistLock) {
       runCatching { cacheStorage.clear() }
-        .onFailure { error -> ClerkLog.w("Failed to clear cached Clerk state: ${error.message}") }
+        .onFailure { error ->
+          ClerkLogger.w("Failed to clear cached Clerk state: ${error.message}")
+        }
     }
   }
 
@@ -374,7 +376,7 @@ internal class ClientStateStore(
     val currentSession = client?.currentSession()
 
     if (currentSession?.status == Session.SessionStatus.PENDING) {
-      ClerkLog.w(
+      ClerkLogger.w(
         "Session is in pending state. " +
           "The user has tasks to complete before the session can be activated. " +
           "Session tokens cannot be issued for pending sessions."
@@ -392,7 +394,7 @@ internal class ClientStateStore(
     try {
       listener?.onSessionStateCommittedUnderWriteLock(previous, current)
     } catch (e: Exception) {
-      ClerkLog.e("${e.message}")
+      ClerkLogger.e("${e.message}")
     }
   }
 
@@ -423,7 +425,7 @@ internal class ClientStateStore(
   }
 
   private fun logDroppedStaleClient(client: Client, order: ResponseOrder?) {
-    ClerkLog.d(
+    ClerkLogger.d(
       "Dropped stale client ${client.id} ordered at $order; newer state is at $newestAppliedOrder"
     )
   }

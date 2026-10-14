@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 
 @Suppress("TooManyFunctions")
 internal object StorageHelper {
@@ -31,7 +31,7 @@ internal object StorageHelper {
       storageCipher =
         runCatching { storageCipherFactoryOverride?.invoke() ?: StorageCipherFactory.create() }
           .onFailure { error ->
-            ClerkLog.w("Failed to initialize encrypted storage: ${error.message}")
+            ClerkLogger.w("Failed to initialize encrypted storage: ${error.message}")
           }
           .getOrNull()
     }
@@ -109,20 +109,20 @@ internal object StorageHelper {
 
     return when {
       prefs == null -> {
-        ClerkLog.w(
+        ClerkLogger.w(
           "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
         )
         false
       }
       value.isEmpty() -> false
       cipher == null -> {
-        ClerkLog.w("Encrypted storage is unavailable, ignoring save for key: ${key.name}")
+        ClerkLogger.w("Encrypted storage is unavailable, ignoring save for key: ${key.name}")
         false
       }
       else -> {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
           .onFailure { error ->
-            ClerkLog.w("Failed to encrypt value for key ${key.name}: ${error.message}")
+            ClerkLogger.w("Failed to encrypt value for key ${key.name}: ${error.message}")
           }
           .map { encryptedValue ->
             commit(prefs, key, cachedDeviceToken = value) { putString(key.name, encryptedValue) }
@@ -150,7 +150,7 @@ internal object StorageHelper {
 
     return when {
       prefs == null -> {
-        ClerkLog.w(
+        ClerkLogger.w(
           "StorageHelper.loadValue called before initialization, returning null for key: ${key.name}"
         )
         null
@@ -161,13 +161,13 @@ internal object StorageHelper {
         storedValue
       }
       cipher == null -> {
-        ClerkLog.w("Encrypted storage is unavailable, returning null for key: ${key.name}")
+        ClerkLogger.w("Encrypted storage is unavailable, returning null for key: ${key.name}")
         null
       }
       else -> {
         runCatching { cipher.decrypt(storedValue.removePrefix(ENCRYPTED_VALUE_PREFIX)) }
           .onFailure { error ->
-            ClerkLog.w("Failed to decrypt stored value for key ${key.name}: ${error.message}")
+            ClerkLogger.w("Failed to decrypt stored value for key ${key.name}: ${error.message}")
             replaceIfStillStored(prefs, key, storedValue, cachedDeviceToken = null) {
               remove(key.name)
             }
@@ -195,7 +195,7 @@ internal object StorageHelper {
     initializeIfPrepared()
     val prefs = secureStorage
     if (prefs == null) {
-      ClerkLog.w(
+      ClerkLogger.w(
         "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
       )
       return false
@@ -274,7 +274,7 @@ internal object StorageHelper {
         }
       }
       .onFailure { error ->
-        ClerkLog.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
+        ClerkLogger.w("Failed to migrate plaintext value for key ${key.name}: ${error.message}")
       }
   }
 }
@@ -286,7 +286,7 @@ private inline fun commitEdit(
   edit: SharedPreferences.Editor.() -> Unit,
 ): Boolean {
   val committed = prefs.edit().apply(edit).commit()
-  if (!committed) ClerkLog.w("Failed to commit storage change for key: ${key.name}")
+  if (!committed) ClerkLogger.w("Failed to commit storage change for key: ${key.name}")
   return committed
 }
 

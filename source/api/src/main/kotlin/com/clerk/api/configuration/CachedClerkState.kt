@@ -1,7 +1,7 @@
 package com.clerk.api.configuration
 
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
@@ -25,7 +25,9 @@ internal data class CachedClerkState(
     val restoredClient =
       Clerk.restoreCachedClient(client = client, serverFetchAtMillis = clientServerFetchAtMillis)
     val restoredEnvironment = Clerk.restoreCachedEnvironment(environment)
-    ClerkLog.d("Restored from cache (client: $restoredClient, environment: $restoredEnvironment)")
+    ClerkLogger.d(
+      "Restored from cache (client: $restoredClient, environment: $restoredEnvironment)"
+    )
     return (restoredClient || restoredEnvironment) &&
       Clerk.clientInitialized &&
       Clerk.environment != null
@@ -38,13 +40,13 @@ internal data class CachedClerkState(
       val cachedState = cachedJson?.let {
         runCatching { ClerkApi.json.decodeFromString(serializer(), it) }
           .onFailure { error ->
-            ClerkLog.w("Failed to decode cached Clerk state: ${error.message}")
+            ClerkLogger.w("Failed to decode cached Clerk state: ${error.message}")
           }
           .getOrNull()
       }
       val matches = cachedState?.matchesConfiguration(publishableKey, baseUrl) == true
       if (cachedState != null && !matches) {
-        ClerkLog.d("Ignoring cached Clerk state for a different configuration")
+        ClerkLogger.d("Ignoring cached Clerk state for a different configuration")
       }
       return cachedState?.takeIf { matches }
     }

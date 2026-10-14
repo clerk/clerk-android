@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -60,7 +59,7 @@ class OAuthViewModel : ViewModel() {
             }
 
             OAuthResult.Outcome.Empty -> {
-              ClerkLog.e("OAuth redirect returned neither a sign in nor a sign up")
+              Log.e("OAuthViewModel", "OAuth redirect returned neither a sign in nor a sign up")
             }
           }
         }

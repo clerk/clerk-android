@@ -3,7 +3,7 @@ package com.clerk.api.externalaccount
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccountService.connectExternalAccount
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -29,11 +29,11 @@ internal object ExternalAccountService {
     val initialResult = ClerkApi.user.createExternalAccount(fields)
     return when (initialResult) {
       is ClerkResult.Failure -> {
-        ClerkLog.e("Failed to create external account: ${initialResult.error}")
+        ClerkLogger.e("Failed to create external account: ${initialResult.error}")
         mapErrorToSpecificType(initialResult)
       }
       is ClerkResult.Success -> {
-        ClerkLog.d("External account creation initiated: $initialResult")
+        ClerkLogger.d("External account creation initiated: $initialResult")
         val externalUrl = initialResult.value.verification?.externalVerificationRedirectUrl
         val context = Clerk.applicationContext?.get()
         when {
@@ -75,12 +75,12 @@ internal object ExternalAccountService {
   internal suspend fun completeConnection(
     pendingConnection: PendingRedirect.ExternalAccountConnection
   ) {
-    ClerkLog.d("Completing external connection")
+    ClerkLogger.d("Completing external connection")
     val accountId = pendingConnection.externalAccountId
     val result: ClerkResult<ExternalAccount, ClerkErrorResponse> =
       when (val clientResult = Client.get()) {
         is ClerkResult.Failure -> {
-          ClerkLog.e(
+          ClerkLogger.e(
             "Failed to refresh client for external connection: ${clientResult.errorMessage}"
           )
           clientResult
@@ -98,7 +98,7 @@ internal object ExternalAccountService {
             externalAccount.verification?.status != Verification.Status.VERIFIED ->
               failure("External account verification failed: ${externalAccount.verification}")
             else -> {
-              ClerkLog.d("External account verified successfully")
+              ClerkLogger.d("External account verified successfully")
               ClerkResult.success(externalAccount)
             }
           }
