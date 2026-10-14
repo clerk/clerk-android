@@ -137,7 +137,9 @@ jobs:
             source/ui/build
             source/telemetry/build
           key: verify-gradle-${{ steps.app.outputs.toolchain }}-${{ steps.app.outputs.key || github.run_id }}
-          restore-keys: verify-gradle-${{ steps.app.outputs.toolchain }}-
+          restore-keys: |
+            verify-gradle-${{ steps.app.outputs.toolchain }}-
+            verify-gradle-
 
       - name: Start the session agent and tunnel
         id: tunnel

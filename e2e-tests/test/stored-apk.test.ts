@@ -342,6 +342,13 @@ describe('the workflows that store and restore', () => {
     for (const input of BUILD_INPUTS) assert.ok(paths.includes(input) || paths.includes(`${input}/**`), `${input} is not a path that starts verify-app-cache.yml`);
   });
 
+  it('build the APK on main once a week, so that a new JDK or Android platform is stored before sessions need it, and build nothing when it is stored already', () => {
+    assert.match(main, /^ {2}schedule:\n {4}- cron: "\d+ \d+ \* \* [0-6]"$/m);
+    const steps = main.split(/\n(?= {6}- )/);
+    assert.match(steps.find((step) => step.includes('id: stored')) ?? '', /^ {10}lookup-only: true$/m);
+    assert.match(steps.find((step) => step.includes('- name: Build the e2e APK from nothing')) ?? '', /^ {8}if: .*steps\.stored\.outputs\.cache-hit != 'true'$/m);
+  });
+
   it('leave the Gradle home to the build state, so that setup-gradle neither restores nor saves one of its own', () => {
     for (const workflow of [session, main]) {
       const steps = workflow.split(/\n(?= {6}- )/).filter((step) => step.includes('uses: gradle/actions/setup-gradle@'));
@@ -359,7 +366,10 @@ describe('the build state in a session', () => {
   it('is restored whether or not the APK is stored, so that the first build of a change in the session is incremental', () => {
     assert.ok(restore > 0, 'the session restores the build state');
     assert.match(steps[restore]!, /^ {8}if: steps\.device\.outputs\.serial != ''$/m);
-    assert.match(steps[restore]!, /^ {10}restore-keys: verify-gradle-\$\{\{ steps\.app\.outputs\.toolchain \}\}-$/m);
+  });
+
+  it('falls back to the build state of another JDK or Android platform, because the dependencies in the Gradle home do not depend on them', () => {
+    assert.match(steps[restore]!, /^ {10}restore-keys: \|\n {12}verify-gradle-\$\{\{ steps\.app\.outputs\.toolchain \}\}-\n {12}verify-gradle-\n/m);
   });
 
   it('is restored before the session agent starts, because the agent can start a build at once', () => {

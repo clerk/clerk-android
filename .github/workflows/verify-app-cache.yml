@@ -16,6 +16,8 @@ on:
       - e2e-tests/src/platform/android/**
       - .github/workflows/verify-app-cache.yml
   workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: read
