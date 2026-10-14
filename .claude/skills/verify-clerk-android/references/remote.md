@@ -20,8 +20,8 @@ The check reads files and runs no tool. When something is missing, the `backend`
 - Node 24, at 24.8.0 or newer. On any other Node the CLI reruns itself under `node@24` through `npx` and says so.
 - A pushed branch that holds `.github/workflows/verify-remote.yml`.
 - A GitHub token that may dispatch that workflow. The CLI takes the token from `GH_TOKEN`, then `GITHUB_TOKEN`, then `gh auth token`.
-- Network access to `*.trycloudflare.com`, `api.clerk.com`, and `*.clerk.accounts.dev`.
-- The Platform API credential, as for a local lane.
+- Network access to `api.github.com`, `*.trycloudflare.com`, `api.clerk.com`, and `*.clerk.accounts.dev`.
+- The Platform API credential, as for a local lane. In a cloud environment, add an API credential for `api.clerk.com` with path prefix `/v1/platform/`. The environment then adds the key after a request leaves the machine, and no key is ever in the session.
 
 It needs no Android SDK, no JDK, and no `adb`.
 
@@ -43,7 +43,11 @@ Without it, `doctor` reports `gh-attach` with its fix, and `attach` hands the ev
 
 REST starts, reads, and ends sessions. `git push` gets a commit you make to GitHub so the session can build it. Without push access you can still verify any commit GitHub already has.
 
-Node ignores `HTTPS_PROXY` unless told to honor it, so the CLI decides: it goes through the proxy when the direct path to GitHub does not work, and reruns itself with the proxy in effect for itself, e2e, and agent-device. `doctor`'s `remote-env` line says which path it took and why.
+Node ignores `HTTPS_PROXY` unless told to honor it, so the CLI decides: it goes through the proxy when the direct path to GitHub does not work or GitHub rejects this machine's token on it, and reruns itself with the proxy in effect for itself, e2e, and agent-device. `doctor`'s `remote-env` line says which path it took and why.
+
+The `tunnel-egress` and `clerk-egress` checks in `doctor` show a host that the environment blocks as `blocked:` and what answered, or as `no response from <host>`. When `api.github.com` does not answer, the `github-rest` check shows `api.github.com did not answer`. For the two egress checks, the fix is to add the host to the allowed domains of the environment that the CLI runs in. For `github-rest`, which reports any failed request this way, timeouts included, first check that `api.github.com` is an allowed domain; if it already is, look at the network or the proxy; the check's fix line also says what GitHub access a cloud session needs.
+
+Claude Code cloud sessions are one example of a sandbox where REST and `git push` differ. REST there can use a different credential from `git push`, so REST can work while a push is refused. A 403 on push means that this machine's GitHub credential may not push to the repository. In a cloud sandbox that credential belongs to the sandbox's GitHub integration, and an administrator of the organization gives the integration access to the repository. The sandbox's `GH_TOKEN` is a placeholder that only the sandbox's proxy turns into a real credential, so GitHub rejects it on a direct connection and the CLI goes through the proxy.
 
 ## Builds
 
