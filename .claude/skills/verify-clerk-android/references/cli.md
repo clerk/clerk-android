@@ -69,7 +69,7 @@ A dry run of `down` prints `dryRun: true`, `wouldRelease`, `wouldDelete`, `would
 | `POOL_FULL` | Both lanes on this machine are in use, by other worktrees or by emulators that are not lanes |
 | `DEVICE_BUSY` | Another command in this worktree is driving the device |
 | `LEASE_LOST` | The leased emulator or the remote session is gone |
-| `BUILD_FAILED` | `./gradlew :e2e:assembleDebug` failed. The message has the last 15 lines of its output. With the remote backend, also that the app sources have uncommitted changes, that GitHub does not have HEAD, or that the session could not build the commit |
+| `BUILD_FAILED` | `./gradlew :e2e:assembleDebug` failed. The message has the last 15 lines of its output. With the remote backend, also that GitHub does not have HEAD, that the session could not build the commit, or that the uncommitted changes to the app sources do not apply to it, change a file outside the app sources, or are larger than 16 MiB. A session on `main` refuses uncommitted changes |
 | `KEYS_MISSING` | No Platform API credential works on this machine, or `AI_GATEWAY_API_KEY_FILE` names a file that is missing, empty, or readable by other users |
 | `INSTANCE_MISCONFIGURED` | The Clerk instance does not show the settings a spec needs |
 | `NOT_TEST_IDENTITY` | Reserved. No command raises it. A run whose `app.log` names a user that the run did not create fails `attach` with `EVIDENCE_UNSAFE` |

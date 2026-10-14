@@ -51,7 +51,7 @@ The CLI drives only the lane emulators it boots. Any other emulator on a lane po
 
 Each worktree runs its own agent-device daemon from its own `node_modules`, with state under `.verify/agent-device/`, and `down` stops it.
 
-When this machine cannot run the emulator, `up` borrows one on a GitHub Actions runner. The runner session builds a pushed commit, never your working tree, so the loop is commit, push, `up`. This `up` forces the runner with `--backend remote`. Its first line, one of its `wait` lines, and its last line:
+When this machine cannot run the emulator, `up` borrows one on a GitHub Actions runner. The session builds a pushed commit. When the app sources differ from it, `up` and `run` send the difference with it, and the session builds the commit with your changes on top. This `up` forces the runner with `--backend remote`. Its first line, one of its `wait` lines, and its last line:
 
 ```console
 $ git commit -am "..." && git push
@@ -94,7 +94,7 @@ $ e2e-tests/bin/control-clerk-android screen --png                       # plus 
 
 `run --all` runs every committed spec. `run` also takes `--grep <regex>`, `--retries <n>`, `--max-failures <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a test again, up to `n` more times, when an assertion failed, the test threw an error, or the test ran out of time. A test that e2e reports as a machine failure, such as an `ENGINE_FAILURE` when an `open` or a screenshot times out in agent-device, gets one attempt whatever `n` is. A driver error e2e reports as a test error, such as a stale node or an action that timed out, is retried like any other. The default is 0, so a run of your own change shows exactly what happened. `--max-failures <n>` stops a settings group once `n` of its tests have failed. A test that the limit stopped before it started prints `FAIL` with `not run: failure-limit`, and `run` exits 1. Without the flag, a run has no limit. [references/cli.md](references/cli.md) has every flag, the `--json` output, the exit codes, and the error codes.
 
-With a remote session, an edit to the app reaches the emulator only through a pushed commit: commit and push, then `run` again, and the same session builds it. A commit that only touches specs needs no push, because specs run from this machine.
+With a remote session, `run` after an edit to the app sends the uncommitted changes, and the same session builds them. An edit to a spec needs no push, because specs run from this machine.
 
 ```ts
 import { tapMiddle } from '../../compose.ts';
@@ -218,7 +218,7 @@ On a machine whose `gh` can attach, `attach` edits the description itself and pr
 
 When this machine cannot attach and there is no session to hand the files to, or the hand-off fails, `attach` fails and says which. Then name the run id in the PR and say that the evidence was not attached. A run on a local emulator has no session, so its fix is a newer `gh`. [The emulator on a CI runner](references/remote.md) has what the repository needs before a hand-off can be published, and its limits.
 
-`attach` writes only to an open pull request, and fails on one that is closed or merged. It refuses a run that is tainted, that has a failing spec or no passing one, or whose `app.log` names a user that the run did not create. A before run can have failing specs. `attach` refuses a before run that is tainted, that was never sealed, or whose `app.log` names a user that the run did not create.
+`attach` writes only to an open pull request, and fails on one that is closed or merged. It refuses a run that is tainted, that ran on a session build with uncommitted changes, that has a failing spec or no passing one, or whose `app.log` names a user that the run did not create. A before run can have failing specs. `attach` refuses a before run that is tainted, that ran on a session build with uncommitted changes, that was never sealed, or whose `app.log` names a user that the run did not create.
 
 Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the screenshots or the video show only what the change is about. If you ran other committed specs too, cite that run's id in the PR.
 
