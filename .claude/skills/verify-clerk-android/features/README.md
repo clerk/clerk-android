@@ -57,7 +57,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 ## Features
 
-- [Auth start](./auth-start.md) covers opening AuthView from the home with a close button and full screen, closing it, and opening it with an initial identifier.
+- [Auth start](./auth-start.md) covers opening AuthView from the home with a close button and full screen, closing it, opening it with an initial identifier, and clearing the field the user leaves when switching between email and phone.
 - [Sign in with an email code](./sign-in-email-code.md) covers requesting and entering the email code.
 - [Sign in with an SMS code](./sign-in-phone-code.md) covers requesting and entering the SMS code from the AuthView the home opens.
 - [Custom sign-in flow](./custom-flow-sign-in.md) covers the host's own form on `Clerk.auth.signInWithOtp`.
