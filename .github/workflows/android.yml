@@ -28,10 +28,3 @@ jobs:
         run: chmod +x gradlew
       - name: Assemble ${{ matrix.module }}
         run: ./gradlew ${{ matrix.module }}:assembleDebug --build-cache --parallel
-
-  # Optional: a final step that depends on both module builds
-  verify:
-    runs-on: macos-latest-xlarge
-    needs: [build-module]
-    steps:
-      - run: echo "All module builds finished."
