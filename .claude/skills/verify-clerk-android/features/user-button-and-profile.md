@@ -32,7 +32,7 @@ Preconditions:
 
 ## Gotchas
 
-- `Edit profile`, the section headers of Manage account, and `ACTIVE DEVICES` have no test tag, so those checks use text.
+- `Edit profile`, the section headers of Manage account, `ACTIVE DEVICES`, and the user's email address on the profile have no test tag, so those checks use text.
 - The Security row opens a list of active devices with the public IP address and city of the machine that runs the emulator. No spec takes a screenshot while that list is on screen, and the video of a run shows it.
 - The Security screen and the delete sheet have no test tags. `Delete account` is the text of the row on the Security screen, and of both the title and the button of the sheet. The screen tree leaves out what a sheet covers, so the text matches one node before the sheet opens and two after. The spec taps the row while it is the only match and the button with `.last()`. The confirmation field is the only `textbox` in the sheet. The button stays disabled until the field holds `DELETE`.
 - `Signed out` after a deletion looks the same as after a sign-out. The sign-in attempt with the deleted email is what shows that the account is gone. It needs `authMode: 'signIn'`, because the default mode would start a sign-up for an unknown email.
