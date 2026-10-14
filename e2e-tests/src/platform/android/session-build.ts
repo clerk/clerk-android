@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { APK, ASSEMBLE_HOST } from '../../host-app.ts';
-import { BUILD_COMMAND, apkKey, compileSdk, inputTree, readStored, store, storedApk, toolchain, toolchainName, type ApkIdentity, type InputTree } from './stored-apk.ts';
+import { BUILD_COMMAND, apkKey, inputTree, platformNames, readStored, store, storedApk, toolchain, toolchainName, type ApkIdentity, type InputTree } from './stored-apk.ts';
 
 export interface ApkOutcome {
   readonly state: 'stored' | 'built' | 'failed';
@@ -124,7 +124,7 @@ function stages(work: string): number {
 
 if (import.meta.main) {
   const [command, work = ''] = process.argv.slice(2);
-  const commands: Readonly<Record<string, () => number>> = { platform: () => (say(`platforms;android-${compileSdk(process.cwd())}`), 0), name: () => name(work), build: () => build(work), outcome: () => outcome(work), stages: () => stages(work) };
+  const commands: Readonly<Record<string, () => number>> = { platform: () => (say(platformNames(process.cwd()).map((name) => `platforms;${name}`).join(' ')), 0), name: () => name(work), build: () => build(work), outcome: () => outcome(work), stages: () => stages(work) };
   const chosen = work === '' ? undefined : commands[command ?? ''];
   if (chosen === undefined) {
     console.error('usage: session-build.ts platform|name|build|outcome|stages <work>');

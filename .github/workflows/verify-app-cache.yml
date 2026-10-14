@@ -55,7 +55,10 @@ jobs:
           echo "VERIFY_SESSION_WORK=$RUNNER_TEMP/verify-remote" >> "$GITHUB_ENV"
 
       - name: Install the Android platform the build compiles against
-        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK")" < /dev/null > /dev/null'
+        run: |
+          for package in $(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK"); do
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$package" < /dev/null > /dev/null && break
+          done
 
       - name: Name the APK
         id: app

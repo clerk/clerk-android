@@ -55,7 +55,7 @@ function commit(checkout: Checkout, file: string, text: string): void {
   execFileSync('git', [...AUTHOR, 'commit', '-q', '-m', file], { cwd: checkout.dir });
 }
 
-const setRevision = (from: Checkout, revision: string): void => write(from.fake, 'sdk/platforms/android-37/source.properties', `Pkg.Desc=Android SDK Platform 37\nPkg.Revision=${revision}\n`);
+const setRevision = (from: Checkout, revision: string): void => write(from.fake, 'sdk/platforms/android-37.0/source.properties', `Pkg.Desc=Android SDK Platform 37\nPkg.Revision=${revision}\n`);
 
 function checkout(): Checkout {
   const dir = scratch('verify-stored-apk-');
@@ -119,7 +119,7 @@ describe('the key of a stored e2e APK', () => {
     const repo = checkout();
     const first = named(repo);
     assert.match(first.key!, /^[0-9a-f]{32}$/);
-    assert.equal(first.toolchain, '21.0.12-android-37r2');
+    assert.equal(first.toolchain, '21.0.12-android-37.0r2');
     const changes: Readonly<Record<string, () => void>> = {
       'a Kotlin source under source': () => commit(repo, SOURCE, 'sdk two\n'),
       'a new Kotlin source under source': () => commit(repo, 'source/api/src/main/java/New.kt', 'new\n'),
@@ -180,10 +180,10 @@ describe('the key of a stored e2e APK', () => {
 
   it('names the SDK package of the platform that compileSdk names, so that both workflows install it before they name the APK', () => {
     const repo = checkout();
-    assert.deepEqual(sessionBuild(repo, ['platform', scratch('verify-stored-apk-work-')]), { status: 0, stdout: 'platforms;android-37\n' });
+    assert.deepEqual(sessionBuild(repo, ['platform', scratch('verify-stored-apk-work-')]), { status: 0, stdout: 'platforms;android-37.0 platforms;android-37\n' });
     for (const file of ['verify-remote.yml', 'verify-app-cache.yml']) {
       const steps = readFileSync(join(WORKFLOWS, file), 'utf8').split(/\n(?= {6}- )/);
-      const install = steps.findIndex((step) => step.includes('sdkmanager" --install "$(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK")"'));
+      const install = steps.findIndex((step) => step.includes('for package in $(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK"); do'));
       assert.ok(install > 0 && install < steps.findIndex((step) => step.includes('- name: Name the APK')), file);
     }
   });
@@ -192,7 +192,7 @@ describe('the key of a stored e2e APK', () => {
     const repo = checkout();
     rmSync(join(repo.fake, 'sdk', 'platforms'), { recursive: true });
     const { stdout } = sessionBuild(repo, ['name', scratch('verify-stored-apk-work-')]);
-    assert.match(stdout, /^::warning title=verify::no stored APK is used or kept: the Android SDK has no android-37 platform with a revision at .*source\.properties$/m);
+    assert.match(stdout, /^::warning title=verify::no stored APK is used or kept: the Android SDK at .* has no platform android-37\.0 or android-37 with a revision$/m);
     assert.match(stdout, /^toolchain=unknown\nkey=$/m);
   });
 });
