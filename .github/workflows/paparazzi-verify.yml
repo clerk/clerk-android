@@ -66,4 +66,4 @@ jobs:
       checks: Paparazzi screenshot tests
       workflows: paparazzi-verify.yml
     secrets:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}

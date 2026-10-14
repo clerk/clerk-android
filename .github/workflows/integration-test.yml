@@ -11,7 +11,7 @@ on:
     secrets:
       CLERK_INTEGRATION_TEST_PK:
         required: true
-      SLACK_WEBHOOK_URL:
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:
         required: false
   schedule:
     - cron: "17 7 * * *"
@@ -85,4 +85,4 @@ jobs:
         integration-test.yml
         manual-release.yml=integration-test / integration-test
     secrets:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}

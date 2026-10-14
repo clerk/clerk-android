@@ -6,6 +6,10 @@ on:
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY:
         required: true
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:
+        required: false
+  schedule:
+    - cron: "17 7 * * *"
 
 permissions:
   contents: read
@@ -16,6 +20,7 @@ concurrency:
 
 jobs:
   e2e-tests:
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: ${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 40
     permissions:
@@ -71,6 +76,7 @@ jobs:
         run: npm ci --prefix "$PACKAGE" --no-audit --no-fund
 
       - name: Build the e2e host and boot an emulator
+        timeout-minutes: 15
         env:
           CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
         run: |
@@ -132,3 +138,19 @@ jobs:
             ${{ env.PACKAGE }}/.verify/runs/*/e2e*/artifacts
           retention-days: 3
           if-no-files-found: warn
+
+  notify:
+    needs: e2e-tests
+    if: ${{ always() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: end-to-end tests
+      workflows: |
+        verify-e2e.yml
+        manual-release.yml=verify-e2e / e2e-tests
+    secrets:
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}
