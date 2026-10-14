@@ -3,22 +3,22 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   e2e-runner-tests:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     env:
       PACKAGE: e2e-tests
       WATCHED: >-
         e2e-tests
-        .github/workflows/android-test.yml
-        .github/workflows/verify-remote.yml
-        .github/workflows/verify-attach.yml
+        .github/workflows
         .github/scripts
     steps:
       - uses: actions/checkout@v7
@@ -52,12 +52,12 @@ jobs:
         if: steps.changed.outputs.package == 'true'
         run: npm run typecheck --prefix "$PACKAGE"
 
-      - name: Run the verify-attach script's tests
+      - name: Run the tests of the scripts in .github/scripts
         if: steps.changed.outputs.package == 'true'
-        run: node --test .github/scripts/verify-attach.test.mjs
+        run: node --test .github/scripts/*.test.mjs
 
   test-module:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       matrix:
@@ -107,7 +107,7 @@ jobs:
           if-no-files-found: warn
 
   api-check:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read

@@ -83,6 +83,9 @@ internal class AuthStartViewHelper(private val config: AuthStartConfig = ClerkAu
   val passkeySignInConfigIsEnabled: Boolean
     get() = config.passkeyFirstFactorIsEnabled && config.passkeyAutofillIsEnabled
 
+  val restoreCredentialSignInConfigIsEnabled: Boolean
+    get() = config.passkeyFirstFactorIsEnabled
+
   val biometricSignInConfigIsEnabled: Boolean
     get() = config.biometricSignInIsEnabled
 
@@ -187,4 +190,18 @@ internal fun shouldStartAutomaticPasskeySignIn(
   return authMode != AuthMode.SignUp &&
     !lockedInitialIdentifierIsActive &&
     passkeySignInConfigIsEnabled
+}
+
+internal fun shouldStartRestoreCredentialSignIn(
+  restoreCredentialsAreEnabled: Boolean,
+  authMode: AuthMode,
+  lockedInitialIdentifierIsActive: Boolean,
+  restoreCredentialSignInConfigIsEnabled: Boolean,
+  hasSession: Boolean,
+): Boolean {
+  return restoreCredentialsAreEnabled &&
+    authMode != AuthMode.SignUp &&
+    !lockedInitialIdentifierIsActive &&
+    restoreCredentialSignInConfigIsEnabled &&
+    !hasSession
 }
