@@ -27,7 +27,7 @@ Preconditions:
 - **Sign out.** The third test taps `e2e.auth.signOut` and waits for the home to show `Signed out` with no user ID and no session ID, then expects `e2e.auth.signIn`. Screenshot `signed-out`.
 - **Sign out from the profile.** The fourth test opens the profile, taps `clerk.userProfile.row.signOut`, and waits for the same signed-out home. The profile closes when the user is gone. Screenshot `signed-out-from-profile`.
 - **Delete account.** Run `e2e-tests/bin/control-clerk-android run user-button-and-profile/delete-account`. The spec launches with `authMode: 'signIn'`, opens the profile, taps `clerk.userProfile.row.security`, and taps `Delete account`. It expects the sheet's warning, `Are you sure you want to delete your account? This action is permanent and irreversible.`, types `DELETE` into the one text box of the sheet, and taps the sheet's `Delete account` button. It waits for the home to show `Signed out`. It then taps `e2e.auth.signIn`, enters the deleted user's email, taps `clerk.auth.start.continue`, and expects `Couldn't find your account.`. Screenshot `account-deleted`.
-- **Proof.** `specs/golden/user-button-and-profile/profile.e2e.ts` and `delete-account.e2e.ts` pass. The video shows the home name the seeded user before each test opens the profile, and `Signed out` after each sign-out.
+- **Proof.** `specs/features/user-button-and-profile/profile.e2e.ts` and `delete-account.e2e.ts` pass. The video shows the home name the seeded user before each test opens the profile, and `Signed out` after each sign-out.
 
 ## Gotchas
 

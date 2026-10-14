@@ -1,6 +1,6 @@
 ---
 name: verify-clerk-android
-description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the golden regression specs.
+description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the e2e tests.
 ---
 
 # verify-clerk-android
@@ -84,14 +84,14 @@ With the remote backend, plain `doctor` checks that GitHub has your commit. It s
 Input only goes through specs. A spec is a TypeScript file that uses the `host` fixture from `specs/fixtures.ts` and e2e's `screen` locators.
 
 ```console
-$ e2e-tests/bin/control-clerk-android run auth-start                     # one feature (specs/golden/auth-start/)
+$ e2e-tests/bin/control-clerk-android run auth-start                     # one feature (specs/features/auth-start/)
 $ e2e-tests/bin/control-clerk-android run sign-up/complete               # one spec
 $ e2e-tests/bin/control-clerk-android run specs/explored/resend.e2e.ts   # a spec you wrote
 $ e2e-tests/bin/control-clerk-android screen                             # the current UI tree with test tags
 $ e2e-tests/bin/control-clerk-android screen --png                       # plus a screenshot in .verify/scratch/
 ```
 
-`run --all` runs every golden spec. `run` also takes `--grep <regex>`, `--retries <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a failed test again, up to `n` more times. The default is 0, so a run of your own change shows exactly what happened. [references/cli.md](references/cli.md) has every flag, the `--json` output, and the exit codes.
+`run --all` runs every committed spec. `run` also takes `--grep <regex>`, `--retries <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a failed test again, up to `n` more times. The default is 0, so a run of your own change shows exactly what happened. [references/cli.md](references/cli.md) has every flag, the `--json` output, and the exit codes.
 
 With a remote session, an edit to the app reaches the emulator only through a pushed commit: commit and push, then `run` again, and the same session builds it. A commit that only touches specs needs no push, because specs run from this machine.
 
@@ -143,28 +143,28 @@ A spec names no instance. Most specs run on the standard settings and declare no
 
 [references/instances.md](references/instances.md) has the rules for a declaration and what `run` prints when it applies one.
 
-### Golden and explored specs
+### Committed and explored specs
 
-Golden specs under `specs/golden/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the golden specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). The release workflow runs every one of them unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a golden spec already covers, that spec is your proof: run it. A spec covers a behavior only when it asserts on it. A spec that passes through the screen you changed without checking what you changed is not your proof. Run another feature's specs yourself when you changed code that feature shares, because nothing else runs them until a release, and a failure there stops the release.
+The specs under `specs/features/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the committed specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). The release workflow runs every one of them unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a committed spec already covers, that spec is your proof: run it. A spec covers a behavior only when it asserts on it. A spec that passes through the screen you changed without checking what you changed is not your proof. Run another feature's specs yourself when you changed code that feature shares, because nothing else runs them until a release, and a failure there stops the release.
 
 For new work, write a spec under `specs/explored/`, which is gitignored and does not exist in a fresh worktree. Run it, read the screen it ended on with `screen`, and fix locators from that output until it passes. A failing spec prints `FAIL`, the first assertion message, and the path of its failure page, which lists every step, the screen tree at the failure, and a screenshot. `run` exits 1.
 
 With `--retries`, a test that fails and then passes prints `flaky` and the error of its failed attempt, and a `flaky` line under the results counts such tests. `run.json` records the test as `flaky` with its `attempts`, never as passed, and `run` exits 0. The failure page of the failed attempt and the files of every attempt stay in the run directory. A test that fails on every attempt prints `FAIL`, and `run` exits 1.
 
-When the change adds or changes what the SDK does, the PR commits the spec into `specs/golden/<feature>/`, with its settings file if it has one, and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a golden spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A golden spec sits one folder deeper, so its import of the fixture changes with the move:
+When the change adds or changes what the SDK does, the PR commits the spec into `specs/features/<feature>/`, with its settings file if it has one, and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a committed spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A committed spec sits one folder deeper, so its import of the fixture changes with the move:
 
 ```console
-$ mkdir -p e2e-tests/specs/golden/<feature> && mv e2e-tests/specs/explored/probe.e2e.ts e2e-tests/specs/golden/<feature>/
-$ mv e2e-tests/specs/explored/probe.settings.json e2e-tests/specs/golden/<feature>/   # only when the spec has a settings file
-$ sed -i.bak "s|'../fixtures.ts'|'../../fixtures.ts'|" e2e-tests/specs/golden/<feature>/probe.e2e.ts && rm e2e-tests/specs/golden/<feature>/probe.e2e.ts.bak
+$ mkdir -p e2e-tests/specs/features/<feature> && mv e2e-tests/specs/explored/probe.e2e.ts e2e-tests/specs/features/<feature>/
+$ mv e2e-tests/specs/explored/probe.settings.json e2e-tests/specs/features/<feature>/   # only when the spec has a settings file
+$ sed -i.bak "s|'../fixtures.ts'|'../../fixtures.ts'|" e2e-tests/specs/features/<feature>/probe.e2e.ts && rm e2e-tests/specs/features/<feature>/probe.e2e.ts.bak
 $ e2e-tests/bin/control-clerk-android run <feature>
 ```
 
-`<feature>` is one of the folders under `specs/golden/`. A change to the `:e2e` host alone is not an SDK feature: keep its spec under `specs/explored/` and cite the run in the PR.
+`<feature>` is one of the folders under `specs/features/`. A change to the `:e2e` host alone is not an SDK feature: keep its spec under `specs/explored/` and cite the run in the PR.
 
 ### Agent steps
 
-e2e has a built-in agent, which a test drives with `agent.act(...)` and `agent.assert(...)`. The CLI configures it only when the machine has a Vercel AI Gateway key. The model is `anthropic/claude-haiku-5.5`, and `openai/gpt-6-luna-fast` is the gateway's backup. Supply the key in `AI_GATEWAY_API_KEY_FILE`, a file that only you can read, or in `AI_GATEWAY_API_KEY`. The `agent` line of `doctor` shows the model and where the key came from. Committed golden specs do not use agent steps.
+e2e has a built-in agent, which a test drives with `agent.act(...)` and `agent.assert(...)`. The CLI configures it only when the machine has a Vercel AI Gateway key. The model is `anthropic/claude-haiku-5.5`, and `openai/gpt-6-luna-fast` is the gateway's backup. Supply the key in `AI_GATEWAY_API_KEY_FILE`, a file that only you can read, or in `AI_GATEWAY_API_KEY`. The `agent` line of `doctor` shows the model and where the key came from. Committed specs do not use agent steps.
 
 ## Evidence
 
@@ -217,7 +217,7 @@ When this machine cannot attach and there is no session to hand the files to, or
 
 `attach` writes only to an open pull request, and fails on one that is closed or merged. It refuses a run that is tainted, that has a failing spec or no passing one, or whose `app.log` names a user that the run did not create. A before run can have failing specs. `attach` refuses a before run that is tainted, that was never sealed, or whose `app.log` names a user that the run did not create.
 
-Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the screenshots or the video show only what the change is about. If you ran other golden specs too, cite that run's id in the PR.
+Attach the run of your own change. Run your new or changed spec on its own and attach that run, so the screenshots or the video show only what the change is about. If you ran other committed specs too, cite that run's id in the PR.
 
 Work in this order, with one `up` for both runs: make the branch and `git push` it, `up`, `run` the spec without your change when it changes something that exists, make the change, commit, `git push`, `run` the spec again, open the pull request, `attach` with the before run as `--before <run-id>`, `down`. Open the pull request after the last run, so that it is not left open without its evidence. Commit before the second `run`, so that the line `attach` writes names a commit the pull request holds. In the pull request, name the run id and the specs you ran, and say what you did not run.
 
