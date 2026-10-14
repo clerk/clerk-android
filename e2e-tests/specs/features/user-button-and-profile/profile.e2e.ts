@@ -19,7 +19,7 @@ test('Manage account and Security open from the profile, and back returns to it 
   await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
   const profileRoot = screen.getByText('Edit profile');
   await expect(profileRoot).toBeVisible({ timeout: 20_000 });
-  await host.screenshot('user-button-profile');
+  await host.screenshot('profile-before-sections');
   await host.tap(screen.getByTestId('clerk.userProfile.row.manageAccount'));
   await expect(screen.getByText(user.email)).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText('PHONE NUMBER')).toBeVisible();

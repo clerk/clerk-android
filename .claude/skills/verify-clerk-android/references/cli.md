@@ -5,7 +5,7 @@
 ```console
 e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runner <label>] [--live]
 e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
-e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--github-report] [--no-video] [--wait <seconds>]
+e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--max-failures <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
 e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> [--screenshot <label>]... [--video] [--before <run-id>]
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
