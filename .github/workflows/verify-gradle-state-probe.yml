@@ -1,0 +1,82 @@
+name: verify-gradle-state-probe
+
+on:
+  push:
+    branches:
+      - mike/verify-stored-apk-android
+    paths:
+      - .github/workflows/verify-gradle-state-probe.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: zulu
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+      - name: Measure which Gradle state makes a one-file change incremental after a new checkout
+        run: |
+          set -euo pipefail
+          S="$RUNNER_TEMP/state"; mkdir -p "$S"
+          EDIT=source/ui/src/main/java/com/clerk/ui/auth/AuthStartView.kt
+          PROJECT_STATE=".gradle build e2e/build source/api/build source/ui/build source/telemetry/build .kotlin"
+          stop() { ./gradlew --stop > /dev/null 2>&1 || true; pkill -f KotlinCompileDaemon || true; sleep 2; }
+          build() {
+            local start; start=$(date +%s)
+            ./gradlew :e2e:assembleDebug --console=plain > "$S/$1.log" 2>&1 || { tail -60 "$S/$1.log"; exit 1; }
+            echo "RESULT $1: $(( $(date +%s) - start )) s; $(grep -E 'actionable tasks' "$S/$1.log")"
+            grep -E '^> Task .*(compile|dex|Dex|package|merge)' "$S/$1.log" | grep -vE 'UP-TO-DATE|FROM-CACHE|NO-SOURCE|SKIPPED' | sed 's/^/  ran: /' | head -40
+            stop
+          }
+          fresh() {
+            find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+            git checkout -f HEAD -- .
+            rm -rf ~/.gradle/caches ~/.gradle/wrapper
+          }
+          pack() {
+            local name=$1 root=$2; shift 2
+            local start; start=$(date +%s)
+            tar -C "$root" -I 'zstd -T0' -cf "$S/$name.tar.zst" "$@"
+            echo "SIZE $name: $(du -sh "$S/$name.tar.zst" | cut -f1) compressed; $(cd "$root" && du -shc "$@" | tail -1 | cut -f1) on disk; packed in $(( $(date +%s) - start )) s"
+          }
+          unpack() {
+            local start; start=$(date +%s)
+            tar -C "$2" -I zstd -xf "$S/$1.tar.zst"
+            echo "UNPACK $1: $(( $(date +%s) - start )) s"
+          }
+          nproc; free -g | head -2; java -version 2>&1 | head -1
+          build cold
+          ls -d */build */*/build config/*/build 2>/dev/null || true
+          ls ~/.gradle/caches
+          du -sh ~/.gradle/caches/* ~/.gradle/wrapper | sort -h
+          pack home-deps "$HOME" .gradle/wrapper $(cd ~ && ls -d .gradle/caches/* | grep -v build-cache-1)
+          pack home-build-cache "$HOME" .gradle/caches/build-cache-1
+          pack project "$PWD" $(for p in $PROJECT_STATE; do [ -e "$p" ] && echo "$p"; done)
+
+          for set in "deps" "deps build-cache" "deps project" "deps build-cache project"; do
+            fresh
+            for part in $set; do
+              case "$part" in
+                deps) unpack home-deps "$HOME" ;;
+                build-cache) unpack home-build-cache "$HOME" ;;
+                project) unpack project "$PWD" ;;
+              esac
+            done
+            echo "$(date +%s) // probe" >> "$EDIT"
+            build "edit-with-$(echo "$set" | tr ' ' '+')"
+          done
+
+          fresh
+          unpack home-deps "$HOME"; unpack project "$PWD"
+          build "no-edit-with-deps+project"
