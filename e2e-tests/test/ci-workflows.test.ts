@@ -111,18 +111,20 @@ describe('a pull request', () => {
 });
 
 const INTEGRATION_IN_RELEASE = 'integration-test / integration-test';
+const E2E_IN_RELEASE = 'verify-e2e / e2e-tests';
 
 describe('the nightly run', () => {
   const nightly = [
     { file: 'integration-test.yml', job: 'integration-test', checks: 'integration tests', workflows: ['integration-test.yml', `manual-release.yml=${INTEGRATION_IN_RELEASE}`] },
     { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests', workflows: ['paparazzi-verify.yml'] },
+    { file: 'verify-e2e.yml', job: 'e2e-tests', checks: 'end-to-end tests', workflows: ['verify-e2e.yml', `manual-release.yml=${E2E_IN_RELEASE}`] },
   ];
   const workflowsInput = (notify: string): string[] => {
     const input = /^ {6}workflows: (?:\|\n((?: {8}.+\n)+)|(.+)$)/m.exec(notify);
     return input?.[1] !== undefined ? input[1].trimEnd().split('\n').map((line) => line.trim()) : [input?.[2] ?? ''];
   };
 
-  it('runs the integration tests and the Paparazzi screenshot tests at 07:17 UTC in clerk/clerk-android, and nothing in a fork', () => {
+  it('runs the integration tests, the Paparazzi screenshot tests and the end-to-end tests at 07:17 UTC in clerk/clerk-android, and nothing in a fork', () => {
     for (const { file, job } of nightly) {
       assert.match(triggers(read(file)), /^ {2}schedule:\n {4}- cron: "17 7 \* \* \*"$/m, `${file} runs at 07:17 UTC`);
       const condition = /^ {4}if: (.+)$/m.exec(jobs(read(file)).get(job) ?? '')?.[1] ?? 'true';
@@ -134,13 +136,16 @@ describe('the nightly run', () => {
     }
   });
 
-  it('counts a release as the last passing integration test run only by the name the integration test job has in the release', () => {
+  it('counts a release as the last passing run of the integration tests or the end-to-end tests only by the name their job has in the release', () => {
     const name = (text: string, id: string): string => /^ {4}name: (.+)$/m.exec(text)?.[1] ?? id;
-    const [callerId, caller] = [...jobs(read('manual-release.yml'))].find(([, text]) => /^ {4}uses: \.\/\.github\/workflows\/integration-test\.yml$/m.test(text)) ?? ['', ''];
-    assert.equal(INTEGRATION_IN_RELEASE, `${name(caller, callerId)} / ${name(jobs(read('integration-test.yml')).get('integration-test') ?? '', 'integration-test')}`);
+    const inRelease = (file: string, job: string): string => {
+      const [callerId, caller] = [...jobs(read('manual-release.yml'))].find(([, text]) => new RegExp(`^ {4}uses: \\./\\.github/workflows/${file.replaceAll('.', '\\.')}$`, 'm').test(text)) ?? ['', ''];
+      return `${name(caller, callerId)} / ${name(jobs(read(file)).get(job) ?? '', job)}`;
+    };
+    assert.deepEqual([inRelease('integration-test.yml', 'integration-test'), inRelease('verify-e2e.yml', 'e2e-tests')], [INTEGRATION_IN_RELEASE, E2E_IN_RELEASE]);
   });
 
-  it('posts to Slack when a scheduled run fails, times out, or is cancelled, and not when it passes, when a person started it, or when a release ran it', () => {
+  it('posts to Slack when a scheduled run fails, times out, or is cancelled, and not when it passes, when a fork skipped it, when a person started it, or when a release ran it', () => {
     for (const { file, job, checks, workflows } of nightly) {
       const notify = jobs(read(file)).get('notify') ?? '';
       assert.match(notify, /^ {4}uses: \.\/\.github\/workflows\/notify-nightly-failure\.yml$/m, `${file} notifies Slack`);
@@ -154,11 +159,12 @@ describe('the nightly run', () => {
           evaluate(condition, { event: 'schedule', needs: { [job]: 'failure' } }),
           evaluate(condition, { event: 'schedule', needs: { [job]: 'cancelled' } }),
           evaluate(condition, { event: 'schedule', needs: { [job]: 'success' } }),
+          evaluate(condition, { event: 'schedule', needs: { [job]: 'skipped' } }),
           evaluate(condition, { event: 'schedule', needs: { [job]: 'cancelled' }, cancelled: true }),
           evaluate(condition, { event: 'workflow_dispatch', needs: { [job]: 'failure' } }),
           evaluate(condition, { event: 'release', needs: { [job]: 'failure' } }),
         ],
-        [true, true, false, true, false, false],
+        [true, true, false, false, true, false, false],
         file,
       );
     }
