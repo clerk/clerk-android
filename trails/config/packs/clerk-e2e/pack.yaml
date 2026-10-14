@@ -1,7 +1,0 @@
-id: clerk-e2e
-target:
-  display_name: Clerk Android E2E
-  platforms:
-    android:
-      app_ids:
-        - com.clerk.e2e
