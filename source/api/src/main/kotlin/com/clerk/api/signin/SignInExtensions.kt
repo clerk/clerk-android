@@ -191,6 +191,10 @@ private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
  * [authenticateWithOAuth] or [authenticateWithEnterpriseSso], which prepare the factor and then
  * call this.
  *
+ * The redirect must have been prepared by this SDK in the current process (for example with
+ * [prepareFirstFactor]); otherwise its callback cannot be verified and this returns a failure
+ * without launching the browser. Prepare the first factor again in that case.
+ *
  * @param transferable Whether this authentication flow allows transferring to a sign-up if the user
  *   doesn't have an account. Defaults to `true`.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a

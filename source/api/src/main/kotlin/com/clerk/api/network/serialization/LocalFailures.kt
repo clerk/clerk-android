@@ -32,4 +32,6 @@ internal object LocalFailureCodes {
   const val INVALID_ARGUMENTS = "invalid_arguments"
 
   const val MISSING_RESOURCE_DATA = "missing_resource_data"
+
+  const val REDIRECT_NOT_PREPARED = "redirect_not_prepared"
 }
