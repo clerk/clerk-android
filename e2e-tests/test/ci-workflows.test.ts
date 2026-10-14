@@ -91,7 +91,6 @@ const PULL_REQUEST_JOBS = [
   'android-test.yml test-module',
   'android-test.yml api-check',
   'android.yml build-module',
-  'android.yml verify',
   'checks.yml checks',
   'detekt.yml detekt',
 ];
