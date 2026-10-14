@@ -1,12 +1,13 @@
 package com.clerk.ui.signin.code
 
+import com.clerk.api.auth.types.MfaType
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
-import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.signin.verifyMfaCode
 
 internal class SignInAttemptHandler {
 
@@ -17,7 +18,7 @@ internal class SignInAttemptHandler {
     onErrorCallback: suspend (String?) -> Unit,
   ) {
     inProgressSignIn
-      .attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP(code = code))
+      .verifyMfaCode(code = code, type = MfaType.TOTP)
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting TOTP code: $it")
@@ -64,7 +65,7 @@ internal class SignInAttemptHandler {
   ) {
     if (isSecondFactor) {
       inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.PhoneCode(code = code))
+        .verifyMfaCode(code = code, type = MfaType.PHONE_CODE)
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting phone code as second factor: $it")
@@ -90,7 +91,7 @@ internal class SignInAttemptHandler {
   ) {
     if (isSecondFactor) {
       inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
+        .verifyMfaCode(code = code, type = MfaType.EMAIL_CODE)
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting email code as second factor: $it")

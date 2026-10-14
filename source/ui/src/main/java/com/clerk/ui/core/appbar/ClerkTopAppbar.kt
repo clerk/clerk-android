@@ -35,6 +35,7 @@ import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
@@ -49,7 +50,7 @@ internal fun ClerkTopAppBar(
   hasBackButton: Boolean = true,
   usesHostBackAction: Boolean = false,
   title: String? = null,
-  backgroundColor: Color? = null, // sensible default
+  backgroundColor: Color? = null,
   clerkTheme: ClerkTheme? = null,
   logoUrl: String? = Clerk.organizationLogoUrl,
   contentPadding: PaddingValues = PaddingValues(),
@@ -130,10 +131,13 @@ private fun RowScope.TopBarWithTrailingContent(
       logoContent?.invoke()
     }
   }
-  Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
+  Box(
+    modifier = Modifier.size(width = dp68 + dp6, height = dp48),
+    contentAlignment = Alignment.CenterEnd,
+  ) {
     trailingContent()
   }
-  Spacer(Modifier.width(dp12))
+  Spacer(Modifier.width(dp6))
 }
 
 @Composable

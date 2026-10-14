@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,8 +43,8 @@ import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
-import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -72,7 +73,7 @@ private const val DISABLED_ICON_ALPHA = 0.5f
  *   [OAuthProvider].
  */
 @Composable
-fun ClerkSocialButton(
+public fun ClerkSocialButton(
   provider: OAuthProvider,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
@@ -156,6 +157,7 @@ internal fun ClerkSocialButtonImpl(
   onClick: (OAuthProvider) -> Unit = {},
   clerkTheme: ClerkTheme? = null,
 ) {
+  val testTagModifier = Modifier.testTag(ClerkTestTags.Auth.socialProviderButton(provider.strategy))
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     BoxWithConstraints {
       val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
@@ -185,7 +187,8 @@ internal fun ClerkSocialButtonImpl(
                   Modifier.width(120.dp)
                 })
                 .height(dp48)
-                .defaultMinSize(minWidth = if (expandIconWidth) dp48 else 100.dp),
+                .defaultMinSize(minWidth = if (expandIconWidth) dp48 else 100.dp)
+                .then(testTagModifier),
           ) {
             SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = true)
           }
@@ -200,7 +203,12 @@ internal fun ClerkSocialButtonImpl(
           colors = getButtonColors(isPressedCombined),
           border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
           contentPadding = ButtonDefaults.ContentPadding,
-          modifier = modifier.fillMaxWidth().height(dp48).defaultMinSize(minWidth = 100.dp),
+          modifier =
+            modifier
+              .fillMaxWidth()
+              .height(dp48)
+              .defaultMinSize(minWidth = 100.dp)
+              .then(testTagModifier),
         ) {
           SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = false)
         }
@@ -209,7 +217,6 @@ internal fun ClerkSocialButtonImpl(
   }
 }
 
-/** Returns the button colors based on the pressed state. */
 @Composable
 private fun getButtonColors(isPressedCombined: Boolean) =
   ButtonDefaults.buttonColors(
@@ -221,7 +228,6 @@ private fun getButtonColors(isPressedCombined: Boolean) =
     disabledContentColor = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = 0.5f),
   )
 
-/** Displays the adaptive content of the social button based on available width. */
 @Composable
 private fun SocialButtonContent(
   provider: OAuthProvider,
@@ -242,7 +248,6 @@ private fun SocialButtonContent(
   }
 }
 
-/** Displays the social button with both icon and text. */
 @Composable
 private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   Row(
@@ -258,7 +263,6 @@ private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   }
 }
 
-/** Displays the social button with icon only. */
 @Composable
 private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   SocialButtonIcon(
@@ -268,7 +272,6 @@ private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   )
 }
 
-/** Displays the social provider icon. */
 @Composable
 private fun SocialButtonIcon(
   provider: OAuthProvider,
@@ -323,35 +326,24 @@ private fun SocialButtonIcon(
   )
 }
 
-/**
- * Preview composable for showcasing [ClerkSocialButton] in different states and widths. Displays
- * the button normally, pressed, disabled, and at different widths to show the adaptive
- * text/icon-only behavior.
- */
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun PreviewSocialButton() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      // Full width with text (>180dp)
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(min = 200.dp))
-      // Icon only - constrained width but will be at least 120dp
       ClerkSocialButton(provider = provider, modifier = Modifier.widthIn(max = 150.dp))
-      // Icon only - very narrow constraint, button will still be 120dp minimum
       ClerkSocialButton(provider = provider)
-      // Pressed state
       ClerkSocialButton(
         provider = provider,
         isPressed = true,
         modifier = Modifier.widthIn(min = 200.dp),
       )
-      // Disabled state
       ClerkSocialButton(
         provider = provider,
         isEnabled = false,
@@ -361,17 +353,11 @@ private fun PreviewSocialButton() {
   }
 }
 
-/**
- * Preview composable for showcasing [ClerkSocialButton] in different states and widths. Displays
- * the button normally, pressed, disabled, and at different widths to show the adaptive
- * text/icon-only behavior.
- */
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun PreviewSocialRow() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),

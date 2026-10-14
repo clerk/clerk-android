@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** The DeletedObject class represents an item that has been deleted from the database. */
 @Serializable
-data class DeletedObject(
+public data class DeletedObject(
   /** The object type that has been deleted. */
   @SerialName("object") val objectType: String? = null,
   /** The ID of the deleted item. */

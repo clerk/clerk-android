@@ -90,8 +90,6 @@ internal data class Environment(
         authConfig.nativeSettings.biometricCredentialPromptAfterSignUpEnabled
 
   companion object {
-
-    /** Fetches the environment configuration from the Clerk API. */
     suspend fun get(): ClerkResult<Environment, ClerkErrorResponse> = ClerkApi.environment.get()
   }
 }

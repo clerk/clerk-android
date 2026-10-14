@@ -33,7 +33,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param badgeType The visual style of the badge, defaults to [ClerkBadgeType.Primary]
  */
 @Composable
-fun Badge(
+public fun Badge(
   text: String,
   modifier: Modifier = Modifier,
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
@@ -93,7 +93,7 @@ fun Badge(
  * - [Negative]: Error/danger state colors with matching border
  * - [Warning]: Warning state colors with matching border
  */
-enum class ClerkBadgeType {
+public enum class ClerkBadgeType {
   /** Primary brand styling with no border */
   Primary,
 

@@ -12,6 +12,7 @@ import com.clerk.api.user.User.UpdateParams
 import com.clerk.api.user.update
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -34,6 +35,7 @@ class EmailViewModelTest {
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.user } returns null
+    every { Clerk.isEmailImmutable } returns false
     mockkStatic("com.clerk.api.user.UserKt")
     mockkStatic("com.clerk.api.emailaddress.EmailAddressKt")
   }
@@ -49,6 +51,7 @@ class EmailViewModelTest {
   fun setAsPrimary_success_emitsSuccessState() = runTest {
     val user = mockk<User>()
     val email = mockk<EmailAddress>(relaxed = true)
+    every { email.id } returns "email_123"
     every { Clerk.user } returns user
     coEvery { user.update(any<UpdateParams>()) } returns ClerkResult.success(user)
 
@@ -59,6 +62,7 @@ class EmailViewModelTest {
       assertEquals(EmailViewModel.State.Loading, awaitItem())
       assertEquals(EmailViewModel.State.SetAsPrimary.Success, awaitItem())
     }
+    coVerify(exactly = 1) { user.update(UpdateParams(primaryEmailAddressId = "email_123")) }
   }
 
   @Test

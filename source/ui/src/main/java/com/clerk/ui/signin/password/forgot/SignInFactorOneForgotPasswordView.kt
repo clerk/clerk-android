@@ -12,16 +12,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -30,7 +33,6 @@ import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.divider.TextDivider
@@ -52,7 +54,7 @@ import kotlinx.collections.immutable.toImmutableList
  * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
  */
 @Composable
-fun SignInFactorOneForgotPasswordView(
+public fun SignInFactorOneForgotPasswordView(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -71,14 +73,6 @@ fun SignInFactorOneForgotPasswordView(
   }
 }
 
-/**
- * The internal implementation of the [SignInFactorOneForgotPasswordView].
- *
- * @param alternativeFactors A list of alternative factors the user can use to sign in.
- * @param socialProviders A list of social providers available for sign-in.
- * @param modifier The [Modifier] to be applied to the view.
- * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
- */
 @Composable
 private fun SignInFactorOneForgotPasswordViewImpl(
   alternativeFactors: ImmutableList<Factor>,
@@ -86,8 +80,7 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
-  viewModel: ForgotPasswordViewModel =
-    viewModel(key = "forgot-password-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}"),
+  viewModel: ForgotPasswordViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -164,7 +157,9 @@ internal fun AlternativeFactorList(
       val iconRes = textIconHelper.iconResource(it)
 
       ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+          Modifier.fillMaxWidth()
+            .testTag(ClerkTestTags.Auth.SignIn.alternativeMethodButton(it.strategy)),
         icons =
           ClerkButtonDefaults.icons(
             leadingIcon = iconRes,
@@ -192,10 +187,10 @@ private fun Preview() {
           persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
         alternativeFactors =
           persistentListOf(
-            Factor(StrategyKeys.PASSWORD),
-            Factor(StrategyKeys.PASSKEY),
-            Factor(strategy = StrategyKeys.EMAIL_CODE),
-            Factor(strategy = StrategyKeys.PHONE_CODE, safeIdentifier = "3012370655"),
+            Factor(Strategy.Password.value),
+            Factor(Strategy.Passkey.value),
+            Factor(strategy = Strategy.EmailCode.value),
+            Factor(strategy = Strategy.PhoneCode.value, safeIdentifier = "3012370655"),
           ),
         onClickFactor = {},
         onAuthComplete = {},

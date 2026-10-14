@@ -1,16 +1,17 @@
 package com.clerk.api.session
 
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Strategy.PASSKEY
-import com.clerk.api.Constants.Strategy.PASSWORD
-import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.user.User
 import com.clerk.automap.annotations.AutoMap
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,12 +41,10 @@ import kotlinx.serialization.Serializable
  * object, the two objects have entirely different methods.
  */
 @Serializable
-data class Session(
+public data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
-
-  // Can be null if session wasn’t abandoned
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -55,8 +54,6 @@ data class Session(
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
-
-  // New: factor_verification_age
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
@@ -64,8 +61,10 @@ data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
-  @Serializable
-  enum class SessionStatus {
+  @OptIn(ExperimentalSerializationApi::class)
+  @KeepGeneratedSerializer
+  @Serializable(with = SessionStatus.Serializer::class)
+  public enum class SessionStatus {
     @SerialName("abandoned") ABANDONED,
     @SerialName("active") ACTIVE,
     @SerialName("ended") ENDED,
@@ -74,19 +73,24 @@ data class Session(
     @SerialName("replaced") REPLACED,
     @SerialName("revoked") REVOKED,
     @SerialName("unknown") UNKNOWN,
-    @SerialName("pending") PENDING,
+    @SerialName("pending") PENDING;
+
+    internal object Serializer :
+      UnknownFallbackEnumSerializer<SessionStatus>(generatedSerializer(), UNKNOWN)
   }
 
   /**
-   * Checks whether this session is authorized for the requested role, permission, feature, plan,
-   * and/or reverification.
+   * Returns whether the user has [role] or [permission] in the Active Organization, has the Billing
+   * [feature] or is subscribed to the Billing [plan], and reverified within [reverification].
    *
-   * Shares one implementation with [has]. Returns `false` when the user is missing or any requested
-   * dimension fails. Org role and permission come from the active organization membership. Feature
-   * and plan come from the `fea` / `pla` claims of the freshest token that matches this session and
-   * organization, from the snapshot or the token cache.
+   * Pass one of [role], [permission], [feature], or [plan], optionally with [reverification], or
+   * [reverification] alone. When you pass several, all of them must pass. Returns `false` when
+   * there is no user or no condition is passed, and for [role] and [permission] when there is no
+   * Active Organization. Prefix a [feature] or [plan] slug with `user:` or `org:` to check one
+   * payer only. A Subscription change is reflected in [feature] and [plan] checks after the session
+   * token refreshes.
    */
-  fun checkAuthorization(
+  public fun checkAuthorization(
     role: String? = null,
     permission: String? = null,
     feature: String? = null,
@@ -106,27 +110,8 @@ data class Session(
     )
   }
 
-  /** Alias for [checkAuthorization]. Matches the `useAuth().has` / `auth().has` name. */
-  fun has(
-    role: String? = null,
-    permission: String? = null,
-    feature: String? = null,
-    plan: String? = null,
-    reverification: ReverificationConfig? = null,
-  ): Boolean {
-    return checkAuthorization(
-      role = role,
-      permission = permission,
-      feature = feature,
-      plan = plan,
-      reverification = reverification,
-    )
-  }
-
-  /** Parameters for starting an in-session reverification flow. */
   @Serializable @AutoMap internal data class StartVerificationParams(val level: String)
 
-  /** Parameters for preparing a first factor in an in-session reverification flow. */
   @Serializable
   @AutoMap
   internal data class PrepareFirstFactorParams(
@@ -138,20 +123,21 @@ data class Session(
     @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
-  /** Parameters for attempting a first factor in an in-session reverification flow. */
   internal sealed interface AttemptFirstFactorParams {
     val strategy: String
 
     @Serializable
     @AutoMap
-    data class Password(val password: String, override val strategy: String = PASSWORD) :
-      AttemptFirstFactorParams
+    data class Password(
+      val password: String,
+      override val strategy: String = Strategy.Password.value,
+    ) : AttemptFirstFactorParams
 
     @Serializable
     @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = Strategy.Passkey.value,
     ) : AttemptFirstFactorParams
 
     @Serializable
@@ -165,11 +151,10 @@ data class Session(
       @SerialName("client_data") val clientData: String,
       val signature: String,
       val algorithm: String,
-      override val strategy: String = TRUSTED_DEVICE,
+      override val strategy: String = Strategy.TrustedDevice.value,
     ) : AttemptFirstFactorParams
   }
 
-  /** Parameters for preparing a second factor in an in-session reverification flow. */
   @Serializable
   @AutoMap
   internal data class PrepareSecondFactorParams(
@@ -178,7 +163,6 @@ data class Session(
     @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
-  /** Parameters for attempting a second factor in an in-session reverification flow. */
   internal sealed interface AttemptSecondFactorParams {
     val strategy: String
 
@@ -190,7 +174,7 @@ data class Session(
     @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
-      override val strategy: String = PASSKEY,
+      override val strategy: String = Strategy.Passkey.value,
     ) : AttemptSecondFactorParams
 
     @Serializable
@@ -200,21 +184,21 @@ data class Session(
       @SerialName("client_data") val clientData: String,
       val signature: String,
       val algorithm: String,
-      override val strategy: String = TRUSTED_DEVICE,
+      override val strategy: String = Strategy.TrustedDevice.value,
     ) : AttemptSecondFactorParams
   }
 }
 
-@Serializable data class SessionTask(val key: String)
+@Serializable public data class SessionTask(val key: String)
 
-enum class SessionTaskKey {
+public enum class SessionTaskKey {
   MFA_REQUIRED,
   RESET_PASSWORD,
   CHOOSE_ORGANIZATION,
   UNKNOWN;
 
-  companion object {
-    fun fromRaw(rawValue: String): SessionTaskKey =
+  public companion object {
+    public fun fromRaw(rawValue: String): SessionTaskKey =
       when (rawValue.lowercase()) {
         "setup_mfa",
         "setup-mfa",
@@ -229,18 +213,18 @@ enum class SessionTaskKey {
   }
 }
 
-val SessionTask.parsedKey: SessionTaskKey
+public val SessionTask.parsedKey: SessionTaskKey
   get() = SessionTaskKey.fromRaw(key)
 
-val Session.pendingTaskKey: SessionTaskKey?
+public val Session.pendingTaskKey: SessionTaskKey?
   get() = currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
 
-val Session.hasMfaRequiredTask: Boolean
+public val Session.hasMfaRequiredTask: Boolean
   get() =
     currentTask?.parsedKey == SessionTaskKey.MFA_REQUIRED ||
       tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
 
-val Session.requiresForcedMfa: Boolean
+public val Session.requiresForcedMfa: Boolean
   get() = pendingTaskKey == SessionTaskKey.MFA_REQUIRED
 
 /**
@@ -248,7 +232,7 @@ val Session.requiresForcedMfa: Boolean
  * browser.
  */
 @Serializable
-data class SessionActivity(
+public data class SessionActivity(
   /** A unique identifier for the session activity record. */
   val id: String,
 
@@ -277,7 +261,7 @@ data class SessionActivity(
 )
 
 /** Deletes the current session. */
-suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
+public suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
   return ClerkApi.session.removeSession(id)
 }
 
@@ -285,20 +269,16 @@ suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
  * Fetches a fresh JWT for the session.
  *
  * @param options The options to use when fetching the token.
- * @return The [ClerkResult] containing the [TokenResource] if successful, or [ClerkErrorResponse]
- *   if failed.
+ * @return The [ClerkResult] containing the [TokenResource] if successful. On failure it carries the
+ *   API error, the exception that interrupted the request, or a local error with code
+ *   `session_pending` (the session has tasks to complete) or `session_token_request_superseded`
+ *   (sign-out, reinitialization or reverification invalidated the request).
  * @see GetTokenOptions
  */
-suspend fun Session.fetchToken(
+public suspend fun Session.fetchToken(
   options: GetTokenOptions = GetTokenOptions()
-): ClerkResult<TokenResource, ClerkErrorResponse> {
-  val token = SessionTokenFetcher.shared.getToken(this, options)
-  return if (token != null) {
-    ClerkResult.success(token)
-  } else {
-    ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList(), clerkTraceId = "local-error"))
-  }
-}
+): ClerkResult<TokenResource, ClerkErrorResponse> =
+  SessionTokenFetcher.shared.getTokenResult(this, options)
 
 /**
  * Revokes the current session.
@@ -309,7 +289,7 @@ suspend fun Session.fetchToken(
  * @see ClerkResult
  * @see ClerkErrorResponse
  */
-suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
+public suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
   return ClerkApi.session.revokeSession(sessionIdToRevoke = this.id)
 }
 
@@ -317,5 +297,5 @@ suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
  * Convenience accessor to tell if the given session is the current device. Used mostly for
  * constructing the User profile security view.
  */
-val Session.isThisDevice: Boolean
+public val Session.isThisDevice: Boolean
   get() = this.id == Clerk.session?.id

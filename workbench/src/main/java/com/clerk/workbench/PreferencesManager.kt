@@ -13,10 +13,6 @@ internal object StorageHelper {
 
   private lateinit var secureStorage: SharedPreferences
 
-  /**
-   * Synchronously initializes the secure storage. We do this synchronously because we need to
-   * ensure that the storage is initialized before we generate a device ID.
-   */
   fun initialize(context: Context) {
     secureStorage = context.getSharedPreferences("WORKBENCH_STORAGE", Context.MODE_PRIVATE)
   }

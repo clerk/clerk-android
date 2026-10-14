@@ -273,7 +273,7 @@ private fun AuthSignedInAvatarButton(
       contentDescription = stringResource(R.string.user_avatar),
       contentScale = ContentScale.Crop,
       fallback = painterResource(id = R.drawable.ic_profile),
-      onError = { /* no-op */ },
+      onError = {},
     )
   }
 }
@@ -351,7 +351,7 @@ private fun SignedInAccountSheetHeader(
       contentDescription = stringResource(R.string.user_avatar),
       contentScale = ContentScale.Crop,
       fallback = painterResource(id = R.drawable.ic_profile),
-      onError = { /* no-op */ },
+      onError = {},
     )
     Column(modifier = Modifier.weight(1f).padding(start = dp12)) {
       if (displayName.isNotBlank()) {

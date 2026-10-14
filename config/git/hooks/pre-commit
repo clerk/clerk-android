@@ -43,7 +43,9 @@ if [[ ! -z ${kts_files_list} ]]; then
     fi
 fi
 
-# Modified ktfmt and detekt section with proper checks
+# ktfmt and detekt. config/bin/ktfmt and config/bin/detekt-cli run the versions pinned in
+# gradle/libs.versions.toml (the same ones build.gradle.kts gives Spotless and detekt), and the
+# flags below mirror build.gradle.kts, so the hook agrees with `./gradlew spotlessCheck detekt`.
 kotlin_files_list="$(git diff --cached --name-only --diff-filter=ACMR "-G.*"  | grep -Ei "\.kt(s)?$")"
 if [[ ! -z ${kotlin_files_list} ]]; then
     # Run ktfmt only if there are Kotlin files
@@ -57,7 +59,7 @@ if [[ ! -z ${kotlin_files_list} ]]; then
     fi
 
     # Run detekt only if there are Kotlin files
-    kotlin_files_detekt_args="$(echo $kotlin_files_list | tr " " ",")"
+    kotlin_files_detekt_args="$(echo $kotlin_files_list | tr " " ":")"
     if [[ ! -z ${kotlin_files_detekt_args} ]]; then
         "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
             --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
@@ -71,7 +73,6 @@ if [[ ! -z ${kotlin_files_list} ]]; then
             "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
                 --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
                 --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
-                --build-upon-default-config \
                 --build-upon-default-config \
                 --input "${kotlin_files_detekt_args}" >&2
             exit $?

@@ -10,6 +10,7 @@ import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.auth.AuthStartViewHelper
 import com.clerk.ui.auth.AuthStartViewImpl
 import com.clerk.ui.auth.AuthStartViewModel
+import com.clerk.ui.auth.FixedAuthStartConfig
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import org.junit.Test
 
@@ -18,13 +19,13 @@ class AuthStartViewSnapshotTest : BaseSnapshotTest() {
   @Test
   fun authStartShowsDismissActionAsTrailingChrome() {
     val authViewHelper =
-      AuthStartViewHelper().apply {
-        setTestValues(
+      AuthStartViewHelper(
+        FixedAuthStartConfig(
           enabledFirstFactorAttributes = listOf("email_address"),
-          socialProviders = listOf(OAuthProvider.GOOGLE),
+          authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
           applicationName = "Acme Co",
         )
-      }
+      )
 
     paparazzi.snapshot {
       Box(Modifier.size(width = 390.dp, height = 640.dp)) {

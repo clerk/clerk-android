@@ -10,6 +10,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.createEmailAddress
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -32,6 +33,7 @@ class AddEmailViewModelTest {
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.user } returns null
+    every { Clerk.isEmailImmutable } returns false
     mockkStatic("com.clerk.api.user.UserKt")
   }
 
@@ -96,6 +98,10 @@ class AddEmailViewModelTest {
   @Test
   fun addEmail_whenEmailIsImmutable_emitsErrorWithoutCallingApi() = runTest {
     every { Clerk.isEmailImmutable } returns true
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.createEmailAddress(any()) } returns
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "unexpected"))))
 
     val viewModel = AddEmailViewModel()
     viewModel.state.test {
@@ -105,6 +111,8 @@ class AddEmailViewModelTest {
         AddEmailViewModel.State.Error("Email addresses cannot be changed for this application."),
         awaitItem(),
       )
+      expectNoEvents()
     }
+    coVerify(exactly = 0) { user.createEmailAddress(any()) }
   }
 }

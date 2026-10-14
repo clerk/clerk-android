@@ -1,6 +1,7 @@
 package com.clerk.api.organizations
 
 import kotlinx.serialization.json.JsonObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -11,34 +12,41 @@ class OrganizationMembershipTest {
   fun `permission helpers read raw and system permission keys`() {
     val membership =
       organizationMembership(
-        permissions =
-          listOf(
-            "custom:permission",
-            OrganizationSystemPermission.MANAGE_PROFILE.value,
-            OrganizationSystemPermission.DELETE_PROFILE.value,
-            OrganizationSystemPermission.READ_MEMBERSHIPS.value,
-            OrganizationSystemPermission.MANAGE_MEMBERSHIPS.value,
-            OrganizationSystemPermission.READ_DOMAINS.value,
-            OrganizationSystemPermission.MANAGE_DOMAINS.value,
-            OrganizationSystemPermission.READ_BILLING.value,
-            OrganizationSystemPermission.MANAGE_BILLING.value,
-            OrganizationSystemPermission.READ_API_KEYS.value,
-            OrganizationSystemPermission.MANAGE_API_KEYS.value,
-          )
+        permissions = listOf("custom:permission", OrganizationSystemPermission.MANAGE_PROFILE.value)
       )
 
     assertTrue(membership.hasPermission("custom:permission"))
     assertTrue(membership.hasPermission(OrganizationSystemPermission.MANAGE_PROFILE))
-    assertTrue(membership.canManageProfile)
-    assertTrue(membership.canDeleteOrganization)
-    assertTrue(membership.canReadMemberships)
-    assertTrue(membership.canManageMemberships)
-    assertTrue(membership.canReadDomains)
-    assertTrue(membership.canManageDomains)
-    assertTrue(membership.canReadBilling)
-    assertTrue(membership.canManageBilling)
-    assertTrue(membership.canReadApiKeys)
-    assertTrue(membership.canManageApiKeys)
+    assertFalse(membership.hasPermission(OrganizationSystemPermission.DELETE_PROFILE))
+  }
+
+  @Test
+  fun `each permission helper is granted only by its own system permission`() {
+    val helpers: Map<OrganizationSystemPermission, (OrganizationMembership) -> Boolean> =
+      mapOf(
+        OrganizationSystemPermission.MANAGE_PROFILE to { it.canManageProfile },
+        OrganizationSystemPermission.DELETE_PROFILE to { it.canDeleteOrganization },
+        OrganizationSystemPermission.READ_MEMBERSHIPS to { it.canReadMemberships },
+        OrganizationSystemPermission.MANAGE_MEMBERSHIPS to { it.canManageMemberships },
+        OrganizationSystemPermission.READ_DOMAINS to { it.canReadDomains },
+        OrganizationSystemPermission.MANAGE_DOMAINS to { it.canManageDomains },
+        OrganizationSystemPermission.READ_BILLING to { it.canReadBilling },
+        OrganizationSystemPermission.MANAGE_BILLING to { it.canManageBilling },
+        OrganizationSystemPermission.READ_API_KEYS to { it.canReadApiKeys },
+        OrganizationSystemPermission.MANAGE_API_KEYS to { it.canManageApiKeys },
+      )
+    assertEquals(OrganizationSystemPermission.entries.toSet(), helpers.keys)
+
+    helpers.keys.forEach { granted ->
+      val membership = organizationMembership(permissions = listOf(granted.value))
+      helpers.forEach { (permission, helper) ->
+        assertEquals(
+          "helper for $permission with only $granted granted",
+          permission == granted,
+          helper(membership),
+        )
+      }
+    }
   }
 
   @Test

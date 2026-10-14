@@ -3,11 +3,11 @@ package com.clerk.ui.signin.backupcode
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.MfaType
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.signin.verifyMfaCode
 import com.clerk.ui.auth.AuthenticationViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +26,7 @@ internal class BackupCodeViewModel : ViewModel() {
     val inProgressSignIn = Clerk.auth.currentSignIn!!
     viewModelScope.launch {
       inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.BackupCode(backupCode))
+        .verifyMfaCode(backupCode, MfaType.BACKUP_CODE)
         .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
         .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
     }

@@ -25,7 +25,6 @@ class ClerkAttachActivityTest {
 
   @After
   fun tearDown() {
-    // Clear the Clerk-singleton state we mutated.
     val field = Clerk::class.java.getDeclaredField("currentActivity")
     field.isAccessible = true
     field.set(Clerk, null)
@@ -51,7 +50,6 @@ class ClerkAttachActivityTest {
       Clerk::class.java.getDeclaredField("currentActivity").apply { isAccessible = true }.get(Clerk)
         as java.lang.ref.WeakReference<*>?
 
-    // Same instance through the WeakReference while it's alive.
     assertSame(activity, ref?.get())
 
     // Drop the strong reference; we don't assert collection happens (the GC

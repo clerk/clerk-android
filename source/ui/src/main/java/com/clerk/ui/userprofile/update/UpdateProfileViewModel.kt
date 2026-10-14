@@ -33,7 +33,6 @@ internal class UpdateProfileViewModel : ViewModel() {
             _state.value = State.Error("Failed to delete profile image: ${it.errorMessage}")
           }
           .onSuccess {
-            // Fetch the latest user and update local state so UI re-renders
             user
               .get()
               .onFailure {

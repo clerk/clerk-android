@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -53,6 +54,7 @@ class NativeMagicLinkServiceTest {
   fun setup() {
     StorageHelper.initialize(RuntimeEnvironment.getApplication())
     StorageHelper.reset(RuntimeEnvironment.getApplication())
+    Clerk.stateStore.reset()
 
     signInApi = mockk(relaxed = true)
     signUpApi = mockk(relaxed = true)
@@ -81,6 +83,7 @@ class NativeMagicLinkServiceTest {
     NativeMagicLinkService.resetForTests()
     StorageHelper.reset(RuntimeEnvironment.getApplication())
     unmockkAll()
+    Clerk.stateStore.reset()
   }
 
   @Test
@@ -133,7 +136,7 @@ class NativeMagicLinkServiceTest {
     val preparedSignIn = initialSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
     val completedSignIn =
       initialSignIn.copy(status = SignIn.Status.COMPLETE, createdSessionId = "sess_123")
-    val refreshedClient = mockk<Client>(relaxed = true)
+    val refreshedClient = Client(id = "client_refreshed")
     val activatedSession = mockk<Session>(relaxed = true)
 
     mockEmailLinkPrepare(initialSignIn, preparedSignIn)
@@ -158,6 +161,50 @@ class NativeMagicLinkServiceTest {
     )
 
     verifyEndToEndRequests()
+    assertPkceVerifierMatchesPreparedChallenge()
+    assertEquals(refreshedClient, Clerk.client)
+    assertNull(PersistentPendingNativeMagicLinkStore().load())
+  }
+
+  @Test
+  fun `native magic link sign-in keeps the organization the created session started in`() =
+    runTest {
+      val initialSignIn = emailLinkSignIn()
+      val preparedSignIn = initialSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
+      val completedSignIn =
+        initialSignIn.copy(status = SignIn.Status.COMPLETE, createdSessionId = "sess_123")
+      val createdSession = mockk<Session>(relaxed = true)
+      every { createdSession.id } returns "sess_123"
+      every { createdSession.lastActiveOrganizationId } returns "org_123"
+      val signedInClient = mockk<Client>(relaxed = true)
+      every { signedInClient.sessions } returns listOf(createdSession)
+      every { Clerk.client } returns signedInClient
+
+      mockEmailLinkPrepare(initialSignIn, preparedSignIn)
+      coEvery { magicLinkApi.complete(any()) } returns
+        ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
+      coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
+      coEvery { auth.setActive("sess_123", "org_123") } returns ClerkResult.success(createdSession)
+
+      assertTrue(
+        NativeMagicLinkService.startEmailLinkSignIn("user@example.com") is ClerkResult.Success
+      )
+      val callbackUri =
+        Uri.parse("clerk://com.clerk.test.oauth?flow_id=sign_in_123&approval_token=approval_123")
+      assertTrue(NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri) is ClerkResult.Success)
+
+      coVerify(exactly = 1) { auth.setActive("sess_123", "org_123") }
+    }
+
+  private fun assertPkceVerifierMatchesPreparedChallenge() {
+    val prepareFields = slot<Map<String, String>>()
+    val completeFields = slot<Map<String, String>>()
+    coVerify { signInApi.prepareSignInFirstFactor(any(), capture(prepareFields)) }
+    coVerify { magicLinkApi.complete(capture(completeFields)) }
+    assertEquals(
+      prepareFields.captured.getValue("code_challenge"),
+      PkceUtil.createS256CodeChallenge(completeFields.captured.getValue("code_verifier")),
+    )
   }
 
   @Test
@@ -185,6 +232,20 @@ class NativeMagicLinkServiceTest {
     assertEquals(PendingNativeMagicLinkState.SIGN_IN, pendingFlow?.state)
     assertTrue(pendingFlow?.codeVerifier?.isNotBlank() == true)
     coVerify(exactly = 0) { signInApi.createSignIn(any()) }
+  }
+
+  @Test
+  fun `send email link uses a custom redirect uri when given`() = runTest {
+    val prepareFields = slot<Map<String, String>>()
+    val signIn = emailLinkSignIn().copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
+
+    coEvery { signInApi.prepareSignInFirstFactor(signIn.id, capture(prepareFields)) } returns
+      ClerkResult.success(signIn)
+
+    signIn.sendEmailLink(redirectUri = "myapp://email-link")
+
+    assertEquals("myapp://email-link", prepareFields.captured["redirect_uri"])
+    assertTrue(prepareFields.captured["code_challenge"]?.isNotBlank() == true)
   }
 
   private fun verifyEndToEndRequests() {
@@ -310,6 +371,15 @@ class NativeMagicLinkServiceTest {
       coVerify(exactly = 0) { auth.setActive(any(), any()) }
       coVerify(exactly = 0) { clientApi.get() }
       verify(exactly = 1) { auth.send(AuthEvent.SignUpCompleted(completedSignUp)) }
+      val prepareFields = slot<Map<String, String>>()
+      val completeFields = slot<Map<String, String>>()
+      coVerify { signUpApi.prepareSignUpVerification(any(), capture(prepareFields)) }
+      coVerify { magicLinkApi.complete(capture(completeFields)) }
+      assertEquals(
+        prepareFields.captured.getValue("code_challenge"),
+        PkceUtil.createS256CodeChallenge(completeFields.captured.getValue("code_verifier")),
+      )
+      assertNull(PersistentPendingNativeMagicLinkStore().load())
     }
 
   @Test

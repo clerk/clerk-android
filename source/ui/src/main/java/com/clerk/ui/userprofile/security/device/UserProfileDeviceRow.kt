@@ -11,15 +11,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionActivity
@@ -42,11 +38,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun UserProfileDeviceRow(
-  onError: (String?) -> Unit,
   session: Session,
+  onSignOut: (Session) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  UserProfileDeviceRowImpl(session = session, modifier = modifier, onError = onError)
+  UserProfileDeviceRowImpl(session = session, modifier = modifier, onSignOut = onSignOut)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,16 +51,8 @@ private fun UserProfileDeviceRowImpl(
   session: Session?,
   modifier: Modifier = Modifier,
   forceIsThisDevice: Boolean = false,
-  viewModel: DeviceViewModel = viewModel(),
-  onError: (String?) -> Unit,
+  onSignOut: (Session) -> Unit,
 ) {
-  val state by viewModel.state.collectAsStateWithLifecycle()
-  LaunchedEffect(state) {
-    if (state is DeviceViewModel.State.Error) {
-      onError((state as DeviceViewModel.State.Error).message)
-    }
-  }
-
   session?.latestActivity?.let { activity ->
     ClerkMaterialTheme {
       Row(
@@ -88,7 +76,7 @@ private fun UserProfileDeviceRowImpl(
           onClick = {
             when (it) {
               DeviceAction.SignOut -> {
-                viewModel.signOut(session)
+                onSignOut(session)
               }
             }
           },
@@ -156,7 +144,7 @@ private fun DeviceInfoWithIcon(
 private fun Preview() {
   UserProfileDeviceRowImpl(
     forceIsThisDevice = true,
-    onError = {},
+    onSignOut = {},
     session =
       Session(
         id = "123456",

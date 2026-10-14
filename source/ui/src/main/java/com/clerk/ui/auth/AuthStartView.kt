@@ -1,6 +1,5 @@
 package com.clerk.ui.auth
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -33,7 +33,9 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
+import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -46,16 +48,19 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
-import com.clerk.ui.core.input.ClerkPhoneNumberField
+import com.clerk.ui.core.extensions.isEmailAddress
+import com.clerk.ui.core.input.ClerkPhoneNumberFieldImpl
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
-fun AuthStartView(
+public fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   logo: (@Composable () -> Unit)? = null,
@@ -67,7 +72,7 @@ fun AuthStartView(
 ) {
   ClerkLogoProvider(logo) {
     AuthStartViewImpl(
-      modifier = modifier,
+      modifier = modifier.clerkTestTagsAsResourceIds(),
       preferGoogleOneTap = preferGoogleOneTap,
       startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
       isDismissible = isDismissible,
@@ -124,8 +129,10 @@ internal fun AuthStartViewImpl(
       biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
   }
 
-  val lastAuthenticationStrategy =
-    runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
+  val lastAuthenticationStrategy = runCatching {
+    Clerk.client.lastAuthenticationStrategy
+  }
+    .getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,
@@ -193,11 +200,11 @@ internal fun AuthStartViewImpl(
   LaunchedEffect(state) {
     when (val s = state) {
       is AuthStartViewModel.AuthState.Success.SignInSuccess -> {
-        authState.setToStepForStatus(s.signIn!!, onAuthComplete = onAuthComplete)
+        authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
         authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.Success.SignUpSuccess -> {
-        authState.setToStepForStatus(s.signUp!!, onAuthComplete = onAuthComplete)
+        authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
         authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.OAuthState.SignInSuccess -> {
@@ -276,7 +283,7 @@ internal fun AuthStartViewImpl(
           )
 
           ClerkButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.Start.continueButton),
             text = stringResource(R.string.continue_text),
             isLoading = state is AuthStartViewModel.AuthState.Loading,
             isEnabled = isContinueEnabled,
@@ -290,6 +297,7 @@ internal fun AuthStartViewImpl(
 
           if (authViewHelper.showIdentifierSwitcher) {
             ClerkTextButton(
+              modifier = Modifier.testTag(ClerkTestTags.Auth.Start.identifierSwitcherButton),
               text = authViewHelper.identifierSwitcherString(phoneActive),
               onClick = { phoneActive = !phoneActive },
             )
@@ -373,7 +381,9 @@ private fun dismissTrailingContent(
 @Suppress("ReturnCount")
 private suspend fun resolveBiometricSignInAvailability(): Boolean {
   if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
-  if (!Clerk.biometricCredentials.localAvailability().isAvailable) return false
+  val localAvailability =
+    withContext(Dispatchers.IO) { Clerk.biometricCredentials.localAvailability() }
+  if (!localAvailability.isAvailable) return false
 
   return when (Clerk.biometricCredentials.validateLocalCredentialIfPossible()) {
     is BiometricCredentialValidationResult.Invalid -> false
@@ -390,7 +400,7 @@ private fun BiometricSignInButton(
 ) {
   LastUsedAuthBadgeOverlay(isVisible = showsLastUsedBadge, modifier = Modifier.fillMaxWidth()) {
     ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier.fillMaxWidth().testTag(ClerkTestTags.Auth.Start.biometricSignInButton),
       text = stringResource(R.string.continue_with_biometrics),
       isLoading = isLoading,
       configuration =
@@ -407,7 +417,7 @@ private fun BiometricSignInButton(
 
 @Composable
 private fun AuthDismissButton(onDismiss: () -> Unit) {
-  IconButton(onClick = onDismiss) {
+  IconButton(onClick = onDismiss, modifier = Modifier.testTag(ClerkTestTags.dismissButton)) {
     Icon(
       modifier = Modifier.size(dp24),
       painter = painterResource(R.drawable.ic_cross),
@@ -436,9 +446,10 @@ private fun AuthInputField(
 ) {
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     LastUsedAuthBadgeOverlay(isVisible = showPhoneBadge) {
-      ClerkPhoneNumberField(
+      ClerkPhoneNumberFieldImpl(
         value = authStartPhoneNumber,
         modifier = Modifier.fillMaxWidth(),
+        inputModifier = Modifier.testTag(ClerkTestTags.Auth.Start.phoneNumber),
         onValueChange = onPhoneNumberChange,
         imeAction = ImeAction.Go,
         keyboardActions = KeyboardActions(onGo = { onSubmit() }),
@@ -448,6 +459,7 @@ private fun AuthInputField(
   } else {
     LastUsedAuthBadgeOverlay(isVisible = showEmailUsernameBadge) {
       ClerkTextField(
+        modifier = Modifier.testTag(ClerkTestTags.Auth.Start.identifier),
         inputContentType = authViewHelper.identifierContentType(),
         value = authStartIdentifier,
         onValueChange = onIdentifierChange,
@@ -482,23 +494,18 @@ private fun storeIdentifierType(
   authState.storeLastUsedIdentifierType(identifierType)
 }
 
-private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-private val String.isEmailAddress: Boolean
-  get() = emailRegex.matches(this)
-
-@SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  val authViewHelper = AuthStartViewHelper()
-
-  authViewHelper.setTestValues(
-    enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
-    applicationName = "Acme Co",
-    socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
-  )
+  val authViewHelper =
+    AuthStartViewHelper(
+      FixedAuthStartConfig(
+        enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
+        applicationName = "Acme Co",
+        authenticatableSocialProviders =
+          listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
+      )
+    )
 
   PreviewAuthStateProvider {
     AuthStartViewImpl(authViewHelper = authViewHelper, onAuthComplete = {})

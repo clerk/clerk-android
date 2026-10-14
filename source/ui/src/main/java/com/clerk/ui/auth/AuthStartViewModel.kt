@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.biometriccredential.BiometricCredentialKeyManagerException
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
@@ -14,12 +15,12 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.ResultType
+import com.clerk.api.sso.OAuthResult
+import com.clerk.ui.core.extensions.isEmailAddress
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
@@ -36,21 +37,10 @@ private const val FORM_IDENTIFIER_NOT_FOUND = "form_identifier_not_found"
 
 private const val INVITATION_ACCOUNT_NOT_EXISTS = "invitation_account_not_exists"
 
-/**
- * ViewModel responsible for handling the authentication logic for both sign-in and sign-up flows.
- *
- * This ViewModel manages the overall authentication state ([AuthState]) and interacts with the
- * Clerk SDK to perform operations like creating sign-in/sign-up attempts, and handling social
- * provider authentication.
- */
 internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) :
   ViewModel() {
 
   private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
-  /**
-   * The current state of the authentication process, observed by the UI. See [AuthState] for
-   * possible states.
-   */
   val state: StateFlow<AuthState> = _state.asStateFlow()
 
   private var automaticPasskeySignInJob: Job? = null
@@ -76,11 +66,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       viewModelScope.launch(ioDispatcher, start = CoroutineStart.LAZY) {
         try {
           when (
-            val result =
-              SignIn.create(
-                SignIn.CreateParams.Strategy.Passkey(),
-                preferImmediatelyAvailableCredentials = true,
-              )
+            val result = Clerk.auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
           ) {
             is ClerkResult.Success -> {
               ClerkLog.d("Automatic passkey sign-in succeeded with status ${result.value.status}")
@@ -151,15 +137,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     }
   }
 
-  /**
-   * Initiates the authentication process based on the provided [authMode].
-   *
-   * @param authMode Determines whether to start a sign-in or sign-up flow. See [AuthMode].
-   * @param isPhoneNumberFieldActive Indicates if the phone number input field is currently
-   *   active/focused by the user.
-   * @param phoneNumber The phone number entered by the user (if applicable).
-   * @param identifier The primary identifier (email or username) entered by the user.
-   */
   internal fun startAuth(
     authMode: AuthMode,
     isPhoneNumberFieldActive: Boolean,
@@ -209,7 +186,8 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
-      SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
+      Clerk.auth
+        .signIn { this.identifier = resolvedIdentifier }
         .onSuccess { signIn -> handleSignInSuccess(signIn, transferable) }
         .onFailure {
           val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
@@ -232,14 +210,15 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
   ) {
     _state.value = AuthState.Loading
     viewModelScope.launch(ioDispatcher) {
-      SignUp.create(
-          signUpParams(
-            isPhoneNumberFieldActive = isPhoneNumberFieldActive,
-            identifier = identifier,
-            phoneNumber = phoneNumber,
-            unsafeMetadata = unsafeMetadata,
-          )
-        )
+      Clerk.auth
+        .signUp {
+          when {
+            isPhoneNumberFieldActive -> phone = phoneNumber
+            identifier.isEmailAddress -> email = identifier
+            else -> username = identifier
+          }
+          this.unsafeMetadata = unsafeMetadata
+        }
         .onSuccess { signUp ->
           withContext(Dispatchers.Main) {
             _state.value = AuthState.Success.SignUpSuccess(signUp = signUp)
@@ -251,19 +230,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     }
   }
 
-  /**
-   * Initiates authentication using a specified social (OAuth) provider.
-   *
-   * If [preferGoogleOneTap] is true, Google One Tap is enabled, and the provider is Google, it
-   * attempts Google One Tap authentication. Otherwise, it proceeds with the standard OAuth redirect
-   * flow for the given provider.
-   *
-   * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
-   * @param transferable Whether the flow can transfer between sign-in and sign-up.
-   * @param preferGoogleOneTap Whether Google should prefer native One Tap over browser OAuth.
-   * @param startOAuthWithSignUp Whether browser OAuth should create a sign-up attempt first.
-   * @param unsafeMetadata Custom metadata to attach when browser OAuth starts from sign-up.
-   */
   internal fun authenticateWithSocialProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,
@@ -287,21 +253,20 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     unsafeMetadata: Map<String, Any>?,
   ) {
     viewModelScope.launch(ioDispatcher) {
-      SignIn.authenticateWithGoogleOneTap(transferable)
+      Clerk.auth
+        .signInWithGoogleOneTap(transferable)
         .onSuccess {
           withContext(Dispatchers.Main) {
             _state.value =
-              when (it.resultType) {
-                ResultType.SIGN_IN -> {
-                  it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
-                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+              when (val outcome = it.outcome) {
+                is OAuthResult.Outcome.SignIn ->
+                  AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
+                is OAuthResult.Outcome.SignUp ->
+                  AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
+                OAuthResult.Outcome.Empty -> {
+                  ClerkLog.e("Google One Tap returned neither a sign-in nor a sign-up")
+                  AuthState.OAuthState.Error(null)
                 }
-                ResultType.SIGN_UP -> {
-                  it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
-                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
-                }
-                ResultType.UNKNOWN ->
-                  AuthState.OAuthState.Error("Unknown result type from Google One Tap")
               }
           }
         }
@@ -332,33 +297,23 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     viewModelScope.launch {
       val result =
         if (startOAuthWithSignUp) {
-          SignUp.authenticateWithRedirect(
-            SignUp.AuthenticateWithRedirectParams.OAuth(
-              provider = provider,
-              unsafeMetadata = unsafeMetadata,
-            )
-          )
+          Clerk.auth.signUpWithOAuth(provider = provider, unsafeMetadata = unsafeMetadata)
         } else {
-          SignIn.authenticateWithRedirect(
-            SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
-            transferable = transferable,
-          )
+          Clerk.auth.signInWithOAuth(provider = provider, transferable = transferable)
         }
 
       result
         .onSuccess {
           _state.value =
-            when (it.resultType) {
-              ResultType.SIGN_IN -> {
-                it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
-                  ?: AuthState.OAuthState.Error("Unknown result type from OAuthProvider")
+            when (val outcome = it.outcome) {
+              is OAuthResult.Outcome.SignIn ->
+                AuthState.OAuthState.SignInSuccess(signIn = outcome.signIn)
+              is OAuthResult.Outcome.SignUp ->
+                AuthState.OAuthState.SignUpSuccess(signUp = outcome.signUp)
+              OAuthResult.Outcome.Empty -> {
+                ClerkLog.e("OAuth provider returned neither a sign-in nor a sign-up")
+                AuthState.OAuthState.Error(null)
               }
-              ResultType.SIGN_UP -> {
-                it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
-                  ?: AuthState.OAuthState.Error("Unknown result type from OAuth Provider")
-              }
-              ResultType.UNKNOWN ->
-                AuthState.OAuthState.Error("Unknown result type from OAuth provider")
             }
         }
         .onFailure {
@@ -369,21 +324,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
               AuthState.OAuthState.Error(it.errorMessage)
             }
         }
-    }
-  }
-
-  private fun signUpParams(
-    isPhoneNumberFieldActive: Boolean,
-    identifier: String,
-    phoneNumber: String,
-    unsafeMetadata: Map<String, Any>?,
-  ): SignUp.CreateParams.Standard {
-    return when {
-      isPhoneNumberFieldActive ->
-        SignUp.CreateParams.Standard(phoneNumber = phoneNumber, unsafeMetadata = unsafeMetadata)
-      identifier.isEmailAddress ->
-        SignUp.CreateParams.Standard(emailAddress = identifier, unsafeMetadata = unsafeMetadata)
-      else -> SignUp.CreateParams.Standard(username = identifier, unsafeMetadata = unsafeMetadata)
     }
   }
 
@@ -400,24 +340,15 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
   private suspend fun handleEnterpriseSSO(signIn: SignIn, transferable: Boolean) {
     signIn
-      .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
-      .onSuccess { authenticateWithPreparedRedirect(it, transferable) }
-      .onFailure { throwable ->
-        _state.value = withContext(Dispatchers.Main) { AuthState.Error(throwable.errorMessage) }
-      }
-  }
-
-  private suspend fun authenticateWithPreparedRedirect(signIn: SignIn, transferable: Boolean) {
-    signIn
-      .authenticateWithPreparedRedirect(transferable = transferable)
+      .authenticateWithEnterpriseSso(transferable = transferable)
       .onSuccess {
         withContext(Dispatchers.Main) {
           val successType =
-            when (it.resultType) {
-              ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
-              ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
-              ResultType.UNKNOWN -> {
-                ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
+            when (val outcome = it.outcome) {
+              is OAuthResult.Outcome.SignIn -> AuthState.Success.SignInSuccess(outcome.signIn)
+              is OAuthResult.Outcome.SignUp -> AuthState.Success.SignUpSuccess(outcome.signUp)
+              OAuthResult.Outcome.Empty -> {
+                ClerkLog.e("SSO redirect returned neither a sign-in nor a sign-up")
                 AuthState.Error("Unknown result type after SSO redirect")
               }
             }
@@ -437,42 +368,23 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       }
   }
 
-  /** Represents the various states of the authentication process. */
   internal sealed interface AuthState {
-    /** The initial state before any authentication attempt has started. */
     object Idle : AuthState
 
-    /** Indicates that an authentication operation is currently in progress. */
     object Loading : AuthState
 
-    /**
-     * Indicates that an authentication attempt was successful.
-     *
-     * @property signIn The [SignIn] object if the successful attempt was a sign-in.
-     * @property signUp The [SignUp] object if the successful attempt was a sign-up.
-     */
     sealed interface Success : AuthState {
-      data class SignInSuccess(val signIn: SignIn?) : Success
+      data class SignInSuccess(val signIn: SignIn) : Success
 
-      data class SignUpSuccess(val signUp: SignUp?) : Success
+      data class SignUpSuccess(val signUp: SignUp) : Success
     }
 
-    /** States specific to biometric sign-in. */
     sealed interface BiometricCredentialState : AuthState {
       data object Loading : BiometricCredentialState
     }
 
-    /**
-     * Indicates that an authentication attempt failed.
-     *
-     * @property message A descriptive error message, if available.
-     */
     data class Error(val message: String?) : AuthState
 
-    /**
-     * Represents the states specifically related to OAuth (social provider) authentication.
-     * Inherits from [AuthState] as OAuth is a type of authentication.
-     */
     sealed interface OAuthState : AuthState {
       data object Loading : OAuthState
 
@@ -486,14 +398,9 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 }
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
-  startingFirstFactor?.strategy == "enterprise_sso"
+  startingFirstFactor?.strategyType == Strategy.EnterpriseSso
 
 internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =
     (throwable as? BiometricCredentialKeyManagerException)?.code ==
       BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
-
-private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-private val String.isEmailAddress: Boolean
-  get() = emailRegex.matches(this)

@@ -64,11 +64,10 @@ internal data class OrganizationAccountListState(
     get() = isLoadingMoreMemberships || isLoadingMoreInvitations || isLoadingMoreSuggestions
 
   val pendingInvitationsCount: Int
-    get() =
-      invitations.count {
-        it.status != ACCEPTED_INVITATION_STATUS &&
-          it.publicOrganizationData.id !in acceptedInvitationOrganizationIds
-      }
+    get() = invitations.count {
+      it.status != ACCEPTED_INVITATION_STATUS &&
+        it.publicOrganizationData.id !in acceptedInvitationOrganizationIds
+    }
 }
 
 private const val ACCEPTED_INVITATION_STATUS = "accepted"

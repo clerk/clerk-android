@@ -96,9 +96,8 @@ class SessionReverificationTokenTest {
 
     val updatedSession = updateSnapshot(updatedToken)
 
-    assertTrue(updatedSession.has(feature = "write"))
     assertTrue(updatedSession.checkAuthorization(feature = "write"))
-    assertFalse(updatedSession.has(feature = "read"))
+    assertFalse(updatedSession.checkAuthorization(feature = "read"))
     assertEquals(updatedToken, fetcher.getToken(session))
     assertEquals(updatedToken, SessionTokensCache.getToken(session.tokenCacheKey(null)))
     coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
@@ -227,10 +226,10 @@ class SessionReverificationTokenTest {
           )
         )
       assertEquals(verifiedToken, fetcher.getToken(snapshot))
-      assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+      assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
       assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
-      assertTrue(snapshot.has(feature = "read"))
-      assertFalse(snapshot.has(feature = "stale"))
+      assertTrue(snapshot.checkAuthorization(feature = "read"))
+      assertFalse(snapshot.checkAuthorization(feature = "stale"))
     }
     coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
   }
@@ -247,19 +246,19 @@ class SessionReverificationTokenTest {
 
       val snapshot = updateSnapshot(token(now + 1, permission = "stale", factorAges = "[20,20]"))
       assertEquals(verifiedToken, fetcher.getToken(snapshot))
-      assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+      assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
       assertTrue(snapshot.checkAuthorization(feature = "read"))
-      assertFalse(snapshot.has(feature = "stale"))
+      assertFalse(snapshot.checkAuthorization(feature = "stale"))
     }
 
   @Test
   fun `authorization rejects snapshots until a post-verification token is fetched`() = runTest {
     val now = System.currentTimeMillis() / 1_000
     val snapshot = updateSnapshot(token(now - 20 * 60)).copy(factorVerificationAge = listOf(0, 0))
-    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
     fetcher.invalidateSession(session.id)
 
-    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
     assertFalse(snapshot.checkAuthorization(feature = "read"))
     coVerify(exactly = 0) { api.tokens(session.id, "org_123", any(), any()) }
 
@@ -267,7 +266,7 @@ class SessionReverificationTokenTest {
     coEvery { api.tokens(session.id, "org_123", any(), any()) } returns
       ClerkResult.success(verifiedToken)
     assertEquals(verifiedToken, fetcher.getToken(snapshot))
-    assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
     assertTrue(snapshot.checkAuthorization(feature = "read"))
   }
 
@@ -281,20 +280,20 @@ class SessionReverificationTokenTest {
     fetcher.invalidateSession(session.id)
     assertEquals(verifiedToken, fetcher.getToken(snapshot))
 
-    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
     assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
-    assertTrue(snapshot.has(feature = "read"))
+    assertTrue(snapshot.checkAuthorization(feature = "read"))
   }
 
   @Test
   fun `reset restores authorization from session snapshots`() {
     val snapshot = updateSnapshot(token(System.currentTimeMillis() / 1_000))
     fetcher.invalidateSession(session.id)
-    assertFalse(snapshot.has(feature = "read"))
+    assertFalse(snapshot.checkAuthorization(feature = "read"))
 
     fetcher.reset()
 
-    assertTrue(snapshot.has(feature = "read"))
+    assertTrue(snapshot.checkAuthorization(feature = "read"))
     assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
   }
 

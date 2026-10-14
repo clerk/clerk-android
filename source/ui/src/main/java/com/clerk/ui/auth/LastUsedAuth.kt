@@ -2,8 +2,8 @@ package com.clerk.ui.auth
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.ui.core.common.StrategyKeys
 
 internal sealed class LastUsedAuth {
   data class Social(val provider: OAuthProvider) : LastUsedAuth()
@@ -44,7 +44,8 @@ internal sealed class LastUsedAuth {
       storedIdentifierType: IdentifierType?,
       biometricSignInIsVisible: Boolean = false,
     ): LastUsedAuth? {
-      val lastAuth = lastAuthenticationStrategy?.takeIf { it.isNotBlank() } ?: return null
+      val lastAuth =
+        lastAuthenticationStrategy?.takeIf { it.isNotBlank() }?.let(Strategy::from) ?: return null
       val visibleMethodCount =
         totalEnabledFirstFactorMethods(
           enabledFirstFactorAttributes,
@@ -54,12 +55,12 @@ internal sealed class LastUsedAuth {
         return null
       }
 
-      if (biometricSignInIsVisible && lastAuth == StrategyKeys.TRUSTED_DEVICE) {
+      if (biometricSignInIsVisible && lastAuth == Strategy.TrustedDevice) {
         return BiometricCredential
       }
 
-      if (isOAuthStrategy(lastAuth)) {
-        val provider = OAuthProvider.fromStrategy(lastAuth)
+      if (lastAuth is Strategy.OAuth) {
+        val provider = lastAuth.provider
         if (provider != OAuthProvider.UNKNOWN) {
           authenticatableSocialProviders
             .firstOrNull { it == provider }
@@ -137,12 +138,12 @@ internal object LastUsedIdentifierStorage {
 }
 
 private val emailStrategies =
-  listOf(StrategyKeys.EMAIL_CODE, StrategyKeys.PASSWORD, StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
+  listOf(Strategy.EmailCode, Strategy.Password, Strategy.ResetPasswordEmailCode)
 
 private val phoneStrategies =
-  listOf(StrategyKeys.PHONE_CODE, StrategyKeys.PASSWORD, StrategyKeys.RESET_PASSWORD_PHONE_CODE)
+  listOf(Strategy.PhoneCode, Strategy.Password, Strategy.ResetPasswordPhoneCode)
 
-private val usernameStrategies = listOf(StrategyKeys.PASSWORD)
+private val usernameStrategies = listOf(Strategy.Password)
 
 private val IdentifierType.storageValue: String
   get() =
@@ -154,29 +155,29 @@ private val IdentifierType.storageValue: String
 
 @Suppress("ReturnCount")
 private fun shouldShowBadge(
-  strategies: List<String>,
-  lastAuth: String,
+  strategies: List<Strategy>,
+  lastAuth: Strategy,
   enabledFirstFactorAttributes: List<String>,
   storedIdentifierType: IdentifierType?,
 ): Boolean {
-  if (lastAuth == StrategyKeys.PASSWORD && storedIdentifierType != null) {
+  if (lastAuth == Strategy.Password && storedIdentifierType != null) {
     return storedIdentifierType.matches(strategies)
   }
 
-  if (lastAuth == StrategyKeys.PASSWORD && !canShowLastUsedBadge(enabledFirstFactorAttributes)) {
+  if (lastAuth == Strategy.Password && !canShowLastUsedBadge(enabledFirstFactorAttributes)) {
     return false
   }
 
   return strategies.contains(lastAuth)
 }
 
-private fun IdentifierType.matches(strategies: List<String>): Boolean {
+private fun IdentifierType.matches(strategies: List<Strategy>): Boolean {
   return when (this) {
-    IdentifierType.Email -> strategies.contains(StrategyKeys.EMAIL_CODE)
-    IdentifierType.Phone -> strategies.contains(StrategyKeys.PHONE_CODE)
+    IdentifierType.Email -> strategies.contains(Strategy.EmailCode)
+    IdentifierType.Phone -> strategies.contains(Strategy.PhoneCode)
     IdentifierType.Username ->
-      strategies.contains(StrategyKeys.PASSWORD) &&
-        strategies.none { it == StrategyKeys.EMAIL_CODE || it == StrategyKeys.PHONE_CODE }
+      strategies.contains(Strategy.Password) &&
+        strategies.none { it == Strategy.EmailCode || it == Strategy.PhoneCode }
   }
 }
 
@@ -199,8 +200,4 @@ private fun totalEnabledFirstFactorMethods(
   val identifierKeys = setOf("email_address", "phone_number", "username")
   val identifierCount = enabledFirstFactorAttributes.count { it in identifierKeys }
   return identifierCount + authenticatableSocialProviders.size
-}
-
-private fun isOAuthStrategy(strategy: String): Boolean {
-  return strategy.startsWith("oauth_") && !strategy.startsWith("oauth_token_")
 }

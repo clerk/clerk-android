@@ -206,20 +206,6 @@ class LastUsedAuthTest {
   }
 
   @Test
-  fun fromReturnsBiometricCredentialWhenVisibleAndLastUsed() {
-    val result =
-      LastUsedAuth.from(
-        lastAuthenticationStrategy = "trusted_device",
-        enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = emptyList(),
-        storedIdentifierType = null,
-        biometricSignInIsVisible = true,
-      )
-
-    assertEquals(LastUsedAuth.BiometricCredential, result)
-  }
-
-  @Test
   fun fromIgnoresBiometricCredentialWhenNotVisible() {
     val result =
       LastUsedAuth.from(

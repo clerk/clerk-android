@@ -8,7 +8,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.prepareVerification
+import com.clerk.api.signup.sendEmailLink
 import com.clerk.ui.auth.AuthenticationViewState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,7 @@ internal class SignUpEmailLinkViewModel(
 
     viewModelScope.launch(ioDispatcher) {
       signUp
-        .prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
+        .sendEmailLink()
         .onSuccess { _state.value = AuthenticationViewState.Idle }
         .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
     }

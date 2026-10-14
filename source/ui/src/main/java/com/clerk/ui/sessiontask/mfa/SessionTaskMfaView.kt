@@ -1,5 +1,6 @@
 package com.clerk.ui.sessiontask.mfa
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,10 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
+import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -38,15 +42,29 @@ import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+internal fun SessionTaskMfaView(
+  modifier: Modifier = Modifier,
+  viewModel: SessionTaskMfaViewModel = viewModel(),
+  onAuthComplete: () -> Unit,
+) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  val progress by viewModel.progress.collectAsStateWithLifecycle()
+  val flowStep = progress.stepFor(session?.id)
+  var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
-  LaunchedEffect(session?.requiresForcedMfa) {
-    if (session?.requiresForcedMfa == false) {
-      onAuthComplete()
+  val showStep = { step: FlowStep ->
+    if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
+      taskIsDone = true
+    } else {
+      viewModel.setFlowStep(session?.id, step)
     }
   }
+
+  LaunchedEffect(session?.id, session?.requiresForcedMfa) {
+    showStep(viewModel.progress.value.stepFor(session?.id))
+  }
+  LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
+  BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }
 
   if (!Clerk.mfaPhoneCodeIsEnabled && !Clerk.mfaAuthenticatorAppIsEnabled) {
     SignInGetHelpView(modifier = modifier)
@@ -59,7 +77,7 @@ internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: (
     SessionTaskMfaFlowContent(
       modifier = contentModifier,
       flowStep = flowStep,
-      onFlowStepChange = { flowStep = it },
+      onFlowStepChange = showStep,
     )
   }
 }
@@ -148,6 +166,7 @@ private fun SessionTaskMfaMethodButtons(
     SessionTaskMfaMethodButton(
       text = stringResource(R.string.sms_code),
       iconRes = R.drawable.ic_phone,
+      testTag = ClerkTestTags.Auth.SessionTask.SetupMfa.smsCode,
       onClick = { onClick(ViewType.Sms) },
     )
   }
@@ -156,15 +175,21 @@ private fun SessionTaskMfaMethodButtons(
     SessionTaskMfaMethodButton(
       text = stringResource(R.string.authenticator_application),
       iconRes = R.drawable.ic_key,
+      testTag = ClerkTestTags.Auth.SessionTask.SetupMfa.authenticatorApp,
       onClick = { onClick(ViewType.AuthenticatorApp) },
     )
   }
 }
 
 @Composable
-private fun SessionTaskMfaMethodButton(text: String, iconRes: Int, onClick: () -> Unit) {
+private fun SessionTaskMfaMethodButton(
+  text: String,
+  iconRes: Int,
+  testTag: String,
+  onClick: () -> Unit,
+) {
   ClerkButton(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = Modifier.fillMaxWidth().testTag(testTag),
     text = text,
     onClick = onClick,
     configuration =
@@ -218,16 +243,4 @@ private fun BackupCodesStep(step: FlowStep.BackupCodes, onFlowStepChange: (FlowS
     mfaType = step.mfaType,
     onDismiss = { onFlowStepChange(FlowStep.ChooseMethod) },
   )
-}
-
-private sealed interface FlowStep {
-  data object ChooseMethod : FlowStep
-
-  data class AddMfa(val viewType: ViewType) : FlowStep
-
-  data object AddPhoneNumber : FlowStep
-
-  data class Verify(val mode: VerifyBottomSheetMode) : FlowStep
-
-  data class BackupCodes(val codes: List<String>, val mfaType: MfaType) : FlowStep
 }

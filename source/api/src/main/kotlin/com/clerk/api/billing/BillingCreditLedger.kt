@@ -1,5 +1,6 @@
 package com.clerk.api.billing
 
+import com.clerk.api.network.serialization.EpochMillisecondsSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,10 +13,10 @@ import kotlinx.serialization.Serializable
  * @property createdAt The date when the credit ledger entry was created, as Unix milliseconds.
  */
 @Serializable
-data class BillingCreditLedger(
+public data class BillingCreditLedger(
   val id: String,
   val amount: BillingMoneyAmount,
   val sourceType: String,
   val sourceId: String,
-  val createdAt: Long,
+  @Serializable(with = EpochMillisecondsSerializer::class) val createdAt: Long,
 )

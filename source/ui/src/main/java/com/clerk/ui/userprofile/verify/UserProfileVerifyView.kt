@@ -27,7 +27,7 @@ import com.clerk.ui.userprofile.security.Origin
 import kotlinx.serialization.Serializable
 
 @Composable
-fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
+public fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
   UserProfileVerifyViewImpl(mode = mode, modifier = modifier)
 }
 
@@ -172,10 +172,10 @@ private fun Mode.instructionString(): String {
 
 @Immutable
 @Serializable
-sealed interface Mode {
-  @Serializable data class Email(val emailAddress: EmailAddress) : Mode
+public sealed interface Mode {
+  @Serializable public data class Email(val emailAddress: EmailAddress) : Mode
 
-  @Serializable data class Phone(val phoneNumber: PhoneNumber) : Mode
+  @Serializable public data class Phone(val phoneNumber: PhoneNumber) : Mode
 
-  @Serializable data object Totp : Mode
+  @Serializable public data object Totp : Mode
 }

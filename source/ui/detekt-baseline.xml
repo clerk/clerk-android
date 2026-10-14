@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ForbiddenVoid:UserProfileUpdateProfileView.kt:Void?</ID>
+    <ID>InjectDispatcher:AddEmailViewModel.kt:AddEmailViewModel$IO</ID>
+    <ID>InjectDispatcher:AllDevicesViewModel.kt:AllDevicesViewModel$IO</ID>
+    <ID>InjectDispatcher:AuthStartView.kt:IO</ID>
+    <ID>InjectDispatcher:AuthStartViewModel.kt:AuthStartViewModel$IO</ID>
+    <ID>InjectDispatcher:BiometricCredentialEnrollmentViewModel.kt:BiometricCredentialEnrollmentViewModel$IO</ID>
+    <ID>InjectDispatcher:CollectFieldViewModel.kt:CollectFieldViewModel$IO</ID>
+    <ID>InjectDispatcher:CompleteProfileViewModel.kt:CompleteProfileViewModel$IO</ID>
+    <ID>InjectDispatcher:EmailViewModel.kt:EmailViewModel$IO</ID>
+    <ID>InjectDispatcher:OrganizationCreateFlowViewModel.kt:OrganizationCreateFlowViewModel$IO</ID>
+    <ID>InjectDispatcher:OrganizationProfileFormView.kt:IO</ID>
+    <ID>InjectDispatcher:ResetPasswordViewModel.kt:ResetPasswordViewModel$IO</ID>
+    <ID>InjectDispatcher:SessionTaskCreateOrganizationViewModel.kt:SessionTaskCreateOrganizationViewModel$IO</ID>
+    <ID>InjectDispatcher:SetPasswordViewModel.kt:SetPasswordViewModel$IO</ID>
+    <ID>InjectDispatcher:UserProfileVerifyViewModel.kt:UserProfileVerifyViewModel$IO</ID>
+    <ID>LongMethod:ClerkButton.kt:@PreviewLightDark @Composable private fun PreviewButton</ID>
+    <ID>LongMethod:ClerkTextField.kt:@PreviewLightDark @Composable private fun PreviewClerkTextField</ID>
+    <ID>LongMethod:ClerkTextField.kt:@PreviewLightDark @Composable private fun PreviewClerkTextFieldError</ID>
+    <ID>LongMethod:SignInFactorCodeView.kt:@Composable private fun SignInFactorCodeViewImpl</ID>
+    <ID>LongMethod:SignUpCollectFieldView.kt:@Composable private fun SignUpCollectFieldViewImpl</ID>
+    <ID>LongMethod:SignUpCompleteProfileView.kt:@Composable private fun InputRow</ID>
+    <ID>LongMethod:SignUpCompleteProfileView.kt:@Composable private fun SignUpCompleteProfileImpl</ID>
+    <ID>LongParameterList:ClerkButton.kt:@Composable private fun ButtonContent</ID>
+    <ID>LongParameterList:ClerkButton.kt:@Composable private fun ClerkButtonImpl</ID>
+    <ID>LongParameterList:SignUpCollectFieldView.kt:@Composable private fun InputField</ID>
+    <ID>LongParameterList:SignUpCompleteProfileView.kt:@Composable private fun InputRow</ID>
+    <ID>LongParameterList:UserProfileMfaAddSmsView.kt:@Composable private fun UserProfileMfaAddSmsContent</ID>
+    <ID>NoNameShadowing:AuthView.kt:{ navigateToForgotPasswordFactor(backStack, it) }</ID>
+    <ID>NoNameShadowing:UpdateProfileViewModel.kt:UpdateProfileViewModel${ _state.value = State.Error("Failed to refresh user: ${it.errorMessage}") }</ID>
+    <ID>NoNameShadowing:UserProfileSecurityViewModel.kt:UserProfileSecurityViewModel${ it.id == session.id }</ID>
+    <ID>NoNameShadowing:UserProfileView.kt:{ when (it) { UserProfileAction.Profile -> onShowDetail() UserProfileAction.Security -> backStack.add(UserProfileDestination.UserProfileSecurity) UserProfileAction.SwitchAccount -> onSwitchAccount() UserProfileAction.AddAccount -> onAddAccount() UserProfileAction.SignOut -> Unit } }</ID>
+    <ID>TooManyFunctions:AuthStartViewModel.kt:AuthStartViewModel : ViewModel</ID>
+    <ID>UnsafeCallOnNullableType:AlternativeMethodsViewModel.kt:AlternativeMethodsViewModel$it.signIn!!</ID>
+    <ID>UnsafeCallOnNullableType:AlternativeMethodsViewModel.kt:AlternativeMethodsViewModel$it.signUp!!</ID>
+    <ID>UnsafeCallOnNullableType:AuthStartView.kt:s.signIn!!</ID>
+    <ID>UnsafeCallOnNullableType:AuthStartView.kt:s.signUp!!</ID>
+    <ID>UnsafeCallOnNullableType:BackupCodeViewModel.kt:BackupCodeViewModel$Clerk.auth.currentSignIn!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkCodeInputField.kt:leadingIconTint!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.background!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.border!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.danger!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.foreground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.input!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.inputForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.muted!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.mutedForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.neutral!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.primary!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.primaryForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.ring!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.secondaryButtonBackground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.secondaryButtonForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.shadow!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.success!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:ClerkThemeColors$colors.warning!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.background!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.border!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.danger!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.foreground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.input!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.inputForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.muted!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.mutedForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.neutral!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.primary!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkComposeTheme.kt:colors.primaryForeground!!</ID>
+    <ID>UnsafeCallOnNullableType:ClerkTextField.kt:trailingIcon!!</ID>
+    <ID>UnsafeCallOnNullableType:ForgotPasswordViewModel.kt:ForgotPasswordViewModel$it.signIn!!</ID>
+    <ID>UnsafeCallOnNullableType:ForgotPasswordViewModel.kt:ForgotPasswordViewModel$it.signUp!!</ID>
+    <ID>UnsafeCallOnNullableType:SignUpCollectFieldView.kt:Clerk.auth.currentSignUp!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileMfaAddSmsView.kt:(state as MfaAddSmsViewModel.State.Error).message!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileMfaAddSmsView.kt:(state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileMfaAddSmsView.kt:selectedNumber!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileMfaAddTotpView.kt:state.totpResource.secret!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileMfaAddTotpView.kt:state.totpResource.uri!!</ID>
+    <ID>UnsafeCallOnNullableType:UserProfileUpdateProfileView.kt:inputStream!!</ID>
+    <ID>UnusedVariable:UserProfileVerifyBottomSheetContent.kt:val state by viewModel.state.collectAsStateWithLifecycle()</ID>
+    <ID>UseOrEmpty:ClerkCodeInputField.kt:otpText.getOrNull(index)?.toString() ?: ""</ID>
+    <ID>UseOrEmpty:UserProfileMfaAddSmsView.kt:Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList()</ID>
+  </CurrentIssues>
+</SmellBaseline>

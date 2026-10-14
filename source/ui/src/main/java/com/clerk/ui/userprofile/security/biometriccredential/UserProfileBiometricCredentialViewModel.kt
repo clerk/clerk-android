@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** ViewModel backing the biometric sign-in toggle in the user-profile security screen. */
 internal class UserProfileBiometricCredentialViewModel(
   private val workDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
@@ -25,7 +24,6 @@ internal class UserProfileBiometricCredentialViewModel(
   val state: StateFlow<State> = _state.asStateFlow()
   private var availabilityRequestGeneration = 0
 
-  /** Refreshes availability locally first, then reconciles with the server. */
   fun refreshAvailability() {
     val requestGeneration = ++availabilityRequestGeneration
     _state.update {

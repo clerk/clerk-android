@@ -33,6 +33,7 @@
     <string name="set_new_password">नया पासवर्ड सेट करें</string>
     <string name="reset_password">पासवर्ड रीसेट करें</string>
     <string name="confirm_password">पासवर्ड की पुष्टि करें</string>
+    <string name="passwords_dont_match">पासवर्ड मेल नहीं खाते</string>
     <string name="new_password">नया पासवर्ड</string>
     <string name="sign_out_of_all_other_devices">अन्य सभी डिवाइस से साइन आउट करें</string>
     <string name="back">वापस</string>
@@ -55,6 +56,7 @@
     <string name="email_code">ईमेल कोड</string>
     <string name="or">या</string>
     <string name="continue_to">%1$s पर जारी रखें</string>
+    <string name="continue_with">%1$s के साथ जारी रखें</string>
     <string name="create_your_account">अपना खाता बनाएं</string>
     <string name="welcome_sign_in_to_continue">स्वागत है! जारी रखने के लिए साइन इन करें।</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">स्वागत है! शुरू करने के लिए कृपया विवरण भरें।</string>

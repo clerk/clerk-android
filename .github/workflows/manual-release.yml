@@ -22,8 +22,50 @@ on:
         default: true
 
 jobs:
+  verify:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: "zulu"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests and checks
+        run: >-
+          ./gradlew
+          :source:api:testDebugUnitTest
+          :source:ui:testDebugUnitTest
+          :source:telemetry:testDebugUnitTest
+          spotlessCheck
+          detekt
+          :source:api:detektDebug
+          :source:ui:detektDebug
+          :source:telemetry:detektDebug
+          :source:api:lint
+          :source:ui:lint
+          :source:telemetry:lint
+          verifyPublishedArtifacts
+          --build-cache --parallel --continue
+
+  verify-e2e:
+    uses: ./.github/workflows/verify-e2e.yml
+    secrets:
+      MOBILE_VERIFICATION_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
+
   create-release:
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [verify, verify-e2e]
     if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -108,8 +150,9 @@ jobs:
 
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: create-release
-    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    needs: [verify, verify-e2e, create-release]
+    # always() lets this run when create-release is skipped (release events); every gate must pass.
+    if: always() && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
     outputs:
       tag_name: ${{ steps.release_metadata.outputs.tag_name }}
       release_url: ${{ steps.release_metadata.outputs.release_url }}

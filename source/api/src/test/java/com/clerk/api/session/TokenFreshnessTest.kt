@@ -137,21 +137,19 @@ class TokenFreshnessTest {
     expiresAt: Long = 4_000_000_000,
     signature: String = "signature",
   ): TokenResource {
-    val headerClaims =
-      buildList {
-          add("\"alg\":\"none\"")
-          add("\"typ\":\"JWT\"")
-          originIssuedAt?.let { add("\"oiat\":$it") }
-        }
-        .joinToString(",")
-    val payloadClaims =
-      buildList {
-          sessionId?.let { add("\"sid\":\"$it\"") }
-          add("\"iat\":$issuedAt")
-          add("\"exp\":$expiresAt")
-          organizationId?.let { add("\"org_id\":\"$it\"") }
-        }
-        .joinToString(",")
+    val headerClaims = buildList {
+      add("\"alg\":\"none\"")
+      add("\"typ\":\"JWT\"")
+      originIssuedAt?.let { add("\"oiat\":$it") }
+    }
+      .joinToString(",")
+    val payloadClaims = buildList {
+      sessionId?.let { add("\"sid\":\"$it\"") }
+      add("\"iat\":$issuedAt")
+      add("\"exp\":$expiresAt")
+      organizationId?.let { add("\"org_id\":\"$it\"") }
+    }
+      .joinToString(",")
     return TokenResource("${encode("{$headerClaims}")}.${encode("{$payloadClaims}")}.$signature")
   }
 

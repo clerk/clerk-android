@@ -4,8 +4,14 @@ import com.clerk.api.Clerk
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,55 +32,51 @@ class PasskeyHelperTest {
 
   @Test
   fun `getDomain returns domain without www prefix`() {
-    // Given
     every { Clerk.baseUrl } returns "https://www.example.com/path"
 
-    // When
     val result = PasskeyHelper.getDomain()
 
-    // Then
     assertEquals("example.com", result)
   }
 
   @Test
   fun `getDomain returns domain without protocol and path`() {
-    // Given
     every { Clerk.baseUrl } returns "https://clerk.example.com/api/v1"
 
-    // When
     val result = PasskeyHelper.getDomain()
 
-    // Then
     assertEquals("clerk.example.com", result)
   }
 
   @Test
-  fun `getDomain returns empty string when host is null`() {
-    // Given
-    every { Clerk.baseUrl } returns "invalid-url"
+  fun `getDomain only strips a leading www`() {
+    every { Clerk.baseUrl } returns "https://clerk.awww.dev"
 
-    // When
     val result = PasskeyHelper.getDomain()
 
-    // Then
-    assertEquals("", result)
+    assertEquals("clerk.awww.dev", result)
   }
 
   @Test
-  fun `getDomain handles malformed URL gracefully`() {
-    // Given
+  fun `getDomain returns null when host is empty`() {
+    every { Clerk.baseUrl } returns "https:///path"
+
+    val result = PasskeyHelper.getDomain()
+
+    assertNull(result)
+  }
+
+  @Test
+  fun `getDomain returns null for malformed URL`() {
     every { Clerk.baseUrl } returns "not-a-url"
 
-    // When
     val result = PasskeyHelper.getDomain()
 
-    // Then
-    assertEquals("", result)
+    assertNull(result)
   }
 
   @Test
-  fun `GetPasskeyRequest serializes correctly`() {
-    // Given
+  fun `GetPasskeyRequest serializes to WebAuthn request option JSON`() {
     val request =
       GetPasskeyRequest(
         challenge = "test-challenge",
@@ -88,39 +90,27 @@ class PasskeyHelperTest {
         rpId = "example.com",
       )
 
-    // When/Then - Should not throw during serialization
-    assertEquals("test-challenge", request.challenge)
-    assertEquals(2, request.allowCredentials.size)
-    assertEquals("credential-1", request.allowCredentials[0]["id"])
-    assertEquals("required", request.userVerification)
-  }
+    val json = Json.parseToJsonElement(Json.encodeToString(request)).jsonObject
 
-  @Test
-  fun `PublicKeyCredentialData holds correct data`() {
-    // Given
-    val responseMap =
-      mapOf("attestationObject" to "test-attestation", "clientDataJSON" to "test-client-data")
-
-    // When
-    val credentialData =
-      PublicKeyCredentialData(
-        id = "test-id",
-        rawId = "test-raw-id",
-        type = "public-key",
-        response = responseMap,
-      )
-
-    // Then
-    assertEquals("test-id", credentialData.id)
-    assertEquals("test-raw-id", credentialData.rawId)
-    assertEquals("public-key", credentialData.type)
-    assertEquals("test-attestation", credentialData.response["attestationObject"])
-    assertEquals("test-client-data", credentialData.response["clientDataJSON"])
+    assertEquals(
+      setOf("challenge", "allowCredentials", "timeout", "userVerification", "rpId"),
+      json.keys,
+    )
+    assertEquals("test-challenge", json.getValue("challenge").jsonPrimitive.content)
+    assertEquals(60000L, json.getValue("timeout").jsonPrimitive.long)
+    assertEquals("required", json.getValue("userVerification").jsonPrimitive.content)
+    assertEquals("example.com", json.getValue("rpId").jsonPrimitive.content)
+    assertEquals(
+      listOf("credential-1", "credential-2"),
+      json.getValue("allowCredentials").jsonArray.map {
+        it.jsonObject.getValue("id").jsonPrimitive.content
+      },
+    )
   }
 
   @Test
   fun `constants have expected values`() {
     assertEquals("strategy", com.clerk.api.Constants.Fields.STRATEGY)
-    assertEquals("passkey", PasskeyHelper.passkeyStrategy)
+    assertEquals("passkey", com.clerk.api.auth.types.Strategy.Passkey.value)
   }
 }

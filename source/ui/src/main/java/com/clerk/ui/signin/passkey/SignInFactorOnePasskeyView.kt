@@ -14,17 +14,16 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp72
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -40,7 +39,7 @@ import com.clerk.ui.theme.DefaultColors
  * @param modifier The modifier to be applied to the component.
  */
 @Composable
-fun SignInFactorOnePasskeyView(
+public fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -109,15 +108,7 @@ internal fun SignInFactorOnePasskeyViewImpl(
     )
     Spacers.Vertical.Spacer16()
     ClerkTextButton(
-      onClick = {
-        val destination =
-          if (isSecondFactor) {
-            AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
-          } else {
-            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          }
-        authState.navigateTo(destination)
-      },
+      onClick = { authState.navigateToAlternativeMethods(factor, isSecondFactor) },
       text = stringResource(R.string.use_a_different_method),
     )
   }
@@ -128,7 +119,7 @@ internal fun SignInFactorOnePasskeyViewImpl(
 private fun PreviewSignInFactorOnePasskeyView() {
   PreviewAuthStateProvider {
     SignInFactorOnePasskeyView(
-      factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
+      factor = Factor(strategy = Strategy.Passkey.value, safeIdentifier = "sam@clerk.dev"),
       clerkTheme = ClerkTheme(colors = DefaultColors.clerk),
       onAuthComplete = {},
     )

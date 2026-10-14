@@ -1,6 +1,4 @@
 import org.gradle.api.tasks.testing.Test
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
   alias(libs.plugins.android.library)
@@ -26,25 +24,20 @@ android {
     debug { isMinifyEnabled = false }
     release { isMinifyEnabled = false }
   }
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-  }
-  kotlin { jvmToolchain(17) }
+  kotlin { jvmToolchain(libs.versions.jdk.get().toInt()) }
 
   buildFeatures { compose = true }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
+
+  lint { baseline = file("lint-baseline.xml") }
 }
+
+kotlin { explicitApi() }
 
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
-  javaLauncher.set(
-    project.extensions.getByType<JavaToolchainService>().launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(21))
-    }
-  )
   forkEvery = 1
   reports.html.required.set(false)
 }
@@ -56,12 +49,9 @@ tasks
   .matching { it.name.matches(Regex("report.+ComposeMappingErrors")) }
   .configureEach { enabled = false }
 
-// Configure Maven publishing for this module
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", property("CLERK_UI_VERSION") as String)
   publishToMavenCentral()
-  // Skip signing for local publishing: ./gradlew publishToMavenLocal
-  // -PRELEASE_SIGNING_ENABLED=false
   if (providers.gradleProperty("RELEASE_SIGNING_ENABLED").orNull != "false") {
     signAllPublications()
   }
@@ -110,6 +100,7 @@ dependencies {
   implementation(libs.androidx.compose.runtime)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
+  implementation(libs.androidx.lifecycle.viewmodel.navigation3)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.ui)

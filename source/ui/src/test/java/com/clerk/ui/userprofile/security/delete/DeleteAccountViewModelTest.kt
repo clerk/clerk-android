@@ -86,12 +86,14 @@ class DeleteAccountViewModelTest {
   }
 
   @Test
-  fun deleteAccount_failure_setsErrorState() = runTest {
+  fun deleteAccount_failure_setsErrorStateAndKeepsLocalBiometricCredentials() = runTest {
     val user = mockk<User>()
     every { user.id } returns "user_1"
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     coEvery { user.delete() } returns ClerkResult.Failure(error)
+    mockkObject(BiometricCredentials)
+    every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion(any()) } returns 1
 
     val viewModel = DeleteAccountViewModel()
     viewModel.state.test {
@@ -100,5 +102,6 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Error("boom"), awaitItem())
     }
+    verify(exactly = 0) { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion(any()) }
   }
 }

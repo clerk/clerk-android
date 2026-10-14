@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  *   milliseconds)
  */
 @Serializable
-data class BackupCodeResource(
+public data class BackupCodeResource(
   /** The type of object, typically "backup_code" */
   @SerialName("object") val objectType: String,
 

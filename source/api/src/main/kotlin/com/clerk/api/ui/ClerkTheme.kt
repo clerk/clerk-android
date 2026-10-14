@@ -18,7 +18,7 @@ package com.clerk.api.ui
  * @property typography fonts and typography definitions.
  * @property design design tokens such as spacing and shapes.
  */
-data class ClerkTheme(
+public data class ClerkTheme(
   val colors: ClerkColors? = null,
   val lightColors: ClerkColors? = null,
   val darkColors: ClerkColors? = null,

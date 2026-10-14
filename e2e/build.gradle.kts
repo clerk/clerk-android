@@ -16,7 +16,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.e2e"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.compileSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
 
     val clerkPublishableKey = project.findProperty(e2eKey) as String?
     val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_e2e"
@@ -38,8 +38,6 @@ dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
   implementation(libs.androidx.lifecycle.runtime)
-  implementation(libs.androidx.lifecycle.viewmodel)
-  implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
@@ -50,6 +48,8 @@ dependencies {
   implementation(projects.source.ui)
 
   debugImplementation(libs.androidx.ui.tooling)
+
+  testImplementation(libs.kotlin.test.junit)
 }
 
 tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }

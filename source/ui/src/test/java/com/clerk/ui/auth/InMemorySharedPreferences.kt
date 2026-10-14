@@ -5,6 +5,9 @@ import android.content.SharedPreferences
 internal class InMemorySharedPreferences : SharedPreferences {
   private val values = mutableMapOf<String, Any?>()
 
+  var commitCount = 0
+    private set
+
   override fun getAll(): MutableMap<String, *> = values.toMutableMap()
 
   override fun getString(key: String?, defValue: String?): String? =
@@ -63,11 +66,16 @@ internal class InMemorySharedPreferences : SharedPreferences {
     override fun clear(): SharedPreferences.Editor = apply { shouldClear = true }
 
     override fun commit(): Boolean {
-      apply()
+      commitCount++
+      write()
       return true
     }
 
     override fun apply() {
+      write()
+    }
+
+    private fun write() {
       if (shouldClear) values.clear()
       removals.forEach(values::remove)
       values.putAll(updates)

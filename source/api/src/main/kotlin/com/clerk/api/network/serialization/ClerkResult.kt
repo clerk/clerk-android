@@ -21,6 +21,27 @@ private const val NETWORK_ERROR_MESSAGE =
  * as HTTP status codes, API errors, or unexpected failures. This design ensures predictable error
  * handling and avoids checked exceptions.
  *
+ * # Failure policy
+ *
+ * A function that returns [ClerkResult] reports every failure through [Failure] rather than
+ * throwing:
+ * - Server and transport errors keep the API error, HTTP status code, or throwable.
+ * - Invalid arguments (for example a DSL builder block that leaves out a required value) and
+ *   resources missing data the call needs are reported as [Failure.ErrorType.API] failures with a
+ *   [ClerkErrorResponse] that carries a descriptive error code and message.
+ * - Unexpected exceptions from the platform (Credential Manager, Play Integrity, I/O) are reported
+ *   as [Failure.ErrorType.UNKNOWN] failures with the exception in [Failure.throwable].
+ * - Flows that document a specific exception type for a failure, such as a dismissed or superseded
+ *   browser flow, report it as [Failure.ErrorType.UNKNOWN] with that exception in
+ *   [Failure.throwable].
+ *
+ * Two things still propagate as exceptions: coroutine cancellation
+ * ([kotlin.coroutines.cancellation.CancellationException]), so structured concurrency keeps
+ * working, and calling the SDK before `Clerk.initialize` has configured it, which throws
+ * [IllegalStateException] because it is a setup error rather than a runtime failure.
+ *
+ * Use [map], [mapError], [flatMap] and [fold] to transform results without unpacking them.
+ *
  * # Usage Example
  *
  * ```kotlin
@@ -79,7 +100,11 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
   public companion object {
     private const val OK = 200
     private val HTTP_SUCCESS_RANGE = OK..299
-    private val HTTP_FAILURE_RANGE = 400..599
+    // Any non-2xx status OkHttp can surface (it parses three-digit codes). The call adapter returns
+    // an HTTP failure for every one of them, and SSO/external-account flows re-wrap those failures
+    // with httpFailure(), so it must accept the same set or those flows throw.
+    private val HTTP_STATUS_RANGE = 100..999
+    private val HTTP_ERROR_BODY_RANGE = 400..599
 
     /** Returns a new [Success] with given [value]. */
     public fun <T : Any> success(value: T): Success<T> = Success(value, emptyMap())
@@ -98,10 +123,12 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     public fun unknownFailure(throwable: Throwable): Failure<Nothing> =
       Failure(null, throwable, null, Failure.ErrorType.UNKNOWN)
 
+    internal fun hasHttpErrorBody(code: Int): Boolean = code in HTTP_ERROR_BODY_RANGE
+
     internal fun checkHttpFailureCode(code: Int) {
       require(code !in HTTP_SUCCESS_RANGE) { "Status code '$code' is a successful HTTP response." }
-      require(code in HTTP_FAILURE_RANGE) {
-        "Status code '$code' is not a HTTP failure response. Must be a 4xx or 5xx code."
+      require(code in HTTP_STATUS_RANGE) {
+        "Status code '$code' is not a HTTP failure response. Must be a non-2xx code in 100..999."
       }
     }
   }
@@ -112,7 +139,8 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
  * [ClerkErrorResponse]. Returns `null` if the error is not a [ClerkErrorResponse] or if there are
  * no error messages.
  */
-fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.error?.firstMessage()
+public fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull(): String? =
+  this.error?.firstMessage()
 
 /**
  * Convenience function to extract a user-facing error message from a [ClerkResult.Failure].
@@ -120,7 +148,7 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
  * API-provided messages take precedence. I/O failures that occur while the device is offline use a
  * connectivity-specific message, while all other failures fall back to a generic message.
  */
-val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
+public val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
   get() =
     this.error?.errors?.firstOrNull()?.longMessage
       ?: this.error?.firstMessage()

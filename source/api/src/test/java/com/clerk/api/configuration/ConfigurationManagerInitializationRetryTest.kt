@@ -19,6 +19,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
@@ -100,6 +101,37 @@ class ConfigurationManagerInitializationRetryTest {
     runCurrent()
     coVerify(exactly = 8) { Environment.get() }
   }
+
+  @Test
+  fun `initialization discarded by a device-token change still retries when the follow-up fails`() =
+    runTest {
+      coEvery { Client.getSkippingClientId() } returns
+        ClerkResult.unknownFailure(IOException("offline"))
+      var fenced = false
+      coEvery { Environment.get() } coAnswers
+        {
+          if (!fenced) {
+            fenced = true
+            manager.fenceClientResponsesAfterSharedDeviceTokenChange()
+          }
+          ClerkResult.unknownFailure(IOException("offline"))
+        }
+      initialize()
+      runCurrent()
+
+      coVerify(exactly = 1) { Client.getSkippingClientId() }
+      assertFalse(manager.isInitialized.value)
+      assertNotNull(manager.initializationError.value)
+
+      stubSuccessfulRefresh()
+      advanceTimeBy(5_000)
+      runCurrent()
+
+      assertTrue(manager.isInitialized.value)
+      assertNull(manager.initializationError.value)
+      assertEquals("client_recovered", Clerk.client.id)
+      assertEquals("Recovered App", Clerk.applicationName)
+    }
 
   @Test
   fun `connectivity restoration retries immediately and cancels pending backoff`() = runTest {
@@ -196,6 +228,23 @@ class ConfigurationManagerInitializationRetryTest {
 
     assertNull(manager.initializationError.value)
     coVerify(exactly = 1) { Environment.get() }
+  }
+
+  @Test
+  fun `refresh does not overwrite a client adopted while environment was in flight`() = runTest {
+    val environmentResponse = CompletableDeferred<ClerkResult.Success<Environment>>()
+    coEvery { Client.get() } returns ClerkResult.success(Client(id = "client_refresh"))
+    coEvery { Environment.get() } coAnswers { environmentResponse.await() }
+    initialize()
+    runCurrent()
+
+    Clerk.updateClient(Client(id = "client_signed_in"))
+    environmentResponse.complete(ClerkResult.success(testEnvironment()))
+    runCurrent()
+
+    assertTrue(manager.isInitialized.value)
+    assertEquals("client_signed_in", Clerk.client.id)
+    assertEquals("Recovered App", Clerk.applicationName)
   }
 
   private fun TestScope.initialize() {

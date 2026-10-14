@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.custom
 
 import android.annotation.SuppressLint
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -9,30 +10,30 @@ import androidx.compose.runtime.staticCompositionLocalOf
  *
  * Access via [LocalUserProfileCustomNavigator].
  */
-class UserProfileCustomNavigator
+public class UserProfileCustomNavigator
 internal constructor(
   private val pushAction: (String) -> Unit,
   private val popToRootAction: () -> Unit,
   private val navigateBackAction: () -> Unit,
 ) {
   /** Push another custom route key onto the navigation stack. */
-  fun push(routeKey: String) {
+  public fun push(routeKey: String) {
     pushAction(routeKey)
   }
 
   /** Pop back to the root user profile account screen. */
-  fun popToRoot() {
+  public fun popToRoot() {
     popToRootAction()
   }
 
   /** Navigate back one screen. */
-  fun navigateBack() {
+  public fun navigateBack() {
     navigateBackAction()
   }
 }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalUserProfileCustomNavigator =
+public val LocalUserProfileCustomNavigator: ProvidableCompositionLocal<UserProfileCustomNavigator> =
   staticCompositionLocalOf<UserProfileCustomNavigator> {
     error(
       "No UserProfileCustomNavigator provided. " +

@@ -9,6 +9,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.updatePassword
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -20,6 +21,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,6 +53,15 @@ class UserProfileChangePasswordViewModelTest {
       assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
       viewModel.resetPassword("old", "new", true)
       assertEquals(UserProfileChangePasswordViewModel.State.Success, awaitItem())
+    }
+    coVerify(exactly = 1) {
+      user.updatePassword(
+        User.UpdatePasswordParams(
+          currentPassword = "old",
+          newPassword = "new",
+          signOutOfOtherSessions = true,
+        )
+      )
     }
   }
 
@@ -85,11 +96,21 @@ class UserProfileChangePasswordViewModelTest {
   }
 
   @Test
-  fun resetState_setsIdle() {
+  fun resetState_afterError_setsIdle() = runTest {
+    every { Clerk.user } returns null
+
     val viewModel = UserProfileChangePasswordViewModel()
-    // Already Idle; ensure it's Idle
-    assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
-    viewModel.resetState()
-    assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
+      viewModel.resetPassword("old", "new", false)
+      assertEquals(
+        UserProfileChangePasswordViewModel.State.Error("User does not exist"),
+        awaitItem(),
+      )
+      viewModel.resetState()
+      assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
+      advanceUntilIdle()
+      expectNoEvents()
+    }
   }
 }

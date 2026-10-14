@@ -23,11 +23,11 @@ import androidx.compose.ui.unit.sp
  * ClerkTheme(typography = customTypography)
  * ```
  */
-object ClerkTypographyDefaults {
+public object ClerkTypographyDefaults {
 
   private val defaultFontFamily = FontFamily.Default
 
-  val displaySmall: TextStyle =
+  public val displaySmall: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -36,7 +36,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.sp,
     )
 
-  val headlineLarge: TextStyle =
+  public val headlineLarge: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -45,7 +45,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.sp,
     )
 
-  val headlineMedium: TextStyle =
+  public val headlineMedium: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -54,7 +54,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.sp,
     )
 
-  val headlineSmall: TextStyle =
+  public val headlineSmall: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -63,7 +63,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.sp,
     )
 
-  val titleMedium: TextStyle =
+  public val titleMedium: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Medium,
@@ -72,7 +72,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.15.sp,
     )
 
-  val titleSmall: TextStyle =
+  public val titleSmall: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Medium,
@@ -81,7 +81,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.1.sp,
     )
 
-  val bodyLarge: TextStyle =
+  public val bodyLarge: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -90,7 +90,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.5.sp,
     )
 
-  val bodyMedium: TextStyle =
+  public val bodyMedium: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -99,7 +99,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.25.sp,
     )
 
-  val bodySmall: TextStyle =
+  public val bodySmall: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Normal,
@@ -108,7 +108,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.4.sp,
     )
 
-  val labelMedium: TextStyle =
+  public val labelMedium: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Medium,
@@ -117,7 +117,7 @@ object ClerkTypographyDefaults {
       letterSpacing = 0.5.sp,
     )
 
-  val labelSmall: TextStyle =
+  public val labelSmall: TextStyle =
     TextStyle(
       fontFamily = defaultFontFamily,
       fontWeight = FontWeight.Medium,
@@ -131,7 +131,7 @@ object ClerkTypographyDefaults {
    *
    * Apply [builder] to override any slots you want to customize.
    */
-  fun typography(builder: ClerkTypographyBuilder.() -> Unit = {}): ClerkTypography {
+  public fun typography(builder: ClerkTypographyBuilder.() -> Unit = {}): ClerkTypography {
     val scope =
       ClerkTypographyBuilder(
         displaySmall = displaySmall,
@@ -151,7 +151,7 @@ object ClerkTypographyDefaults {
   }
 
   /** Convenience helper for retrieving the full default [ClerkTypography] without any overrides. */
-  fun default(): ClerkTypography = typography()
+  public fun default(): ClerkTypography = typography()
 }
 
 /**
@@ -163,19 +163,19 @@ object ClerkTypographyDefaults {
  * }
  * ```
  */
-class ClerkTypographyBuilder
+public class ClerkTypographyBuilder
 internal constructor(
-  var displaySmall: TextStyle,
-  var headlineLarge: TextStyle,
-  var headlineMedium: TextStyle,
-  var headlineSmall: TextStyle,
-  var titleMedium: TextStyle,
-  var titleSmall: TextStyle,
-  var bodyLarge: TextStyle,
-  var bodyMedium: TextStyle,
-  var bodySmall: TextStyle,
-  var labelMedium: TextStyle,
-  var labelSmall: TextStyle,
+  public var displaySmall: TextStyle,
+  public var headlineLarge: TextStyle,
+  public var headlineMedium: TextStyle,
+  public var headlineSmall: TextStyle,
+  public var titleMedium: TextStyle,
+  public var titleSmall: TextStyle,
+  public var bodyLarge: TextStyle,
+  public var bodyMedium: TextStyle,
+  public var bodySmall: TextStyle,
+  public var labelMedium: TextStyle,
+  public var labelSmall: TextStyle,
 ) {
 
   internal fun build(): ClerkTypography =

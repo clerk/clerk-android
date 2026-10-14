@@ -14,33 +14,33 @@ package com.clerk.api.auth.builders
  * ```
  */
 @ClerkDsl
-class SignUpBuilder {
+public class SignUpBuilder {
   /** The email address for the new account. */
-  var email: String? = null
+  public var email: String? = null
 
   /** The phone number for the new account. */
-  var phone: String? = null
+  public var phone: String? = null
 
   /** The password for the new account. */
-  var password: String? = null
+  public var password: String? = null
 
   /** The user's first name. */
-  var firstName: String? = null
+  public var firstName: String? = null
 
   /** The user's last name. */
-  var lastName: String? = null
+  public var lastName: String? = null
 
   /** The username for the new account. */
-  var username: String? = null
+  public var username: String? = null
 
   /**
    * Custom metadata that will be attached to the created user. This metadata is not validated by
    * Clerk and should not contain sensitive information.
    */
-  var unsafeMetadata: Map<String, Any>? = null
+  public var unsafeMetadata: Map<String, Any>? = null
 
   /** Whether the user has accepted the legal terms (privacy policy and terms of service). */
-  var legalAccepted: Boolean? = null
+  public var legalAccepted: Boolean? = null
 }
 
 /**
@@ -58,10 +58,10 @@ class SignUpBuilder {
  * ```
  */
 @ClerkDsl
-class SignUpWithIdTokenBuilder {
+public class SignUpWithIdTokenBuilder {
   /** The user's first name. */
-  var firstName: String? = null
+  public var firstName: String? = null
 
   /** The user's last name. */
-  var lastName: String? = null
+  public var lastName: String? = null
 }

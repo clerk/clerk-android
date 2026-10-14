@@ -1,21 +1,17 @@
 package com.clerk.ui.signin
 
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.authenticateWithOAuth
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockkStatic
-import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
 
@@ -28,7 +24,6 @@ class SignInRedirectTest {
 
   @Test
   fun `redirect reuses the current sign in attempt`() = runTest {
-    mockkStatic("com.clerk.api.signin.SignInKt")
     mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
     val currentSignIn =
       SignIn(
@@ -37,22 +32,11 @@ class SignInRedirectTest {
         identifier = "user@example.com",
         supportedFirstFactors = listOf(Factor(strategy = "password")),
       )
-    val externalRedirectUrl = "https://oauth.example.com/start"
-    val preparedSignIn =
-      currentSignIn.copy(
-        firstFactorVerification =
-          Verification(
-            strategy = OAuthProvider.GITHUB.strategy,
-            externalVerificationRedirectUrl = externalRedirectUrl,
-          )
-      )
-    val oauthResult = OAuthResult(signIn = preparedSignIn)
-    val prepareParams = slot<SignIn.PrepareFirstFactorParams>()
+    val oauthResult = OAuthResult(signIn = currentSignIn)
 
-    coEvery { currentSignIn.prepareFirstFactor(capture(prepareParams)) } returns
-      ClerkResult.success(preparedSignIn)
-    coEvery { preparedSignIn.authenticateWithPreparedRedirect(transferable = true) } returns
-      ClerkResult.success(oauthResult)
+    coEvery {
+      currentSignIn.authenticateWithOAuth(OAuthProvider.GITHUB, transferable = true, any())
+    } returns ClerkResult.success(oauthResult)
 
     val result =
       authenticateWithRedirect(
@@ -62,8 +46,8 @@ class SignInRedirectTest {
       )
 
     assertSame(oauthResult, (result as ClerkResult.Success).value)
-    assertEquals(OAuthProvider.GITHUB.strategy, prepareParams.captured.strategy)
-    coVerify(exactly = 1) { currentSignIn.prepareFirstFactor(any()) }
-    coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(transferable = true) }
+    coVerify(exactly = 1) {
+      currentSignIn.authenticateWithOAuth(OAuthProvider.GITHUB, transferable = true, any())
+    }
   }
 }

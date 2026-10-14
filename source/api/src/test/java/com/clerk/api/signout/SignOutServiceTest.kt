@@ -9,7 +9,10 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentialManager
+import com.clerk.api.restorecredentials.RestoreCredentialManagerImpl
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
@@ -23,13 +26,20 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -56,11 +66,9 @@ class SignOutServiceTest {
     Dispatchers.setMain(testDispatcher)
     context = RuntimeEnvironment.getApplication()
 
-    // Initialize StorageHelper with real context
     StorageHelper.initialize(context)
     StorageHelper.reset(context)
 
-    // Create mocks
     mockClient = mockk()
     mockEnvironment = mockk()
     mockSession = mockk(relaxed = true)
@@ -68,12 +76,10 @@ class SignOutServiceTest {
     mockSessionApi = mockk()
     mockClientApi = mockk()
 
-    // Mock ClerkApi apis
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns mockSessionApi
     every { ClerkApi.client } returns mockClientApi
 
-    // Setup environment mock
     val mockDisplayConfig = mockk<DisplayConfig>()
     val mockUserSettings = mockk<UserSettings>()
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
@@ -95,6 +101,8 @@ class SignOutServiceTest {
   fun tearDown() {
     Dispatchers.resetMain()
     unmockkAll()
+    Clerk.applicationContext = null
+    RestoreCredentials.credentialManager = RestoreCredentialManagerImpl()
     StorageHelper.reset(context)
   }
 
@@ -116,21 +124,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears device token on successful server sign-out`() = runTest {
-    // Given - active session with device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     assertNull("Session should be cleared", Clerk.session)
@@ -140,21 +143,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears device token even when server sign-out fails`() = runTest {
-    // Given - active session with device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock server sign-out failure (network error)
     coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
     assertNull(
       "Device token should still be deleted on failure",
@@ -180,22 +178,17 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears session and user state on successful sign-out`() = runTest {
-    // Given - active session
     setupActiveSession()
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
     assertTrue("User should exist before sign-out", Clerk.user != null)
     assertTrue("isSignedIn should be true before sign-out", Clerk.isSignedIn)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     assertNull("Session should be null after sign-out", Clerk.sessionFlow.value)
     assertNull("User should be null after sign-out", Clerk.userFlow.value)
@@ -203,21 +196,16 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut clears session and user state even when server sign-out fails`() = runTest {
-    // Given - active session
     setupActiveSession()
 
-    // Mock server sign-out failure
     coEvery { mockSessionApi.deleteSessions() } throws Exception("Server error")
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
     assertTrue("User should exist before sign-out", Clerk.user != null)
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then
     assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
     assertNull("Session should be null even on failure", Clerk.sessionFlow.value)
     assertNull("User should be null even on failure", Clerk.userFlow.value)
@@ -225,7 +213,6 @@ class SignOutServiceTest {
 
   @Test
   fun `signOut succeeds when no session exists`() = runTest {
-    // Given - no active session
     val emptyClient = mockk<Client>()
     every { emptyClient.lastActiveSessionId } returns null
     every { emptyClient.sessions } returns emptyList()
@@ -240,28 +227,22 @@ class SignOutServiceTest {
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // When
     val result = SignOutService.signOut()
 
-    // Then - should succeed (nothing to sign out)
     assertTrue("Sign-out should succeed with no session", result is ClerkResult.Success)
   }
 
   @Test
   fun `signOut preserves device ID while clearing device token`() = runTest {
-    // Given - active session with both device ID and device token stored
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test_device_id")
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
-    // Mock successful server sign-out
     coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
-    // When
     SignOutService.signOut()
 
-    // Then - device token should be deleted, but device ID should be preserved
     assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     assertTrue(
       "Device ID should be preserved",
@@ -272,13 +253,26 @@ class SignOutServiceTest {
   @Test
   fun `signOut refreshes client after local sign-out cleanup`() = runTest {
     setupActiveSession()
-    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+    val stillSignedInClient = mockClient
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(stillSignedInClient)
+    var deviceTokenAtRefresh: String? = "not-refreshed"
+    var sessionAtRefresh: Session? = mockSession
+    val refreshedClient = Client(id = "refreshed_client_id")
+    coEvery { mockClientApi.getSkippingClientId(any()) } answers
+      {
+        deviceTokenAtRefresh = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
+        sessionAtRefresh = Clerk.session
+        ClerkResult.success(refreshedClient)
+      }
 
     val result = SignOutService.signOut()
 
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
     coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
+    assertNull("Device token should be cleared before the refresh", deviceTokenAtRefresh)
+    assertNull("Session should be cleared before the refresh", sessionAtRefresh)
+    assertEquals("refreshed_client_id", Clerk.client.id)
   }
 
   @Test
@@ -293,5 +287,50 @@ class SignOutServiceTest {
     coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
     assertNull("Session should still be cleared", Clerk.session)
     assertNull("User should still be cleared", Clerk.user)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `cancelling signOut propagates cancellation and still clears local state`() = runTest {
+    setupActiveSession()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+    Clerk.applicationContext = WeakReference(context)
+    var restoreCredentialCleared = false
+    val credentialManager = mockk<RestoreCredentialManager>()
+    coEvery { credentialManager.clearCredentialState(any(), any()) } coAnswers
+      {
+        yield()
+        restoreCredentialCleared = true
+      }
+    RestoreCredentials.credentialManager = credentialManager
+    coEvery { mockSessionApi.deleteSessions() } coAnswers { awaitCancellation() }
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    var result: ClerkResult<Unit, ClerkErrorResponse>? = null
+    val job = launch { result = SignOutService.signOut() }
+    runCurrent()
+    job.cancelAndJoin()
+
+    assertNull("Cancelled sign-out should not return a result", result)
+    assertTrue("Restore credential should be cleared", restoreCredentialCleared)
+    assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertNull("Session should be cleared", Clerk.session)
+    assertFalse("isSignedIn should be false", Clerk.isSignedIn)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `cancelling signOut during client refresh propagates cancellation`() = runTest {
+    setupActiveSession()
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } coAnswers { awaitCancellation() }
+
+    var result: ClerkResult<Unit, ClerkErrorResponse>? = null
+    val job = launch { result = SignOutService.signOut() }
+    runCurrent()
+    job.cancelAndJoin()
+
+    assertNull("Cancelled sign-out should not return a result", result)
+    assertNull("Session should be cleared", Clerk.session)
   }
 }

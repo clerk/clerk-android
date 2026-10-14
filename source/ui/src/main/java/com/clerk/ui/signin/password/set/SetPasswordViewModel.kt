@@ -5,8 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptFirstFactor
+import com.clerk.api.signin.verifyWithPassword
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +24,7 @@ internal class SetPasswordViewModel : ViewModel() {
       _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(Dispatchers.IO) {
         signIn
-          .attemptFirstFactor(SignIn.AttemptFirstFactorParams.Password(password))
+          .verifyWithPassword(password)
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignIn(it)

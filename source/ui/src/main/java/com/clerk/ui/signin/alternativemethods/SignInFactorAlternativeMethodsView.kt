@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
 import com.clerk.api.signin.alternativeSecondFactors
@@ -23,7 +24,6 @@ import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.transferable
 import com.clerk.ui.core.button.social.ClerkSocialRow
-import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -49,7 +49,7 @@ import kotlinx.collections.immutable.toImmutableList
  *   authentication step. This affects which alternative factors are fetched.
  */
 @Composable
-fun SignInFactorAlternativeMethodsView(
+public fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
@@ -73,16 +73,6 @@ fun SignInFactorAlternativeMethodsView(
   }
 }
 
-/**
- * The internal implementation of the [SignInFactorAlternativeMethodsView].
- *
- * @param providers A list of social providers to display.
- * @param alternativeFactors A list of alternative factors (e.g., password, passkey) to display.
- * @param modifier The [Modifier] to be applied to the view.
- * @param textIconHelper A helper class to get the appropriate text and icon for each factor.
- * @param viewModel The [AlternativeMethodsViewModel] for handling the view's logic, such as social
- *   sign-in.
- */
 @Composable
 private fun SignInFactorAlternativeMethodsViewImpl(
   providers: ImmutableList<OAuthProvider>,
@@ -145,8 +135,8 @@ private fun Preview() {
       onAuthComplete = {},
       alternativeFactors =
         persistentListOf(
-          Factor(strategy = StrategyKeys.PASSWORD),
-          Factor(strategy = StrategyKeys.PHONE_CODE),
+          Factor(strategy = Strategy.Password.value),
+          Factor(strategy = Strategy.PhoneCode.value),
         ),
       providers =
         persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
