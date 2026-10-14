@@ -32,7 +32,7 @@ env:
 jobs:
   store:
     name: Store the e2e APK and the Gradle build state for verify-remote sessions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
