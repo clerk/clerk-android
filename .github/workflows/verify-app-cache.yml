@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - mike/verify-stored-apk-android
     paths:
       - source/**
       - e2e/**
