@@ -94,7 +94,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests for ${{ matrix.module }}
-        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} --build-cache --parallel
+        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} -PskipSnapshotTests=true --build-cache --parallel
 
       - name: Upload test results (${{ matrix.label }})
         if: always()

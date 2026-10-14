@@ -352,6 +352,17 @@ describe('the Paparazzi screenshot tests', () => {
     );
   });
 
+  it('are left out of the unit tests of a pull request, and run in full when this workflow verifies or records them', () => {
+    const gradle = (text: string): string => /^ {8}run: (\.\/gradlew .+)$/m.exec(text)?.[1] ?? '';
+    const unitTests = (jobs(read('android-test.yml')).get('test-module') ?? '').split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '';
+    const property = /providers\.gradleProperty\("(\w+)"\)\.orNull == "true"\) \{\n\s+useJUnit \{ excludeCategories\("com\.clerk\.base\.SnapshotTest"\) \}/.exec(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'))?.[1];
+    assert.ok(property !== undefined, 'source/ui leaves out the SnapshotTest category when a Gradle property is true');
+    assert.deepEqual(
+      [gradle(unitTests), ...['Verify Paparazzi snapshots', 'Record Paparazzi snapshots'].map((name) => gradle(steps.find((text) => text.includes(`- name: ${name}\n`)) ?? ''))].map((command) => command.includes(`-P${property}=true`)),
+      [true, false, false],
+    );
+  });
+
   it('upload the recorded images from the folder that holds the committed snapshots', () => {
     const upload = steps.find((text) => text.includes('- name: Upload the recorded snapshots\n')) ?? '';
     const path = /^ {10}path: (.+)$/m.exec(upload)?.[1] ?? '';
