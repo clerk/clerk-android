@@ -1,3 +1,4 @@
+import { tapMiddle } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 import { asShownByClerk } from '../../phone.ts';
 
@@ -21,4 +22,20 @@ test('AuthView opens on the phone field holding the number the app passes as ini
   await host.tap(screen.getByTestId('clerk.auth.start.continue'));
   await expect(screen.getByTestId('clerk.auth.signIn.password')).toBeVisible({ timeout: 20_000 });
   await host.screenshot('auth-initial-identifier-accepted');
+});
+
+test('dismissing AuthView returns to the home, and it opens again', async ({ host, screen }) => {
+  const identifier = screen.getByTestId('clerk.auth.start.identifier');
+  await host.launch();
+  await host.expectSignedOut();
+  await host.tap(host.app.signIn);
+  await expect(identifier).toBeVisible({ timeout: 20_000 });
+  await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible();
+  await host.screenshot('auth-from-home');
+  await tapMiddle(screen.getByTestId('clerk.dismissButton'));
+  await host.expectSignedOut();
+  await expect(identifier).toHaveCount(0);
+  await host.screenshot('auth-dismissed');
+  await host.tap(host.app.signIn);
+  await expect(identifier).toBeVisible({ timeout: 20_000 });
 });
