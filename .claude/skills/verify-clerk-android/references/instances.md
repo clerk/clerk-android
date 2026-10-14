@@ -15,7 +15,7 @@ The CLI checks those 62 leaves and the leaves a settings file declares, and no o
 
 ## What a spec file declares
 
-A spec file that runs on the standard instance declares nothing. A spec file that needs other settings has a settings file beside it, with the same name and `.settings.json` in place of `.e2e.ts`. For `specs/golden/session-tasks/setup-mfa.e2e.ts`, that file is `specs/golden/session-tasks/setup-mfa.settings.json`:
+A spec file that runs on the standard instance declares nothing. A spec file that needs other settings has a settings file beside it, with the same name and `.settings.json` in place of `.e2e.ts`. For `specs/features/session-tasks/setup-mfa.e2e.ts`, that file is `specs/features/session-tasks/setup-mfa.settings.json`:
 
 ```json
 {
@@ -46,9 +46,9 @@ To find the name of a leaf, read `environment` in `base.json`. A leaf that is no
 ```console
 settings 3 groups in this run: standard (10 spec files), organization_settings.force_organization_selection=true (1), auth_multi_factor.required_for_sign_up=true (3)
 settings standard  already on app_<id>
-settings changing app_<id> from standard to organization_settings.force_organization_selection=true, which specs/golden/session-tasks/choose-organization.e2e.ts declares
+settings changing app_<id> from standard to organization_settings.force_organization_selection=true, which specs/features/session-tasks/choose-organization.e2e.ts declares
 settings organization_settings.force_organization_selection=true  on app_<id> in 0.4s (Clerk answered in 0.28s, the instance showed it 0.09s later), 62 settings match
-settings changing app_<id> from organization_settings.force_organization_selection=true to auth_multi_factor.required_for_sign_up=true, which specs/golden/session-tasks/complete-setup-mfa.e2e.ts declares
+settings changing app_<id> from organization_settings.force_organization_selection=true to auth_multi_factor.required_for_sign_up=true, which specs/features/session-tasks/complete-setup-mfa.e2e.ts declares
 settings auth_multi_factor.required_for_sign_up=true  on app_<id> in 0.3s (Clerk answered in 0.23s, the instance showed it 0.09s later), 62 settings match
 ```
 

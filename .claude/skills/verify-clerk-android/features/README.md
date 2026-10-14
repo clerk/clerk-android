@@ -1,6 +1,6 @@
 # clerk-android verification map
 
-This directory is the maintained source for verifying the user-facing behavior of the clerk-android SDK UI (`source/ui`) through the `:e2e` host app. Read this index before driving the app, then use the matching feature file as the recipe. Every recipe runs through the `control-clerk-android` CLI and the golden specs under `specs/golden/<feature>/`. Run its commands from the repo root. Paths that begin `specs/` are inside `e2e-tests/`.
+This directory is the maintained source for verifying the user-facing behavior of the clerk-android SDK UI (`source/ui`) through the `:e2e` host app. Read this index before driving the app, then use the matching feature file as the recipe. Every recipe runs through the `control-clerk-android` CLI and the golden specs under `specs/features/<feature>/`. Run its commands from the repo root. Paths that begin `specs/` are inside `e2e-tests/`.
 
 ## Test users and sign-in
 
