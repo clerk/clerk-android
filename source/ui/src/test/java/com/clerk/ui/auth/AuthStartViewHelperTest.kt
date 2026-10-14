@@ -205,4 +205,49 @@ class AuthStartViewHelperTest {
 
     assertFalse(result)
   }
+
+  @Test
+  fun restoreCredentialSignInStaysOffWhenTheFlagIsOff() {
+    assertFalse(restoreCredentialSignInGate(restoreCredentialsAreEnabled = false))
+  }
+
+  @Test
+  fun restoreCredentialSignInStartsForASignedOutStartScreen() {
+    assertTrue(restoreCredentialSignInGate())
+  }
+
+  @Test
+  fun restoreCredentialSignInNeedsPasskeyFirstFactor() {
+    val helper = AuthStartViewHelper(FixedAuthStartConfig(passkeyFirstFactorIsEnabled = false))
+
+    assertFalse(
+      restoreCredentialSignInGate(
+        restoreCredentialSignInConfigIsEnabled = helper.restoreCredentialSignInConfigIsEnabled
+      )
+    )
+  }
+
+  @Test
+  fun restoreCredentialSignInSkipsSignUpLockedIdentifiersAndExistingSessions() {
+    assertFalse(restoreCredentialSignInGate(authMode = AuthMode.SignUp))
+    assertFalse(restoreCredentialSignInGate(lockedInitialIdentifierIsActive = true))
+    assertFalse(restoreCredentialSignInGate(hasSession = true))
+  }
+
+  private fun restoreCredentialSignInGate(
+    restoreCredentialsAreEnabled: Boolean = true,
+    authMode: AuthMode = AuthMode.SignInOrUp,
+    lockedInitialIdentifierIsActive: Boolean = false,
+    restoreCredentialSignInConfigIsEnabled: Boolean =
+      AuthStartViewHelper(FixedAuthStartConfig(passkeyFirstFactorIsEnabled = true))
+        .restoreCredentialSignInConfigIsEnabled,
+    hasSession: Boolean = false,
+  ): Boolean =
+    shouldStartRestoreCredentialSignIn(
+      restoreCredentialsAreEnabled = restoreCredentialsAreEnabled,
+      authMode = authMode,
+      lockedInitialIdentifierIsActive = lockedInitialIdentifierIsActive,
+      restoreCredentialSignInConfigIsEnabled = restoreCredentialSignInConfigIsEnabled,
+      hasSession = hasSession,
+    )
 }

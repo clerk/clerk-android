@@ -12,7 +12,7 @@ public final class com/clerk/ui/auth/AuthModeKt {
 }
 
 public final class com/clerk/ui/auth/AuthViewKt {
-	public static final fun AuthView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZZLjava/util/Map;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/clerk/ui/auth/AuthMode;Landroidx/compose/runtime/Composer;III)V
+	public static final fun AuthView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZZZZLjava/util/Map;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/clerk/ui/auth/AuthMode;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/clerk/ui/core/avatar/AvatarSize : java/lang/Enum {
