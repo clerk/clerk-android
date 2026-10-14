@@ -1,13 +1,18 @@
 package com.clerk.api.session
 
+import com.auth0.android.jwt.JWT
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.user.User
+import io.mockk.every
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.serialization.json.JsonObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -531,7 +536,7 @@ class SessionAuthorizationTest {
   }
 
   @Test
-  fun `has on a cached token stays under one millisecond`() {
+  fun `has on a cached token does the same work on every call`() {
     val session =
       session(
         orgId = "org_123",
@@ -540,18 +545,29 @@ class SessionAuthorizationTest {
         features = "o:reservations,u:dashboard",
         plans = "u:plus",
       )
-    session.checkAuthorization(plan = "plus")
+    val claimReads = AtomicInteger()
+    mockkConstructor(JWT::class)
+    try {
+      every { anyConstructed<JWT>().getClaim(any()) } answers
+        {
+          claimReads.incrementAndGet()
+          callOriginal()
+        }
 
-    val samples = DoubleArray(1000)
-    repeat(1000) { index ->
-      val start = System.nanoTime()
-      session.checkAuthorization(plan = "plus")
-      samples[index] = (System.nanoTime() - start) / 1_000_000.0
+      assertTrue(session.checkAuthorization(plan = "plus"))
+      val claimReadsPerCall = claimReads.getAndSet(0)
+      repeat(REPEATED_CALLS) { assertTrue(session.checkAuthorization(plan = "plus")) }
+
+      assertTrue(claimReadsPerCall > 0)
+      assertEquals(claimReadsPerCall * REPEATED_CALLS, claimReads.get())
+      assertEquals(0, SessionTokensCache.size)
+    } finally {
+      unmockkConstructor(JWT::class)
     }
-    samples.sort()
-    assertTrue(samples[949] < 1.0)
   }
 }
+
+private const val REPEATED_CALLS = 100
 
 private fun clientWith(session: Session): Client =
   Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
