@@ -81,6 +81,8 @@ jobs:
     uses: ./.github/workflows/notify-nightly-failure.yml
     with:
       checks: integration tests
-      workflows: integration-test.yml manual-release.yml
+      workflows: |
+        integration-test.yml
+        manual-release.yml=integration-test / integration-test
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       workflows:
-        description: The workflow files, separated by spaces, whose passing runs count as the last passing run of these checks.
+        description: The workflow files whose passing runs count as the last passing run of these checks, one per line. A workflow that runs the checks in one of its jobs, such as the release, is written file=job, and a run of it counts only when that job passed.
         required: true
         type: string
     secrets:
@@ -54,7 +54,10 @@ jobs:
 
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           message=":red_circle: $GITHUB_REPOSITORY nightly $CHECKS failed · <$run_url|View the run>"
-          read -ra workflows <<< "$WORKFLOWS"
+          workflows=()
+          while IFS= read -r workflow; do
+            workflows+=("$workflow")
+          done <<< "${WORKFLOWS%$'\n'}"
           if since="$(timeout 90 node .github/scripts/nightly-failure-message.mjs "${workflows[@]}")"; then
             message="$message"$'\n'"$since"
           else
