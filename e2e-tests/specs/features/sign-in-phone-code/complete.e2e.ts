@@ -25,8 +25,8 @@ test('signs in with the SMS code from the AuthView the home opens', async ({ hos
   await expect(code).toBeVisible({ timeout: 1000 });
   await expect(screen.getByText('Check your phone')).toBeVisible();
   await expect(screen.getByText(user.phone!)).toBeVisible();
-  await host.screenshot('code-screen');
+  await host.screenshot('phone-code-screen');
   await host.fill(code, CLERK_TEST_CODE);
   await host.expectSignedInAs(user, 30_000);
-  await host.screenshot('signed-in');
+  await host.screenshot('signed-in-with-phone-code');
 });
