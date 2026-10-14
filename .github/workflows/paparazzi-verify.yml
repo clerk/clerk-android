@@ -2,6 +2,12 @@ name: Paparazzi Verify
 
 on:
   workflow_dispatch:
+    inputs:
+      record:
+        description: Record the snapshots on this runner and upload them as the paparazzi-snapshots artifact, instead of verifying them.
+        type: boolean
+        default: false
+  workflow_call:
   schedule:
     - cron: "17 7 * * *"
 
@@ -27,12 +33,34 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # ⬇️ replace :source:ui with your module path(s)
       - name: Verify Paparazzi snapshots
+        if: ${{ !inputs.record }}
         timeout-minutes: 20
         run: ./gradlew :source:ui:verifyPaparazziDebug --stacktrace
 
-      # Upload HTML report + image diffs when verification fails
+      - name: Record Paparazzi snapshots
+        if: inputs.record
+        timeout-minutes: 20
+        run: ./gradlew :source:ui:recordPaparazziDebug --stacktrace
+
+      - name: Upload the recorded snapshots
+        if: inputs.record
+        uses: actions/upload-artifact@v7
+        with:
+          name: paparazzi-snapshots
+          retention-days: 7
+          path: source/ui/src/test/snapshots/images/
+          if-no-files-found: error
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: paparazzi-test-results
+          retention-days: 7
+          path: source/ui/build/test-results/
+          if-no-files-found: warn
+
       - name: Upload Paparazzi report
         if: failure()
         uses: actions/upload-artifact@v7
@@ -43,7 +71,6 @@ jobs:
             **/build/reports/paparazzi/**
             **/build/paparazzi/**
 
-      # Bonus: add a short summary to the run
       - name: Add run summary
         if: failure()
         run: |
@@ -51,7 +78,7 @@ jobs:
             echo "### Paparazzi differences detected";
             echo "";
             echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
-            echo "- If expected, re-record locally and commit updated goldens.";
+            echo "- If the change is intended, start this workflow with **record** checked and commit the images from its **paparazzi-snapshots** artifact. Snapshots recorded on another machine render differently.";
           } >> "$GITHUB_STEP_SUMMARY"
 
   notify:
@@ -64,6 +91,8 @@ jobs:
     uses: ./.github/workflows/notify-nightly-failure.yml
     with:
       checks: Paparazzi screenshot tests
-      workflows: paparazzi-verify.yml
+      workflows: |
+        paparazzi-verify.yml
+        manual-release.yml=paparazzi-verify / verify
     secrets:
       SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}

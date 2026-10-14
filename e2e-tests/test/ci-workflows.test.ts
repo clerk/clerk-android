@@ -113,11 +113,12 @@ const WEBHOOK = '${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}';
 
 const INTEGRATION_IN_RELEASE = 'integration-test / integration-test';
 const E2E_IN_RELEASE = 'verify-e2e / e2e-tests';
+const PAPARAZZI_IN_RELEASE = 'paparazzi-verify / verify';
 
 describe('the nightly run', () => {
   const nightly = [
     { file: 'integration-test.yml', job: 'integration-test', checks: 'integration tests', workflows: ['integration-test.yml', `manual-release.yml=${INTEGRATION_IN_RELEASE}`] },
-    { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests', workflows: ['paparazzi-verify.yml'] },
+    { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests', workflows: ['paparazzi-verify.yml', `manual-release.yml=${PAPARAZZI_IN_RELEASE}`] },
     { file: 'verify-e2e.yml', job: 'e2e-tests', checks: 'end-to-end tests', workflows: ['verify-e2e.yml', `manual-release.yml=${E2E_IN_RELEASE}`] },
   ];
   const workflowsInput = (notify: string): string[] => {
@@ -137,13 +138,16 @@ describe('the nightly run', () => {
     }
   });
 
-  it('counts a release as the last passing run of the integration tests or the end-to-end tests only by the name their job has in the release', () => {
+  it('counts a release as the last passing run of the integration tests, the Paparazzi screenshot tests or the end-to-end tests only by the name their job has in the release', () => {
     const name = (text: string, id: string): string => /^ {4}name: (.+)$/m.exec(text)?.[1] ?? id;
     const inRelease = (file: string, job: string): string => {
       const [callerId, caller] = [...jobs(read('manual-release.yml'))].find(([, text]) => new RegExp(`^ {4}uses: \\./\\.github/workflows/${file.replaceAll('.', '\\.')}$`, 'm').test(text)) ?? ['', ''];
       return `${name(caller, callerId)} / ${name(jobs(read(file)).get(job) ?? '', job)}`;
     };
-    assert.deepEqual([inRelease('integration-test.yml', 'integration-test'), inRelease('verify-e2e.yml', 'e2e-tests')], [INTEGRATION_IN_RELEASE, E2E_IN_RELEASE]);
+    assert.deepEqual(
+      [inRelease('integration-test.yml', 'integration-test'), inRelease('paparazzi-verify.yml', 'verify'), inRelease('verify-e2e.yml', 'e2e-tests')],
+      [INTEGRATION_IN_RELEASE, PAPARAZZI_IN_RELEASE, E2E_IN_RELEASE],
+    );
   });
 
   it('posts to Slack when a scheduled run fails, times out, or is cancelled, and not when it passes, when a fork skipped it, when a person started it, or when a release ran it', () => {
@@ -299,14 +303,69 @@ describe('a release', () => {
     );
   });
 
-  it('creates no release and publishes nothing unless the integration tests pass', () => {
+  it('runs the Paparazzi screenshot tests with no secrets', () => {
+    assert.equal(release.get('paparazzi-verify'), '  paparazzi-verify:\n    uses: ./.github/workflows/paparazzi-verify.yml\n');
+  });
+
+  it('creates no release and publishes nothing unless the integration tests and the Paparazzi screenshot tests pass', () => {
     assert.match(release.get('create-release') ?? '', /^ {4}needs: \[[^\]]*\bintegration-test\b[^\]]*\]$/m);
+    assert.match(release.get('create-release') ?? '', /^ {4}needs: \[[^\]]*\bpaparazzi-verify\b[^\]]*\]$/m);
     const condition = /^ {4}if: (.+)$/m.exec(release.get('publish') ?? '')?.[1] ?? 'true';
-    const needs = (integration: string) => ({ verify: 'success', 'verify-e2e': 'success', 'integration-test': integration, 'create-release': 'skipped' });
+    const needs = (integration: string, paparazzi: string) => ({ verify: 'success', 'verify-e2e': 'success', 'integration-test': integration, 'paparazzi-verify': paparazzi, 'create-release': 'skipped' });
     assert.deepEqual(
-      [evaluate(condition, { event: 'release', needs: needs('success') }), evaluate(condition, { event: 'release', needs: needs('failure') })],
-      [true, false],
+      [
+        evaluate(condition, { event: 'release', needs: needs('success', 'success') }),
+        evaluate(condition, { event: 'release', needs: needs('failure', 'success') }),
+        evaluate(condition, { event: 'release', needs: needs('success', 'failure') }),
+      ],
+      [true, false, false],
     );
+  });
+});
+
+describe('the Paparazzi screenshot tests', () => {
+  const steps = (jobs(read('paparazzi-verify.yml')).get('verify') ?? '').split(/\n(?= {6}- )/);
+  const SNAPSHOT_STEPS = ['Verify Paparazzi snapshots', 'Record Paparazzi snapshots', 'Upload the recorded snapshots'];
+  const ran = (context: Context): string[] =>
+    SNAPSHOT_STEPS.filter((name) => {
+      const step = steps.find((text) => text.includes(`- name: ${name}\n`));
+      return step !== undefined && evaluate(/^ {8}if: (.+)$/m.exec(step)?.[1] ?? 'true', context);
+    });
+
+  it('verify the snapshots every night, before each release, and when a person starts them, and record them on the runner only when that person asks', () => {
+    assert.deepEqual(
+      [
+        ran({ event: 'schedule' }),
+        ran({ event: 'release' }),
+        ran({ event: 'workflow_dispatch' }),
+        ran({ event: 'workflow_dispatch', inputs: { record: false } }),
+        ran({ event: 'workflow_dispatch', inputs: { record: true } }),
+      ],
+      [
+        ['Verify Paparazzi snapshots'],
+        ['Verify Paparazzi snapshots'],
+        ['Verify Paparazzi snapshots'],
+        ['Verify Paparazzi snapshots'],
+        ['Record Paparazzi snapshots', 'Upload the recorded snapshots'],
+      ],
+    );
+  });
+
+  it('are left out of the unit tests of a pull request, and run in full when this workflow verifies or records them', () => {
+    const gradle = (text: string): string => /^ {8}run: (\.\/gradlew .+)$/m.exec(text)?.[1] ?? '';
+    const unitTests = (jobs(read('android-test.yml')).get('test-module') ?? '').split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '';
+    const property = /providers\.gradleProperty\("(\w+)"\)\.orNull == "true"\) \{\n\s+useJUnit \{ excludeCategories\("com\.clerk\.base\.SnapshotTest"\) \}/.exec(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'))?.[1];
+    assert.ok(property !== undefined, 'source/ui leaves out the SnapshotTest category when a Gradle property is true');
+    assert.deepEqual(
+      [gradle(unitTests), ...['Verify Paparazzi snapshots', 'Record Paparazzi snapshots'].map((name) => gradle(steps.find((text) => text.includes(`- name: ${name}\n`)) ?? ''))].map((command) => command.includes(`-P${property}=true`)),
+      [true, false, false],
+    );
+  });
+
+  it('upload the recorded images from the folder that holds the committed snapshots', () => {
+    const upload = steps.find((text) => text.includes('- name: Upload the recorded snapshots\n')) ?? '';
+    const path = /^ {10}path: (.+)$/m.exec(upload)?.[1] ?? '';
+    assert.ok(path !== '' && readdirSync(join(WORKFLOWS, '..', '..', path)).some((file) => file.endsWith('.png')), `${path} holds the committed snapshots`);
   });
 });
 

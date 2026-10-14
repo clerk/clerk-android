@@ -40,6 +40,9 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
   forkEvery = 1
   reports.html.required.set(false)
+  if (providers.gradleProperty("skipSnapshotTests").orNull == "true") {
+    useJUnit { excludeCategories("com.clerk.base.SnapshotTest") }
+  }
 }
 
 // Compose mapping collection can emit hundreds of parser/tokenizer warnings

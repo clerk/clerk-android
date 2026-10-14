@@ -70,9 +70,12 @@ jobs:
     secrets:
       CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
 
+  paparazzi-verify:
+    uses: ./.github/workflows/paparazzi-verify.yml
+
   create-release:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: [verify, verify-e2e, integration-test]
+    needs: [verify, verify-e2e, integration-test, paparazzi-verify]
     if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -157,9 +160,9 @@ jobs:
 
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: [verify, verify-e2e, integration-test, create-release]
+    needs: [verify, verify-e2e, integration-test, paparazzi-verify, create-release]
     # always() lets this run when create-release is skipped (release events); every gate must pass.
-    if: always() && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && needs.integration-test.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
+    if: always() && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && needs.integration-test.result == 'success' && needs.paparazzi-verify.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
     outputs:
       tag_name: ${{ steps.release_metadata.outputs.tag_name }}
       release_url: ${{ steps.release_metadata.outputs.release_url }}
