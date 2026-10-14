@@ -110,6 +110,8 @@ describe('a pull request', () => {
   });
 });
 
+const WEBHOOK = '${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}';
+
 const INTEGRATION_IN_RELEASE = 'integration-test / integration-test';
 const E2E_IN_RELEASE = 'verify-e2e / e2e-tests';
 
@@ -169,6 +171,13 @@ describe('the nightly run', () => {
       );
     }
   });
+
+  it('passes the mobile team alerts webhook to the shared notify workflow', () => {
+    for (const { file } of nightly) {
+      const notify = jobs(read(file)).get('notify') ?? '';
+      assert.equal(/^ {4}secrets:\n((?: {6}.+\n)+)/m.exec(notify)?.[1], `      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${WEBHOOK}\n`, file);
+    }
+  });
 });
 
 describe('the Slack message about a failed nightly run', () => {
@@ -187,7 +196,7 @@ describe('the Slack message about a failed nightly run', () => {
     const ran = spawnSync('bash', ['-c', step], {
       env: {
         PATH: `${join(work, 'bin')}:${process.env.PATH}`,
-        SLACK_WEBHOOK_URL: webhook,
+        SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: webhook,
         CHECKS: 'integration tests',
         WORKFLOWS: `integration-test.yml\nmanual-release.yml=${INTEGRATION_IN_RELEASE}\n`,
         GITHUB_SERVER_URL: 'https://github.com',
@@ -235,7 +244,20 @@ describe('the Slack message about a failed nightly run', () => {
   });
 
   it('is skipped with a warning when the webhook secret is empty', () => {
-    assert.deepEqual(notified(''), { status: 0, stdout: '::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification\n', node: [], posted: null });
+    assert.deepEqual(notified(''), { status: 0, stdout: '::warning::SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL is not configured; skipping Slack notification\n', node: [], posted: null });
+  });
+
+  it('posts to the webhook its caller passes', () => {
+    const shared = read('notify-nightly-failure.yml');
+    assert.deepEqual(
+      { declared: /^ {4}secrets:\n((?: {6}.+\n)+)/m.exec(shared.slice(0, shared.indexOf('\njobs:')))?.[1], read: /^ {10}SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: (.+)$/m.exec(post)?.[1] },
+      { declared: '      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:\n        required: false\n', read: WEBHOOK },
+    );
+  });
+
+  it('is posted when the whole nightly run was cancelled, since the caller alone decides whether it runs', () => {
+    const condition = /^ {4}if: (.+)$/m.exec(notify)?.[1] ?? 'true';
+    assert.deepEqual([evaluate(condition, { event: 'schedule' }), evaluate(condition, { event: 'schedule', cancelled: true })], [true, true]);
   });
 });
 
@@ -286,5 +308,54 @@ describe('a release', () => {
       [evaluate(condition, { event: 'release', needs: needs('success') }), evaluate(condition, { event: 'release', needs: needs('failure') })],
       [true, false],
     );
+  });
+});
+
+describe('the Slack posts of the workflows', () => {
+  it('go to the mobile team alerts channel, so no workflow reads the old SLACK_WEBHOOK_URL secret', () => {
+    assert.ok(files.includes('manual-release.yml'), files.join(', '));
+    assert.deepEqual(files.filter((file) => /\bSLACK_WEBHOOK_URL\b/.test(read(file))), []);
+  });
+});
+
+describe('the Slack announcement of a release', () => {
+  const step = (jobs(read('manual-release.yml')).get('notify-slack') ?? '').split(/\n(?= {6}- )/).find((text) => text.includes('- name: Notify Slack')) ?? '';
+
+  function announced(webhook: string): { status: number | null; stdout: string; posted: unknown } {
+    const run = step.slice(step.indexOf('run: |') + 'run: |'.length);
+    const work = mkdtempSync(join(tmpdir(), 'release-notify-'));
+    mkdirSync(join(work, 'bin'));
+    writeFileSync(join(work, 'bin', 'curl'), `#!/bin/sh\nwhile [ "$#" -gt 1 ]; do [ "$1" = --data ] && printf '%s' "$2" > "${work}/posted"; shift; done\necho "$1" > "${work}/url"\n`, { mode: 0o755 });
+    const ran = spawnSync('bash', ['-c', run], {
+      env: {
+        PATH: `${join(work, 'bin')}:${process.env.PATH}`,
+        SLACK_BOT_TOKEN: '',
+        SLACK_CHANNEL_ID: '',
+        SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: webhook,
+        RELEASE_TAG: 'v1.2.3',
+        RELEASE_URL: 'https://github.com/clerk/clerk-android/releases/tag/v1.2.3',
+        PR_URL: '',
+      },
+      encoding: 'utf8',
+      timeout: 20_000,
+    });
+    let posted: unknown = null;
+    try {
+      posted = { url: readFileSync(join(work, 'url'), 'utf8').trim(), payload: JSON.parse(readFileSync(join(work, 'posted'), 'utf8')).text };
+    } catch {}
+    rmSync(work, { recursive: true, force: true });
+    return { status: ran.status, stdout: ran.stdout, posted };
+  }
+
+  it('reads the mobile team alerts webhook', () => {
+    assert.equal(/^ {10}SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: (.+)$/m.exec(step)?.[1], WEBHOOK);
+  });
+
+  it('posts the release to that webhook when the repository has no Slack bot token', () => {
+    assert.deepEqual(announced('https://hooks.slack.test/T/B/x'), {
+      status: 0,
+      stdout: '::warning::SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are not configured; falling back to webhook release notification\n',
+      posted: { url: 'https://hooks.slack.test/T/B/x', payload: 'Clerk Android SDK v1.2.3 has been released' },
+    });
   });
 });

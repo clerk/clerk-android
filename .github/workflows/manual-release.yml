@@ -531,7 +531,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}
           RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
           RELEASE_URL: ${{ needs.publish.outputs.release_url }}
           PR_URL: ${{ needs.open-expo-android-release-pr.outputs.pr_url }}
@@ -592,14 +592,14 @@ jobs:
             exit 0
           fi
 
-          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+          if [ -n "$SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL" ]; then
             echo "::warning::SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are not configured; falling back to webhook release notification"
             webhook_payload=$(jq 'del(.channel)' <<<"$PAYLOAD")
             curl --silent --show-error --fail-with-body \
               --request POST \
               --header "Content-type: application/json" \
               --data "$webhook_payload" \
-              "$SLACK_WEBHOOK_URL" || {
+              "$SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL" || {
                 echo "::warning::Failed to post Slack release notification with webhook"
                 exit 0
               }

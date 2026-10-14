@@ -6,7 +6,7 @@ on:
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY:
         required: true
-      SLACK_WEBHOOK_URL:
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:
         required: false
   schedule:
     - cron: "17 7 * * *"
@@ -153,4 +153,4 @@ jobs:
         verify-e2e.yml
         manual-release.yml=verify-e2e / e2e-tests
     secrets:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}
