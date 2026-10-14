@@ -9,6 +9,7 @@ import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.state.ClientStateStore
@@ -87,6 +88,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             completedAuthFlow = completedAuthFlow,
           )
 
+          authEvents.filterIsInstance<AuthEvent.SignInCompleted>().forEach { event ->
+            RestoreCredentials.onSignInCompleted(event.signIn)
+          }
           authEvents.forEach(Clerk.auth::send)
         } catch (e: SerializationException) {
           ClerkLogger.e("Error deserializing client: ${e.message}")
