@@ -116,11 +116,40 @@ describe('the clerk-android host with a remote device', () => {
 
     it('builds or takes the stored e2e APK, waits for the emulator, then installs the APK the build step handed over', () => {
       const steps = device.build('/work');
-      assert.deepEqual(steps.map((step) => step.command), [process.execPath, 'sh', 'adb']);
+      assert.deepEqual(steps.map((step) => step.command), [process.execPath, 'sh', 'sh']);
       assert.deepEqual(steps[0]!.args, [join(PACKAGE_DIR, 'src', 'platform', 'android', 'session-build.ts'), 'build', '/work']);
       assert.equal(steps[0]!.cwd, `${join(PACKAGE_DIR, '..')}/`);
       assert.equal(steps[1]!.args.at(-1), '/work');
-      assert.equal(line(steps[2]!), 'adb -s emulator-5560 install -r -t /work/e2e-debug.apk');
+      assert.deepEqual(steps[2]!.args.slice(2), ['emulator-5560', '/work/e2e-debug.apk', 'com.clerk.e2e']);
+    });
+
+    function installed(answers: readonly string[]): { readonly status: number | null; readonly calls: readonly string[] } {
+      const work = mkdtempSync(join(tmpdir(), 'verify-host-install-'));
+      mkdirSync(join(work, 'bin'));
+      writeFileSync(join(work, 'answers'), `${answers.join('\n')}\n`);
+      writeFileSync(join(work, 'calls'), '');
+      writeFileSync(join(work, 'bin', 'adb'), `#!/bin/sh\necho "$*" >> "${work}/calls"\nanswer=$(sed -n "$(wc -l < "${work}/calls" | tr -d ' ')p" "${work}/answers")\necho "$answer"\n[ "$answer" = Success ]\n`, { mode: 0o755 });
+      const install = device.build('/work')[2]!;
+      const ran = spawnSync(install.command, [...install.args], { env: { PATH: `${join(work, 'bin')}:${process.env.PATH}` }, encoding: 'utf8' });
+      const calls = readFileSync(join(work, 'calls'), 'utf8').split('\n').filter((call) => call !== '');
+      rmSync(work, { recursive: true, force: true });
+      return { status: ran.status, calls };
+    }
+
+    it('replaces the app in place when it can', () => {
+      assert.deepEqual(installed(['Success']), { status: 0, calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk'] });
+    });
+
+    it('uninstalls an app that another machine signed, such as a stored APK, then installs the new build', () => {
+      const refused = 'adb: failed to install /work/e2e-debug.apk: Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.clerk.e2e signatures do not match newer version; ignoring!]';
+      assert.deepEqual(installed([refused, 'Success', 'Success']), {
+        status: 0,
+        calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk', '-s emulator-5560 uninstall com.clerk.e2e', '-s emulator-5560 install -t /work/e2e-debug.apk'],
+      });
+    });
+
+    it('fails, and uninstalls nothing, when the install fails for another reason', () => {
+      assert.deepEqual(installed(['adb: failed to install: Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]']), { status: 1, calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk'] });
     });
 
     it('lets a patch change exactly the paths the CLI sends from the tree', () => {
