@@ -52,6 +52,15 @@ jobs:
           path: source/ui/src/test/snapshots/images/
           if-no-files-found: error
 
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: paparazzi-test-results
+          retention-days: 7
+          path: source/ui/build/test-results/
+          if-no-files-found: warn
+
       - name: Upload Paparazzi report
         if: failure()
         uses: actions/upload-artifact@v7
