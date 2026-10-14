@@ -69,6 +69,7 @@ jobs:
       AGENT_DEVICE_DAEMON_IDLE_TIMEOUT_MS: "0"
       AGENT_DEVICE_LEASE_TTL_MS: "21600000"
       AGENT_DEVICE_LEASE_MAX_TTL_MS: "21600000"
+      SESSION_BUILD: e2e-tests/src/platform/android/session-build.ts
     steps:
       - uses: actions/checkout@v7
         with:
@@ -84,6 +85,8 @@ jobs:
           distribution: zulu
       - uses: gradle/actions/setup-gradle@v6
         if: needs.plan.outputs.device != ''
+        with:
+          cache-disabled: true
 
       - name: Make the work directory and name the device
         id: device
@@ -93,11 +96,50 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/verify-remote"
           echo "VERIFY_SESSION_WORK=$RUNNER_TEMP/verify-remote" >> "$GITHUB_ENV"
+          echo "start $(date +%s)000" >> "$RUNNER_TEMP/verify-remote/marks"
           if [ "$RUNNER_OS" = Linux ] && [ -n "$DEVICE" ]; then
             [ -x "$ANDROID_HOME/platform-tools/adb" ] || "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install platform-tools < /dev/null > /dev/null
             echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
             echo "serial=$(node "$PACKAGE/src/platform/android/session-lane.ts" serial)" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Install the Android platform the build compiles against
+        if: steps.device.outputs.serial != ''
+        run: |
+          for package in $(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK"); do
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$package" < /dev/null > /dev/null && break
+          done
+
+      - name: Name the APK
+        id: app
+        if: steps.device.outputs.serial != ''
+        run: node "$SESSION_BUILD" name "$VERIFY_SESSION_WORK"
+
+      - name: Restore the APK that an earlier build stored
+        id: stored
+        if: steps.app.outputs.key != ''
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/verify-remote/apks/${{ steps.app.outputs.key }}
+          key: verify-e2e-apk-${{ steps.app.outputs.key }}
+
+      - name: Restore the build state
+        if: steps.device.outputs.serial != ''
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            !~/.gradle/caches/build-cache-1
+            ~/.gradle/wrapper
+            .gradle
+            e2e/build
+            source/api/build
+            source/ui/build
+            source/telemetry/build
+          key: verify-gradle-${{ steps.app.outputs.toolchain }}-${{ steps.app.outputs.key || github.run_id }}
+          restore-keys: |
+            verify-gradle-${{ steps.app.outputs.toolchain }}-
+            verify-gradle-
 
       - name: Start the session agent and tunnel
         id: tunnel
@@ -119,12 +161,14 @@ jobs:
           VERIFY_SESSION_CLOUDFLARED="$WORK/cloudflared" \
             nohup node "$PACKAGE/src/core/remote/session-agent.ts" serve > "$WORK/agent.log" 2>&1 &
           disown
+          echo "agent-started $(date +%s)000" >> "$WORK/marks"
           for _ in $(seq 1 150); do
             sleep 1
             [ -s "$WORK/tunnel" ] && break
             pgrep -f 'session-agent.ts serve' > /dev/null || { echo "::error::the session agent ended before a tunnel came up"; break; }
           done
           [ -s "$WORK/tunnel" ] || { echo "::error::no tunnel came up"; tail -n 20 "$WORK/agent.log" "$WORK/tunnel.log" || true; exit 1; }
+          echo "tunnel-up $(date +%s)000" >> "$WORK/marks"
           echo "host=$(cat "$WORK/tunnel")" >> "$GITHUB_OUTPUT"
 
       - name: verify-remote tunnel ${{ steps.tunnel.outputs.host }}
@@ -140,6 +184,7 @@ jobs:
           IMAGE="system-images;android-36;google_apis;x86_64"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$IMAGE" emulator < /dev/null > "$VERIFY_SESSION_WORK/sdkmanager.log" 2>&1 \
             || { echo "::error::sdkmanager could not install $IMAGE"; tail -20 "$VERIFY_SESSION_WORK/sdkmanager.log"; exit 1; }
+          echo "boot-started $(date +%s)000" >> "$VERIFY_SESSION_WORK/marks"
           nohup node "$PACKAGE/src/platform/android/session-lane.ts" boot "$VERIFY_SESSION_WORK" > "$VERIFY_SESSION_WORK/lane.log" 2>&1 &
           disown
 
@@ -149,6 +194,7 @@ jobs:
           set -euo pipefail
           npm ci --prefix "$PACKAGE" --no-audit --no-fund
           "$PACKAGE/node_modules/.bin/agent-device" --version
+          echo "tools-installed $(date +%s)000" >> "$VERIFY_SESSION_WORK/marks"
 
       - name: Wait for the emulator
         if: steps.device.outputs.serial != ''
@@ -162,10 +208,42 @@ jobs:
             fi
             sleep 2
           done
+          echo "booted $(date +%s)000" >> "$VERIFY_SESSION_WORK/marks"
           cat "$VERIFY_SESSION_WORK/lane.log"
 
       - name: Mark the device ready
-        run: touch "$VERIFY_SESSION_WORK/device-ready"
+        run: |
+          touch "$VERIFY_SESSION_WORK/device-ready"
+          echo "device-ready $(date +%s)000" >> "$VERIFY_SESSION_WORK/marks"
+
+      - name: Report the APK and the stage times
+        id: report
+        if: steps.device.outputs.serial != ''
+        run: |
+          for _ in $(seq 1 1500); do
+            pgrep -f 'session-build.ts build' > /dev/null || break
+            sleep 1
+          done
+          if pgrep -f 'session-build.ts build' > /dev/null; then
+            echo "::warning title=verify::a build was still running after 25 minutes, so nothing it builds is stored"
+          fi
+          node "$SESSION_BUILD" outcome "$VERIFY_SESSION_WORK"
+          node "$SESSION_BUILD" stages "$VERIFY_SESSION_WORK"
+
+      - name: Check whether the session built uncommitted changes
+        id: patched
+        run: |
+          if [ -f "$VERIFY_SESSION_WORK/patched" ]; then
+            echo "::notice title=verify::this session built uncommitted changes, so it stores nothing for later sessions"
+            echo "built=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Store the APK for the next session with the same sources, JDK and Android platform
+        if: steps.patched.outputs.built != 'true' && steps.report.outputs.store != '' && steps.report.outputs.store == steps.app.outputs.key
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/verify-remote/apks/${{ steps.report.outputs.store }}
+          key: verify-e2e-apk-${{ steps.report.outputs.store }}
 
       - name: Hold the session
         run: |
