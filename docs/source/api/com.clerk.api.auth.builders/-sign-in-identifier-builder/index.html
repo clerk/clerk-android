@@ -94,7 +94,7 @@
   <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.auth.builders</a><span class="delimiter">/</span><span class="current">SignInIdentifierBuilder</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Sign</span><wbr><span>In</span><wbr><span>Identifier</span><wbr><span><span>Builder</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SignInIdentifierBuilder</a></div><p class="paragraph">Builder for sign-in with identifier.</p><p class="paragraph">Use this builder to specify the identifier for starting a sign-in flow. Only one of <a href="email.html">email</a>, <a href="phone.html">phone</a>, or <a href="username.html">username</a> should be set.</p><h3 class="">Example usage:</h3><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">clerk.auth.signIn { email = "user@email.com" }<br>// or<br>clerk.auth.signIn { phone = "+1234567890" }<br>// or<br>clerk.auth.signIn { username = "johndoe" }</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SignInIdentifierBuilder</a></div><p class="paragraph">Builder for sign-in with identifier.</p><p class="paragraph">Use this builder to specify the identifier for starting a sign-in flow. Only one of <a href="email.html">email</a>, <a href="phone.html">phone</a>, <a href="username.html">username</a>, or <a href="identifier.html">identifier</a> should be set.</p><h3 class="">Example usage:</h3><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">clerk.auth.signIn { email = "user@email.com" }<br>// or<br>clerk.auth.signIn { phone = "+1234567890" }<br>// or<br>clerk.auth.signIn { username = "johndoe" }</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -131,6 +131,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="email.html">email</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The email address to sign in with.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1066794454%2FProperties%2F-1784893667" anchor-label="identifier" id="-1066794454%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="identifier.html"><span><span>identifier</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1066794454%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="identifier.html">identifier</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">An identifier of any type, such as text a user typed into a single "email, phone or username" field. Clerk works out which kind it is.</p></div></div></div>
                 </div>
               </div>
             </div>
