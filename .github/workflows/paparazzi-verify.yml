@@ -2,17 +2,17 @@ name: Paparazzi Verify
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "17 7 * * *"
+
+permissions:
+  contents: read
 
 jobs:
   verify:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: blacksmith-4vcpu-ubuntu-2404
-
-    permissions:
-      contents: read
-      pull-requests: write  # for PR comment
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -29,6 +29,7 @@ jobs:
 
       # ⬇️ replace :source:ui with your module path(s)
       - name: Verify Paparazzi snapshots
+        timeout-minutes: 20
         run: ./gradlew :source:ui:verifyPaparazziDebug --stacktrace
 
       # Upload HTML report + image diffs when verification fails
@@ -52,3 +53,17 @@ jobs:
             echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
             echo "- If expected, re-record locally and commit updated goldens.";
           } >> "$GITHUB_STEP_SUMMARY"
+
+  notify:
+    needs: verify
+    if: ${{ always() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: Paparazzi screenshot tests
+      workflows: paparazzi-verify.yml
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
