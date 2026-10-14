@@ -1,13 +1,26 @@
 name: Integration Tests
 on:
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      CLERK_INTEGRATION_TEST_PK:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: false
+  schedule:
+    - cron: "0 7 * * *"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [ "main" ]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   integration-test:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (github.event_name != 'schedule' || github.repository == 'clerk/clerk-android')
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v7
@@ -44,3 +57,12 @@ jobs:
             source/api/build/test-results/**
             source/api/build/reports/tests/**
           if-no-files-found: warn
+
+  notify:
+    needs: integration-test
+    if: failure() && github.event_name == 'schedule'
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: integration tests
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

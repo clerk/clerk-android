@@ -2,17 +2,16 @@ name: Paparazzi Verify
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
 
 jobs:
   verify:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: blacksmith-4vcpu-ubuntu-2404
-
-    permissions:
-      contents: read
-      pull-requests: write  # for PR comment
 
     steps:
       - name: Checkout
@@ -52,3 +51,12 @@ jobs:
             echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
             echo "- If expected, re-record locally and commit updated goldens.";
           } >> "$GITHUB_STEP_SUMMARY"
+
+  notify:
+    needs: verify
+    if: failure() && github.event_name == 'schedule'
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: Paparazzi screenshot tests
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

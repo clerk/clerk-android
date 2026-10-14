@@ -1,0 +1,200 @@
+import '../testing/git-env.ts';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, it } from 'node:test';
+
+const WORKFLOWS = join(import.meta.dirname, '..', '..', '.github', 'workflows');
+const read = (file: string): string => readFileSync(join(WORKFLOWS, file), 'utf8');
+const files = readdirSync(WORKFLOWS).filter((file) => file.endsWith('.yml')).sort();
+
+interface Context {
+  readonly event: string;
+  readonly repository?: string;
+  readonly draft?: boolean;
+  readonly failed?: boolean;
+  readonly needs?: Readonly<Record<string, string>>;
+}
+
+function triggers(workflow: string): string {
+  const start = workflow.indexOf('\non:\n');
+  return workflow.slice(start, workflow.indexOf('\n\n', start + 1));
+}
+
+function jobs(workflow: string): ReadonlyMap<string, string> {
+  const section = workflow.slice(workflow.indexOf('\njobs:\n'));
+  return new Map(section.split(/\n(?= {2}[\w-]+:\n)/).slice(1).map((text) => [/^ {2}([\w-]+):/.exec(text)![1]!, text]));
+}
+
+// GitHub compares values of different types as numbers, so null == false is true there.
+function eq(left: unknown, right: unknown): boolean {
+  if (typeof left === 'string' && typeof right === 'string') return left.toLowerCase() === right.toLowerCase();
+  return left === right || Number(left) === Number(right);
+}
+
+function evaluate(condition: string, context: Context): boolean {
+  const value = (path: string): unknown => {
+    if (path === 'github.event_name') return context.event;
+    if (path === 'github.repository') return context.repository ?? 'clerk/clerk-android';
+    if (path === 'github.event.pull_request.draft') return context.event === 'pull_request' ? (context.draft ?? false) : null;
+    const need = /^needs\.([\w-]+)\.result$/.exec(path);
+    if (need) return context.needs?.[need[1]!] ?? '';
+    throw new Error(`no value for ${path} in ${condition}`);
+  };
+  const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
+  const script = condition
+    .replaceAll('failure()', String(context.failed ?? false))
+    .replaceAll('always()', 'true')
+    .replaceAll(/'([^']*)'/g, (_, text: string) => JSON.stringify(text))
+    .replaceAll(/\b(?:github|needs)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
+    .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
+  return Boolean(new Function('eq', `return ${script};`)(eq));
+}
+
+function ranJobs(context: Context): readonly string[] {
+  const ran: string[] = [];
+  for (const file of files) {
+    const on = triggers(read(file));
+    const triggered = context.event === 'push' ? /^ {2}push:\n {4}branches: \[main\]$/m.test(on) : new RegExp(`^ {2}${context.event}:`, 'm').test(on);
+    if (!triggered) continue;
+    const started = new Set<string>();
+    for (const [name, text] of jobs(read(file))) {
+      const condition = /^ {4}if: (.+)$/m.exec(text)?.[1];
+      const needs = /^ {4}needs: \[?([^\]\n]+)\]?$/m.exec(text)?.[1]?.split(',').map((need) => need.trim()) ?? [];
+      if (condition === undefined ? needs.every((need) => started.has(need)) : evaluate(condition, context)) {
+        started.add(name);
+        ran.push(`${file} ${name}`);
+      }
+    }
+  }
+  return ran;
+}
+
+const PULL_REQUEST_JOBS = [
+  'android-test.yml e2e-runner-tests',
+  'android-test.yml test-module',
+  'android-test.yml api-check',
+  'android.yml build-module',
+  'android.yml verify',
+  'checks.yml checks',
+  'detekt.yml detekt',
+  'integration-test.yml integration-test',
+];
+
+describe('a pull request', () => {
+  it('runs the build, unit test, and lint jobs, and the integration tests that branch protection on main requires', () => {
+    assert.deepEqual(ranJobs({ event: 'pull_request', draft: false }), PULL_REQUEST_JOBS);
+  });
+
+  it('runs no job while it is a draft', () => {
+    assert.deepEqual(ranJobs({ event: 'pull_request', draft: true }), []);
+  });
+
+  it('runs the same jobs again when it is merged, as a push to main', () => {
+    assert.deepEqual(ranJobs({ event: 'push' }), PULL_REQUEST_JOBS);
+  });
+});
+
+describe('the nightly run', () => {
+  const nightly = [
+    { file: 'integration-test.yml', job: 'integration-test', checks: 'integration tests' },
+    { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests' },
+  ];
+
+  it('runs the integration tests and the Paparazzi screenshot tests at 07:00 UTC in clerk/clerk-android, and nothing in a fork', () => {
+    for (const { file, job } of nightly) {
+      assert.match(triggers(read(file)), /^ {2}schedule:\n {4}- cron: "0 7 \* \* \*"$/m, `${file} runs at 07:00 UTC`);
+      const condition = /^ {4}if: (.+)$/m.exec(jobs(read(file)).get(job) ?? '')?.[1] ?? 'true';
+      assert.deepEqual(
+        [evaluate(condition, { event: 'schedule' }), evaluate(condition, { event: 'schedule', repository: 'someone/clerk-android' })],
+        [true, false],
+        file,
+      );
+    }
+  });
+
+  it('posts to Slack when a scheduled run fails, and not when it passes, when a person started it, or when a release ran it', () => {
+    for (const { file, job, checks } of nightly) {
+      const notify = jobs(read(file)).get('notify') ?? '';
+      assert.match(notify, /^ {4}uses: \.\/\.github\/workflows\/notify-nightly-failure\.yml$/m, `${file} notifies Slack`);
+      assert.match(notify, new RegExp(`^ {4}needs: ${job}$`, 'm'));
+      assert.match(notify, new RegExp(`^ {6}checks: ${checks}$`, 'm'));
+      const condition = /^ {4}if: (.+)$/m.exec(notify)![1]!;
+      assert.deepEqual(
+        [
+          evaluate(condition, { event: 'schedule', failed: true }),
+          evaluate(condition, { event: 'schedule', failed: false }),
+          evaluate(condition, { event: 'workflow_dispatch', failed: true }),
+          evaluate(condition, { event: 'release', failed: true }),
+        ],
+        [true, false, false, false],
+        file,
+      );
+    }
+  });
+});
+
+describe('the Slack message about a failed nightly run', () => {
+  function notified(webhook: string): { status: number | null; stdout: string; posted: unknown } {
+    const text = read('notify-nightly-failure.yml');
+    const script = text.slice(text.indexOf('run: |') + 'run: |'.length).split('\n').map((line) => line.trim()).join('\n');
+    const work = mkdtempSync(join(tmpdir(), 'ci-nightly-notify-'));
+    mkdirSync(join(work, 'bin'));
+    writeFileSync(join(work, 'bin', 'curl'), `#!/bin/sh\nwhile [ "$#" -gt 1 ]; do [ "$1" = --data ] && printf '%s' "$2" > "${work}/posted"; shift; done\necho "$1" > "${work}/url"\n`, { mode: 0o755 });
+    const ran = spawnSync('bash', ['-c', script], {
+      env: { PATH: `${join(work, 'bin')}:${process.env.PATH}`, SLACK_WEBHOOK_URL: webhook, CHECKS: 'integration tests', GITHUB_SERVER_URL: 'https://github.com', GITHUB_REPOSITORY: 'clerk/clerk-android', GITHUB_RUN_ID: '123' },
+      encoding: 'utf8',
+      timeout: 20_000,
+    });
+    let posted: unknown = null;
+    try {
+      posted = { url: readFileSync(join(work, 'url'), 'utf8').trim(), payload: JSON.parse(readFileSync(join(work, 'posted'), 'utf8')) };
+    } catch {}
+    rmSync(work, { recursive: true, force: true });
+    return { status: ran.status, stdout: ran.stdout, posted };
+  }
+
+  it('names the checks that failed and the repository, and links the run', () => {
+    assert.deepEqual(notified('https://hooks.slack.test/T/B/x'), {
+      status: 0,
+      stdout: '',
+      posted: {
+        url: 'https://hooks.slack.test/T/B/x',
+        payload: {
+          text: 'The nightly integration tests failed in clerk/clerk-android',
+          blocks: [
+            { type: 'section', text: { type: 'mrkdwn', text: '*The nightly integration tests failed in clerk/clerk-android*' } },
+            { type: 'context', elements: [{ type: 'mrkdwn', text: '<https://github.com/clerk/clerk-android/actions/runs/123|View the run>' }] },
+          ],
+        },
+      },
+    });
+  });
+
+  it('is skipped with a warning when the webhook secret is empty', () => {
+    assert.deepEqual(notified(''), { status: 0, stdout: '::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification\n', posted: null });
+  });
+});
+
+describe('a release', () => {
+  const release = jobs(read('manual-release.yml'));
+
+  it('runs the integration tests with only the key they need', () => {
+    assert.equal(
+      release.get('integration-test'),
+      '  integration-test:\n    uses: ./.github/workflows/integration-test.yml\n    secrets:\n      CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}\n',
+    );
+  });
+
+  it('creates no release and publishes nothing unless the integration tests pass', () => {
+    assert.match(release.get('create-release') ?? '', /^ {4}needs: \[[^\]]*\bintegration-test\b[^\]]*\]$/m);
+    const condition = /^ {4}if: (.+)$/m.exec(release.get('publish') ?? '')?.[1] ?? 'true';
+    const needs = (integration: string) => ({ verify: 'success', 'verify-e2e': 'success', 'integration-test': integration, 'create-release': 'skipped' });
+    assert.deepEqual(
+      [evaluate(condition, { event: 'release', needs: needs('success') }), evaluate(condition, { event: 'release', needs: needs('failure') })],
+      [true, false],
+    );
+  });
+});

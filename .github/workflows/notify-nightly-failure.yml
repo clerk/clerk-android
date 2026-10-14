@@ -1,0 +1,73 @@
+name: Notify Slack of a failed nightly run
+
+on:
+  workflow_call:
+    inputs:
+      checks:
+        description: The checks that failed, as the message names them.
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CHECKS: ${{ inputs.checks }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
+            exit 0
+          fi
+
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          PAYLOAD=$(jq -n \
+            --arg checks "$CHECKS" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg run_url "$run_url" \
+            '{
+              text: "The nightly \($checks) failed in \($repo)",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: "*The nightly \($checks) failed in \($repo)*"
+                  }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    {
+                      type: "mrkdwn",
+                      text: "<\($run_url)|View the run>"
+                    }
+                  ]
+                }
+              ]
+            }')
+
+          curl --fail-with-body \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-max-time 60 \
+            --retry-all-errors \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
