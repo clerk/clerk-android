@@ -178,6 +178,16 @@ describe('the key of a stored e2e APK', () => {
     assert.equal(named(repo).key, before);
   });
 
+  it('names the SDK package of the platform that compileSdk names, so that both workflows install it before they name the APK', () => {
+    const repo = checkout();
+    assert.deepEqual(sessionBuild(repo, ['platform', scratch('verify-stored-apk-work-')]), { status: 0, stdout: 'platforms;android-37\n' });
+    for (const file of ['verify-remote.yml', 'verify-app-cache.yml']) {
+      const steps = readFileSync(join(WORKFLOWS, file), 'utf8').split(/\n(?= {6}- )/);
+      const install = steps.findIndex((step) => step.includes('sdkmanager" --install "$(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK")"'));
+      assert.ok(install > 0 && install < steps.findIndex((step) => step.includes('- name: Name the APK')), file);
+    }
+  });
+
   it('is empty, with the reason, when the SDK has no platform for compileSdk', () => {
     const repo = checkout();
     rmSync(join(repo.fake, 'sdk', 'platforms'), { recursive: true });

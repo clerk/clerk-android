@@ -53,17 +53,22 @@ export function inputTree(worktree: string): InputTree {
   return { head: git(worktree, 'rev-parse', 'HEAD').trim(), hash: sha256(files.join('\0')), changed: [...changed, ...ignored] };
 }
 
+export function compileSdk(worktree: string): string {
+  const version = /^compileSdk\s*=\s*"(\d+)"/m.exec(readFileSync(join(worktree, 'gradle', 'libs.versions.toml'), 'utf8'))?.[1];
+  if (version === undefined) throw new Error('gradle/libs.versions.toml names no compileSdk');
+  return version;
+}
+
 export function toolchain(worktree: string, env: NodeJS.ProcessEnv = process.env): Toolchain {
   const java = env.JAVA_HOME === undefined || env.JAVA_HOME === '' ? 'java' : join(env.JAVA_HOME, 'bin', 'java');
   const jdk = output(java, ['-version'], worktree).stderr.trim().split('\n').map((line) => line.trim()).join('; ');
   if (jdk === '') throw new Error(`${java} -version printed nothing`);
-  const compileSdk = /^compileSdk\s*=\s*"(\d+)"/m.exec(readFileSync(join(worktree, 'gradle', 'libs.versions.toml'), 'utf8'))?.[1];
-  if (compileSdk === undefined) throw new Error('gradle/libs.versions.toml names no compileSdk');
+  const platform = `android-${compileSdk(worktree)}`;
   const sdk = env.ANDROID_HOME ?? env.ANDROID_SDK_ROOT ?? '';
-  const properties = join(sdk, 'platforms', `android-${compileSdk}`, 'source.properties');
+  const properties = join(sdk, 'platforms', platform, 'source.properties');
   const revision = existsSync(properties) ? /^Pkg\.Revision=(\S+)$/m.exec(readFileSync(properties, 'utf8'))?.[1] : undefined;
-  if (sdk === '' || revision === undefined) throw new Error(`the Android SDK has no android-${compileSdk} platform with a revision at ${properties}`);
-  return { jdk, platform: `android-${compileSdk}r${revision}` };
+  if (sdk === '' || revision === undefined) throw new Error(`the Android SDK has no ${platform} platform with a revision at ${properties}`);
+  return { jdk, platform: `${platform}r${revision}` };
 }
 
 export const toolchainName = (tools: Toolchain): string => `${/version "([^"]+)"/.exec(tools.jdk)?.[1] ?? sha256(tools.jdk).slice(0, 12)}-${tools.platform}`.replace(/[^\w.-]/g, '_');

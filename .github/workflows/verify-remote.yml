@@ -103,6 +103,10 @@ jobs:
             echo "serial=$(node "$PACKAGE/src/platform/android/session-lane.ts" serial)" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install the Android platform the build compiles against
+        if: steps.device.outputs.serial != ''
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK")" < /dev/null > /dev/null'
+
       - name: Name the APK
         id: app
         if: steps.device.outputs.serial != ''
