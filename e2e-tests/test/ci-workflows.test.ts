@@ -48,8 +48,10 @@ function evaluate(condition: string, context: Context): boolean {
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
   const results = Object.values(context.needs ?? {});
-  const script = condition
-    .replace(/^\$\{\{ (.+) \}\}$/, '$1')
+  const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
+  // GitHub adds success() to a condition that calls no status function.
+  const script = (/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`)
+    .replaceAll('success()', String(!(context.cancelled ?? false) && results.every((result) => result === 'success')))
     .replaceAll('failure()', String(results.includes('failure')))
     .replaceAll('cancelled()', String(context.cancelled ?? false))
     .replaceAll('always()', 'true')
