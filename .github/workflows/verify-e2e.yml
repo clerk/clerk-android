@@ -6,6 +6,10 @@ on:
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY:
         required: true
+      SLACK_WEBHOOK_URL:
+        required: false
+  schedule:
+    - cron: "0 7 * * *"
 
 permissions:
   contents: read
@@ -16,6 +20,7 @@ concurrency:
 
 jobs:
   e2e-tests:
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: ${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 40
     permissions:
@@ -132,3 +137,60 @@ jobs:
             ${{ env.PACKAGE }}/.verify/runs/*/e2e*/artifacts
           retention-days: 3
           if-no-files-found: warn
+
+  notify:
+    name: Notify Slack of a failed nightly run
+    needs: e2e-tests
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
+            exit 0
+          fi
+
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          PAYLOAD=$(jq -n \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg run_url "$run_url" \
+            '{
+              text: "The nightly end-to-end tests failed in \($repo)",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: "*The nightly end-to-end tests failed in \($repo)*"
+                  }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    {
+                      type: "mrkdwn",
+                      text: "<\($run_url)|View the run>"
+                    }
+                  ]
+                }
+              ]
+            }')
+
+          curl --fail-with-body \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-max-time 60 \
+            --retry-all-errors \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
