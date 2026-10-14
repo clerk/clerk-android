@@ -13,6 +13,7 @@ import { host } from '../src/host.ts';
 import { LANE_FAILED, LANE_READY, LOG_FILTER, RECORD_SIZE } from '../src/platform/android/emulator.ts';
 import { localAndroidBackend } from '../src/platform/android/local.ts';
 import { systemImage, type Machine } from '../src/platform/android/sdk.ts';
+import { answer } from '../src/core/remote/recipe.ts';
 import sessionDevice from '../src/platform/android/session-device.ts';
 
 const PACKAGE_DIR = join(import.meta.dirname, '..');
@@ -119,6 +120,11 @@ describe('the clerk-android host with a remote device', () => {
       assert.deepEqual(steps[0]!.args, [':e2e:assembleDebug', '--console=plain', '--quiet']);
       assert.equal(steps[1]!.args.at(-1), '/work');
       assert.equal(line(steps[2]!), 'adb -s emulator-5560 install -r -t e2e/build/outputs/apk/debug/e2e-debug.apk');
+    });
+
+    it('lets a patch change exactly the paths the CLI sends from the tree', () => {
+      assert.deepEqual(answer(device, { op: 'inputs' }), host.buildInputs('android', 'remote'));
+      assert.deepEqual(device.inputs, ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew']);
     });
 
     it('records to a file on the emulator, stops screenrecord there, then pulls the file', () => {
