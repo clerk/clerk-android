@@ -14,7 +14,7 @@ interface Context {
   readonly event: string;
   readonly repository?: string;
   readonly draft?: boolean;
-  readonly failed?: boolean;
+  readonly cancelled?: boolean;
   readonly needs?: Readonly<Record<string, string>>;
   readonly inputs?: Readonly<Record<string, boolean>>;
 }
@@ -47,13 +47,18 @@ function evaluate(condition: string, context: Context): boolean {
     throw new Error(`no value for ${path} in ${condition}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
+  const results = Object.values(context.needs ?? {});
   const script = condition
-    .replaceAll('failure()', String(context.failed ?? false))
+    .replace(/^\$\{\{ (.+) \}\}$/, '$1')
+    .replaceAll('failure()', String(results.includes('failure')))
+    .replaceAll('cancelled()', String(context.cancelled ?? false))
     .replaceAll('always()', 'true')
+    .replaceAll('needs.*.result', JSON.stringify(results))
     .replaceAll(/'([^']*)'/g, (_, text: string) => JSON.stringify(text))
     .replaceAll(/\b(?:github|needs|inputs)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
-  return Boolean(new Function('eq', `return ${script};`)(eq));
+  const contains = (list: readonly unknown[], item: unknown): boolean => list.some((entry) => eq(entry, item));
+  return Boolean(new Function('eq', 'contains', `return ${script};`)(eq, contains));
 }
 
 function ranJobs(context: Context): readonly string[] {
@@ -117,7 +122,7 @@ describe('the nightly run', () => {
     }
   });
 
-  it('posts to Slack when a scheduled run fails, and not when it passes, when a person started it, or when a release ran it', () => {
+  it('posts to Slack when a scheduled run fails or times out, and not when it passes, when a person cancelled or started it, or when a release ran it', () => {
     for (const { file, job, checks } of nightly) {
       const notify = jobs(read(file)).get('notify') ?? '';
       assert.match(notify, /^ {4}uses: \.\/\.github\/workflows\/notify-nightly-failure\.yml$/m, `${file} notifies Slack`);
@@ -126,12 +131,14 @@ describe('the nightly run', () => {
       const condition = /^ {4}if: (.+)$/m.exec(notify)![1]!;
       assert.deepEqual(
         [
-          evaluate(condition, { event: 'schedule', failed: true }),
-          evaluate(condition, { event: 'schedule', failed: false }),
-          evaluate(condition, { event: 'workflow_dispatch', failed: true }),
-          evaluate(condition, { event: 'release', failed: true }),
+          evaluate(condition, { event: 'schedule', needs: { [job]: 'failure' } }),
+          evaluate(condition, { event: 'schedule', needs: { [job]: 'cancelled' } }),
+          evaluate(condition, { event: 'schedule', needs: { [job]: 'success' } }),
+          evaluate(condition, { event: 'schedule', needs: { [job]: 'cancelled' }, cancelled: true }),
+          evaluate(condition, { event: 'workflow_dispatch', needs: { [job]: 'failure' } }),
+          evaluate(condition, { event: 'release', needs: { [job]: 'failure' } }),
         ],
-        [true, false, false, false],
+        [true, true, false, false, false, false],
         file,
       );
     }

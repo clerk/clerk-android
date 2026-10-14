@@ -23,6 +23,7 @@ jobs:
   integration-test:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
     steps:
       - name: Check that the integration tests have a key
         if: inputs.require_key
@@ -57,6 +58,7 @@ jobs:
           echo '{"with-email-codes":{"pk":"'"$CLERK_INTEGRATION_TEST_PK"'"}}' > .keys.json
 
       - name: Run integration tests
+        timeout-minutes: 20
         run: ./gradlew :source:api:testDebugUnitTest --tests "com.clerk.api.integration.*" --build-cache
 
       - name: Upload test results
@@ -71,7 +73,7 @@ jobs:
 
   notify:
     needs: integration-test
-    if: failure() && github.event_name == 'schedule'
+    if: ${{ !cancelled() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
     uses: ./.github/workflows/notify-nightly-failure.yml
     with:
       checks: integration tests

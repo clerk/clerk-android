@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Notify Slack
+        timeout-minutes: 3
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           CHECKS: ${{ inputs.checks }}

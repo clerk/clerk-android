@@ -12,6 +12,7 @@ jobs:
   verify:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -28,6 +29,7 @@ jobs:
 
       # ⬇️ replace :source:ui with your module path(s)
       - name: Verify Paparazzi snapshots
+        timeout-minutes: 20
         run: ./gradlew :source:ui:verifyPaparazziDebug --stacktrace
 
       # Upload HTML report + image diffs when verification fails
@@ -54,7 +56,7 @@ jobs:
 
   notify:
     needs: verify
-    if: failure() && github.event_name == 'schedule'
+    if: ${{ !cancelled() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
     uses: ./.github/workflows/notify-nightly-failure.yml
     with:
       checks: Paparazzi screenshot tests
