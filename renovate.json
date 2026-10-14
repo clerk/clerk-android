@@ -2,5 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "packageRules": [
+    {
+      "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",
+      "matchFileNames": ["e2e-tests/**"],
+      "enabled": false
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
 }

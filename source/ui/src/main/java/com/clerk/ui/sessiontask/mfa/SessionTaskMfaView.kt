@@ -50,7 +50,8 @@ internal fun SessionTaskMfaView(
   onAuthComplete: () -> Unit,
 ) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val flowStep by viewModel.flowStep.collectAsStateWithLifecycle()
+  val progress by viewModel.progress.collectAsStateWithLifecycle()
+  val flowStep = progress.stepFor(session?.id)
   val enrollmentInFlight = enrollmentInFlight(flowStep)
   var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
@@ -58,13 +59,12 @@ internal fun SessionTaskMfaView(
     if (session?.requiresForcedMfa == false && step.endsDoneTask(enrollmentInFlight)) {
       taskIsDone = true
     } else {
-      viewModel.setFlowStep(step)
+      viewModel.setFlowStep(session?.id, step)
     }
   }
 
   LaunchedEffect(session?.id, session?.requiresForcedMfa, enrollmentInFlight) {
-    viewModel.startSession(session?.id)
-    showStep(viewModel.flowStep.value)
+    showStep(viewModel.progress.value.stepFor(session?.id))
   }
   LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
   BackHandler(enabled = flowStep is FlowStep.BackupCodes) { showStep(FlowStep.ChooseMethod) }

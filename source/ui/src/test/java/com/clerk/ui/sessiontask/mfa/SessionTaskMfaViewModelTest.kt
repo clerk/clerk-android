@@ -9,19 +9,22 @@ import kotlin.test.assertEquals
 class SessionTaskMfaViewModelTest {
 
   @Test
-  fun flowStep_startsOnChooseMethod() {
+  fun progress_startsOnChooseMethod() {
     val viewModel = SessionTaskMfaViewModel()
 
-    assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
+    assertEquals(FlowStep.ChooseMethod, viewModel.progress.value.stepFor("sess_123"))
   }
 
   @Test
-  fun setFlowStep_updatesFlowStep() {
+  fun setFlowStep_updatesTheStepForItsSession() {
     val viewModel = SessionTaskMfaViewModel()
 
-    viewModel.setFlowStep(FlowStep.AddMfa(ViewType.AuthenticatorApp))
+    viewModel.setFlowStep("sess_123", FlowStep.AddMfa(ViewType.AuthenticatorApp))
 
-    assertEquals(FlowStep.AddMfa(ViewType.AuthenticatorApp), viewModel.flowStep.value)
+    assertEquals(
+      FlowStep.AddMfa(ViewType.AuthenticatorApp),
+      viewModel.progress.value.stepFor("sess_123"),
+    )
   }
 
   @Test
@@ -30,37 +33,35 @@ class SessionTaskMfaViewModelTest {
     val backupCodes =
       FlowStep.BackupCodes(codes = listOf("code-1", "code-2"), mfaType = MfaType.PhoneCode)
 
-    viewModel.setFlowStep(backupCodes)
+    viewModel.setFlowStep("sess_123", backupCodes)
 
-    assertEquals(backupCodes, viewModel.flowStep.value)
+    assertEquals(backupCodes, viewModel.progress.value.stepFor("sess_123"))
 
-    viewModel.setFlowStep(FlowStep.ChooseMethod)
+    viewModel.setFlowStep("sess_123", FlowStep.ChooseMethod)
 
-    assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
+    assertEquals(FlowStep.ChooseMethod, viewModel.progress.value.stepFor("sess_123"))
   }
 
   @Test
-  fun startSession_keepsFlowStepForTheSameSession() {
+  fun stepFor_isChooseMethodForAnotherSession() {
     val viewModel = SessionTaskMfaViewModel()
-    viewModel.startSession("sess_123")
-    viewModel.setFlowStep(FlowStep.AddPhoneNumber)
-
-    viewModel.startSession("sess_123")
-
-    assertEquals(FlowStep.AddPhoneNumber, viewModel.flowStep.value)
-  }
-
-  @Test
-  fun startSession_resetsFlowStepForAnotherSession() {
-    val viewModel = SessionTaskMfaViewModel()
-    viewModel.startSession("sess_123")
     viewModel.setFlowStep(
-      FlowStep.BackupCodes(codes = listOf("code-1"), mfaType = MfaType.PhoneCode)
+      "sess_123",
+      FlowStep.BackupCodes(codes = listOf("code-1"), mfaType = MfaType.PhoneCode),
     )
 
-    viewModel.startSession("sess_456")
+    assertEquals(FlowStep.ChooseMethod, viewModel.progress.value.stepFor("sess_456"))
+  }
 
-    assertEquals(FlowStep.ChooseMethod, viewModel.flowStep.value)
+  @Test
+  fun stepFor_isChooseMethodAfterSignOut() {
+    val viewModel = SessionTaskMfaViewModel()
+    viewModel.setFlowStep(
+      "sess_123",
+      FlowStep.BackupCodes(codes = listOf("code-1"), mfaType = MfaType.PhoneCode),
+    )
+
+    assertEquals(FlowStep.ChooseMethod, viewModel.progress.value.stepFor(null))
   }
 
   @Test
