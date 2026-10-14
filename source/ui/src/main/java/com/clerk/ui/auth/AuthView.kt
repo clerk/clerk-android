@@ -90,12 +90,17 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  *   attempt and transfers back to sign-in if the selected account already exists.
  * @param enableRestoreCredentials When `true`, the view uses
  *   [Google Play Restore Credentials](https://developer.android.com/identity/sign-in/restore-credentials)
- *   to keep users signed in when they move the app to a new Android device. When the start screen
- *   appears without a session, it silently tries the restore credential that device setup
- *   transferred and completes authentication with it; when there is none, the start screen works as
- *   usual. After the user signs in or signs up, it creates a restore credential in the background
- *   unless this device already has one for that user. Restore credentials are passkeys, so this
- *   needs passkeys enabled for the instance. The restore credential is cleared on sign-out.
+ *   to keep users signed in when they move the app to a new Android device. On the first launch
+ *   after the app is installed or restored onto a device, the start screen silently tries the
+ *   restore credential that device setup transferred and completes authentication with it; when
+ *   there is none, the start screen works as usual. Later launches never try it again, so a user
+ *   whose session ended (sign-out, revocation, or expiry) is not signed back in silently. After the
+ *   user signs in or signs up, the view creates a restore credential for them in the background
+ *   unless this device already holds theirs. A device holds one restore credential, which belongs
+ *   to the user who most recently signed in, and creating it replaces the passkey this device
+ *   created for the same user before. Restore credentials are passkeys named "Android restore key",
+ *   so this needs passkeys enabled as a first factor for the instance. Signing out through Clerk
+ *   deletes the device's restore credential.
  * @param unsafeMetadata Custom metadata to attach to users created by the prebuilt sign-up flow.
  *   This metadata is not validated by Clerk and should not contain sensitive information.
  * @param isDismissible When `true`, the auth start screen shows a close affordance.

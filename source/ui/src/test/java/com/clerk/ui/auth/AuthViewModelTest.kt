@@ -27,6 +27,7 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -228,8 +229,7 @@ class AuthViewModelTest {
   fun restoreCredentialSignInCompletesWithTheRestoredSignIn() = runTest {
     val signIn = SignIn(id = "sign_in_restored", status = SignIn.Status.COMPLETE)
     mockkObject(RestoreCredentials)
-    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
-      ClerkResult.success(signIn)
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } returns ClerkResult.success(signIn)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -243,7 +243,7 @@ class AuthViewModelTest {
   @Test
   fun restoreCredentialSignInWithoutACredentialStaysSilent() = runTest {
     mockkObject(RestoreCredentials)
-    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } returns
       ClerkResult.unknownFailure(noSavedCredential())
 
     viewModel.state.test {
@@ -255,13 +255,13 @@ class AuthViewModelTest {
       testDispatcher.scheduler.advanceUntilIdle()
       expectNoEvents()
     }
-    coVerify(exactly = 1) { RestoreCredentials.signInWithoutReportingFailures() }
+    coVerify(exactly = 1) { RestoreCredentials.signInOnFirstLaunch() }
   }
 
   @Test
   fun automaticPasskeySignInRunsAfterRestoreCredentialFindsNothing() = runTest {
     mockkObject(RestoreCredentials)
-    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } returns
       ClerkResult.unknownFailure(noSavedCredential())
     coEvery {
       auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
@@ -277,7 +277,7 @@ class AuthViewModelTest {
   @Test
   fun automaticPasskeySignInIsSkippedAfterRestoreCredentialSignsIn() = runTest {
     mockkObject(RestoreCredentials)
-    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } returns
       ClerkResult.success(SignIn(id = "sign_in_restored", status = SignIn.Status.COMPLETE))
 
     viewModel.startRestoreCredentialSignIn()
@@ -685,6 +685,37 @@ class AuthViewModelTest {
 
     coVerify(exactly = 1) { auth.signInWithGoogleOneTap(true) }
     coVerify(exactly = 1) { auth.signInWithOAuth(any(), true, any()) }
+  }
+
+  @Test
+  fun automaticPasskeySignInRunsAfterRestoreCredentialSignInIsCancelled() = runTest {
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } coAnswers { awaitCancellation() }
+    coEvery {
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
+    } returns ClerkResult.unknownFailure(noSavedCredential())
+
+    viewModel.startRestoreCredentialSignIn()
+    testDispatcher.scheduler.runCurrent()
+    viewModel.cancelAutomaticSignIn()
+    viewModel.startAutomaticPasskeySignIn()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true) }
+  }
+
+  @Test
+  fun cancellingAutomaticPasskeySignInWhileRestoreRunsSkipsThePasskeyPrompt() = runTest {
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInOnFirstLaunch() } coAnswers { awaitCancellation() }
+
+    viewModel.startRestoreCredentialSignIn()
+    viewModel.startAutomaticPasskeySignIn()
+    testDispatcher.scheduler.runCurrent()
+    viewModel.cancelAutomaticPasskeySignIn()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { auth.signInWithPasskey(any()) }
   }
 
   private fun noSavedCredential(): Throwable =
