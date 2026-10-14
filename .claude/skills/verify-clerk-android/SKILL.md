@@ -87,6 +87,7 @@ Input only goes through specs. A spec is a TypeScript file that uses the `host` 
 $ e2e-tests/bin/control-clerk-android run auth-start                     # one feature (specs/features/auth-start/)
 $ e2e-tests/bin/control-clerk-android run sign-up/complete               # one spec
 $ e2e-tests/bin/control-clerk-android run specs/explored/resend.e2e.ts   # a spec you wrote
+$ e2e-tests/bin/control-clerk-android run auth-start sign-up organizations  # several targets in one run, with one video
 $ e2e-tests/bin/control-clerk-android screen                             # the current UI tree with test tags
 $ e2e-tests/bin/control-clerk-android screen --png                       # plus a screenshot in .verify/scratch/
 ```
@@ -149,6 +150,8 @@ The specs under `specs/features/<feature>/` are committed and cover the Feature 
 
 For new work, write a spec under `specs/explored/`, which is gitignored and does not exist in a fresh worktree. Run it, read the screen it ended on with `screen`, and fix locators from that output until it passes. A failing spec prints `FAIL`, the first assertion message, and the path of its failure page, which lists every step, the screen tree at the failure, and a screenshot. `run` exits 1.
 
+Right after `up` the host has not been launched, and `screen` opens it without launch extras. The host then starts on the publishable key that `gradle.properties` builds in, not on this worktree's application, so the screen is not one a spec sees. To look at a real screen, first run a spec that launches the host and taps to it. When a node may be missing, assert `await expect(locator).toBeVisible()` before you tap it. That failure reads `observed: no node (match count 0)`, and a failed tap says only `LOCATOR_NOT_FOUND`.
+
 With `--retries`, a test that fails and then passes prints `flaky` and the error of its failed attempt, and a `flaky` line under the results counts such tests. `run.json` records the test as `flaky` with its `attempts`, never as passed, and `run` exits 0. The failure page of the failed attempt and the files of every attempt stay in the run directory. A test that fails on every attempt prints `FAIL`, and `run` exits 1.
 
 When the change adds or changes what the SDK does, the PR commits the spec into `specs/features/<feature>/`, with its settings file if it has one, and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a committed spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A committed spec sits one folder deeper, so its import of the fixture changes with the move:
@@ -177,7 +180,7 @@ Every `run` writes `.verify/runs/<run-id>/` and prints its path:
 | `screenshots/<label>.png` | Every `host.screenshot(label)` |
 | `app.log` | `adb logcat` lines from the run for `ClerkVerify`, `ClerkLog`, `OkHttp`, and `AndroidRuntime` errors. The host writes one `ClerkVerify` line each time its screen, user, session, or launch error changes, with the `launchId` that a failed `host.launch` names. No spec reads these lines. They are for diagnosing a failure that the screen does not explain |
 | `e2e/`, `e2e.log` | e2e's `report.json` and `junit.xml`, failure pages, and console output. A run with several groups has `e2e/`, `e2e-2/`, `e2e-3/` in the order they ran |
-| `driver/` | `summary.txt`, which says what agent-device state the run found and what it copied, and the part of agent-device's `daemon.log` that the run added. They are for a failure that the driver caused, such as a daemon that did not start |
+| `driver/` | `summary.txt`, which says what agent-device state the run found and what it copied, and the part of agent-device's `daemon.log` that the run added. The copy leaves out typed text. They are for a failure that the driver caused, such as a daemon that did not start |
 | `specs/` | A copy of every spec the run used, and of its settings file |
 
 Proof standards: drive the real user path. The video and the screenshots show the action and its result as a user sees them. Check side effects where the app shows them, such as the user ID on the home or the organization name on the switcher, not only that the last screen appeared.

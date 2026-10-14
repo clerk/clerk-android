@@ -2,6 +2,15 @@
 
 This directory is the maintained source for verifying the user-facing behavior of the clerk-android SDK UI (`source/ui`) through the `:e2e` host app. Read this index before driving the app, then use the matching feature file as the recipe. Every recipe runs through the `control-clerk-android` CLI and the specs under `specs/features/<feature>/`. Run its commands from the repo root. Paths that begin `specs/` are inside `e2e-tests/`.
 
+## Baseline preconditions
+
+`SKILL.md` under Launch has the setup and the commands. These facts hold for every recipe here.
+
+- The standard settings have every auth method and signed-in feature that these recipes use. The `settings` check of `doctor` compares the live instance with the standard file once the worktree holds an application.
+- Every launch gets a new `verifyStorageScope`, so no spec inherits a session from another spec. A launch with `keepStorage: true` reuses the scope of the launch before it in the same test.
+- `down` deletes this worktree's application, and with it every user and organization a run created, including users created through the sign-up form.
+- The AuthView that `Sign in` opens takes the place of the home, so the home is readable only after AuthView has closed.
+
 ## Test users and sign-in
 
 Clerk's test mode makes all of this safe to type into the real app.
@@ -30,6 +39,17 @@ Clerk's test mode makes all of this safe to type into the real app.
 The names come from `source/ui/src/main/java/com/clerk/ui/ClerkTestTags.kt`. They are internal test hooks and may change.
 
 On the standard instance an email sign-in for a user with no password goes straight to the email code screen ("Check your email"). The email link is off there. For a phone sign-in, tap `clerk.auth.start.identifierSwitcher`, fill `clerk.auth.start.phoneNumber` with the ten digits of the seeded user's phone, and continue. A user with a password sees the password screen first and reaches the SMS code through `Use another method`. For sign-up, launch with `authMode: 'signUp'`, fill the email from `host.newEmail()` into `clerk.auth.start.identifier`, continue, fill the run password into `clerk.auth.signUp.password`, continue, then type the code into `clerk.auth.signUp.code`.
+
+## Driving conventions
+
+- Input reaches the app only through specs. To look at any screen past launch, write a spec, `run` it, then run `screen`.
+- Prefer SDK test tags (`screen.getByTestId('clerk....')`) and the locators of the home in `host.app`. Fall back to visible text only where nothing is tagged.
+
+## Proof
+
+- A proof is a passing `run` whose run directory holds `video.mp4`, `screenshots/`, `app.log`, and `e2e/report.json`.
+- Name the run id and the specs in the PR. Attach with `e2e-tests/bin/control-clerk-android attach <run-id> --pr <n>` and `--screenshot <label>` for a still change or `--video` for behavior or a flow. Add `--before <run-id>` when the change is to something that exists. `SKILL.md` has the choice under Evidence.
+- Report an unreachable path with the attempted command and the unmet precondition.
 
 ## Feature entry contract
 

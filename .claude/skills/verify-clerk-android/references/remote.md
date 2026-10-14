@@ -20,8 +20,8 @@ The check reads files and runs no tool. When something is missing, the `backend`
 - Node 24, at 24.8.0 or newer. On any other Node the CLI reruns itself under `node@24` through `npx` and says so.
 - A pushed branch that holds `.github/workflows/verify-remote.yml`.
 - A GitHub token that may dispatch that workflow. The CLI takes the token from `GH_TOKEN`, then `GITHUB_TOKEN`, then `gh auth token`.
-- Network access to `*.trycloudflare.com`, `api.clerk.com`, and `*.clerk.accounts.dev`.
-- The Platform API credential, as for a local lane.
+- Network access to `api.github.com`, `*.trycloudflare.com`, `api.clerk.com`, and `*.clerk.accounts.dev`.
+- The Platform API credential, as for a local lane. In a cloud environment, add an API credential for `api.clerk.com` with path prefix `/v1/platform/`. The environment then adds the key after a request leaves the machine, and no key is ever in the session.
 
 It needs no Android SDK, no JDK, and no `adb`.
 
@@ -43,7 +43,11 @@ Without it, `doctor` reports `gh-attach` with its fix, and `attach` hands the ev
 
 REST starts, reads, and ends sessions. `git push` gets a commit you make to GitHub so the session can build it. Without push access you can still verify any commit GitHub already has.
 
-Node ignores `HTTPS_PROXY` unless told to honor it, so the CLI decides: it goes through the proxy when the direct path to GitHub does not work, and reruns itself with the proxy in effect for itself, e2e, and agent-device. `doctor`'s `remote-env` line says which path it took and why.
+Node ignores `HTTPS_PROXY` unless told to honor it, so the CLI decides: it goes through the proxy when the direct path to GitHub does not work or GitHub rejects this machine's token on it, and reruns itself with the proxy in effect for itself, e2e, and agent-device. `doctor`'s `remote-env` line says which path it took and why.
+
+A host that the environment blocks shows in `doctor` as `blocked:` and what answered. The fix is to add the host to the allowed domains of the environment that the CLI runs in.
+
+Claude Code cloud sessions are one example of a sandbox where REST and `git push` differ. REST there uses the session user's own access. `git push` needs the Claude GitHub App installed on the repository, and a 403 on push means that it is not. The sandbox's `GH_TOKEN` is a placeholder that only the sandbox's proxy turns into a real credential, so GitHub rejects it on a direct connection and the CLI goes through the proxy.
 
 ## Builds
 
