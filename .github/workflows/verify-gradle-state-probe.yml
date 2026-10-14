@@ -73,7 +73,7 @@ jobs:
                 project) unpack project "$PWD" ;;
               esac
             done
-            echo "$(date +%s) // probe" >> "$EDIT"
+            echo "// probe $(date +%s)" >> "$EDIT"
             build "edit-with-$(echo "$set" | tr ' ' '+')"
           done
 
