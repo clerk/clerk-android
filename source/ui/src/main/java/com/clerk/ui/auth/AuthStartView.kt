@@ -66,6 +66,7 @@ internal fun AuthStartView(
   logo: (@Composable () -> Unit)? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  enableRestoreCredentials: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
@@ -75,6 +76,7 @@ internal fun AuthStartView(
       modifier = modifier.clerkTestTagsAsResourceIds(),
       preferGoogleOneTap = preferGoogleOneTap,
       startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      enableRestoreCredentials = enableRestoreCredentials,
       isDismissible = isDismissible,
       onDismiss = onDismiss,
       onAuthComplete = onAuthComplete,
@@ -92,6 +94,7 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  enableRestoreCredentials: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
@@ -152,6 +155,24 @@ internal fun AuthStartViewImpl(
   val dismissHandler = rememberDismissHandler(onDismiss)
   val lockedInitialIdentifierIsActive =
     authState.authStartIdentifierLocked || authState.authStartPhoneNumberLocked
+  val restoreCredentialSignInIsEnabled =
+    shouldStartRestoreCredentialSignIn(
+      restoreCredentialsAreEnabled = enableRestoreCredentials,
+      authMode = authState.mode,
+      lockedInitialIdentifierIsActive = lockedInitialIdentifierIsActive,
+      restoreCredentialSignInConfigIsEnabled =
+        authViewHelper.restoreCredentialSignInConfigIsEnabled,
+      hasSession = Clerk.session != null,
+    )
+  var restoreCredentialSignInHasStarted by rememberSaveable { mutableStateOf(false) }
+
+  LaunchedEffect(restoreCredentialSignInIsEnabled) {
+    if (restoreCredentialSignInIsEnabled && !restoreCredentialSignInHasStarted) {
+      restoreCredentialSignInHasStarted = true
+      authStartViewModel.startRestoreCredentialSignIn()
+    }
+  }
+
   val passkeySignInConfigIsEnabled = authViewHelper.passkeySignInConfigIsEnabled
   val automaticPasskeySignInIsEnabled =
     shouldStartAutomaticPasskeySignIn(
@@ -189,7 +210,7 @@ internal fun AuthStartViewImpl(
   }
 
   DisposableEffect(authStartViewModel) {
-    onDispose { authStartViewModel.cancelAutomaticPasskeySignIn() }
+    onDispose { authStartViewModel.cancelAutomaticSignIn() }
   }
 
   val signInWithBiometricsTitle = stringResource(R.string.sign_in_with_biometrics)

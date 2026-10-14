@@ -9,6 +9,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.authenticateWithEnterpriseSso
 import com.clerk.api.signup.SignUp
@@ -221,6 +222,69 @@ class AuthViewModelTest {
 
       assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), awaitItem())
     }
+  }
+
+  @Test
+  fun restoreCredentialSignInCompletesWithTheRestoredSignIn() = runTest {
+    val signIn = SignIn(id = "sign_in_restored", status = SignIn.Status.COMPLETE)
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+      ClerkResult.success(signIn)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startRestoreCredentialSignIn()
+
+      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
+    }
+  }
+
+  @Test
+  fun restoreCredentialSignInWithoutACredentialStaysSilent() = runTest {
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+      ClerkResult.unknownFailure(noSavedCredential())
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startRestoreCredentialSignIn()
+      viewModel.startRestoreCredentialSignIn()
+
+      testDispatcher.scheduler.advanceUntilIdle()
+      expectNoEvents()
+    }
+    coVerify(exactly = 1) { RestoreCredentials.signInWithoutReportingFailures() }
+  }
+
+  @Test
+  fun automaticPasskeySignInRunsAfterRestoreCredentialFindsNothing() = runTest {
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+      ClerkResult.unknownFailure(noSavedCredential())
+    coEvery {
+      auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
+    } returns ClerkResult.unknownFailure(noSavedCredential())
+
+    viewModel.startRestoreCredentialSignIn()
+    viewModel.startAutomaticPasskeySignIn()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true) }
+  }
+
+  @Test
+  fun automaticPasskeySignInIsSkippedAfterRestoreCredentialSignsIn() = runTest {
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.signInWithoutReportingFailures() } returns
+      ClerkResult.success(SignIn(id = "sign_in_restored", status = SignIn.Status.COMPLETE))
+
+    viewModel.startRestoreCredentialSignIn()
+    viewModel.startAutomaticPasskeySignIn()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { auth.signInWithPasskey(any()) }
   }
 
   @Test
@@ -622,4 +686,9 @@ class AuthViewModelTest {
     coVerify(exactly = 1) { auth.signInWithGoogleOneTap(true) }
     coVerify(exactly = 1) { auth.signInWithOAuth(any(), true, any()) }
   }
+
+  private fun noSavedCredential(): Throwable =
+    Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoSavedCredential")
+      .getDeclaredConstructor()
+      .newInstance() as Throwable
 }
