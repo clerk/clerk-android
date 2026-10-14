@@ -97,6 +97,14 @@ internal class AuthState(
   val authStartPhoneNumberLocked: Boolean
     get() = lockPrefilledFields && initialPhoneNumberWasPrefilled
 
+  fun clearAuthStartField(phoneNumberField: Boolean) {
+    if (phoneNumberField) {
+      if (!authStartPhoneNumberLocked) authStartPhoneNumber = ""
+    } else {
+      if (!authStartIdentifierLocked) authStartIdentifier = ""
+    }
+  }
+
   val signUpFirstNameLocked: Boolean
     get() = lockPrefilledFields && initialFirstNameWasPrefilled
 

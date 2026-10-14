@@ -180,6 +180,35 @@ class AuthStateConfigurationTest {
     assertEquals(version, authState.identifierConfigVersion)
   }
 
+  @Test
+  fun clearAuthStartFieldClearsOnlyTheFieldBeingLeft() {
+    val authState = createAuthState()
+    authState.authStartIdentifier = "user@example.com"
+    authState.authStartPhoneNumber = "+15555550100"
+
+    authState.clearAuthStartField(phoneNumberField = false)
+
+    assertEquals("", authState.authStartIdentifier)
+    assertEquals("+15555550100", authState.authStartPhoneNumber)
+
+    authState.clearAuthStartField(phoneNumberField = true)
+
+    assertEquals("", authState.authStartPhoneNumber)
+  }
+
+  @Test
+  fun clearAuthStartFieldKeepsALockedPrefilledIdentifier() {
+    val authState =
+      createAuthState(
+        identifierConfig =
+          AuthIdentifierConfig(initialIdentifier = "locked@example.com", lockPrefilledFields = true)
+      )
+
+    authState.clearAuthStartField(phoneNumberField = false)
+
+    assertEquals("locked@example.com", authState.authStartIdentifier)
+  }
+
   private fun createAuthState(
     sharedPreferences: SharedPreferences = authPreferences(),
     identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),

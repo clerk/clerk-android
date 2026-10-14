@@ -299,7 +299,10 @@ internal fun AuthStartViewImpl(
             ClerkTextButton(
               modifier = Modifier.testTag(ClerkTestTags.Auth.Start.identifierSwitcherButton),
               text = authViewHelper.identifierSwitcherString(phoneActive),
-              onClick = { phoneActive = !phoneActive },
+              onClick = {
+                authState.clearAuthStartField(phoneNumberField = phoneActive)
+                phoneActive = !phoneActive
+              },
             )
           }
         }
