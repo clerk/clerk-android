@@ -114,12 +114,13 @@ describe('the clerk-android host with a remote device', () => {
     const device = sessionDevice({ id: 'emulator-5560', platform: 'android' });
     const line = (command: { command: string; args: readonly string[] }) => `${command.command} ${command.args.join(' ')}`;
 
-    it('assembles the e2e host, waits for the emulator, then installs the debug APK it built', () => {
+    it('builds or takes the stored e2e APK, waits for the emulator, then installs the APK the build step handed over', () => {
       const steps = device.build('/work');
-      assert.deepEqual(steps.map((step) => step.command), ['./gradlew', 'sh', 'adb']);
-      assert.deepEqual(steps[0]!.args, [':e2e:assembleDebug', '--console=plain', '--quiet']);
+      assert.deepEqual(steps.map((step) => step.command), [process.execPath, 'sh', 'adb']);
+      assert.deepEqual(steps[0]!.args, [join(PACKAGE_DIR, 'src', 'platform', 'android', 'session-build.ts'), 'build', '/work']);
+      assert.equal(steps[0]!.cwd, `${join(PACKAGE_DIR, '..')}/`);
       assert.equal(steps[1]!.args.at(-1), '/work');
-      assert.equal(line(steps[2]!), 'adb -s emulator-5560 install -r -t e2e/build/outputs/apk/debug/e2e-debug.apk');
+      assert.equal(line(steps[2]!), 'adb -s emulator-5560 install -r -t /work/e2e-debug.apk');
     });
 
     it('lets a patch change exactly the paths the CLI sends from the tree', () => {
