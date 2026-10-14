@@ -2,13 +2,19 @@ name: Integration Tests
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      require_key:
+        description: Fail when CLERK_INTEGRATION_TEST_PK is empty, instead of skipping every test.
+        required: false
+        type: boolean
+        default: false
     secrets:
       CLERK_INTEGRATION_TEST_PK:
         required: true
       SLACK_WEBHOOK_URL:
         required: false
   schedule:
-    - cron: "0 7 * * *"
+    - cron: "17 7 * * *"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [ "main" ]
@@ -23,6 +29,16 @@ jobs:
     if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (github.event_name != 'schedule' || github.repository == 'clerk/clerk-android')
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
+      - name: Check that the integration tests have a key
+        if: inputs.require_key
+        env:
+          CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
+        run: |
+          if [ -z "$CLERK_INTEGRATION_TEST_PK" ]; then
+            echo "::error title=Integration tests::The CLERK_INTEGRATION_TEST_PK secret is empty, so every integration test would be skipped."
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
 
       - name: Set up JDK 21

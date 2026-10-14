@@ -65,6 +65,8 @@ jobs:
 
   integration-test:
     uses: ./.github/workflows/integration-test.yml
+    with:
+      require_key: true
     secrets:
       CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
 

@@ -16,6 +16,7 @@ interface Context {
   readonly draft?: boolean;
   readonly failed?: boolean;
   readonly needs?: Readonly<Record<string, string>>;
+  readonly inputs?: Readonly<Record<string, boolean>>;
 }
 
 function triggers(workflow: string): string {
@@ -41,6 +42,8 @@ function evaluate(condition: string, context: Context): boolean {
     if (path === 'github.event.pull_request.draft') return context.event === 'pull_request' ? (context.draft ?? false) : null;
     const need = /^needs\.([\w-]+)\.result$/.exec(path);
     if (need) return context.needs?.[need[1]!] ?? '';
+    const input = /^inputs\.(\w+)$/.exec(path);
+    if (input) return context.inputs?.[input[1]!] ?? null;
     throw new Error(`no value for ${path} in ${condition}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
@@ -48,7 +51,7 @@ function evaluate(condition: string, context: Context): boolean {
     .replaceAll('failure()', String(context.failed ?? false))
     .replaceAll('always()', 'true')
     .replaceAll(/'([^']*)'/g, (_, text: string) => JSON.stringify(text))
-    .replaceAll(/\b(?:github|needs)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
+    .replaceAll(/\b(?:github|needs|inputs)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
   return Boolean(new Function('eq', `return ${script};`)(eq));
 }
@@ -103,9 +106,9 @@ describe('the nightly run', () => {
     { file: 'paparazzi-verify.yml', job: 'verify', checks: 'Paparazzi screenshot tests' },
   ];
 
-  it('runs the integration tests and the Paparazzi screenshot tests at 07:00 UTC in clerk/clerk-android, and nothing in a fork', () => {
+  it('runs the integration tests and the Paparazzi screenshot tests at 07:17 UTC in clerk/clerk-android, and nothing in a fork', () => {
     for (const { file, job } of nightly) {
-      assert.match(triggers(read(file)), /^ {2}schedule:\n {4}- cron: "0 7 \* \* \*"$/m, `${file} runs at 07:00 UTC`);
+      assert.match(triggers(read(file)), /^ {2}schedule:\n {4}- cron: "17 7 \* \* \*"$/m, `${file} runs at 07:17 UTC`);
       const condition = /^ {4}if: (.+)$/m.exec(jobs(read(file)).get(job) ?? '')?.[1] ?? 'true';
       assert.deepEqual(
         [evaluate(condition, { event: 'schedule' }), evaluate(condition, { event: 'schedule', repository: 'someone/clerk-android' })],
@@ -181,10 +184,39 @@ describe('the Slack message about a failed nightly run', () => {
 describe('a release', () => {
   const release = jobs(read('manual-release.yml'));
 
-  it('runs the integration tests with only the key they need', () => {
+  const integration = jobs(read('integration-test.yml')).get('integration-test') ?? '';
+  const keyCheck = integration.split(/\n(?= {6}- )/).find((step) => step.includes('- name: Check that the integration tests have a key')) ?? '';
+
+  it('runs the integration tests with only the key they need, and asks them to require it', () => {
     assert.equal(
       release.get('integration-test'),
-      '  integration-test:\n    uses: ./.github/workflows/integration-test.yml\n    secrets:\n      CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}\n',
+      '  integration-test:\n    uses: ./.github/workflows/integration-test.yml\n    with:\n      require_key: true\n    secrets:\n      CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}\n',
+    );
+  });
+
+  it('runs the integration test job whether a published release or a person started the release workflow', () => {
+    const condition = /^ {4}if: (.+)$/m.exec(integration)?.[1] ?? 'true';
+    assert.deepEqual([evaluate(condition, { event: 'release' }), evaluate(condition, { event: 'workflow_dispatch' })], [true, true]);
+  });
+
+  it('fails the integration tests when the release passes an empty key, instead of passing with every test skipped', () => {
+    const condition = /^ {8}if: (.+)$/m.exec(keyCheck)?.[1] ?? 'false';
+    const required = /^ {6}require_key: (true|false)$/m.exec(release.get('integration-test') ?? '')?.[1] === 'true';
+    assert.deepEqual(
+      [evaluate(condition, { event: 'release', inputs: { require_key: required } }), evaluate(condition, { event: 'schedule' }), evaluate(condition, { event: 'pull_request' })],
+      [true, false, false],
+    );
+    const script = keyCheck.slice(keyCheck.indexOf('run: |') + 'run: |'.length).split('\n').map((line) => line.trim()).join('\n');
+    const checked = (key: string) => {
+      const ran = spawnSync('bash', ['-e', '-c', script], { env: { PATH: process.env.PATH, CLERK_INTEGRATION_TEST_PK: key }, encoding: 'utf8', timeout: 20_000 });
+      return { status: ran.status, stdout: ran.stdout };
+    };
+    assert.deepEqual(
+      [checked(''), checked('pk_test_Y2xlcmsuZXhhbXBsZS5jb20k')],
+      [
+        { status: 1, stdout: '::error title=Integration tests::The CLERK_INTEGRATION_TEST_PK secret is empty, so every integration test would be skipped.\n' },
+        { status: 0, stdout: '' },
+      ],
     );
   });
 
