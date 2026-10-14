@@ -177,6 +177,22 @@ class SignOutServiceTest {
   }
 
   @Test
+  fun `signOut forgets which user this device has a restore credential for`() = runTest {
+    setupActiveSession()
+    Clerk.applicationContext = WeakReference(context)
+    val credentialManager = mockk<RestoreCredentialManager>()
+    coEvery { credentialManager.clearCredentialState(any(), any()) } just runs
+    RestoreCredentials.credentialManager = credentialManager
+    StorageHelper.saveValue(StorageKey.RESTORE_CREDENTIAL_USER_ID, "user_1")
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    assertNull(StorageHelper.loadValue(StorageKey.RESTORE_CREDENTIAL_USER_ID))
+  }
+
+  @Test
   fun `signOut clears session and user state on successful sign-out`() = runTest {
     setupActiveSession()
 

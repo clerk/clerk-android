@@ -1,6 +1,7 @@
 package com.clerk.api.restorecredentials
 
 import android.os.Build
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CreateRestoreCredentialRequest
@@ -14,6 +15,7 @@ import androidx.credentials.exceptions.restorecredential.E2eeUnavailableExceptio
 import com.clerk.api.Clerk
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.Strategy
+import com.clerk.api.auth.withoutAuthErrorReporting
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyCreateCredentialFailure
 import com.clerk.api.credentials.classifyGetCredentialFailure
@@ -23,6 +25,8 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
+import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -51,11 +55,11 @@ public object RestoreCredentials {
     isCloudBackupEnabled: Boolean = true
   ): ClerkResult<Unit, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
-    if (Clerk.activeSession == null || Clerk.user == null) {
-      return ClerkResult.unknownFailure(
-        IllegalStateException("A signed-in user is required to create a restore credential.")
-      )
-    }
+    val userId =
+      Clerk.user?.id?.takeIf { Clerk.activeSession != null }
+        ?: return ClerkResult.unknownFailure(
+          IllegalStateException("A signed-in user is required to create a restore credential.")
+        )
     val context =
       Clerk.applicationContext?.get()
         ?: return ClerkResult.unknownFailure(
@@ -92,11 +96,36 @@ public object RestoreCredentials {
               publicKeyCredential = response.responseJson,
             )
         ) {
-          is ClerkResult.Success -> ClerkResult.success(Unit)
+          is ClerkResult.Success -> {
+            RestoreCredentialOwner.userId = userId
+            ClerkResult.success(Unit)
+          }
           is ClerkResult.Failure -> verificationResult
         }
       }
     }
+  }
+
+  /**
+   * Creates a restore credential for the current signed-in user unless this device already holds
+   * one for them.
+   *
+   * Every [create] registers a new passkey on the user's account, so this skips users who already
+   * have a restore credential on this device, from [create] or [signIn], until [clear] removes it.
+   * It also skips instances that do not have passkeys enabled.
+   */
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public suspend fun createIfMissing(): ClerkResult<Unit, ClerkErrorResponse> {
+    if (!Clerk.passkeyIsEnabled) {
+      ClerkLogger.d("Skipping restore credential creation: passkeys are disabled.")
+      return ClerkResult.success(Unit)
+    }
+    val userId = Clerk.user?.id
+    if (userId != null && userId == RestoreCredentialOwner.userId) {
+      ClerkLogger.d("Skipping restore credential creation: this device already has one.")
+      return ClerkResult.success(Unit)
+    }
+    return create()
   }
 
   /**
@@ -107,6 +136,16 @@ public object RestoreCredentials {
    */
   public suspend fun signIn(): ClerkResult<SignIn, ClerkErrorResponse> =
     Clerk.auth.reportingFailures { signInWithRestoreCredential() }
+
+  /**
+   * Runs [signIn] without emitting [com.clerk.api.auth.AuthEvent.Error] when it fails, for callers
+   * that try it on their own and fall back to their sign-in UI without telling the user.
+   */
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public suspend fun signInWithoutReportingFailures(): ClerkResult<SignIn, ClerkErrorResponse> =
+    withoutAuthErrorReporting {
+      signInWithRestoreCredential()
+    }
 
   private suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
@@ -144,6 +183,7 @@ public object RestoreCredentials {
 
   /** Deletes the app's restore credential from this device and its cloud backup. */
   public suspend fun clear(): ClerkResult<Unit, ClerkErrorResponse> {
+    RestoreCredentialOwner.userId = null
     if (!isSupportedAndroidVersion) return ClerkResult.success(Unit)
     val context =
       Clerk.applicationContext?.get()
@@ -209,9 +249,11 @@ public object RestoreCredentials {
           )
           .also { clearSignInAttempt(signIn) }
       } else {
-        signIn.attemptFirstFactor(
-          SignIn.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
-        )
+        signIn
+          .attemptFirstFactor(
+            SignIn.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
+          )
+          .also { if (it is ClerkResult.Success) RestoreCredentialOwner.rememberUserOf(it.value) }
       }
     } catch (e: GetCredentialException) {
       ClerkLogger.d("Restore credential sign-in is unavailable: ${e.message}")
@@ -237,5 +279,23 @@ public object RestoreCredentials {
 
   private fun <T : Any> unsupportedPlatformFailure(): ClerkResult<T, ClerkErrorResponse> {
     return ClerkResult.unknownFailure(CredentialFlowException.ProviderUnavailable())
+  }
+}
+
+private object RestoreCredentialOwner {
+  var userId: String?
+    get() = StorageHelper.loadValue(StorageKey.RESTORE_CREDENTIAL_USER_ID)
+    set(value) {
+      if (value == null) {
+        StorageHelper.deleteValue(StorageKey.RESTORE_CREDENTIAL_USER_ID)
+      } else {
+        StorageHelper.saveValue(StorageKey.RESTORE_CREDENTIAL_USER_ID, value)
+      }
+    }
+
+  fun rememberUserOf(signIn: SignIn) {
+    if (signIn.status != SignIn.Status.COMPLETE) return
+    val session = Clerk.sessionsFlow.value.firstOrNull { it.id == signIn.createdSessionId }
+    userId = session?.user?.id ?: return
   }
 }

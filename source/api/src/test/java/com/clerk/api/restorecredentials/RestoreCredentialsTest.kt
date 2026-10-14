@@ -21,6 +21,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
+import com.clerk.api.storage.StorageHelper
 import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -70,8 +71,10 @@ class RestoreCredentialsTest {
       )
 
     Clerk.stateStore.reset()
+    StorageHelper.reset(context)
     mockkObject(Clerk)
     every { Clerk.applicationContext } returns WeakReference(context)
+    every { Clerk.passkeyIsEnabled } returns true
     every { Clerk.activeSession } returns session
     every { Clerk.session } returns session
     every { Clerk.user } returns mockk<User>(relaxed = true)
@@ -89,6 +92,7 @@ class RestoreCredentialsTest {
   fun tearDown() {
     unmockkAll()
     Clerk.stateStore.reset()
+    StorageHelper.reset(context)
     RestoreCredentials.credentialManager = RestoreCredentialManagerImpl()
   }
 
@@ -300,6 +304,104 @@ class RestoreCredentialsTest {
       throwable?.message,
     )
     coVerify(exactly = 0) { userApi.createPasskey(any()) }
+  }
+
+  @Test
+  fun `createIfMissing creates one restore credential per user on this device`() = runTest {
+    signedInAs("user_1")
+    stubSuccessfulCreate()
+
+    val first = RestoreCredentials.createIfMissing()
+    val second = RestoreCredentials.createIfMissing()
+
+    assertTrue(first is ClerkResult.Success)
+    assertTrue(second is ClerkResult.Success)
+    coVerify(exactly = 1) { userApi.createPasskey(any()) }
+  }
+
+  @Test
+  fun `createIfMissing creates a restore credential for a different user`() = runTest {
+    stubSuccessfulCreate()
+
+    signedInAs("user_1")
+    RestoreCredentials.createIfMissing()
+    signedInAs("user_2")
+    RestoreCredentials.createIfMissing()
+
+    coVerify(exactly = 2) { userApi.createPasskey(any()) }
+  }
+
+  @Test
+  fun `createIfMissing skips instances without passkeys`() = runTest {
+    signedInAs("user_1")
+    every { Clerk.passkeyIsEnabled } returns false
+
+    val result = RestoreCredentials.createIfMissing()
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 0) { userApi.createPasskey(any()) }
+    coVerify(exactly = 0) { credentialManager.createCredential(any(), any()) }
+  }
+
+  @Test
+  fun `createIfMissing skips the user who signed in with the restore credential`() = runTest {
+    every { Clerk.activeSession } returns null
+    every { Clerk.session } returns null
+    every { Clerk.user } returns null
+    val restoredSession =
+      mockk<Session> {
+        every { id } returns "session_restored"
+        every { user } returns mockk<User> { every { id } returns "user_1" }
+      }
+    every { Clerk.sessionsFlow } returns MutableStateFlow(listOf(restoredSession))
+    val restoreCredential = mockk<RestoreCredential>()
+    every { restoreCredential.authenticationResponseJson } returns AUTHENTICATION_RESPONSE_JSON
+    val pendingSignIn = pendingSignIn()
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(pendingSignIn)
+    coEvery { credentialManager.getCredential(eq(context), any()) } returns
+      GetCredentialResponse(restoreCredential)
+    coEvery { signInApi.attemptFirstFactor(pendingSignIn.id, any()) } returns
+      ClerkResult.success(
+        SignIn(
+          id = pendingSignIn.id,
+          status = SignIn.Status.COMPLETE,
+          createdSessionId = "session_restored",
+        )
+      )
+    stubSuccessfulCreate()
+
+    RestoreCredentials.signInWithoutReportingFailures()
+    every { Clerk.activeSession } returns session
+    signedInAs("user_1")
+    RestoreCredentials.createIfMissing()
+
+    coVerify(exactly = 0) { userApi.createPasskey(any()) }
+  }
+
+  @Test
+  fun `clear lets the next createIfMissing create a restore credential again`() = runTest {
+    signedInAs("user_1")
+    stubSuccessfulCreate()
+    coEvery { credentialManager.clearCredentialState(eq(context), any()) } returns Unit
+
+    RestoreCredentials.createIfMissing()
+    RestoreCredentials.clear()
+    RestoreCredentials.createIfMissing()
+
+    coVerify(exactly = 2) { userApi.createPasskey(any()) }
+  }
+
+  private fun signedInAs(userId: String) {
+    every { Clerk.user } returns mockk<User>(relaxed = true) { every { id } returns userId }
+  }
+
+  private fun stubSuccessfulCreate() {
+    val preparedPasskey = preparedPasskey()
+    coEvery { userApi.createPasskey(any()) } returns ClerkResult.success(preparedPasskey)
+    coEvery { credentialManager.createCredential(eq(context), any()) } returns
+      CreateRestoreCredentialResponse(REGISTRATION_RESPONSE_JSON)
+    coEvery { userApi.attemptPasskeyVerification(any(), any(), any(), any()) } returns
+      ClerkResult.success(preparedPasskey)
   }
 
   private suspend fun assertCancels(block: suspend () -> ClerkResult<*, *>): CancellationException {

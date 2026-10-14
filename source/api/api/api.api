@@ -4537,7 +4537,9 @@ public final class com/clerk/api/restorecredentials/RestoreCredentials {
 	public final fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun create (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun create$default (Lcom/clerk/api/restorecredentials/RestoreCredentials;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createIfMissing (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun signIn (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun signInWithoutReportingFailures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/clerk/api/session/GetTokenOptions {
