@@ -120,9 +120,9 @@ jobs:
             nohup node "$PACKAGE/src/core/remote/session-agent.ts" serve > "$WORK/agent.log" 2>&1 &
           disown
           for _ in $(seq 1 150); do
+            sleep 1
             [ -s "$WORK/tunnel" ] && break
             pgrep -f 'session-agent.ts serve' > /dev/null || { echo "::error::the session agent ended before a tunnel came up"; break; }
-            sleep 1
           done
           [ -s "$WORK/tunnel" ] || { echo "::error::no tunnel came up"; tail -n 20 "$WORK/agent.log" "$WORK/tunnel.log" || true; exit 1; }
           echo "host=$(cat "$WORK/tunnel")" >> "$GITHUB_OUTPUT"
