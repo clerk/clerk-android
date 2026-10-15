@@ -5,6 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.OrganizationCreationDefaults
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.PublicOrganizationData
 import com.clerk.api.organizations.UserOrganizationInvitation
@@ -30,6 +31,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -254,6 +256,51 @@ class OrganizationAccountListViewModelTest {
     val state = viewModel.state.value
     assertEquals(listOf(accepted), state.suggestions)
     assertNull(state.activeActionId)
+  }
+
+  @Test
+  fun `an older load finishing after a newer one does not overwrite it`() = runTest {
+    val user = user()
+    val olderMemberships =
+      CompletableDeferred<
+        ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
+      >()
+    var membershipRequests = 0
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } coAnswers
+      {
+        membershipRequests += 1
+        if (membershipRequests == 1) {
+          olderMemberships.await()
+        } else {
+          ClerkResult.success(
+            ClerkPaginatedResponse(data = listOf(membership("org_new")), totalCount = 1)
+          )
+        }
+      }
+    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      user.getOrganizationSuggestions(
+        limit = 2,
+        offset = 0,
+        statuses = listOf("pending", "accepted"),
+      )
+    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = testViewModel(user = user)
+    viewModel.load()
+    viewModel.reset()
+    viewModel.load()
+    olderMemberships.complete(
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = listOf(membership("org_old")), totalCount = 1)
+      )
+    )
+
+    assertEquals(
+      listOf("org_new"),
+      viewModel.state.value.memberships.map { it.organization.id },
+    )
   }
 
   private fun testViewModel(

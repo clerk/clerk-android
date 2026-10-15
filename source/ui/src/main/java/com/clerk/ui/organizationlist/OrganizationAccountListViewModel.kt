@@ -23,6 +23,7 @@ import com.clerk.api.user.getOrganizationSuggestions
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +40,11 @@ internal open class OrganizationAccountListViewModel(
   protected val mutableState = MutableStateFlow(OrganizationAccountListState())
   val state = mutableState.asStateFlow()
 
+  private var loadJob: Job? = null
+
   fun load() {
     if (mutableState.value.initialLoadAttempted) return
+    loadJob?.cancel()
 
     val user = currentUser()
     if (user == null) {
@@ -57,31 +61,32 @@ internal open class OrganizationAccountListViewModel(
         canCreateOrganization = user.createOrganizationEnabled == true,
       )
 
-    viewModelScope.launch(workDispatcher) {
-      val loadResult = loadInitialResources(user)
-      withContext(Dispatchers.Main) {
-        when (loadResult) {
-          is InitialLoadResult.Success -> {
-            mutableState.value =
-              mutableState.value.copy(
-                isLoading = false,
-                memberships = loadResult.memberships.data,
-                membershipsTotalCount = loadResult.memberships.totalCount,
-                invitations = loadResult.invitations.data,
-                invitationsTotalCount = loadResult.invitations.totalCount,
-                suggestions = loadResult.suggestions.data,
-                suggestionsTotalCount = loadResult.suggestions.totalCount,
-                creationDefaults = loadResult.creationDefaults,
-                hasLoadedInitialResources = true,
-                errorMessage = null,
-              )
+    loadJob =
+      viewModelScope.launch(workDispatcher) {
+        val loadResult = loadInitialResources(user)
+        withContext(Dispatchers.Main) {
+          when (loadResult) {
+            is InitialLoadResult.Success -> {
+              mutableState.value =
+                mutableState.value.copy(
+                  isLoading = false,
+                  memberships = loadResult.memberships.data,
+                  membershipsTotalCount = loadResult.memberships.totalCount,
+                  invitations = loadResult.invitations.data,
+                  invitationsTotalCount = loadResult.invitations.totalCount,
+                  suggestions = loadResult.suggestions.data,
+                  suggestionsTotalCount = loadResult.suggestions.totalCount,
+                  creationDefaults = loadResult.creationDefaults,
+                  hasLoadedInitialResources = true,
+                  errorMessage = null,
+                )
+            }
+            is InitialLoadResult.Failure ->
+              mutableState.value =
+                mutableState.value.copy(isLoading = false, errorMessage = loadResult.message)
           }
-          is InitialLoadResult.Failure ->
-            mutableState.value =
-              mutableState.value.copy(isLoading = false, errorMessage = loadResult.message)
         }
       }
-    }
   }
 
   fun retryLoad() {
