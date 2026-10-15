@@ -31,6 +31,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.mfa.AddMfaCallbacks
+import com.clerk.ui.userprofile.mfa.MfaAddSmsViewModel
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
@@ -38,6 +39,7 @@ import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.toVerifyMode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyBottomSheetContent
+import com.clerk.ui.userprofile.verify.UserProfileVerifyViewModel
 import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.toImmutableList
 
@@ -50,17 +52,18 @@ internal fun SessionTaskMfaView(
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val progress by viewModel.progress.collectAsStateWithLifecycle()
   val flowStep = progress.stepFor(session?.id)
+  val enrollmentInFlight = enrollmentInFlight(flowStep)
   var taskIsDone by remember(session?.id) { mutableStateOf(false) }
 
   val showStep = { step: FlowStep ->
-    if (step == FlowStep.ChooseMethod && session?.requiresForcedMfa == false) {
+    if (session?.requiresForcedMfa == false && step.endsDoneTask(enrollmentInFlight)) {
       taskIsDone = true
     } else {
       viewModel.setFlowStep(session?.id, step)
     }
   }
 
-  LaunchedEffect(session?.id, session?.requiresForcedMfa) {
+  LaunchedEffect(session?.id, session?.requiresForcedMfa, enrollmentInFlight) {
     showStep(viewModel.progress.value.stepFor(session?.id))
   }
   LaunchedEffect(taskIsDone) { if (taskIsDone) onAuthComplete() }
@@ -81,6 +84,22 @@ internal fun SessionTaskMfaView(
     )
   }
 }
+
+@Composable
+private fun enrollmentInFlight(flowStep: FlowStep): Boolean =
+  when (flowStep) {
+    FlowStep.AddMfa(ViewType.Sms) -> {
+      val state by viewModel<MfaAddSmsViewModel>().state.collectAsStateWithLifecycle()
+      state is MfaAddSmsViewModel.State.Loading || state is MfaAddSmsViewModel.State.Success
+    }
+    is FlowStep.Verify -> {
+      val state by
+        viewModel<UserProfileVerifyViewModel>().verificationTextState.collectAsStateWithLifecycle()
+      state is UserProfileVerifyViewModel.VerificationTextState.Verifying ||
+        state is UserProfileVerifyViewModel.VerificationTextState.Verified
+    }
+    else -> false
+  }
 
 @Composable
 private fun SessionTaskMfaFlowContent(
