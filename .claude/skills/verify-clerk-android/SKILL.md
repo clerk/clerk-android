@@ -21,6 +21,7 @@ A machine needs these once:
 - The Android SDK with `emulator`, `platform-tools`, and the system image `system-images;android-36;google_apis;arm64-v8a` (`x86_64` on an Intel machine). The CLI looks in `ANDROID_HOME`, then `ANDROID_SDK_ROOT`, then `~/Library/Android/sdk`.
 - Java 21 for the Gradle build. Android Studio's bundled JBR counts and is found by itself.
 - A Clerk Platform API credential for the team's verification workspace (see below).
+- ffmpeg (`brew install ffmpeg`), which `attach --video` uses to cut the video to the part that `host.evidence` marks. Without it, `attach` posts the whole video and says that ffmpeg is not installed.
 
 The first `up` writes the `Clerk_Verify_Pixel` AVD when the machine has none. An AVD you already have is never changed.
 

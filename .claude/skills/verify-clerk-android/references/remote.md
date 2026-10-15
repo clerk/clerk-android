@@ -22,6 +22,7 @@ The check reads files and runs no tool. When something is missing, the `backend`
 - A GitHub token that may dispatch that workflow. The CLI takes the token from `GH_TOKEN`, then `GITHUB_TOKEN`, then `gh auth token`.
 - Network access to `api.github.com`, `*.trycloudflare.com`, `api.clerk.com`, and `*.clerk.accounts.dev`.
 - The Platform API credential, as for a local lane. In a cloud environment, add an API credential for `api.clerk.com` with path prefix `/v1/platform/`. The environment then adds the key after a request leaves the machine, and no key is ever in the session.
+- ffmpeg on `PATH`, which `attach --video` uses to cut the video to the part that `host.evidence` marks. Without it, `attach` posts the whole video and says that ffmpeg is not installed.
 
 It needs no Android SDK, no JDK, and no `adb`.
 
