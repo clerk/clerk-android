@@ -16,7 +16,7 @@ async function openRow(host: HostFixture, screen: Screen, label: string): Promis
   await host.tap(middleOf(row));
 }
 
-test('the creator of an organization sees every row of its profile', async ({ host, screen, device }) => {
+test('the creator of an organization sees every row of its profile', async ({ host, screen }) => {
   const name = newOrganizationName(host, 'Profile');
   await openManageOrganization(host, screen, name);
   await expect(screen.getByText(name, { exact: true })).toBeVisible();
@@ -29,7 +29,7 @@ test('the creator of an organization sees every row of its profile', async ({ ho
   await expect(screen.getByText('Add domain', { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText('No verified domains.')).toHaveCount(0);
   await host.screenshot('verified-domains');
-  await device.back();
+  await host.back();
 
   await openRow(host, screen, 'Members');
   await expect(screen.getByText('You', { exact: true })).toBeVisible({ timeout: 20_000 });
