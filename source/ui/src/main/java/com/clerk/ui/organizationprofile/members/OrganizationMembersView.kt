@@ -317,6 +317,7 @@ private fun LazyListScope.invitationsTab(
       InvitationRow(
         modifier = Modifier.padding(horizontal = dp18),
         invitation = invitation,
+        roleName = invitation.displayRole(state.roles),
         isLoading = state.activeMutationId == invitation.id,
         onRevoke = { actions.onRevokeInvitation(invitation) },
       )
@@ -550,6 +551,7 @@ private fun MemberAvatar(publicUserData: PublicUserData?) {
 @Composable
 private fun InvitationRow(
   invitation: OrganizationInvitation,
+  roleName: String,
   isLoading: Boolean,
   onRevoke: () -> Unit,
   modifier: Modifier = Modifier,
@@ -570,7 +572,7 @@ private fun InvitationRow(
           overflow = TextOverflow.Ellipsis,
         )
         Text(
-          text = invitation.role,
+          text = roleName,
           style = ClerkMaterialTheme.typography.bodySmall,
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
@@ -934,6 +936,10 @@ private fun OrganizationMembership.isSameMembership(other: OrganizationMembershi
 
 private fun OrganizationMembership.displayRole(): String {
   return roleName.ifBlank { role }
+}
+
+private fun OrganizationInvitation.displayRole(roles: List<Role>): String {
+  return roles.firstOrNull { it.key == role }?.name ?: role
 }
 
 private fun formattedMembershipDate(timestampMillis: Long): String {
