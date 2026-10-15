@@ -22,7 +22,7 @@ permissions:
 jobs:
   integration-test:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Check that the integration tests have a key

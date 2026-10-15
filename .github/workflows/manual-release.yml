@@ -23,7 +23,7 @@ on:
 
 jobs:
   verify:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -74,7 +74,7 @@ jobs:
     uses: ./.github/workflows/paparazzi-verify.yml
 
   create-release:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [verify, verify-e2e, integration-test, paparazzi-verify]
     if: github.event_name == 'workflow_dispatch'
     outputs:
@@ -159,7 +159,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [verify, verify-e2e, integration-test, paparazzi-verify, create-release]
     # always() lets this run when create-release is skipped (release events); every gate must pass.
     if: always() && needs.verify.result == 'success' && needs.verify-e2e.result == 'success' && needs.integration-test.result == 'success' && needs.paparazzi-verify.result == 'success' && (github.event_name == 'release' || needs.create-release.result == 'success')
@@ -246,7 +246,7 @@ jobs:
           ./gradlew $TASKS
 
   open-expo-android-release-pr:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: publish
     if: needs.publish.result == 'success' && (github.event_name == 'release' || (github.event.inputs.publish_api == 'true' && github.event.inputs.publish_ui == 'true'))
     outputs:
@@ -525,7 +525,7 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
 
   notify-slack:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     needs: [publish, open-expo-android-release-pr]
     if: always() && needs.publish.result == 'success'
 

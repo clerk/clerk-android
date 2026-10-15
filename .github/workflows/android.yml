@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-module:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         module: [":source:api", ":source:ui"]
