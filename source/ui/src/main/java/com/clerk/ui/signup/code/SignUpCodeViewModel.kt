@@ -26,7 +26,7 @@ internal class SignUpCodeViewModel : ViewModel() {
   val state = _state.asStateFlow()
 
   fun prepare(field: SignUpCodeField) {
-    val signUp = Clerk.client.signUp ?: return
+    val signUp = Clerk.auth.currentSignUp ?: return
     if (field is SignUpCodeField.Email && signUp.isEmailLinkVerificationSupported) {
       _state.value = AuthenticationViewState.Success.SignUp(signUp)
       return
@@ -43,7 +43,7 @@ internal class SignUpCodeViewModel : ViewModel() {
 
   fun attempt(code: String, field: SignUpCodeField) {
     _verificationState.value = VerificationUiState.Verifying
-    val signUp = Clerk.client.signUp ?: return
+    val signUp = Clerk.auth.currentSignUp ?: return
     viewModelScope.launch {
       val signUp =
         when (field) {

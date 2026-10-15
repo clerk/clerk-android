@@ -1,8 +1,8 @@
 package com.clerk.ui.signup.code
 
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.auth.types.VerificationType
-import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailCode
@@ -31,14 +31,14 @@ class SignUpCodeViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
   private val signUp = mockk<SignUp>(relaxed = true)
-  private val client = mockk<Client>()
+  private val auth = mockk<Auth>(relaxed = true)
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
-    every { Clerk.client } returns client
-    every { client.signUp } returns signUp
+    every { Clerk.auth } returns auth
+    every { auth.currentSignUp } returns signUp
     mockkStatic("com.clerk.api.signup.SignUpKt", "com.clerk.api.signup.SignUpExtensionsKt")
     coEvery { signUp.sendEmailCode() } returns ClerkResult.success(signUp)
     coEvery { signUp.sendPhoneCode() } returns ClerkResult.success(signUp)

@@ -198,7 +198,7 @@ internal class ConfigurationManager(
     this.context = WeakReference(context.applicationContext)
     this.storedOptions = options
     this.publishableKey = publishableKey
-    Clerk.publishableKey = publishableKey
+    Clerk.configuredPublishableKey = publishableKey
     LocaleProvider.initialize()
 
     val baseUrl = options?.proxyUrl ?: PublishableKeyHelper().extractApiUrl(publishableKey)
