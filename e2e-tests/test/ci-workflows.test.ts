@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, matchesGlob } from 'node:path';
 import { describe, it } from 'node:test';
 
 const WORKFLOWS = join(import.meta.dirname, '..', '..', '.github', 'workflows');
@@ -17,6 +17,9 @@ interface Context {
   readonly cancelled?: boolean;
   readonly needs?: Readonly<Record<string, string>>;
   readonly inputs?: Readonly<Record<string, boolean>>;
+  readonly matrix?: Readonly<Record<string, string>>;
+  readonly earlierStepFailed?: boolean;
+  readonly runnerFiles?: readonly string[];
 }
 
 function triggers(workflow: string): string {
@@ -44,6 +47,8 @@ function evaluate(condition: string, context: Context): boolean {
     if (need) return context.needs?.[need[1]!] ?? '';
     const input = /^inputs\.(\w+)$/.exec(path);
     if (input) return context.inputs?.[input[1]!] ?? null;
+    const entry = /^matrix\.(\w+)$/.exec(path);
+    if (entry) return context.matrix?.[entry[1]!] ?? null;
     throw new Error(`no value for ${path} in ${condition}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
@@ -51,13 +56,14 @@ function evaluate(condition: string, context: Context): boolean {
   const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
   // GitHub adds success() to a condition that calls no status function.
   const script = (/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`)
-    .replaceAll('success()', String(!(context.cancelled ?? false) && results.every((result) => result === 'success')))
-    .replaceAll('failure()', String(results.includes('failure')))
+    .replaceAll(/hashFiles\('([^']*)'\)/g, (_, pattern: string) => JSON.stringify((context.runnerFiles ?? []).some((file) => matchesGlob(file, pattern)) ? 'hash' : ''))
+    .replaceAll('success()', String(!(context.cancelled ?? false) && !(context.earlierStepFailed ?? false) && results.every((result) => result === 'success')))
+    .replaceAll('failure()', String((context.earlierStepFailed ?? false) || results.includes('failure')))
     .replaceAll('cancelled()', String(context.cancelled ?? false))
     .replaceAll('always()', 'true')
     .replaceAll('needs.*.result', JSON.stringify(results))
     .replaceAll(/'([^']*)'/g, (_, text: string) => JSON.stringify(text))
-    .replaceAll(/\b(?:github|needs|inputs)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
+    .replaceAll(/\b(?:github|needs|inputs|matrix)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
   const contains = (list: readonly unknown[], item: unknown): boolean => list.some((entry) => eq(entry, item));
   return Boolean(new Function('eq', 'contains', `return ${script};`)(eq, contains));
@@ -367,15 +373,41 @@ describe('the Paparazzi screenshot tests', () => {
     );
   });
 
-  it('are left out of the unit tests of a pull request, and run in full when this workflow verifies or records them', () => {
+  it('are compared with the committed images in the unit tests of every pull request and push to main, by the task that compares them every night', () => {
     const gradle = (text: string): string => /^ {8}run: (\.\/gradlew .+)$/m.exec(text)?.[1] ?? '';
-    const unitTests = (jobs(read('android-test.yml')).get('test-module') ?? '').split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '';
-    const property = /providers\.gradleProperty\("(\w+)"\)\.orNull == "true"\) \{\n\s+useJUnit \{ excludeCategories\("com\.clerk\.base\.SnapshotTest"\) \}/.exec(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'))?.[1];
-    assert.ok(property !== undefined, 'source/ui leaves out the SnapshotTest category when a Gradle property is true');
+    const testModule = jobs(read('android-test.yml')).get('test-module') ?? '';
+    const ui = /^ {10}- module: ":source:ui"\n((?: {12}\w+: .+\n)+)/m.exec(testModule)?.[1] ?? '';
+    const matrix: Record<string, string> = { module: ':source:ui', ...Object.fromEntries([...ui.matchAll(/^ {12}(\w+): "([^"]*)"/gm)].map(([, key, value]) => [key!, value!])) };
+    const unitTests = gradle(testModule.split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '').replaceAll(/\$\{\{ matrix\.(\w+) \}\}/g, (_, key: string) => matrix[key] ?? '');
+    const nightly = gradle(steps.find((text) => text.includes('- name: Verify Paparazzi snapshots\n')) ?? '');
+    assert.deepEqual([unitTests, nightly], ['./gradlew :source:ui:verifyPaparazziDebug --build-cache --parallel', './gradlew :source:ui:verifyPaparazziDebug --stacktrace']);
+    assert.doesNotMatch(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'), /\bexclude(?:Categories|TestsMatching)\b/, 'source/ui leaves no test out');
+  });
+
+  it('tell the author of a pull request how to record the images again when one no longer matches, in the words of the nightly run', () => {
+    const testModule = (jobs(read('android-test.yml')).get('test-module') ?? '').split(/\n(?= {6}- )/);
+    const REPORT_STEPS = ['Upload Paparazzi report', 'Add run summary'];
+    const DELTA = 'source/ui/build/paparazzi/failures/debug/delta-com.clerk.snapshot.organizationprofile_OrganizationProfileSnapshotTest_organizationMembersInvitationsTab.png';
+    const ui = { module: ':source:ui' };
+    const reported = (context: Context): string[] =>
+      REPORT_STEPS.filter((name) => {
+        const step = testModule.find((text) => text.includes(`- name: ${name}\n`));
+        return step !== undefined && evaluate(/^ {8}if: (.+)$/m.exec(step)?.[1] ?? 'true', context);
+      });
     assert.deepEqual(
-      [gradle(unitTests), ...['Verify Paparazzi snapshots', 'Record Paparazzi snapshots'].map((name) => gradle(steps.find((text) => text.includes(`- name: ${name}\n`)) ?? ''))].map((command) => command.includes(`-P${property}=true`)),
-      [true, false, false],
+      [
+        reported({ event: 'pull_request', matrix: ui, earlierStepFailed: true, runnerFiles: [DELTA] }),
+        reported({ event: 'push', matrix: ui, earlierStepFailed: true, runnerFiles: [DELTA] }),
+        reported({ event: 'pull_request', matrix: ui, earlierStepFailed: true, runnerFiles: [] }),
+        reported({ event: 'pull_request', matrix: { module: ':source:api' }, earlierStepFailed: true, runnerFiles: [] }),
+        reported({ event: 'pull_request', matrix: ui, earlierStepFailed: false, runnerFiles: [] }),
+      ],
+      [REPORT_STEPS, REPORT_STEPS, [], [], []],
     );
+    const summary = (text: string): string => /- name: Add run summary\n(?: {8}if: .+\n)? {8}run: \|\n((?: {10}.*\n?)+)/.exec(text)?.[1] ?? '';
+    const words = summary(testModule.find((text) => text.includes('- name: Add run summary\n')) ?? '');
+    assert.match(words, /start the \*\*Paparazzi Verify\*\* workflow on your branch with \*\*record\*\* checked/);
+    assert.equal(words, summary(steps.find((text) => text.includes('- name: Add run summary\n')) ?? ''));
   });
 
   it('upload the recorded images from the folder that holds the committed snapshots', () => {
