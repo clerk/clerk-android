@@ -48,7 +48,7 @@ describe('a step that hangs', () => {
         job: Number(/^ {4}timeout-minutes: (\d+)$/m.exec(e2e)?.[1]),
         steps: steps.map((step) => [/- name: (.+)/.exec(step)?.[1], Number(/^ {8}timeout-minutes: (\d+)$/m.exec(step)?.[1])]),
       },
-      { job: 40, steps: [['Build the e2e host and boot an emulator', 15], ['Run the end-to-end tests', 20]] },
+      { job: 60, steps: [['Build the e2e host and boot an emulator', 15], ['Run the end-to-end tests', 35]] },
     );
   });
 });
