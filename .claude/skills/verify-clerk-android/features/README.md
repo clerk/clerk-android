@@ -19,7 +19,7 @@ Clerk's test mode makes all of this safe to type into the real app.
 - Phones. US numbers 555-0100 to 555-0199 are test numbers. Get one from `host.seedUser({ phone: true })`, or from `host.newPhone()` for a number no user holds. Both give `+1` and the ten digits, such as `+12015550142`. AuthView's phone field takes the ten digits, `nationalDigits(phone)` from `specs/phone.ts`. The host's own fields take the whole number.
 - One-time code. `424242` verifies every email and SMS code for test addresses and phones. Specs use the constant `CLERK_TEST_CODE`.
 - Authenticator code. Read the key from the `Add authenticator application` screen and pass it to `totp(key, Date.now() / 1000)` from `specs/totp.ts`, which gives the six digits an authenticator would show.
-- Passwords. The standard instance requires a password at sign-up. Fill it with `runPassword(host.runId)` from `specs/support/clerk.ts`, such as `Otter-Lamp-3f9c`. For a password sign-in, seed the user with `host.seedUser({ password: true })` and fill the field with `host.fill(field, user.password!)`.
+- Passwords. The standard instance requires a password at sign-up. Fill it with `runPassword(host.runId)` from `specs/support/clerk.ts`, such as `Otter-Lamp-3917`. For a password sign-in, seed the user with `host.seedUser({ password: true })` and fill the field with `host.fill(field, user.password!)`.
 
 | Step | SDK test tag |
 | --- | --- |
