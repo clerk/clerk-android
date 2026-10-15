@@ -108,6 +108,40 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
   }
 
   @Test
+  fun `token refresh starts when a session signs in after a signed-out initialization and stops on sign-out`() =
+    runTest {
+      coEvery { Client.get() } returns ClerkResult.success(signedOutClient())
+      initialize()
+      runCurrent()
+      advanceTimeBy(5_001)
+      assertEquals(0, tokenFetches)
+
+      Clerk.updateClient(signedInClient())
+      runCurrent()
+      assertEquals(1, tokenFetches)
+      advanceTimeBy(5_001)
+      assertEquals(2, tokenFetches)
+
+      Clerk.updateClient(signedOutClient())
+      advanceTimeBy(15_001)
+      assertEquals(2, tokenFetches)
+    }
+
+  @Test
+  fun `token refresh skips a pending session and starts once it becomes active`() = runTest {
+    coEvery { Client.get() } returns
+      ClerkResult.success(signedInClient(status = Session.SessionStatus.PENDING))
+    initialize()
+    runCurrent()
+    advanceTimeBy(15_001)
+    assertEquals(0, tokenFetches)
+
+    Clerk.updateClient(signedInClient())
+    runCurrent()
+    assertEquals(1, tokenFetches)
+  }
+
+  @Test
   fun `foreground callback already sees the app as foregrounded so a restarted refresh loop keeps running`() {
     val backgroundFlagSeenByCallback = mutableListOf<Boolean>()
     AppLifecycleListener.configure {
@@ -134,10 +168,12 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
     )
   }
 
-  private fun signedInClient(): Client {
+  private fun signedOutClient(): Client = Client(id = "client_123")
+
+  private fun signedInClient(status: Session.SessionStatus = Session.SessionStatus.ACTIVE): Client {
     val session = mockk<Session>(relaxed = true)
     every { session.id } returns "sess_123"
-    every { session.status } returns Session.SessionStatus.ACTIVE
+    every { session.status } returns status
     every { session.user } returns mockk<User>(relaxed = true)
     return Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = "sess_123")
   }

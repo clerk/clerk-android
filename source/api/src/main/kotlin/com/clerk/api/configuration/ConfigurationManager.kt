@@ -21,6 +21,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.GetTokenOptions
+import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
@@ -44,7 +45,11 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -88,7 +93,11 @@ internal class ConfigurationManager(
 
   private var storedOptions: ClerkConfigurationOptions? = null
 
+  private val tokenRefreshLock = Any()
+
   private var refreshJob: Job? = null
+
+  private var activeSessionWatchJob: Job? = null
 
   private var initializationJob: Job? = null
 
@@ -233,6 +242,7 @@ internal class ConfigurationManager(
         expectedConfigurationVersion = configuredVersion,
       )
     if (!restoreLocalState(configuredVersion)) return@launch
+    activeSessionWatchJob = startTokenRefreshWhenASessionBecomesActive()
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
@@ -276,9 +286,11 @@ internal class ConfigurationManager(
     scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
     refreshJob?.cancel()
+    activeSessionWatchJob?.cancel()
     initializationJob = null
     initializationRetryJob = null
     refreshJob = null
+    activeSessionWatchJob = null
     context = null
     storageInitialized = false
     hasConfigured = false
@@ -294,6 +306,15 @@ internal class ConfigurationManager(
     sharedDeviceTokenFenceGeneration.incrementAndGet()
   }
 
+  private fun startTokenRefreshWhenASessionBecomesActive(): Job = scope.launch {
+    Clerk.sessionFlow
+      .map { session -> session?.takeIf { it.status == Session.SessionStatus.ACTIVE }?.id }
+      .distinctUntilChanged()
+      .drop(1)
+      .filterNotNull()
+      .collect { startTokenRefresh() }
+  }
+
   private fun startTokenRefresh() {
     ClerkLogger.d(
       "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
@@ -304,28 +325,32 @@ internal class ConfigurationManager(
       return
     }
 
-    refreshJob?.cancel()
-    refreshJob = scope.launch {
-      while (isActive && !AppLifecycleListener.isInBackground) {
-        try {
-          val session = Clerk.session
-          if (session != null) {
-            if (Clerk.debugMode) {
-              ClerkLogger.d("Refreshing token for session: ${session.id}")
-            }
-            // Use async to avoid blocking the refresh loop
-            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-          } else {
-            if (Clerk.debugMode) {
-              ClerkLogger.d("No session available for token refresh")
-            }
-          }
-        } catch (e: Exception) {
-          ClerkLogger.w("Token refresh failed: ${e.message}")
-        }
+    synchronized(tokenRefreshLock) {
+      refreshJob?.cancel()
+      refreshJob = scope.launch { refreshActiveSessionTokenUntilBackgroundedOrSignedOut() }
+    }
+  }
 
-        delay(REFRESH_TOKEN_INTERVAL.seconds)
+  private suspend fun CoroutineScope.refreshActiveSessionTokenUntilBackgroundedOrSignedOut() {
+    while (isActive && !AppLifecycleListener.isInBackground) {
+      val session = Clerk.activeSession
+      if (session == null) {
+        if (Clerk.debugMode) {
+          ClerkLogger.d("No active session available for token refresh")
+        }
+        return
       }
+      try {
+        if (Clerk.debugMode) {
+          ClerkLogger.d("Refreshing token for session: ${session.id}")
+        }
+        // Use async to avoid blocking the refresh loop
+        async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+      } catch (e: Exception) {
+        ClerkLogger.w("Token refresh failed: ${e.message}")
+      }
+
+      delay(REFRESH_TOKEN_INTERVAL.seconds)
     }
   }
 
