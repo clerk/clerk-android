@@ -65,6 +65,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Session persistence](./session-persistence.md) covers a session that survives a restart of the app.
 - [User button and profile](./user-button-and-profile.md) covers UserButton, UserProfileView, its Manage account and Security screens, sign-out, and deleting the account.
 - [Session tasks](./session-tasks.md) covers the setup-MFA and choose-organization tasks after sign-in, the setup-MFA task after sign-up, and finishing the setup-MFA task with an authenticator code.
-- [Organizations](./organizations.md) covers creating an organization from OrganizationSwitcher.
+- [Organizations](./organizations.md) covers creating an organization from OrganizationSwitcher and switching between it and the personal account.
+- [Organization profile](./organization-profile.md) covers the profile that `Manage organization` opens: its rows, the Members tabs, sending an invitation, verified domains, and renaming. It lists the states that need a second member or a role other than admin, which the harness cannot seed.
 
-Not mapped: a password sign-in past the password screen, the email link (off on the standard instance), completing the setup-MFA task with an SMS code, social providers (no real OAuth on emulators), passkeys, and biometrics.
+Not mapped: a password sign-in past the password screen, the email link (off on the standard instance), completing the setup-MFA task with an SMS code, the reset-password session task, the choose-organization task's list of memberships, invitations, and suggestions, organization invitations and suggestions in the switcher (the harness cannot seed them), social providers (no real OAuth on emulators), passkeys, biometrics, and Restore Credentials (the host never turns it on).

@@ -1,6 +1,6 @@
 ---
 name: verify-clerk-android
-description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the e2e tests.
+description: Drive the clerk-android SDK UI (AuthView, UserButton, UserProfileView, OrganizationSwitcher, OrganizationProfileView, session tasks) in the :e2e host app on an Android emulator, on this machine or on a CI runner, against a real Clerk development instance that the CLI creates and deletes, and capture video, screenshots, and the app log as evidence. Use it to prove any change to source/api, source/ui, or the :e2e host works before calling it done, to reproduce a UI bug, or to run the e2e tests.
 ---
 
 # verify-clerk-android
