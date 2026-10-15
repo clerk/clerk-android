@@ -19,6 +19,7 @@ import com.clerk.api.user.getOrganizationSuggestions
 import com.clerk.ui.organizationswitcher.previewOrganizationMembership
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -353,6 +354,68 @@ class OrganizationAccountListViewModelTest {
       listOf("org_new"),
       viewModel.state.value.memberships.map { it.organization.id },
     )
+  }
+
+  @Test
+  fun `load for the same user and session keeps loaded pages without refetching`() = runTest {
+    val user = user()
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = listOf(membership("org_1")), totalCount = 2)
+      )
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 1) } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = listOf(membership("org_2")), totalCount = 2)
+      )
+    stubEmptyInvitationsAndSuggestions(user)
+
+    val viewModel = testViewModel(user = user)
+    viewModel.load(userId = "user_1", sessionId = "sess_1")
+    viewModel.loadMoreMemberships()
+    viewModel.load(userId = "user_1", sessionId = "sess_1")
+
+    assertEquals(
+      listOf("org_1", "org_2"),
+      viewModel.state.value.memberships.map { it.organization.id },
+    )
+    coVerify(exactly = 1) { user.getOrganizationMemberships(limit = 2, offset = 0) }
+  }
+
+  @Test
+  fun `load for a different session resets and reloads`() = runTest {
+    val user = user()
+    var firstPageRequests = 0
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } coAnswers
+      {
+        firstPageRequests += 1
+        val organizationId = if (firstPageRequests == 1) "org_old" else "org_new"
+        ClerkResult.success(
+          ClerkPaginatedResponse(data = listOf(membership(organizationId)), totalCount = 1)
+        )
+      }
+    stubEmptyInvitationsAndSuggestions(user)
+
+    val viewModel = testViewModel(user = user)
+    viewModel.load(userId = "user_1", sessionId = "sess_1")
+    viewModel.load(userId = "user_1", sessionId = "sess_2")
+
+    assertEquals(
+      listOf("org_new"),
+      viewModel.state.value.memberships.map { it.organization.id },
+    )
+    coVerify(exactly = 2) { user.getOrganizationMemberships(limit = 2, offset = 0) }
+  }
+
+  private fun stubEmptyInvitationsAndSuggestions(user: User) {
+    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      user.getOrganizationSuggestions(
+        limit = 2,
+        offset = 0,
+        statuses = listOf("pending", "accepted"),
+      )
+    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
   }
 
   private fun testViewModel(

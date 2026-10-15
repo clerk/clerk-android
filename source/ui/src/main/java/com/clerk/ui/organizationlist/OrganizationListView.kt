@@ -139,8 +139,7 @@ internal fun OrganizationListViewImpl(
     user != null && !hidePersonalAccount && !Clerk.organizationSelectionIsForced
 
   LaunchedEffect(user?.id, session?.id) {
-    viewModel.reset()
-    viewModel.load()
+    viewModel.load(userId = user?.id, sessionId = session?.id)
   }
   LaunchedEffect(user?.id) {
     if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("OrganizationListView"))

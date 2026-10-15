@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -147,7 +148,7 @@ private fun OrganizationProfileNavDisplay(
   onComplete: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  var membersRefreshKey by remember { mutableIntStateOf(0) }
+  var membersRefreshKey by rememberSaveable { mutableIntStateOf(0) }
 
   NavDisplay(
     modifier = modifier,

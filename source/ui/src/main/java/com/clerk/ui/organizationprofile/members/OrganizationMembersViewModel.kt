@@ -27,6 +27,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 
 internal class OrganizationMembersViewModel(
@@ -41,55 +43,75 @@ internal class OrganizationMembersViewModel(
   private var membership: OrganizationMembership? = null
   private var domainsEnabled: Boolean = false
   private var searchJob: Job? = null
+  private var lastLoadRequest: MembersLoadRequest? = null
 
   fun load(
     organization: Organization,
     membership: OrganizationMembership?,
     domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
     initialTab: OrganizationMembersTab? = null,
+    refreshKey: Int = 0,
+  ) {
+    val request =
+      MembersLoadRequest(
+        organizationId = organization.id,
+        membershipId = membership?.id,
+        initialTab = initialTab,
+        refreshKey = refreshKey,
+      )
+    if (request == lastLoadRequest) return
+    lastLoadRequest = request
+    reload(organization, membership, domainsEnabled, initialTab)
+  }
+
+  fun retry() {
+    val currentOrganization = organization ?: return
+    reload(currentOrganization, membership, domainsEnabled, initialTab = null)
+  }
+
+  private fun reload(
+    organization: Organization,
+    membership: OrganizationMembership?,
+    domainsEnabled: Boolean,
+    initialTab: OrganizationMembersTab?,
   ) {
     this.organization = organization
     this.membership = membership
     this.domainsEnabled = domainsEnabled
     val tabs = organizationMembersAvailableTabs(membership, domainsEnabled)
-    val selectedTab =
-      mutableState.value.selectedTab?.takeIf { it in tabs }
-        ?: initialTab?.takeIf { it in tabs }
-        ?: tabs.firstOrNull()
 
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update { current ->
+      current.copy(
         availableTabs = tabs,
-        selectedTab = selectedTab,
+        selectedTab =
+          current.selectedTab?.takeIf { it in tabs }
+            ?: initialTab?.takeIf { it in tabs }
+            ?: tabs.firstOrNull(),
         isLoadingInitial = true,
         errorMessage = null,
         isSearchingMembers = false,
         hasRoleSetMigration = false,
       )
+    }
 
     viewModelScope.launch(dispatcher) {
       if (membership?.canManageMemberships == true) loadRoles()
       if (OrganizationMembersTab.Members in tabs) loadMembers(reset = true)
       if (OrganizationMembersTab.Invitations in tabs) loadInvitations(reset = true)
       if (OrganizationMembersTab.Requests in tabs) loadRequests(reset = true)
-      mutableState.value = mutableState.value.copy(isLoadingInitial = false)
+      mutableState.update { it.copy(isLoadingInitial = false) }
     }
   }
 
-  fun retry() {
-    val currentOrganization = organization ?: return
-    load(currentOrganization, membership, domainsEnabled)
-  }
-
   fun selectTab(tab: OrganizationMembersTab) {
-    if (tab in mutableState.value.availableTabs) {
-      mutableState.value = mutableState.value.copy(selectedTab = tab)
+    mutableState.update { current ->
+      if (tab in current.availableTabs) current.copy(selectedTab = tab) else current
     }
   }
 
   fun setMemberQuery(query: String) {
     if (query == mutableState.value.memberQuery) return
-    mutableState.value = mutableState.value.copy(memberQuery = query, isSearchingMembers = true)
+    mutableState.update { it.copy(memberQuery = query, isSearchingMembers = true) }
     searchJob?.cancel()
     searchJob =
       viewModelScope.launch(dispatcher) {
@@ -101,7 +123,7 @@ internal class OrganizationMembersViewModel(
   fun submitMemberSearch() {
     searchJob?.cancel()
     searchJob = null
-    mutableState.value = mutableState.value.copy(isSearchingMembers = true)
+    mutableState.update { it.copy(isSearchingMembers = true) }
     viewModelScope.launch(dispatcher) { loadMembers(reset = true) }
   }
 
@@ -127,25 +149,24 @@ internal class OrganizationMembersViewModel(
     if (mutableState.value.hasRoleSetMigration) return
     val userId = membership.publicUserData?.userId
     if (userId == null) {
-      mutableState.value = mutableState.value.copy(errorMessage = "Member user ID is unavailable")
+      mutableState.update { it.copy(errorMessage = "Member user ID is unavailable") }
       return
     }
     if (mutableState.value.activeMutationId != null) return
 
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = membership.id, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = membership.id, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       when (val result = membership.updateMembership(userId = userId, role = role)) {
-        is ClerkResult.Success -> {
-          mutableState.value =
-            mutableState.value.copy(
+        is ClerkResult.Success ->
+          mutableState.update { current ->
+            current.copy(
               activeMutationId = null,
               members =
-                mutableState.value.members.map { current ->
-                  if (current.id == membership.id) result.value else current
+                current.members.map { member ->
+                  if (member.id == membership.id) result.value else member
                 },
             )
-        }
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
@@ -156,23 +177,22 @@ internal class OrganizationMembersViewModel(
     val currentOrganization = organization ?: return
     val userId = membership.publicUserData?.userId
     if (userId == null) {
-      mutableState.value = mutableState.value.copy(errorMessage = "Member user ID is unavailable")
+      mutableState.update { it.copy(errorMessage = "Member user ID is unavailable") }
       return
     }
     if (mutableState.value.activeMutationId != null) return
 
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = membership.id, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = membership.id, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       when (val result = currentOrganization.removeMember(userId = userId)) {
-        is ClerkResult.Success -> {
-          mutableState.value =
-            mutableState.value.copy(
+        is ClerkResult.Success ->
+          mutableState.update { current ->
+            current.copy(
               activeMutationId = null,
-              members = mutableState.value.members.filterNot { it.id == membership.id },
-              membersTotalCount = (mutableState.value.membersTotalCount - 1).coerceAtLeast(0),
+              members = current.members.filterNot { it.id == membership.id },
+              membersTotalCount = (current.membersTotalCount - 1).coerceAtLeast(0),
             )
-        }
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
@@ -180,19 +200,17 @@ internal class OrganizationMembersViewModel(
 
   fun revokeInvitation(invitation: OrganizationInvitation) {
     if (mutableState.value.activeMutationId != null) return
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = invitation.id, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = invitation.id, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       when (val result = invitation.revoke()) {
-        is ClerkResult.Success -> {
-          mutableState.value =
-            mutableState.value.copy(
+        is ClerkResult.Success ->
+          mutableState.update { current ->
+            current.copy(
               activeMutationId = null,
-              invitations = mutableState.value.invitations.filterNot { it.id == invitation.id },
-              invitationsTotalCount =
-                (mutableState.value.invitationsTotalCount - 1).coerceAtLeast(0),
+              invitations = current.invitations.filterNot { it.id == invitation.id },
+              invitationsTotalCount = (current.invitationsTotalCount - 1).coerceAtLeast(0),
             )
-        }
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
@@ -207,20 +225,20 @@ internal class OrganizationMembersViewModel(
   }
 
   fun clearError() {
-    mutableState.value = mutableState.value.copy(errorMessage = null)
+    mutableState.update { it.copy(errorMessage = null) }
   }
 
   private suspend fun loadRoles() {
     val currentOrganization = organization ?: return
     when (val result = currentOrganization.getRolesPaginated()) {
       is ClerkResult.Success ->
-        mutableState.value =
-          mutableState.value.copy(
+        mutableState.update {
+          it.copy(
             roles = result.value.data,
             hasRoleSetMigration = result.value.hasRoleSetMigration == true,
           )
-      is ClerkResult.Failure ->
-        mutableState.value = mutableState.value.copy(errorMessage = result.errorMessage)
+        }
+      is ClerkResult.Failure -> mutableState.update { it.copy(errorMessage = result.errorMessage) }
     }
   }
 
@@ -228,18 +246,17 @@ internal class OrganizationMembersViewModel(
     val currentOrganization =
       organization
         ?: run {
-          mutableState.value =
-            mutableState.value.copy(isSearchingMembers = false, isLoadingMoreMembers = false)
+          mutableState.update { it.copy(isSearchingMembers = false, isLoadingMoreMembers = false) }
           return
         }
-    val current = mutableState.value
-    mutableState.value =
-      current.copy(
-        isSearchingMembers = reset && !current.isLoadingInitial,
+    val current = mutableState.updateAndGet {
+      it.copy(
+        isSearchingMembers = reset && !it.isLoadingInitial,
         isLoadingMoreMembers = !reset,
         errorMessage = null,
-        membersHasNextPage = if (reset) false else current.membersHasNextPage,
+        membersHasNextPage = if (reset) false else it.membersHasNextPage,
       )
+    }
 
     val offset = if (reset) 0 else current.members.size
     when (
@@ -252,12 +269,13 @@ internal class OrganizationMembersViewModel(
     ) {
       is ClerkResult.Success -> applyMembersPage(result.value, append = !reset)
       is ClerkResult.Failure ->
-        mutableState.value =
-          mutableState.value.copy(
+        mutableState.update {
+          it.copy(
             isSearchingMembers = false,
             isLoadingMoreMembers = false,
             errorMessage = result.errorMessage,
           )
+        }
     }
   }
 
@@ -265,23 +283,24 @@ internal class OrganizationMembersViewModel(
     page: ClerkPaginatedResponse<OrganizationMembership>,
     append: Boolean,
   ) {
-    val memberships = if (append) mutableState.value.members + page.data else page.data
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update { current ->
+      val memberships = if (append) current.members + page.data else page.data
+      current.copy(
         members = memberships,
         membersTotalCount = page.totalCount,
         membersHasNextPage = memberships.size < page.totalCount,
         isSearchingMembers = false,
         isLoadingMoreMembers = false,
-        hasRoleSetMigration =
-          mutableState.value.hasRoleSetMigration || page.hasRoleSetMigration == true,
+        hasRoleSetMigration = current.hasRoleSetMigration || page.hasRoleSetMigration == true,
       )
+    }
   }
 
   private suspend fun loadInvitations(reset: Boolean) {
     val currentOrganization = organization ?: return
-    val current = mutableState.value
-    mutableState.value = current.copy(isLoadingMoreInvitations = !reset, errorMessage = null)
+    val current = mutableState.updateAndGet {
+      it.copy(isLoadingMoreInvitations = !reset, errorMessage = null)
+    }
     val offset = if (reset) 0 else current.invitations.size
     when (
       val result =
@@ -291,30 +310,28 @@ internal class OrganizationMembersViewModel(
           status = OrganizationInvitation.Status.Pending,
         )
     ) {
-      is ClerkResult.Success -> {
-        val invitations =
-          if (reset) result.value.data else mutableState.value.invitations + result.value.data
-        mutableState.value =
-          mutableState.value.copy(
+      is ClerkResult.Success ->
+        mutableState.update { latest ->
+          val invitations = if (reset) result.value.data else latest.invitations + result.value.data
+          latest.copy(
             invitations = invitations,
             invitationsTotalCount = result.value.totalCount,
             invitationsHasNextPage = invitations.size < result.value.totalCount,
             isLoadingMoreInvitations = false,
           )
-      }
+        }
       is ClerkResult.Failure ->
-        mutableState.value =
-          mutableState.value.copy(
-            isLoadingMoreInvitations = false,
-            errorMessage = result.errorMessage,
-          )
+        mutableState.update {
+          it.copy(isLoadingMoreInvitations = false, errorMessage = result.errorMessage)
+        }
     }
   }
 
   private suspend fun loadRequests(reset: Boolean) {
     val currentOrganization = organization ?: return
-    val current = mutableState.value
-    mutableState.value = current.copy(isLoadingMoreRequests = !reset, errorMessage = null)
+    val current = mutableState.updateAndGet {
+      it.copy(isLoadingMoreRequests = !reset, errorMessage = null)
+    }
     val offset = if (reset) 0 else current.requests.size
     when (
       val result =
@@ -324,45 +341,52 @@ internal class OrganizationMembersViewModel(
           status = REQUEST_PENDING_STATUS,
         )
     ) {
-      is ClerkResult.Success -> {
-        val requests =
-          if (reset) result.value.data else mutableState.value.requests + result.value.data
-        mutableState.value =
-          mutableState.value.copy(
+      is ClerkResult.Success ->
+        mutableState.update { latest ->
+          val requests = if (reset) result.value.data else latest.requests + result.value.data
+          latest.copy(
             requests = requests,
             requestsTotalCount = result.value.totalCount,
             requestsHasNextPage = requests.size < result.value.totalCount,
             isLoadingMoreRequests = false,
           )
-      }
+        }
       is ClerkResult.Failure ->
-        mutableState.value =
-          mutableState.value.copy(isLoadingMoreRequests = false, errorMessage = result.errorMessage)
+        mutableState.update {
+          it.copy(isLoadingMoreRequests = false, errorMessage = result.errorMessage)
+        }
     }
   }
 
   private fun updateMembershipRequest(request: OrganizationMembershipRequest, accept: Boolean) {
     if (mutableState.value.activeMutationId != null) return
-    mutableState.value = mutableState.value.copy(activeMutationId = request.id, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = request.id, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       val result = if (accept) request.accept() else request.reject()
       when (result) {
         is ClerkResult.Success ->
-          mutableState.value =
-            mutableState.value.copy(
+          mutableState.update { current ->
+            current.copy(
               activeMutationId = null,
-              requests = mutableState.value.requests.filterNot { it.id == request.id },
-              requestsTotalCount = (mutableState.value.requestsTotalCount - 1).coerceAtLeast(0),
+              requests = current.requests.filterNot { it.id == request.id },
+              requestsTotalCount = (current.requestsTotalCount - 1).coerceAtLeast(0),
             )
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
   }
 
   private fun mutationFailed(errorMessage: String) {
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = null, errorMessage = errorMessage)
+    mutableState.update { it.copy(activeMutationId = null, errorMessage = errorMessage) }
   }
+
+  private data class MembersLoadRequest(
+    val organizationId: String,
+    val membershipId: String?,
+    val initialTab: OrganizationMembersTab?,
+    val refreshKey: Int,
+  )
 }
 
 private const val DEFAULT_PAGE_SIZE = 20
