@@ -3,11 +3,14 @@ import { expect, type Locator, type Screen } from 'e2e';
 import { ASSERTION_TIMEOUT_MS } from './support/config.ts';
 import type { HostFixture, SeededUser } from './support/types.ts';
 
-export async function tapMiddle(target: Locator): Promise<void> {
-  await target.waitFor({ state: 'visible', timeout: ASSERTION_TIMEOUT_MS });
-  const box = await target.boundingBox();
-  if (box === null) throw new Error('tap target has no box on screen');
-  await target.tap({ position: { x: box.width / 2, y: box.height / 2 } });
+export function middleOf(target: Locator): Locator {
+  const tap = async (): Promise<void> => {
+    await target.waitFor({ state: 'visible', timeout: ASSERTION_TIMEOUT_MS });
+    const box = await target.boundingBox();
+    if (box === null) throw new Error('tap target has no box on screen');
+    await target.tap({ position: { x: box.width / 2, y: box.height / 2 } });
+  };
+  return Object.assign(Object.create(target) as Locator, { tap });
 }
 
 export const customSignInLink = (screen: Screen): Locator => screen.getByTestId('e2e.home.customSignIn');
@@ -25,7 +28,7 @@ export async function signInWithNewOrganization(host: HostFixture, screen: Scree
   await host.tap(screen.getByTestId('clerk.organization.profileForm.submit'));
   const close = screen.getByLabel('Close');
   await expect(close).toBeVisible({ timeout: 20_000 });
-  await tapMiddle(close);
+  await host.tap(middleOf(close));
   await host.expectSignedInAs(user, 30_000);
   await expect(switcher.getByText(name)).toBeVisible({ timeout: 20_000 });
   return { user, switcher };

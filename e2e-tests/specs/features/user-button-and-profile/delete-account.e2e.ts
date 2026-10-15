@@ -1,10 +1,10 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 
 test('deleting the account from the profile Security screen ends the session and removes the account', async ({ host, screen }) => {
   const user = await host.seedUser();
   await host.launch({ signedInAs: user, authMode: 'signIn' });
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   await host.tap(screen.getByTestId('clerk.userProfile.row.security'));
   const deleteAccount = screen.getByText('Delete account');
   await expect(deleteAccount).toBeVisible({ timeout: 20_000 });

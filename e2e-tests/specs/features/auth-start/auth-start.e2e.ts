@@ -1,4 +1,4 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 import { asShownByClerk } from '../../phone.ts';
 
@@ -32,7 +32,7 @@ test('dismissing AuthView returns to the home, and it opens again', async ({ hos
   await expect(identifier).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible();
   await host.screenshot('auth-from-home');
-  await tapMiddle(screen.getByTestId('clerk.dismissButton'));
+  await host.tap(middleOf(screen.getByTestId('clerk.dismissButton')));
   await host.expectSignedOut();
   await expect(identifier).toHaveCount(0);
   await host.screenshot('auth-dismissed');

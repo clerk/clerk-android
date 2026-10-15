@@ -38,7 +38,7 @@ Preconditions:
 - `Signed out` after a deletion looks the same as after a sign-out. The sign-in attempt with the deleted email is what shows that the account is gone. It needs `authMode: 'signIn'`, because the default mode would start a sign-up for an unknown email.
 - `Couldn't find your account.` shows in a message at the bottom of the sign-in screen that closes itself after a few seconds. It is Clerk's wording, so a change of it fails the spec.
 - A new application has reverification on, and the Platform API has no setting for it. Clerk accepts the deletion without another verification because the ticket sign-in happened seconds earlier. A spec that deletes the account long after its sign-in can be asked to verify again.
-- `clerk.userButton.profile` is the clickable icon button itself, with the avatar inside it. agent-device refuses a plain tap on it with "no parent-owned touch point outside its interactive descendants", so tap it with `tapMiddle` from `specs/compose.ts`.
+- `clerk.userButton.profile` is the clickable icon button itself, with the avatar inside it. agent-device refuses a plain tap on it with "no parent-owned touch point outside its interactive descendants", so tap it with `host.tap(middleOf(locator))`, and `middleOf` is in `specs/compose.ts`.
 - `Edit profile` is also the title of the screen it opens, so on its own it does not show that the profile's first screen is up.
 - Ticket sign-in is a shortcut, not the feature. It is fine here because this feature is not about authentication.
 - The host shows a spinner while the ticket sign-in runs. `host.launch` returns once the home shows the user, and fails with the reason when the sign-in fails.

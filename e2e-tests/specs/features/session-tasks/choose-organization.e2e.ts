@@ -1,4 +1,4 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 
 test('a ticket sign-in with forced organization selection stops on the organization task', async ({ host, screen }) => {
@@ -7,7 +7,7 @@ test('a ticket sign-in with forced organization selection stops on the organizat
   await host.tap(host.app.signInFullScreen);
   await expect(screen.getByTestId('clerk.organization.profileForm.name')).toBeVisible({ timeout: 20_000 });
   await host.screenshot('choose-organization-task');
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   await expect(screen.getByText(user.email)).toBeVisible({ timeout: 20_000 });
   await host.screenshot('choose-organization-task-account');
 });

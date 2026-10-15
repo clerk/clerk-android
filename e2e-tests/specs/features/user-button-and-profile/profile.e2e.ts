@@ -1,11 +1,11 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 import { asShownByClerk } from '../../phone.ts';
 
 test('the home UserButton opens the profile of the signed-in user', async ({ host, screen }) => {
   const user = await host.seedUser();
   await host.launch({ signedInAs: user });
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   await expect(screen.getByText('Edit profile')).toBeVisible({ timeout: 20_000 });
   await host.screenshot('user-button-profile');
   await host.tap(screen.getByTestId('clerk.userProfile.row.manageAccount'));
@@ -16,7 +16,7 @@ test('the home UserButton opens the profile of the signed-in user', async ({ hos
 test('Manage account and Security open from the profile, and back returns to it from each', async ({ host, screen, device }) => {
   const user = await host.seedUser({ phone: true });
   await host.launch({ signedInAs: user });
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   const profileRoot = screen.getByText('Edit profile');
   await expect(profileRoot).toBeVisible({ timeout: 20_000 });
   await host.screenshot('profile-before-sections');
@@ -40,7 +40,7 @@ test('Manage account and Security open from the profile, and back returns to it 
 test('the Add account row opens sign-in for a second account', async ({ host, screen }) => {
   const user = await host.seedUser();
   await host.launch({ signedInAs: user });
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   await host.tap(screen.getByTestId('clerk.userProfile.row.addAccount'));
   await expect(screen.getByTestId('clerk.auth.start.continue')).toBeVisible({ timeout: 20_000 });
   await host.screenshot('add-account');
@@ -58,7 +58,7 @@ test('the home sign-out button ends the session', async ({ host }) => {
 test('the profile Sign out row ends the session', async ({ host, screen }) => {
   const user = await host.seedUser();
   await host.launch({ signedInAs: user });
-  await tapMiddle(screen.getByTestId('clerk.userButton.profile'));
+  await host.tap(middleOf(screen.getByTestId('clerk.userButton.profile')));
   await host.tap(screen.getByTestId('clerk.userProfile.row.signOut'));
   await host.expectSignedOut();
   await host.screenshot('signed-out-from-profile');
