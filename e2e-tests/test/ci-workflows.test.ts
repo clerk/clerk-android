@@ -358,13 +358,19 @@ describe('the alert about a blocked release', () => {
   function notified(
     webhook: string,
     needs: Readonly<Record<string, string>>,
-    { event = 'workflow_dispatch', tag = '', inputs = ['true', 'true', 'true'], withScript = true }: { event?: string; tag?: string; inputs?: readonly string[]; withScript?: boolean } = {},
+    {
+      event = 'workflow_dispatch',
+      tag = '',
+      inputs = ['true', 'true', 'true'],
+      withScript = true,
+      properties = 'GROUP=com.clerk\nCLERK_API_VERSION=1.2.3\nCLERK_UI_VERSION=1.2.3\nCLERK_TELEMETRY_VERSION=1.1.1\n',
+    }: { event?: string; tag?: string; inputs?: readonly string[]; withScript?: boolean; properties?: string | null } = {},
   ): { status: number | null; stdout: string; posted: unknown } {
     const work = mkdtempSync(join(tmpdir(), 'release-blocked-'));
     mkdirSync(join(work, 'bin'));
     mkdirSync(join(work, '.github', 'scripts'), { recursive: true });
     if (withScript) writeFileSync(join(work, '.github', 'scripts', 'nightly-failure-message.mjs'), readFileSync(join(WORKFLOWS, '..', 'scripts', 'nightly-failure-message.mjs')));
-    writeFileSync(join(work, 'gradle.properties'), 'GROUP=com.clerk\nCLERK_API_VERSION=1.2.3\nCLERK_UI_VERSION=1.2.3\nCLERK_TELEMETRY_VERSION=1.1.1\n');
+    if (properties !== null) writeFileSync(join(work, 'gradle.properties'), properties);
     writeFileSync(join(work, 'bin', 'curl'), `#!/bin/sh\nwhile [ "$#" -gt 1 ]; do [ "$1" = --data ] && printf '%s' "$2" > "${work}/posted"; shift; done\necho "$1" > "${work}/url"\n`, { mode: 0o755 });
     const ran = spawnSync('bash', ['-c', step(alert)], {
       cwd: work,
@@ -436,11 +442,29 @@ describe('the alert about a blocked release', () => {
     );
   });
 
-  it('still names the repository and the release tag and links the run when the script cannot name the gates', () => {
-    assert.deepEqual(notified('https://hooks.slack.test/T/B/x', { ...PASSED, verify: 'failure', 'create-release': 'skipped' }, { withScript: false }), {
+  it('reads the version as creating the release does, escapes the tag for Slack, and leaves out a version it cannot read', () => {
+    const verify = { ...PASSED, verify: 'failure', 'create-release': 'skipped' };
+    assert.deepEqual(
+      [
+        notified('https://hooks.slack.test/T/B/x', verify, { properties: 'CLERK_API_VERSION=1.2.3 \r\nCLERK_TELEMETRY_VERSION=1.1.1\r\n' }),
+        notified('https://hooks.slack.test/T/B/x', verify, { properties: 'CLERK_TELEMETRY_VERSION=1.1.1\r\n', inputs: ['false', 'false', 'true'] }),
+        notified('https://hooks.slack.test/T/B/x', verify, { event: 'release', tag: 'v1.2.4-<b>&<a>', inputs: ['', '', ''] }),
+        notified('https://hooks.slack.test/T/B/x', verify, { properties: null }),
+      ].map(({ posted }) => (posted as { text: string } | null)?.text),
+      [
+        `:red_circle: clerk/clerk-android v1.2.3 release blocked: unit tests and lint failed · ${RUN}`,
+        `:red_circle: clerk/clerk-android telemetry-v1.1.1 release blocked: unit tests and lint failed · ${RUN}`,
+        `:red_circle: clerk/clerk-android v1.2.4-&lt;b&gt;&amp;&lt;a&gt; release blocked: unit tests and lint failed · ${RUN}`,
+        `:red_circle: clerk/clerk-android release blocked: unit tests and lint failed · ${RUN}`,
+      ],
+    );
+  });
+
+  it('still names the repository and links the run when the checkout failed, so neither the script nor the version is there', () => {
+    assert.deepEqual(notified('https://hooks.slack.test/T/B/x', { ...PASSED, verify: 'failure', 'create-release': 'skipped' }, { withScript: false, properties: null }), {
       status: 0,
-      stdout: '::warning::Could not name the gates that failed; the message names none\n',
-      posted: { url: 'https://hooks.slack.test/T/B/x', text: `:red_circle: clerk/clerk-android v1.2.3 release blocked · ${RUN}` },
+      stdout: '::warning::Could not name the release or the gates that stopped it; the message names neither\n',
+      posted: { url: 'https://hooks.slack.test/T/B/x', text: `:red_circle: clerk/clerk-android release blocked · ${RUN}` },
     });
   });
 

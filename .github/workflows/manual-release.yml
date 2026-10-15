@@ -650,20 +650,20 @@ jobs:
           tag="$RELEASE_TAG"
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" = "true" ]; then
-              tag="telemetry-v$(sed -n 's/^CLERK_TELEMETRY_VERSION=//p' gradle.properties 2>/dev/null || true)"
+              version="$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties 2>/dev/null | tr -d '[:space:]' || true)"
+              tag="${version:+telemetry-v$version}"
             else
-              tag="v$(sed -n 's/^CLERK_API_VERSION=//p' gradle.properties 2>/dev/null || true)"
+              version="$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties 2>/dev/null | tr -d '[:space:]' || true)"
+              tag="${version:+v$version}"
             fi
           fi
 
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          blocked=":red_circle: $GITHUB_REPOSITORY $tag release blocked"
-          if failed="$(node .github/scripts/nightly-failure-message.mjs --release 'verify=unit tests and lint' 'verify-e2e=end-to-end tests' 'integration-test=integration tests' 'paparazzi-verify=Paparazzi screenshot tests' 'create-release=creating the GitHub release')"; then
-            blocked="$blocked: $failed"
-          else
-            echo "::warning::Could not name the gates that failed; the message names none"
+          if ! blocked="$(RELEASE="$tag" node .github/scripts/nightly-failure-message.mjs --release 'verify=unit tests and lint' 'verify-e2e=end-to-end tests' 'integration-test=integration tests' 'paparazzi-verify=Paparazzi screenshot tests' 'create-release=creating the GitHub release')"; then
+            echo "::warning::Could not name the release or the gates that stopped it; the message names neither"
+            blocked="release blocked"
           fi
-          message="$blocked · <$run_url|View the run>"
+          message=":red_circle: $GITHUB_REPOSITORY $blocked · <$run_url|View the run>"
 
           PAYLOAD=$(jq -n --arg text "$message" '{text: $text, unfurl_links: false, unfurl_media: false}')
 
