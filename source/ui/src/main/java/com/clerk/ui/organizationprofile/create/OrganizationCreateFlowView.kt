@@ -110,6 +110,7 @@ internal fun OrganizationCreateFlowView(
               logoFile = submit.logoFile,
             )
           },
+          onSlugEdited = viewModel::clearSlugError,
         )
       }
     }
@@ -121,6 +122,7 @@ private fun CreateOrganizationFormContent(
   creationDefaults: OrganizationCreationDefaults?,
   state: OrganizationCreateFlowState,
   onSubmit: (com.clerk.ui.organizationprofile.form.OrganizationProfileFormSubmit) -> Unit,
+  onSlugEdited: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val defaultName = creationDefaults?.form?.name.orEmpty()
@@ -144,6 +146,8 @@ private fun CreateOrganizationFormContent(
         submitText = stringResource(R.string.create_organization),
         isLoading = state.isLoading,
         onSubmit = onSubmit,
+        serverSlugError = state.slugError,
+        onSlugEdited = onSlugEdited,
       )
     }
     item { SecuredByClerkView() }

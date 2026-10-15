@@ -9,6 +9,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.updateLogo
 import com.clerk.api.session.Session
+import com.clerk.ui.organizationprofile.form.slugErrorMessage
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ internal class OrganizationCreateFlowViewModel : ViewModel() {
     }
     if (_state.value.isLoading) return
 
-    _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+    _state.value = _state.value.copy(isLoading = true, errorMessage = null, slugError = null)
     viewModelScope.launch(Dispatchers.IO) {
       Organization.create(name = name, slug = slug)
         .onSuccess { organization ->
@@ -37,8 +38,14 @@ internal class OrganizationCreateFlowViewModel : ViewModel() {
           setActiveOrganization(sessionId = sessionId, organization = organizationWithLogo)
         }
         .onFailure { failure ->
+          val slugError = slug?.let { failure.error?.slugErrorMessage() }
           withContext(Dispatchers.Main) {
-            _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
+            _state.value =
+              _state.value.copy(
+                isLoading = false,
+                errorMessage = if (slugError == null) failure.errorMessage else null,
+                slugError = slugError,
+              )
           }
         }
     }
@@ -50,6 +57,10 @@ internal class OrganizationCreateFlowViewModel : ViewModel() {
 
   fun clearError() {
     _state.value = _state.value.copy(errorMessage = null)
+  }
+
+  fun clearSlugError() {
+    _state.value = _state.value.copy(slugError = null)
   }
 
   private suspend fun uploadLogoIfNeeded(
@@ -88,6 +99,7 @@ internal class OrganizationCreateFlowViewModel : ViewModel() {
 internal data class OrganizationCreateFlowState(
   val isLoading: Boolean = false,
   val errorMessage: String? = null,
+  val slugError: String? = null,
   val createdOrganization: Organization? = null,
   val completedSession: Session? = null,
 )

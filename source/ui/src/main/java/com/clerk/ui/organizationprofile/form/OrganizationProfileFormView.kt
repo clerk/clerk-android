@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import coil3.compose.SubcomposeAsyncImage
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.ui.ClerkTestTags
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -63,6 +64,8 @@ import java.io.FileOutputStream
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -82,6 +85,8 @@ internal fun OrganizationProfileFormView(
   enabled: Boolean = true,
   advisory: (@Composable () -> Unit)? = null,
   footer: (@Composable () -> Unit)? = null,
+  serverSlugError: String? = null,
+  onSlugEdited: () -> Unit = {},
 ) {
   val context = LocalContext.current
   val invalidSlugMessage = stringResource(R.string.enter_a_valid_organization_slug)
@@ -169,16 +174,18 @@ internal fun OrganizationProfileFormView(
       organizationName = organizationName,
       slug = slug,
       slugEnabled = slugEnabled,
-      slugError = slugError,
+      slugError = slugError ?: serverSlugError,
       enabled = enabled && !isLoading,
       onOrganizationNameChange = {
         organizationName = it
         if (autoGenerateSlug) slug = createOrganizationSlug(it)
         slugError = null
+        onSlugEdited()
       },
       onSlugChange = {
         slug = it
         slugError = null
+        onSlugEdited()
       },
     )
 
@@ -209,6 +216,11 @@ internal fun OrganizationProfileFormView(
     footer?.invoke()
   }
 }
+
+internal fun ClerkErrorResponse.slugErrorMessage(): String? =
+  errors
+    .firstOrNull { it.meta?.get("param_name")?.jsonPrimitive?.contentOrNull == "slug" }
+    ?.let { it.longMessage ?: it.message }
 
 internal data class OrganizationProfileFormSubmit(
   val name: String,
