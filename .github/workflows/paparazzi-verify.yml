@@ -17,7 +17,7 @@ permissions:
 jobs:
   verify:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: ${{ github.event_name == 'schedule' && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2404' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -33,8 +33,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          # On GitHub's runner a save goes to the repository's Actions cache, which is capped at 10 GB and holds verify-app-cache's entries.
-          cache-disabled: ${{ github.event_name == 'schedule' }}
+          cache-read-only: true
 
       - name: Verify Paparazzi snapshots
         if: ${{ !inputs.record }}

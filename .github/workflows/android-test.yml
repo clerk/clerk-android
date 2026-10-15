@@ -12,7 +12,7 @@ permissions:
 jobs:
   e2e-runner-tests:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       PACKAGE: e2e-tests
@@ -58,7 +58,7 @@ jobs:
 
   test-module:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
@@ -66,14 +66,17 @@ jobs:
             path: "source/api"
             label: "source-api"   # <— safe artifact label (no /)
             task: "testDebugUnitTest"
+            save-cache: true
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui-snapshots"
             task: "verifyPaparazziDebug --tests 'com.clerk.snapshot.*'"
+            save-cache: true
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui-unit"
             task: "verifyPaparazziDebug --tests 'com.clerk.ui.*'"
+            save-cache: true
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
@@ -93,6 +96,9 @@ jobs:
       
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # GitHub keeps 10 GB of Actions cache per repository, so only the slowest jobs save their Gradle state from main.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' || !matrix.save-cache }}
       
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -132,7 +138,7 @@ jobs:
 
   api-check:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -148,6 +154,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

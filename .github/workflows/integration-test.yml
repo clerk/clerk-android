@@ -22,7 +22,7 @@ permissions:
 jobs:
   integration-test:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: ${{ github.event_name == 'schedule' && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2404' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Check that the integration tests have a key
@@ -42,14 +42,12 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
-          # On GitHub's runner a save goes to the repository's Actions cache, which is capped at 10 GB and holds verify-app-cache's entries.
-          cache-read-only: ${{ github.event_name == 'schedule' }}
+          cache-jdk: true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-disabled: ${{ github.event_name == 'schedule' }}
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
