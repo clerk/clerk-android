@@ -23,6 +23,7 @@ import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
+import okhttp3.ConnectionSpec
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -134,26 +135,28 @@ internal object ClerkApi {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion
 
-    val client =
-      OkHttpClient.Builder()
-        .apply {
-          addInterceptor(ClientSyncingMiddleware(json = json))
-          addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
-          addInterceptor(DeviceTokenSavingMiddleware())
-          addInterceptor(UrlAppendingMiddleware())
-
-          if (Clerk.debugMode) {
-            addInterceptor(RequestLoggingMiddleware.create())
-          }
-        }
-        .build()
-
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
-      .client(client)
+      .client(buildHttpClient(customHeaders))
       .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
       .addConverterFactory(ClerkApiResultConverterFactory)
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }
+
+  @VisibleForTesting
+  internal fun buildHttpClient(customHeaders: Map<String, String>): OkHttpClient =
+    OkHttpClient.Builder()
+      .apply {
+        connectionSpecs(listOf(ConnectionSpec.MODERN_TLS))
+        addInterceptor(ClientSyncingMiddleware(json = json))
+        addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
+        addInterceptor(DeviceTokenSavingMiddleware())
+        addInterceptor(UrlAppendingMiddleware())
+
+        if (Clerk.debugMode) {
+          addInterceptor(RequestLoggingMiddleware.create())
+        }
+      }
+      .build()
 }

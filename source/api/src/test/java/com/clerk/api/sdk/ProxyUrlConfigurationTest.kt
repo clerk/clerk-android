@@ -13,27 +13,31 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.serialization.ClerkResult
 import io.mockk.coEvery
-import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
 class ProxyUrlConfigurationTest {
 
-  private lateinit var mockContext: Context
+  private lateinit var context: Context
   private val configurationManagers = mutableListOf<ConfigurationManager>()
 
   @Before
   fun setUp() {
-    mockContext = mockk(relaxed = true)
+    context = RuntimeEnvironment.getApplication()
+    ClerkApi.reset()
     mockkObject(Client.Companion)
     mockkObject(Environment.Companion)
     coEvery { Client.get() } returns ClerkResult.success(Client())
@@ -57,6 +61,73 @@ class ProxyUrlConfigurationTest {
     assertEquals(proxyUrl, Clerk.baseUrl)
     assertEquals(proxyUrl, ClerkApi.configuredBaseUrl)
     assertEquals("$proxyUrl/v1/", ClerkApi.configuredUrlWithVersion)
+  }
+
+  @Test
+  fun `proxyUrl with a non-default port is accepted`() {
+    val proxyUrl = "https://proxy.example.com:8443/__clerk"
+
+    configure("pk_test_dummy", ClerkConfigurationOptions(proxyUrl = proxyUrl))
+
+    assertEquals(proxyUrl, ClerkApi.configuredBaseUrl)
+  }
+
+  @Test
+  fun `http proxyUrl is rejected`() {
+    assertProxyUrlRejected("http://proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl without a scheme is rejected`() {
+    assertProxyUrlRejected("proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl without a host is rejected`() {
+    assertProxyUrlRejected("https://")
+  }
+
+  @Test
+  fun `proxyUrl with a port but no host is rejected`() {
+    assertProxyUrlRejected("https://:8443/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl with a non-http scheme is rejected`() {
+    assertProxyUrlRejected("ftp://proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl with userinfo is rejected`() {
+    assertProxyUrlRejected("https://user:secret@proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl with only a username is rejected`() {
+    assertProxyUrlRejected("https://user@proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl with a query is rejected`() {
+    assertProxyUrlRejected("https://proxy.example.com/__clerk?env=dev")
+  }
+
+  @Test
+  fun `proxyUrl with a fragment is rejected`() {
+    assertProxyUrlRejected("https://proxy.example.com/__clerk#section")
+  }
+
+  @Test
+  fun `rejected proxyUrl error does not echo credentials`() {
+    val error =
+      assertThrows(IllegalArgumentException::class.java) {
+        configure(
+          "pk_test_dummy",
+          ClerkConfigurationOptions(proxyUrl = "https://user:secret@proxy.example.com"),
+        )
+      }
+
+    assertFalse(error.message.orEmpty().contains("secret"))
   }
 
   @Test
@@ -84,10 +155,20 @@ class ProxyUrlConfigurationTest {
     assertEquals("$expectedBaseUrl/v1/", ClerkApi.configuredUrlWithVersion)
   }
 
+  private fun assertProxyUrlRejected(proxyUrl: String) {
+    val manager = ConfigurationManager().also { configurationManagers += it }
+
+    assertThrows(IllegalArgumentException::class.java) {
+      manager.configure(context, "pk_test_dummy", ClerkConfigurationOptions(proxyUrl = proxyUrl))
+    }
+    assertFalse(manager.isConfigured())
+    assertNull(ClerkApi.configuredBaseUrl)
+  }
+
   private fun configure(publishableKey: String, options: ClerkConfigurationOptions?) {
     ConfigurationManager()
       .also { configurationManagers += it }
-      .configure(mockContext, publishableKey, options)
+      .configure(context, publishableKey, options)
   }
 
   private fun testEnvironment(): Environment {
