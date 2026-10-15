@@ -1,4 +1,4 @@
-import { newOrganizationName, tapMiddle } from '../../compose.ts';
+import { newOrganizationName, middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 
 test('creating an organization from OrganizationSwitcher makes it active', async ({ host, screen }) => {
@@ -13,7 +13,7 @@ test('creating an organization from OrganizationSwitcher makes it active', async
   await host.tap(screen.getByTestId('clerk.organization.profileForm.submit'));
   const close = screen.getByLabel('Close');
   await expect(close).toBeVisible({ timeout: 20_000 });
-  await tapMiddle(close);
+  await host.tap(middleOf(close));
   await host.expectSignedInAs(user, 30_000);
   await expect(switcher.getByText(name)).toBeVisible({ timeout: 20_000 });
   await expect(switcher.getByText(user.email)).toHaveCount(0);

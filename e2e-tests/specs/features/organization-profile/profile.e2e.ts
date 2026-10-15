@@ -1,4 +1,4 @@
-import { newOrganizationName, signInWithNewOrganization, tapMiddle } from '../../compose.ts';
+import { newOrganizationName, signInWithNewOrganization, middleOf } from '../../compose.ts';
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
 import type { HostFixture } from '../../support/types.ts';
 import type { Screen } from 'e2e';
@@ -10,10 +10,10 @@ async function openManageOrganization(host: HostFixture, screen: Screen, name: s
   await expect(screen.getByText('Update profile', { exact: true })).toBeVisible({ timeout: 20_000 });
 }
 
-async function openRow(screen: Screen, label: string): Promise<void> {
+async function openRow(host: HostFixture, screen: Screen, label: string): Promise<void> {
   const row = screen.getByText(label, { exact: true }).first();
   await expect(row).toBeVisible({ timeout: 20_000 });
-  await tapMiddle(row);
+  await host.tap(middleOf(row));
 }
 
 test('the creator of an organization sees every row of its profile', async ({ host, screen, device }) => {
@@ -25,36 +25,36 @@ test('the creator of an organization sees every row of its profile', async ({ ho
   }
   await host.screenshot('org-profile');
 
-  await openRow(screen, 'Verified domains');
+  await openRow(host, screen, 'Verified domains');
   await expect(screen.getByText('Add domain', { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText('No verified domains.')).toHaveCount(0);
   await host.screenshot('verified-domains');
   await device.back();
 
-  await openRow(screen, 'Members');
+  await openRow(host, screen, 'Members');
   await expect(screen.getByText('You', { exact: true })).toBeVisible({ timeout: 20_000 });
   await host.screenshot('members');
-  await openRow(screen, 'Invitations');
+  await openRow(host, screen, 'Invitations');
   await expect(screen.getByText('No invitations sent')).toBeVisible({ timeout: 20_000 });
-  await openRow(screen, 'Requests');
+  await openRow(host, screen, 'Requests');
   await expect(screen.getByText('No membership requests')).toBeVisible({ timeout: 20_000 });
 });
 
 test('an invitation sent from Members shows on the Invitations tab', async ({ host, screen }) => {
   await openManageOrganization(host, screen, newOrganizationName(host, 'Invite'));
-  await openRow(screen, 'Members');
-  await openRow(screen, 'Invite');
+  await openRow(host, screen, 'Members');
+  await openRow(host, screen, 'Invite');
   const invitee = await host.newEmail();
   await host.fill(screen.getByText('Enter email addresses'), invitee);
-  await openRow(screen, 'Send invitations');
-  await openRow(screen, 'Invitations');
+  await openRow(host, screen, 'Send invitations');
+  await openRow(host, screen, 'Invitations');
   await expect(screen.getByText(invitee)).toBeVisible({ timeout: 20_000 });
   await host.screenshot('invitation-sent');
 });
 
 test('Update profile renames the organization', async ({ host, screen }) => {
   await openManageOrganization(host, screen, newOrganizationName(host, 'Rename'));
-  await openRow(screen, 'Update profile');
+  await openRow(host, screen, 'Update profile');
   const field = screen.getByTestId('clerk.organization.profileForm.name');
   await expect(field).toBeVisible({ timeout: 20_000 });
   await field.clear();
@@ -75,7 +75,7 @@ test('a member whose role reads domains and cannot manage them sees No verified 
   await expect(switcher.getByText(org.name)).toBeVisible({ timeout: 20_000 });
   await host.tap(switcher);
   await host.tap(screen.getByTestId('clerk.organizationSwitcher.manageOrganization'));
-  await openRow(screen, 'Verified domains');
+  await openRow(host, screen, 'Verified domains');
   await expect(screen.getByText('No verified domains.')).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText('Add domain', { exact: true })).toHaveCount(0);
   await host.screenshot('org-domains-empty');
@@ -94,7 +94,7 @@ test('a user who signs up at a verified domain of the organization asks to join,
   await host.fill(screen.getByTestId('clerk.auth.signUp.code'), CLERK_TEST_CODE);
   await host.expectSignedInAs(requester, 30_000);
   await host.tap(screen.getByTestId('clerk.organizationSwitcher.trigger'));
-  await openRow(screen, 'Request to join');
+  await openRow(host, screen, 'Request to join');
   await expect(screen.getByText('Pending approval', { exact: true })).toBeVisible({ timeout: 20_000 });
 
   await host.launch({ signedInAs: admin });
@@ -102,8 +102,8 @@ test('a user who signs up at a verified domain of the organization asks to join,
   await expect(switcher.getByText(org.name)).toBeVisible({ timeout: 20_000 });
   await host.tap(switcher);
   await host.tap(screen.getByTestId('clerk.organizationSwitcher.manageOrganization'));
-  await openRow(screen, 'Members');
-  await openRow(screen, 'Requests');
+  await openRow(host, screen, 'Members');
+  await openRow(host, screen, 'Requests');
   await expect(screen.getByText(requester).first()).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText('Accept', { exact: true })).toBeVisible();
   await expect(screen.getByText('Reject', { exact: true })).toBeVisible();
