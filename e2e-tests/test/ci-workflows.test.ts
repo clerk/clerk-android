@@ -39,6 +39,12 @@ function eq(left: unknown, right: unknown): boolean {
 }
 
 function evaluate(condition: string, context: Context): boolean {
+  const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
+  // GitHub adds success() to a condition that calls no status function.
+  return Boolean(compute(/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`, context));
+}
+
+function compute(expression: string, context: Context): unknown {
   const value = (path: string): unknown => {
     if (path === 'github.event_name') return context.event;
     if (path === 'github.repository') return context.repository ?? 'clerk/clerk-android';
@@ -49,13 +55,11 @@ function evaluate(condition: string, context: Context): boolean {
     if (input) return context.inputs?.[input[1]!] ?? null;
     const entry = /^matrix\.(\w+)$/.exec(path);
     if (entry) return context.matrix?.[entry[1]!] ?? null;
-    throw new Error(`no value for ${path} in ${condition}`);
+    throw new Error(`no value for ${path} in ${expression}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
   const results = Object.values(context.needs ?? {});
-  const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
-  // GitHub adds success() to a condition that calls no status function.
-  const script = (/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`)
+  const script = expression
     .replaceAll(/hashFiles\('([^']*)'\)/g, (_, pattern: string) => JSON.stringify((context.runnerFiles ?? []).some((file) => matchesGlob(file, pattern)) ? 'hash' : ''))
     .replaceAll('success()', String(!(context.cancelled ?? false) && !(context.earlierStepFailed ?? false) && results.every((result) => result === 'success')))
     .replaceAll('failure()', String((context.earlierStepFailed ?? false) || results.includes('failure')))
@@ -66,7 +70,12 @@ function evaluate(condition: string, context: Context): boolean {
     .replaceAll(/\b(?:github|needs|inputs|matrix)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
   const contains = (list: readonly unknown[], item: unknown): boolean => list.some((entry) => eq(entry, item));
-  return Boolean(new Function('eq', 'contains', `return ${script};`)(eq, contains));
+  return new Function('eq', 'contains', `return ${script};`)(eq, contains);
+}
+
+function setting(text: string, context: Context): unknown {
+  const expression = /^\$\{\{ (.+) \}\}$/.exec(text)?.[1];
+  return expression === undefined ? text : compute(expression, context);
 }
 
 function ranJobs(context: Context): readonly string[] {
@@ -195,6 +204,47 @@ describe('the nightly run', () => {
         file,
       );
     }
+  });
+
+  const BLACKSMITH = 'blacksmith-4vcpu-ubuntu-2404';
+  const ON_GITHUB = [
+    { file: 'integration-test.yml', job: 'integration-test' },
+    { file: 'paparazzi-verify.yml', job: 'verify' },
+  ];
+
+  it('runs the integration tests and the Paparazzi screenshot tests on GitHub\'s free runner, and on the faster Blacksmith runner when a release or a person starts them', () => {
+    const runners = ({ file, job }: { file: string; job: string }): unknown[] => {
+      const runsOn = /^ {4}runs-on: (.+)$/m.exec(jobs(read(file)).get(job) ?? '')?.[1] ?? '';
+      return ['schedule', 'release', 'workflow_dispatch'].map((event) => setting(runsOn, { event }));
+    };
+    assert.deepEqual(ON_GITHUB.map(runners), [
+      ['ubuntu-latest', BLACKSMITH, BLACKSMITH],
+      ['ubuntu-latest', BLACKSMITH, BLACKSMITH],
+    ]);
+  });
+
+  it('saves nothing to the Actions cache when it runs on GitHub\'s runner, and still saves from main when a person starts it on Blacksmith', () => {
+    const saving = ({ file, job }: { file: string; job: string }, context: Context): string[] =>
+      (jobs(read(file)).get(job) ?? '')
+        .split(/\n(?= {6}- )/)
+        .filter((step) => {
+          const input = (name: string): unknown => {
+            const text = new RegExp(`^ {10}${name}: (.+)$`, 'm').exec(step)?.[1];
+            return text === undefined ? undefined : setting(text, context);
+          };
+          if (/^ +uses: actions\/setup-java@/m.test(step)) return input('cache') !== undefined && input('cache-read-only') !== true;
+          // setup-gradle saves from the default branch unless told otherwise, and the nightly runs on main.
+          if (/^ +uses: gradle\/actions\/setup-gradle@/m.test(step)) return input('cache-disabled') !== true && input('cache-read-only') !== true;
+          return /^ +uses: actions\/cache(?:\/save)?@/m.test(step);
+        })
+        .map((step) => /- name: (.+)/.exec(step)?.[1] ?? step);
+    assert.deepEqual(
+      ON_GITHUB.map((job) => [saving(job, { event: 'schedule' }), saving(job, { event: 'workflow_dispatch' })]),
+      [
+        [[], ['Set up JDK 21', 'Setup Gradle']],
+        [[], ['Setup Gradle']],
+      ],
+    );
   });
 
   it('passes the mobile team alerts webhook to the shared notify workflow', () => {
