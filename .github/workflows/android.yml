@@ -26,6 +26,9 @@ jobs:
           cache-jdk: true
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # GitHub keeps 10 GB of cache per repository, so only the slow jobs save their Gradle state.
+          cache-read-only: true
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Assemble ${{ matrix.module }}

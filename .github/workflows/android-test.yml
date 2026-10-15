@@ -66,10 +66,12 @@ jobs:
             path: "source/api"
             label: "source-api"   # <— safe artifact label (no /)
             task: "testDebugUnitTest"
+            save-cache: true
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui"
             task: "verifyPaparazziDebug"
+            save-cache: true
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
@@ -89,6 +91,9 @@ jobs:
       
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # GitHub keeps 10 GB of cache per repository, so only the slow jobs save their Gradle state.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' || !matrix.save-cache }}
       
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -144,6 +149,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
