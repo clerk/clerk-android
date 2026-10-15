@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { expect, type Locator, type Screen } from 'e2e';
 import { ASSERTION_TIMEOUT_MS } from './support/config.ts';
 import type { HostFixture, SeededUser } from './support/types.ts';
@@ -10,6 +11,9 @@ export async function tapMiddle(target: Locator): Promise<void> {
 }
 
 export const customSignInLink = (screen: Screen): Locator => screen.getByTestId('e2e.home.customSignIn');
+
+// A retry keeps host.runId, and Clerk refuses a second organization with the same slug.
+export const newOrganizationName = (host: HostFixture, prefix: string): string => `${prefix} ${host.runId} ${randomBytes(3).toString('hex')}`;
 
 export async function signInWithNewOrganization(host: HostFixture, screen: Screen, name: string): Promise<{ user: SeededUser; switcher: Locator }> {
   const user = await host.seedUser();

@@ -1,8 +1,8 @@
-import { signInWithNewOrganization } from '../../compose.ts';
+import { newOrganizationName, signInWithNewOrganization } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 
 test('the switcher moves from the organization to the personal account and back', async ({ host, screen }) => {
-  const name = `Switch ${host.runId}`;
+  const name = newOrganizationName(host, 'Switch');
   const { user, switcher } = await signInWithNewOrganization(host, screen, name);
   await host.launch({ keepStorage: true, landsOn: host.app.signedIn });
   await expect(switcher.getByText(name)).toBeVisible({ timeout: 20_000 });

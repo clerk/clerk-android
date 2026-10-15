@@ -1,4 +1,4 @@
-import { tapMiddle } from '../../compose.ts';
+import { newOrganizationName, tapMiddle } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 
 test('creating an organization from OrganizationSwitcher makes it active', async ({ host, screen }) => {
@@ -8,7 +8,7 @@ test('creating an organization from OrganizationSwitcher makes it active', async
   await expect(switcher.getByText(user.email)).toBeVisible();
   await host.tap(switcher);
   await host.tap(screen.getByTestId('clerk.organization.accountList.createOrganization'));
-  const name = `Verify ${host.runId}`;
+  const name = newOrganizationName(host, 'Verify');
   await host.fill(screen.getByTestId('clerk.organization.profileForm.name'), name);
   await host.tap(screen.getByTestId('clerk.organization.profileForm.submit'));
   const close = screen.getByLabel('Close');

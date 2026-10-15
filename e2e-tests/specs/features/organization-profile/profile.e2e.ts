@@ -1,4 +1,4 @@
-import { signInWithNewOrganization, tapMiddle } from '../../compose.ts';
+import { newOrganizationName, signInWithNewOrganization, tapMiddle } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 import type { HostFixture } from '../../support/types.ts';
 import type { Screen } from 'e2e';
@@ -17,7 +17,7 @@ async function openRow(screen: Screen, label: string): Promise<void> {
 }
 
 test('the creator of an organization sees every row of its profile', async ({ host, screen, device }) => {
-  const name = `Profile ${host.runId}`;
+  const name = newOrganizationName(host, 'Profile');
   await openManageOrganization(host, screen, name);
   await expect(screen.getByText(name, { exact: true })).toBeVisible();
   for (const row of ['Members', 'Verified domains', 'Leave organization', 'Delete organization']) {
@@ -41,7 +41,7 @@ test('the creator of an organization sees every row of its profile', async ({ ho
 });
 
 test('an invitation sent from Members shows on the Invitations tab', async ({ host, screen }) => {
-  await openManageOrganization(host, screen, `Invite ${host.runId}`);
+  await openManageOrganization(host, screen, newOrganizationName(host, 'Invite'));
   await openRow(screen, 'Members');
   await openRow(screen, 'Invite');
   const invitee = await host.newEmail();
@@ -53,7 +53,7 @@ test('an invitation sent from Members shows on the Invitations tab', async ({ ho
 });
 
 test('Update profile renames the organization', async ({ host, screen }) => {
-  await openManageOrganization(host, screen, `Rename ${host.runId}`);
+  await openManageOrganization(host, screen, newOrganizationName(host, 'Rename'));
   await openRow(screen, 'Update profile');
   const field = screen.getByTestId('clerk.organization.profileForm.name');
   await expect(field).toBeVisible({ timeout: 20_000 });
