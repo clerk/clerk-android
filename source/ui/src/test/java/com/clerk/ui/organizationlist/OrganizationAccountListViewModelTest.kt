@@ -303,6 +303,58 @@ class OrganizationAccountListViewModelTest {
     )
   }
 
+  @Test
+  fun `a page from an older list finishing after a reload does not append`() = runTest {
+    val user = user()
+    val olderPage =
+      CompletableDeferred<
+        ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
+      >()
+    var firstPageRequests = 0
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } coAnswers
+      {
+        firstPageRequests += 1
+        if (firstPageRequests == 1) {
+          ClerkResult.success(
+            ClerkPaginatedResponse(data = listOf(membership("org_old")), totalCount = 2)
+          )
+        } else {
+          ClerkResult.success(
+            ClerkPaginatedResponse(data = listOf(membership("org_new")), totalCount = 1)
+          )
+        }
+      }
+    coEvery { user.getOrganizationMemberships(limit = 2, offset = 1) } coAnswers
+      {
+        olderPage.await()
+      }
+    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      user.getOrganizationSuggestions(
+        limit = 2,
+        offset = 0,
+        statuses = listOf("pending", "accepted"),
+      )
+    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = testViewModel(user = user)
+    viewModel.load()
+    viewModel.loadMoreMemberships()
+    viewModel.reset()
+    viewModel.load()
+    olderPage.complete(
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = listOf(membership("org_old_page")), totalCount = 2)
+      )
+    )
+
+    assertEquals(
+      listOf("org_new"),
+      viewModel.state.value.memberships.map { it.organization.id },
+    )
+  }
+
   private fun testViewModel(
     user: User? = null,
     session: Session? = null,

@@ -23,11 +23,12 @@ import com.clerk.api.user.getOrganizationSuggestions
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -40,11 +41,12 @@ internal open class OrganizationAccountListViewModel(
   protected val mutableState = MutableStateFlow(OrganizationAccountListState())
   val state = mutableState.asStateFlow()
 
-  private var loadJob: Job? = null
+  private var listJob = newListJob()
 
   fun load() {
     if (mutableState.value.initialLoadAttempted) return
-    loadJob?.cancel()
+    listJob.cancel()
+    listJob = newListJob()
 
     val user = currentUser()
     if (user == null) {
@@ -61,32 +63,31 @@ internal open class OrganizationAccountListViewModel(
         canCreateOrganization = user.createOrganizationEnabled == true,
       )
 
-    loadJob =
-      viewModelScope.launch(workDispatcher) {
-        val loadResult = loadInitialResources(user)
-        withContext(Dispatchers.Main) {
-          when (loadResult) {
-            is InitialLoadResult.Success -> {
-              mutableState.value =
-                mutableState.value.copy(
-                  isLoading = false,
-                  memberships = loadResult.memberships.data,
-                  membershipsTotalCount = loadResult.memberships.totalCount,
-                  invitations = loadResult.invitations.data,
-                  invitationsTotalCount = loadResult.invitations.totalCount,
-                  suggestions = loadResult.suggestions.data,
-                  suggestionsTotalCount = loadResult.suggestions.totalCount,
-                  creationDefaults = loadResult.creationDefaults,
-                  hasLoadedInitialResources = true,
-                  errorMessage = null,
-                )
-            }
-            is InitialLoadResult.Failure ->
-              mutableState.value =
-                mutableState.value.copy(isLoading = false, errorMessage = loadResult.message)
+    viewModelScope.launch(listJob + workDispatcher) {
+      val loadResult = loadInitialResources(user)
+      withContext(Dispatchers.Main) {
+        when (loadResult) {
+          is InitialLoadResult.Success -> {
+            mutableState.value =
+              mutableState.value.copy(
+                isLoading = false,
+                memberships = loadResult.memberships.data,
+                membershipsTotalCount = loadResult.memberships.totalCount,
+                invitations = loadResult.invitations.data,
+                invitationsTotalCount = loadResult.invitations.totalCount,
+                suggestions = loadResult.suggestions.data,
+                suggestionsTotalCount = loadResult.suggestions.totalCount,
+                creationDefaults = loadResult.creationDefaults,
+                hasLoadedInitialResources = true,
+                errorMessage = null,
+              )
           }
+          is InitialLoadResult.Failure ->
+            mutableState.value =
+              mutableState.value.copy(isLoading = false, errorMessage = loadResult.message)
         }
       }
+    }
   }
 
   fun retryLoad() {
@@ -104,7 +105,7 @@ internal open class OrganizationAccountListViewModel(
     if (!current.membershipsHasNextPage || current.isLoadingMoreMemberships) return
 
     mutableState.value = current.copy(isLoadingMoreMemberships = true, errorMessage = null)
-    viewModelScope.launch(workDispatcher) {
+    viewModelScope.launch(listJob + workDispatcher) {
       user
         .getOrganizationMemberships(limit = pageSize, offset = current.memberships.size)
         .onSuccess { response ->
@@ -136,7 +137,7 @@ internal open class OrganizationAccountListViewModel(
     if (!current.invitationsHasNextPage || current.isLoadingMoreInvitations) return
 
     mutableState.value = current.copy(isLoadingMoreInvitations = true, errorMessage = null)
-    viewModelScope.launch(workDispatcher) {
+    viewModelScope.launch(listJob + workDispatcher) {
       user
         .getOrganizationInvitations(
           limit = pageSize,
@@ -172,7 +173,7 @@ internal open class OrganizationAccountListViewModel(
     if (!current.suggestionsHasNextPage || current.isLoadingMoreSuggestions) return
 
     mutableState.value = current.copy(isLoadingMoreSuggestions = true, errorMessage = null)
-    viewModelScope.launch(workDispatcher) {
+    viewModelScope.launch(listJob + workDispatcher) {
       user
         .getOrganizationSuggestions(
           limit = pageSize,
@@ -356,6 +357,8 @@ internal open class OrganizationAccountListViewModel(
     }
     return failure.errorMessage
   }
+
+  private fun newListJob() = SupervisorJob(viewModelScope.coroutineContext.job)
 
   private suspend fun loadInitialResources(user: User): InitialLoadResult = coroutineScope {
     val memberships = async { user.getOrganizationMemberships(limit = pageSize, offset = 0) }
