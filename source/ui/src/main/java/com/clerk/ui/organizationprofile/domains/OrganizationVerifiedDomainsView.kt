@@ -584,7 +584,7 @@ private fun LoadingState() {
 @Composable
 private fun EmptyState(text: String) {
   Text(
-    modifier = Modifier.fillMaxWidth().padding(vertical = dp24),
+    modifier = Modifier.fillMaxWidth().padding(dp24),
     text = text,
     style = ClerkMaterialTheme.typography.bodyMedium,
     color = ClerkMaterialTheme.colors.mutedForeground,
