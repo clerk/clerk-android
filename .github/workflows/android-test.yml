@@ -60,6 +60,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
+      fail-fast: false
       matrix:
         include:
           - module: ":source:api"
@@ -68,8 +69,12 @@ jobs:
             task: "testDebugUnitTest"
           - module: ":source:ui"
             path: "source/ui"
-            label: "source-ui"
-            task: "verifyPaparazziDebug"
+            label: "source-ui-snapshots"
+            task: "verifyPaparazziDebug --tests 'com.clerk.snapshot.*'"
+          - module: ":source:ui"
+            path: "source/ui"
+            label: "source-ui-unit"
+            task: "verifyPaparazziDebug --tests 'com.clerk.ui.*'"
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
@@ -110,7 +115,7 @@ jobs:
         if: failure() && matrix.module == ':source:ui' && hashFiles('source/ui/build/paparazzi/failures/**') != ''
         uses: actions/upload-artifact@v7
         with:
-          name: paparazzi-report
+          name: paparazzi-report-${{ matrix.label }}
           retention-days: 7
           path: |
             source/ui/build/reports/paparazzi/**
@@ -122,7 +127,7 @@ jobs:
           {
             echo "### Paparazzi differences detected";
             echo "";
-            echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
+            echo "- An artifact whose name starts with **paparazzi-report** was uploaded with the HTML report and image diffs.";
             echo "- If the change is intended, start the **Paparazzi Verify** workflow on your branch with **record** checked and commit the images from its **paparazzi-snapshots** artifact. Snapshots recorded on another machine render differently.";
           } >> "$GITHUB_STEP_SUMMARY"
 

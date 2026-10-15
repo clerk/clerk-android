@@ -77,7 +77,7 @@ jobs:
           {
             echo "### Paparazzi differences detected";
             echo "";
-            echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
+            echo "- An artifact whose name starts with **paparazzi-report** was uploaded with the HTML report and image diffs.";
             echo "- If the change is intended, start the **Paparazzi Verify** workflow on your branch with **record** checked and commit the images from its **paparazzi-snapshots** artifact. Snapshots recorded on another machine render differently.";
           } >> "$GITHUB_STEP_SUMMARY"
 

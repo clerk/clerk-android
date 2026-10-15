@@ -506,14 +506,32 @@ describe('the Paparazzi screenshot tests', () => {
     );
   });
 
-  it('are compared with the committed images in the unit tests of every pull request and push to main, by the task that compares them every night', () => {
+  it('are compared with the committed images in the unit tests of every pull request and push to main, by the task that compares them every night, in two jobs that together run every test class once', () => {
     const gradle = (text: string): string => /^ {8}run: (\.\/gradlew .+)$/m.exec(text)?.[1] ?? '';
     const testModule = jobs(read('android-test.yml')).get('test-module') ?? '';
-    const ui = /^ {10}- module: ":source:ui"\n((?: {12}\w+: .+\n)+)/m.exec(testModule)?.[1] ?? '';
-    const matrix: Record<string, string> = { module: ':source:ui', ...Object.fromEntries([...ui.matchAll(/^ {12}(\w+): "([^"]*)"/gm)].map(([, key, value]) => [key!, value!])) };
-    const unitTests = gradle(testModule.split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '').replaceAll(/\$\{\{ matrix\.(\w+) \}\}/g, (_, key: string) => matrix[key] ?? '');
+    const run = gradle(testModule.split(/\n(?= {6}- )/).find((text) => text.includes('- name: Run unit tests for ')) ?? '');
+    const commands = [...testModule.matchAll(/^ {10}- module: ":source:ui"\n((?: {12}\w+: .+\n)+)/gm)].map(([, fields]) => {
+      const matrix: Record<string, string> = { module: ':source:ui', ...Object.fromEntries([...fields!.matchAll(/^ {12}(\w+): "([^"]*)"/gm)].map(([, key, value]) => [key!, value!])) };
+      return run.replaceAll(/\$\{\{ matrix\.(\w+) \}\}/g, (_, key: string) => matrix[key] ?? '');
+    });
     const nightly = gradle(steps.find((text) => text.includes('- name: Verify Paparazzi snapshots\n')) ?? '');
-    assert.deepEqual([unitTests, nightly], ['./gradlew :source:ui:verifyPaparazziDebug --build-cache --parallel', './gradlew :source:ui:verifyPaparazziDebug --stacktrace']);
+    assert.deepEqual(
+      [commands, nightly],
+      [
+        [
+          "./gradlew :source:ui:verifyPaparazziDebug --tests 'com.clerk.snapshot.*' --build-cache --parallel",
+          "./gradlew :source:ui:verifyPaparazziDebug --tests 'com.clerk.ui.*' --build-cache --parallel",
+        ],
+        './gradlew :source:ui:verifyPaparazziDebug --stacktrace',
+      ],
+    );
+    const filters = commands.map((command) => new RegExp(`^${(/--tests '([^']+)'/.exec(command)?.[1] ?? '').replaceAll('.', '\\.').replaceAll('*', '.*')}$`));
+    const sources = join(WORKFLOWS, '..', '..', 'source', 'ui', 'src', 'test', 'java');
+    const classes = readdirSync(sources, { recursive: true, encoding: 'utf8' })
+      .filter((file) => file.endsWith('.kt') && /@(?:org\.junit\.)?Test\b/.test(readFileSync(join(sources, file), 'utf8')))
+      .map((file) => file.replace(/\.kt$/, '').replaceAll('/', '.'));
+    assert.ok(classes.length > 100, `${classes.length} test classes found`);
+    assert.deepEqual(classes.filter((name) => filters.filter((filter) => filter.test(name)).length !== 1), [], 'each test class runs in exactly one job');
     assert.doesNotMatch(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'), /\bexclude(?:Categories|TestsMatching)\b/, 'source/ui leaves no test out');
   });
 
