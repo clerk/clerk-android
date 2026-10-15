@@ -1,7 +1,8 @@
-import { newOrganizationName, signInWithNewOrganization, middleOf } from '../../compose.ts';
+import { signInWithNewOrganization, middleOf } from '../../compose.ts';
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
 import type { HostFixture } from '../../support/types.ts';
 import type { Screen } from 'e2e';
+import { runPassword } from '../../support/clerk.ts';
 
 async function openManageOrganization(host: HostFixture, screen: Screen, name: string): Promise<void> {
   const { switcher } = await signInWithNewOrganization(host, screen, name);
@@ -17,7 +18,7 @@ async function openRow(host: HostFixture, screen: Screen, label: string): Promis
 }
 
 test('the creator of an organization sees every row of its profile', async ({ host, screen, device }) => {
-  const name = newOrganizationName(host, 'Profile');
+  const name = host.newOrganizationName();
   await openManageOrganization(host, screen, name);
   await expect(screen.getByText(name, { exact: true })).toBeVisible();
   for (const row of ['Members', 'Verified domains', 'Leave organization', 'Delete organization']) {
@@ -41,7 +42,7 @@ test('the creator of an organization sees every row of its profile', async ({ ho
 });
 
 test('an invitation sent from Members shows on the Invitations tab', async ({ host, screen }) => {
-  await openManageOrganization(host, screen, newOrganizationName(host, 'Invite'));
+  await openManageOrganization(host, screen, host.newOrganizationName());
   await openRow(host, screen, 'Members');
   await openRow(host, screen, 'Invite');
   const invitee = await host.newEmail();
@@ -53,12 +54,12 @@ test('an invitation sent from Members shows on the Invitations tab', async ({ ho
 });
 
 test('Update profile renames the organization', async ({ host, screen }) => {
-  await openManageOrganization(host, screen, newOrganizationName(host, 'Rename'));
+  await openManageOrganization(host, screen, host.newOrganizationName());
   await openRow(host, screen, 'Update profile');
   const field = screen.getByTestId('clerk.organization.profileForm.name');
   await expect(field).toBeVisible({ timeout: 20_000 });
   await field.clear();
-  const renamed = `Renamed ${host.runId}`;
+  const renamed = host.newOrganizationName();
   await host.fill(field, renamed);
   await host.tap(screen.getByTestId('clerk.organization.profileForm.submit'));
   await expect(field).toHaveCount(0, { timeout: 20_000 });
@@ -89,7 +90,7 @@ test('a user who signs up at a verified domain of the organization asks to join,
   await host.tap(host.app.signInFullScreen);
   await host.fill(screen.getByTestId('clerk.auth.start.identifier'), requester);
   await host.tap(screen.getByTestId('clerk.auth.start.continue'));
-  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), `Verify-${host.runId}-Pw1!`);
+  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), runPassword(host.runId));
   await host.tap(screen.getByTestId('clerk.auth.signUp.continue'));
   await host.fill(screen.getByTestId('clerk.auth.signUp.code'), CLERK_TEST_CODE);
   await host.expectSignedInAs(requester, 30_000);
