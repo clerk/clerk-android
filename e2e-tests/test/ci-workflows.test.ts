@@ -108,7 +108,7 @@ describe('a pull request', () => {
     assert.deepEqual(ranJobs({ event: 'push' }), PULL_REQUEST_JOBS);
   });
 
-  // setup-gradle restores nothing when another step has already created the Gradle home, as setup-java's Gradle cache does.
+  // setup-gradle restores nothing when another step has already created ~/.gradle/caches, as setup-java's Gradle cache does.
   it('restores the Gradle home that main saved through setup-gradle alone, in every job that runs Gradle', () => {
     const text = new Map(PULL_REQUEST_JOBS.map((job) => {
       const [file, name] = job.split(' ');
