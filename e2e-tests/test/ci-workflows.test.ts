@@ -107,6 +107,22 @@ describe('a pull request', () => {
   it('runs the same jobs again when it is merged, as a push to main', () => {
     assert.deepEqual(ranJobs({ event: 'push' }), PULL_REQUEST_JOBS);
   });
+
+  // setup-gradle restores nothing when another step has already created the Gradle home, as setup-java's Gradle cache does.
+  it('restores the Gradle home that main saved through setup-gradle alone, in every job that runs Gradle', () => {
+    const text = new Map(PULL_REQUEST_JOBS.map((job) => {
+      const [file, name] = job.split(' ');
+      return [job, jobs(read(file!)).get(name!) ?? ''];
+    }));
+    const gradle = PULL_REQUEST_JOBS.filter((job) => text.get(job)!.includes('./gradlew'));
+    assert.deepEqual(gradle, ['android-test.yml test-module', 'android-test.yml api-check', 'android.yml build-module', 'checks.yml checks', 'detekt.yml detekt']);
+    const setUpBeforeGradle = (job: string): boolean => {
+      const setUp = /^ +uses: gradle\/actions\/setup-gradle@/m.exec(text.get(job)!)?.index ?? Infinity;
+      return setUp < text.get(job)!.indexOf('./gradlew');
+    };
+    assert.deepEqual(gradle.filter((job) => !setUpBeforeGradle(job)), []);
+    assert.deepEqual(gradle.filter((job) => /^\s+cache:\s*['"]?gradle\b/m.test(text.get(job)!)), []);
+  });
 });
 
 const WEBHOOK = '${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}';
