@@ -131,6 +131,8 @@ describe('android screenrecord', () => {
         'case "$*" in',
         '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
         '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+        '  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+        '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) echo "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
         '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
         '  *" pull "*) echo mp4 > "${@: -1}" ;;',
         'esac',
@@ -156,6 +158,26 @@ describe('android screenrecord', () => {
     assert.ok(calls.some((c) => c.includes('rm -f /data/local/tmp/verify-r20261003-040814-846e.mp4')), 'removes the device copy');
   });
 
+  it('starts the video at the first frame the MP4 writer logged for this recording, on the host clock, not at an older record of a reused pid or when the process started', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
+    const adb = fakeTool(dir, 'adb', [
+      `state=${dir}/recording`,
+      'case "$*" in',
+      '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
+      '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+      `  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075600.000  4242  4250 I MPEG4Writer: Earliest track starting time: 1000"; [ "$(grep -c 'v epoch' ${dir}/calls.log)" -ge 3 ] && echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;`,
+      '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) printf "%s\\n" "     1.000  4242  4250 I MPEG4Writer: Earliest track starting time: 1000" "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+      '  *"shell date +%s%N"*) echo 1792075718500000000 ;;',
+      '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
+      'esac',
+    ]);
+    const into = join(dir, 'r20261003-040814-846e') as EvidencePath;
+    mkdirSync(into);
+    const recording = await startScreenrecord({ adbBin: adb, serial: 'emulator-5560', into, now: () => 1_792_075_718_000 });
+    await recording.stop().catch(() => undefined);
+    assert.equal(recording.videoStartsAt?.toFixed(3), '1792075718600.316');
+  });
+
   it('fails stop with adb\'s error when the pull fails', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
     const adb = fakeTool(dir, 'adb', [
@@ -163,6 +185,8 @@ describe('android screenrecord', () => {
       'case "$*" in',
       '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
       '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+      '  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+      '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) echo "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
       '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
       '  *" pull "*) echo "adb: error: remote object does not exist" >&2; exit 1 ;;',
       'esac',

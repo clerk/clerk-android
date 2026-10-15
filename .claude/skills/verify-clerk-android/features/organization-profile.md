@@ -43,7 +43,7 @@ A change to a state no spec reaches is shown on a build with a local change that
 
 ## Gotchas
 
-- No row, tab, or button of the profile has a test tag except the name, slug, and submit of `Update profile`, which share the `clerk.organization.profileForm.*` tags with the create form. The spec finds rows and tabs by text with `{ exact: true }` and taps them with `tapMiddle`. `Members` is both a row and a tab label, and the Members screen's title.
+- No row, tab, or button of the profile has a test tag except the name, slug, and submit of `Update profile`, which share the `clerk.organization.profileForm.*` tags with the create form. The spec finds rows and tabs by text with `{ exact: true }` and taps them with `host.tap(middleOf(...))`. `Members` is both a row and a tab label, and the Members screen's title.
 - `Verified domains` shows only when the instance has domains on and the member can read or manage them. On the standard instance the creator always sees it.
 - The `Requests` tab shows only when the instance has domains on and the member can manage memberships (`OrganizationMembersState.kt`). On the standard instance the creator always sees it.
 - Back from `Verified domains` returns to the profile. The spec presses the system back button with `device.back()`.

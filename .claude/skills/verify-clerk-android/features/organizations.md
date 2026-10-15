@@ -25,7 +25,7 @@ Preconditions:
 
 ## Gotchas
 
-- The invite step after creation is a full screen with the title `Invite new members`. It shows only while the organization may have more than one member, which the standard settings allow. It has no test tag and no Skip button. The spec closes it with `tapMiddle(screen.getByLabel('Close'))`.
+- The invite step after creation is a full screen with the title `Invite new members`. It shows only while the organization may have more than one member, which the standard settings allow. It has no test tag and no Skip button. The spec closes it with `host.tap(middleOf(screen.getByLabel('Close')))`.
 - The screen tree leaves out what a sheet or a full-screen step covers, so the home cannot be read while the switcher's sheet or the invite step is up. `host.expectSignedInAs` waits for the invite step to close.
 - The switcher loads the user's organizations when it first shows and when the session or the user changes. It loads them again when its create flow is dismissed or moves on to the invite step, and when its organization profile completes because the organization is gone, such as after the user leaves or deletes it. Closing the profile any other way does not reload the list. An organization that the app creates some other way, such as through `onCreateOrganization`, is not in the list until one of those happens.
 - `Create organization` is the text of the account list row, the title of the create screen, and the label of its button. Tap the row and the button by their tags.
