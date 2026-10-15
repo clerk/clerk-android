@@ -22,6 +22,6 @@ Preconditions:
 
 ## Gotchas
 
-- `clerk.auth.start.phoneNumber` formats as you type and shows `+1 201-555-01xx`. Fill it with ten digits, `nationalDigits(user.phone!)` from `specs/phone.ts`. `host.fill` compares only the digits with what the field shows. The code screen shows the number, and the spec checks it there.
+- `clerk.auth.start.phoneNumber` formats as you type and shows `+1 201-555-01xx`. Fill it with ten digits, `nationalDigits(user.phone!)` from `specs/phone.ts`. `host.fill` compares only the letters and digits, and accepts a field that shows the typed digits inside more, such as the `1` of `+1`. The code screen shows the number, and the spec checks it there.
 - The code screen shows the number unformatted, as `+120155501xx`, so the spec matches `user.phone` as it is.
 - "Check your phone" has no test tag, so that check uses text.
