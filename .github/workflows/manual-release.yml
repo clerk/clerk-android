@@ -610,3 +610,71 @@ jobs:
           fi
 
           echo "::warning::Slack notification secrets are not configured; skipping Slack notification"
+
+  notify-blocked-release:
+    runs-on: ubuntu-latest
+    needs: [verify, verify-e2e, integration-test, paparazzi-verify, create-release]
+    if: always() && (contains(needs.*.result, 'failure') || (contains(needs.*.result, 'cancelled') && !cancelled()))
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out the script that names the gates, and the release versions
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/scripts/nightly-failure-message.mjs
+            gradle.properties
+          sparse-checkout-cone-mode: false
+
+      - name: Notify Slack
+        if: always()
+        timeout-minutes: 3
+        env:
+          SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PUBLISH_API: ${{ github.event.inputs.publish_api }}
+          PUBLISH_UI: ${{ github.event.inputs.publish_ui }}
+          PUBLISH_TELEMETRY: ${{ github.event.inputs.publish_telemetry }}
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL is not configured; skipping Slack notification"
+            exit 0
+          fi
+
+          tag="$RELEASE_TAG"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" = "true" ]; then
+              tag="telemetry-v$(sed -n 's/^CLERK_TELEMETRY_VERSION=//p' gradle.properties 2>/dev/null || true)"
+            else
+              tag="v$(sed -n 's/^CLERK_API_VERSION=//p' gradle.properties 2>/dev/null || true)"
+            fi
+          fi
+
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          blocked=":red_circle: $GITHUB_REPOSITORY $tag release blocked"
+          if failed="$(node .github/scripts/nightly-failure-message.mjs --release 'verify=unit tests and lint' 'verify-e2e=end-to-end tests' 'integration-test=integration tests' 'paparazzi-verify=Paparazzi screenshot tests' 'create-release=creating the GitHub release')"; then
+            blocked="$blocked: $failed"
+          else
+            echo "::warning::Could not name the gates that failed; the message names none"
+          fi
+          message="$blocked · <$run_url|View the run>"
+
+          PAYLOAD=$(jq -n --arg text "$message" '{text: $text, unfurl_links: false, unfurl_media: false}')
+
+          curl --fail-with-body \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-max-time 60 \
+            --retry-all-errors \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$PAYLOAD" \
+            "$SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL"

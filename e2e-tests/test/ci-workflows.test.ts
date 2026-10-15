@@ -345,6 +345,115 @@ describe('a release', () => {
   });
 });
 
+describe('the alert about a blocked release', () => {
+  const release = jobs(read('manual-release.yml'));
+  const alert = release.get('notify-blocked-release') ?? '';
+  const step = (text: string): string => {
+    const post = text.split(/\n(?= {6}- )/).find((part) => part.includes('- name: Notify Slack')) ?? '';
+    return post.slice(post.indexOf('run: |') + 'run: |'.length).split('\n').map((line) => line.trim()).join('\n');
+  };
+  const RUN = '<https://github.com/clerk/clerk-android/actions/runs/123|View the run>';
+  const PASSED = { verify: 'success', 'verify-e2e': 'success', 'integration-test': 'success', 'paparazzi-verify': 'success', 'create-release': 'success' };
+
+  function notified(
+    webhook: string,
+    needs: Readonly<Record<string, string>>,
+    { event = 'workflow_dispatch', tag = '', inputs = ['true', 'true', 'true'], withScript = true }: { event?: string; tag?: string; inputs?: readonly string[]; withScript?: boolean } = {},
+  ): { status: number | null; stdout: string; posted: unknown } {
+    const work = mkdtempSync(join(tmpdir(), 'release-blocked-'));
+    mkdirSync(join(work, 'bin'));
+    mkdirSync(join(work, '.github', 'scripts'), { recursive: true });
+    if (withScript) writeFileSync(join(work, '.github', 'scripts', 'nightly-failure-message.mjs'), readFileSync(join(WORKFLOWS, '..', 'scripts', 'nightly-failure-message.mjs')));
+    writeFileSync(join(work, 'gradle.properties'), 'GROUP=com.clerk\nCLERK_API_VERSION=1.2.3\nCLERK_UI_VERSION=1.2.3\nCLERK_TELEMETRY_VERSION=1.1.1\n');
+    writeFileSync(join(work, 'bin', 'curl'), `#!/bin/sh\nwhile [ "$#" -gt 1 ]; do [ "$1" = --data ] && printf '%s' "$2" > "${work}/posted"; shift; done\necho "$1" > "${work}/url"\n`, { mode: 0o755 });
+    const ran = spawnSync('bash', ['-c', step(alert)], {
+      cwd: work,
+      env: {
+        PATH: `${join(work, 'bin')}:${process.env.PATH}`,
+        SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: webhook,
+        GITHUB_EVENT_NAME: event,
+        RELEASE_TAG: tag,
+        PUBLISH_API: inputs[0]!,
+        PUBLISH_UI: inputs[1]!,
+        PUBLISH_TELEMETRY: inputs[2]!,
+        NEEDS: JSON.stringify(Object.fromEntries(Object.entries(needs).map(([job, result]) => [job, { result, outputs: {} }])), null, 2),
+        GITHUB_SERVER_URL: 'https://github.com',
+        GITHUB_REPOSITORY: 'clerk/clerk-android',
+        GITHUB_RUN_ID: '123',
+      },
+      encoding: 'utf8',
+      timeout: 20_000,
+    });
+    let posted: unknown = null;
+    try {
+      posted = { url: readFileSync(join(work, 'url'), 'utf8').trim(), text: JSON.parse(readFileSync(join(work, 'posted'), 'utf8')).text };
+    } catch {}
+    rmSync(work, { recursive: true, force: true });
+    return { status: ran.status, stdout: ran.stdout, posted };
+  }
+
+  it('posts when a gate fails or is cancelled, and not when the release passes, when no gate ran, or when a person cancels the run before a gate fails', () => {
+    const condition = /^ {4}if: (.+)$/m.exec(alert)?.[1] ?? 'true';
+    const blocked = { ...PASSED, 'create-release': 'skipped' };
+    assert.deepEqual(
+      [
+        evaluate(condition, { event: 'workflow_dispatch', needs: { ...blocked, 'paparazzi-verify': 'failure' } }),
+        evaluate(condition, { event: 'release', needs: { ...blocked, 'verify-e2e': 'cancelled' } }),
+        evaluate(condition, { event: 'workflow_dispatch', needs: { ...PASSED, 'create-release': 'failure' } }),
+        evaluate(condition, { event: 'workflow_dispatch', needs: { ...blocked, verify: 'failure', 'integration-test': 'cancelled' }, cancelled: true }),
+        evaluate(condition, { event: 'workflow_dispatch', needs: PASSED }),
+        evaluate(condition, { event: 'release', needs: blocked }),
+        evaluate(condition, { event: 'workflow_dispatch', needs: { ...blocked, verify: 'cancelled', 'verify-e2e': 'cancelled', 'integration-test': 'cancelled' }, cancelled: true }),
+      ],
+      [true, true, true, true, false, false, false],
+    );
+  });
+
+  it('waits for the gates alone, reads only the repository contents, and holds up no job of the release', () => {
+    assert.deepEqual(
+      {
+        needs: /^ {4}needs: (.+)$/m.exec(alert)?.[1],
+        permissions: permissions(alert),
+        waiting: [...release].filter(([, text]) => /^ {4}needs: .*\bnotify-blocked-release\b/m.test(text)).map(([name]) => name),
+      },
+      { needs: '[verify, verify-e2e, integration-test, paparazzi-verify, create-release]', permissions: ['contents: read'], waiting: [] },
+    );
+  });
+
+  it('names the repository, the release tag and the gates that failed, and links the run', () => {
+    const paparazzi = { ...PASSED, 'paparazzi-verify': 'failure', 'create-release': 'skipped' };
+    assert.deepEqual(
+      [
+        notified('https://hooks.slack.test/T/B/x', paparazzi),
+        notified('https://hooks.slack.test/T/B/x', paparazzi, { event: 'release', tag: 'v1.2.4', inputs: ['', '', ''] }),
+        notified('https://hooks.slack.test/T/B/x', { ...PASSED, 'create-release': 'failure' }, { inputs: ['false', 'false', 'true'] }),
+      ].map(({ posted }) => (posted as { text: string } | null)?.text),
+      [
+        `:red_circle: clerk/clerk-android v1.2.3 release blocked: Paparazzi screenshot tests failed · ${RUN}`,
+        `:red_circle: clerk/clerk-android v1.2.4 release blocked: Paparazzi screenshot tests failed · ${RUN}`,
+        `:red_circle: clerk/clerk-android telemetry-v1.1.1 release blocked: creating the GitHub release failed · ${RUN}`,
+      ],
+    );
+  });
+
+  it('still names the repository and the release tag and links the run when the script cannot name the gates', () => {
+    assert.deepEqual(notified('https://hooks.slack.test/T/B/x', { ...PASSED, verify: 'failure', 'create-release': 'skipped' }, { withScript: false }), {
+      status: 0,
+      stdout: '::warning::Could not name the gates that failed; the message names none\n',
+      posted: { url: 'https://hooks.slack.test/T/B/x', text: `:red_circle: clerk/clerk-android v1.2.3 release blocked · ${RUN}` },
+    });
+  });
+
+  it('is skipped with a warning when the webhook secret is empty', () => {
+    assert.deepEqual(notified('', { ...PASSED, verify: 'failure' }), { status: 0, stdout: '::warning::SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL is not configured; skipping Slack notification\n', posted: null });
+  });
+
+  it('retries the post as the nightly alert does, since a second message costs less than a lost one', () => {
+    const post = (text: string): string => text.slice(text.indexOf('curl '));
+    assert.equal(post(step(alert)), post(step(jobs(read('notify-nightly-failure.yml')).get('notify') ?? '')));
+  });
+});
+
 describe('the Paparazzi screenshot tests', () => {
   const steps = (jobs(read('paparazzi-verify.yml')).get('verify') ?? '').split(/\n(?= {6}- )/);
   const SNAPSHOT_STEPS = ['Verify Paparazzi snapshots', 'Record Paparazzi snapshots', 'Upload the recorded snapshots'];
