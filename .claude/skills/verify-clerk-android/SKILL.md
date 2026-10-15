@@ -243,11 +243,11 @@ On a remote emulator, the before run needs a session of its own, started on the 
 ```console
 $ git switch -c <branch>-before "$(git merge-base origin/main HEAD)"
 $ git push origin <branch>-before
-$ e2e-tests/bin/control-clerk-android up
+$ e2e-tests/bin/control-clerk-android up --backend remote
 $ e2e-tests/bin/control-clerk-android run specs/explored/<name>.e2e.ts
 $ e2e-tests/bin/control-clerk-android down
 $ git switch <branch>
-$ e2e-tests/bin/control-clerk-android up
+$ e2e-tests/bin/control-clerk-android up --backend remote
 $ e2e-tests/bin/control-clerk-android run specs/explored/<name>.e2e.ts
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label> --before <before-run-id>
 $ e2e-tests/bin/control-clerk-android down
