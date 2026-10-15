@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -155,7 +156,10 @@ private fun ClerkButtonImpl(
       buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
 
     val surfaceModifier =
-      Modifier.height(tokens.height).then(modifier).clip(ClerkMaterialTheme.shape)
+      Modifier.height(tokens.height)
+        .then(modifier)
+        .clip(ClerkMaterialTheme.shape)
+        .alpha(if (clerkButtonState.isEnabled) 1f else DISABLED_ALPHA)
 
     Button(
       modifier = surfaceModifier,
@@ -171,16 +175,16 @@ private fun ClerkButtonImpl(
         },
       colors =
         ButtonDefaults.buttonColors(
-          containerColor =
-            if (clerkButtonState.isEnabled) tokens.backgroundColor
-            else tokens.backgroundColor.copy(alpha = 0.5f)
+          containerColor = tokens.backgroundColor,
+          contentColor = tokens.foreground,
+          disabledContainerColor = tokens.backgroundColor,
+          disabledContentColor = tokens.foreground,
         ),
       onClick = onClick,
     ) {
       ButtonContent(
         isLoading = clerkButtonState.isLoading,
         icons = icons,
-        isEnabled = clerkButtonState.isEnabled,
         text = text,
         tokens = tokens,
         size = configuration.size,
@@ -189,6 +193,8 @@ private fun ClerkButtonImpl(
     }
   }
 }
+
+private const val DISABLED_ALPHA = 0.5f
 
 public data class ClerkButtonState(
   val isLoading: Boolean,
@@ -200,7 +206,6 @@ public data class ClerkButtonState(
 private fun ButtonContent(
   isLoading: Boolean,
   icons: ClerkButtonIcons,
-  isEnabled: Boolean,
   text: String?,
   size: ClerkButtonConfiguration.Size,
   paddingValues: PaddingValues,
@@ -229,7 +234,7 @@ private fun ButtonContent(
           modifier = Modifier.size(iconSize),
           painter = painterResource(it),
           contentDescription = null,
-          tint = if (isEnabled) iconColor else iconColor.copy(alpha = 0.5f),
+          tint = iconColor,
         )
       }
       text?.let {
@@ -238,7 +243,7 @@ private fun ButtonContent(
           text = text,
           style = tokens.textStyle,
           overflow = TextOverflow.Ellipsis,
-          color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
+          color = tokens.foreground,
         )
       }
       icons.trailingIcon?.let {
@@ -246,7 +251,7 @@ private fun ButtonContent(
         Icon(
           painter = painterResource(it),
           contentDescription = null,
-          tint = if (isEnabled) iconColor else iconColor.copy(alpha = 0.5f),
+          tint = iconColor,
         )
       }
     }
