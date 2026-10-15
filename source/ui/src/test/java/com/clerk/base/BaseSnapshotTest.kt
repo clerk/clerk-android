@@ -10,11 +10,7 @@ import com.clerk.api.Clerk
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
-import org.junit.experimental.categories.Category
 
-interface SnapshotTest
-
-@Category(SnapshotTest::class)
 abstract class BaseSnapshotTest {
 
   @Before

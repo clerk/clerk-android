@@ -69,7 +69,7 @@ jobs:
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui"
-            task: "testDebugUnitTest"
+            task: "verifyPaparazziDebug"
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
@@ -94,7 +94,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests for ${{ matrix.module }}
-        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} -PskipSnapshotTests=true --build-cache --parallel
+        run: ./gradlew ${{ matrix.module }}:${{ matrix.task }} --build-cache --parallel
 
       - name: Upload test results (${{ matrix.label }})
         if: always()
@@ -105,6 +105,26 @@ jobs:
             ${{ matrix.path }}/build/test-results/**
             ${{ matrix.path }}/build/reports/tests/**
           if-no-files-found: warn
+
+      - name: Upload Paparazzi report
+        if: failure() && matrix.module == ':source:ui' && hashFiles('source/ui/build/paparazzi/failures/**') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: paparazzi-report
+          retention-days: 7
+          path: |
+            source/ui/build/reports/paparazzi/**
+            source/ui/build/paparazzi/**
+
+      - name: Add run summary
+        if: failure() && matrix.module == ':source:ui' && hashFiles('source/ui/build/paparazzi/failures/**') != ''
+        run: |
+          {
+            echo "### Paparazzi differences detected";
+            echo "";
+            echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
+            echo "- If the change is intended, start the **Paparazzi Verify** workflow on your branch with **record** checked and commit the images from its **paparazzi-snapshots** artifact. Snapshots recorded on another machine render differently.";
+          } >> "$GITHUB_STEP_SUMMARY"
 
   api-check:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
