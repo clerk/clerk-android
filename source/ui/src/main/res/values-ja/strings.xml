@@ -234,7 +234,7 @@
     <string name="load_more">さらに読み込む</string>
     <string name="try_again">もう一度試す</string>
     <string name="enter_a_valid_organization_slug">小文字、数字、ハイフンを使用してスラッグを入力してください。</string>
-    <string name="organization_already_exists_advisory">検出された会社名（%1$s）と %2$s の組織はすでに存在します。招待から参加してください。</string>
+    <string name="organization_already_exists_advisory">検出された会社名（%1$s）とドメイン %2$s の組織はすでに存在します。招待から参加してください。</string>
     <string name="organization">組織</string>
     <string name="update_profile">プロフィールを更新</string>
     <string name="members">メンバー</string>

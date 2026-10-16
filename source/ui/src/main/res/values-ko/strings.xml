@@ -234,7 +234,7 @@
     <string name="load_more">더 불러오기</string>
     <string name="try_again">다시 시도</string>
     <string name="enter_a_valid_organization_slug">소문자, 숫자, 하이픈을 사용해 슬러그를 입력하세요.</string>
-    <string name="organization_already_exists_advisory">감지된 회사 이름(%1$s) 및 %2$s에 대한 조직이 이미 있습니다. 초대로 참여하세요.</string>
+    <string name="organization_already_exists_advisory">감지된 회사 이름(%1$s) 및 도메인 %2$s에 대한 조직이 이미 있습니다. 초대로 참여하세요.</string>
     <string name="organization">조직</string>
     <string name="update_profile">프로필 업데이트</string>
     <string name="members">멤버</string>

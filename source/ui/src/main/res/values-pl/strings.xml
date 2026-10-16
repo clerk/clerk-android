@@ -88,7 +88,7 @@
     <string name="load_more">Załaduj więcej</string>
     <string name="try_again">Spróbuj ponownie</string>
     <string name="enter_a_valid_organization_slug">Wprowadź slug, używając małych liter, cyfr i myślników.</string>
-    <string name="organization_already_exists_advisory">Organizacja dla wykrytej nazwy firmy (%1$s) i %2$s już istnieje. Dołącz przez zaproszenie.</string>
+    <string name="organization_already_exists_advisory">Organizacja dla wykrytej nazwy firmy (%1$s) i domeny %2$s już istnieje. Dołącz przez zaproszenie.</string>
     <string name="back">Wstecz</string>
     <string name="enter_a_backup_code">Wprowadź kod zapasowy</string>
     <string name="your_backup_code">Kod zapasowy otrzymujesz podczas konfigurowania uwierzytelniania dwuetapowego.</string>
