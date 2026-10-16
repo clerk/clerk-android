@@ -46,7 +46,21 @@ function read(ref, file) {
   }
 }
 
+const resolves = ref => {
+  try {
+    execFileSync('git', ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export function main([baseRef, headRef]) {
+  const missing = [baseRef, headRef].filter(ref => ref !== undefined && !resolves(ref));
+  if (baseRef === undefined || missing.length > 0) {
+    console.error(`Cannot compare translations: ${baseRef === undefined ? 'no base ref given' : `${missing.join(', ')} is not a commit here`}. Fetch it first.`);
+    return 2;
+  }
   const load = file => ({ base: parseStrings(read(baseRef, file)), head: parseStrings(read(headRef, file)) });
   const localeDirs = fs.readdirSync(RES).filter(dir => dir.startsWith('values-') && fs.existsSync(path.join(RES, dir, 'strings.xml')));
   const stale = staleTranslations({
