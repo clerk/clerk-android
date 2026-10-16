@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "orginv_1",
+      "email_address": "sam+clerk_test@acme.com",
+      "organization_id": "org_123",
+      "public_metadata": {},
+      "role": "org:member",
+      "status": "pending",
+      "created_at": 1700000000000,
+      "updated_at": 1700000000000
+    },
+    {
+      "id": "orginv_2",
+      "email_address": "alex+clerk_test@acme.com",
+      "organization_id": "org_123",
+      "public_metadata": {},
+      "role": "org:member",
+      "status": "expired",
+      "created_at": 1700000000000,
+      "updated_at": 1700000000000
+    }
+  ],
+  "total_count": 2
+}
