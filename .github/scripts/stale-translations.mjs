@@ -17,7 +17,9 @@ export function parseStrings(xml) {
 
 const wording = text =>
   text
-    .replace(/&(?:[a-z]+|#\d+|#x[0-9a-f]+);/gi, '')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&[a-z]+;/gi, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}%$]/gu, '');
 

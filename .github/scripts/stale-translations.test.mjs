@@ -37,6 +37,13 @@ describe('staleTranslations', () => {
     assert.deepEqual(staleTranslations({ english: { base, head }, locales: { 'values-de': { base: de, head: de } } }), []);
   });
 
+  it('reads a letter written as a numeric entity', () => {
+    const base = strings('<string name="title">Plan &#65;</string>');
+    const head = strings('<string name="title">Plan &#x42;</string>');
+    const de = strings('<string name="title">Plan A</string>');
+    assert.equal(staleTranslations({ english: { base, head }, locales: { 'values-de': { base: de, head: de } } }).length, 1);
+  });
+
   it('reads a string whose name is not its first attribute', () => {
     const base = strings('<string translatable="true" name="advisory">Exists for %1$s.</string>', '<string translatable="false" name="brand">Clerk</string>');
     assert.deepEqual([...base.keys()], ['advisory']);
