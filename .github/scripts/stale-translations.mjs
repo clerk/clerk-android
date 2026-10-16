@@ -15,7 +15,11 @@ export function parseStrings(xml) {
   return strings;
 }
 
-const wording = text => text.toLowerCase().replace(/[^\p{L}\p{N}%$]/gu, '');
+const wording = text =>
+  text
+    .replace(/&(?:[a-z]+|#\d+|#x[0-9a-f]+);/gi, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}%$]/gu, '');
 
 export function staleTranslations({ english, locales }) {
   const stale = [];

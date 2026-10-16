@@ -30,6 +30,13 @@ describe('staleTranslations', () => {
     assert.deepEqual(staleTranslations({ english: { base, head }, locales: { 'values-de': { base, head } } }), []);
   });
 
+  it('ignores punctuation written as an XML entity', () => {
+    const base = strings('<string name="title">Profile details</string>');
+    const head = strings('<string name="title">&quot;Profile details&quot; &amp;</string>');
+    const de = strings('<string name="title">Profildetails</string>');
+    assert.deepEqual(staleTranslations({ english: { base, head }, locales: { 'values-de': { base: de, head: de } } }), []);
+  });
+
   it('reads a string whose name is not its first attribute', () => {
     const base = strings('<string translatable="true" name="advisory">Exists for %1$s.</string>', '<string translatable="false" name="brand">Clerk</string>');
     assert.deepEqual([...base.keys()], ['advisory']);
