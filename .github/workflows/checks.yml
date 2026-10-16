@@ -38,6 +38,12 @@ jobs:
           verifyPublishedArtifacts
           --build-cache --parallel --continue
 
+      - name: Check translations of changed strings
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          node .github/scripts/stale-translations.mjs FETCH_HEAD
+
       - name: Upload lint reports
         if: failure()
         uses: actions/upload-artifact@v7

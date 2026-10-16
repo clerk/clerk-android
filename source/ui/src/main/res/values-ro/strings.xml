@@ -88,7 +88,7 @@
     <string name="load_more">Încarcă mai multe</string>
     <string name="try_again">Încearcă din nou</string>
     <string name="enter_a_valid_organization_slug">Introdu un slug folosind litere mici, cifre și cratime.</string>
-    <string name="organization_already_exists_advisory">Există deja o organizație pentru numele companiei detectate (%1$s) și %2$s. Alătură-te prin invitație.</string>
+    <string name="organization_already_exists_advisory">Există deja o organizație pentru numele companiei detectate (%1$s) și domeniul %2$s. Alătură-te prin invitație.</string>
     <string name="back">Înapoi</string>
     <string name="enter_a_backup_code">Introdu un cod de rezervă</string>
     <string name="your_backup_code">Codul de rezervă este cel primit când configurezi autentificarea în doi pași.</string>
