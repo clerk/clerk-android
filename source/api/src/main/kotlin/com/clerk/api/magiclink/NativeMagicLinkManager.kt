@@ -317,18 +317,16 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     createdSessionId: String?
   ): ClerkResult<Unit, NativeMagicLinkError> {
     createdSessionId ?: return ClerkResult.success(Unit)
-    val organizationId = runCatching {
-      Clerk.client.sessions
-    }
-      .getOrNull()
-      ?.firstOrNull { it.id == createdSessionId }
-      ?.lastActiveOrganizationId
+    val organizationId =
+      Clerk.clientOrNull
+        ?.sessions
+        ?.firstOrNull { it.id == createdSessionId }
+        ?.lastActiveOrganizationId
     return when (val activationResult = Clerk.auth.setActive(createdSessionId, organizationId)) {
       is ClerkResult.Success -> ClerkResult.success(Unit)
       is ClerkResult.Failure -> {
         refreshClientState()
-        val isAlreadyActive =
-          runCatching { Clerk.client.lastActiveSessionId }.getOrNull() == createdSessionId
+        val isAlreadyActive = Clerk.clientOrNull?.lastActiveSessionId == createdSessionId
         if (isAlreadyActive) {
           ClerkResult.success(Unit)
         } else {

@@ -103,7 +103,7 @@ public data class User(
    * A boolean to check if the user has uploaded an image or one was copied from OAuth. Returns
    * false if Clerk is displaying an avatar for the user.
    */
-  @SerialName("has_image") @Deprecated("Use hasUploadedImage instead") val hasImage: Boolean,
+  @SerialName("has_image") val hasImage: Boolean,
 
   /** The unique identifier for the user. */
   val id: String,
@@ -938,17 +938,16 @@ public suspend fun User.getPaymentMethods(
 }
 
 internal fun currentSessionId(): String? {
-  val clientSessionId = runCatching {
-    val client = Clerk.client
-    val pendingChooseOrganizationSession =
-      client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-    val lastActiveSession =
-      client.lastActiveSessionId?.let { lastActiveSessionId ->
-        client.sessions.firstOrNull { it.id == lastActiveSessionId }
-      }
-    pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
-  }
-    .getOrNull()
+  val clientSessionId =
+    Clerk.clientOrNull?.let { client ->
+      val pendingChooseOrganizationSession =
+        client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+      val lastActiveSession =
+        client.lastActiveSessionId?.let { lastActiveSessionId ->
+          client.sessions.firstOrNull { it.id == lastActiveSessionId }
+        }
+      pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+    }
 
   return clientSessionId ?: Clerk.session?.id
 }

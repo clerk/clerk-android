@@ -178,7 +178,7 @@ class NativeMagicLinkServiceTest {
       every { createdSession.lastActiveOrganizationId } returns "org_123"
       val signedInClient = mockk<Client>(relaxed = true)
       every { signedInClient.sessions } returns listOf(createdSession)
-      every { Clerk.client } returns signedInClient
+      every { Clerk.clientOrNull } returns signedInClient
 
       mockEmailLinkPrepare(initialSignIn, preparedSignIn)
       coEvery { magicLinkApi.complete(any()) } returns
