@@ -351,29 +351,61 @@ class AuthTest {
   }
 
   @Test
-  fun `setActive no-ops personal account selection when organization selection is forced`() =
+  fun `setActive no-ops personal account selection on the current session when organization selection is forced`() =
     runTest {
       setForceOrganizationSelection(true)
       val currentSession = testSession("sess_1", lastActiveOrganizationId = "org_1")
-      val personalSession = testSession("sess_2")
+      val otherSession = testSession("sess_2")
       val clientApi = mockk<ClientApi>(relaxed = true)
       mockkObject(ClerkApi)
       every { ClerkApi.client } returns clientApi
       Clerk.updateClient(
         Client(
           id = "client_123",
-          sessions = listOf(currentSession, personalSession),
+          sessions = listOf(currentSession, otherSession),
           lastActiveSessionId = currentSession.id,
         )
       )
 
-      val result = Auth().setActive(sessionId = personalSession.id)
+      val result = Auth().setActive(sessionId = currentSession.id)
 
       assertTrue(result is ClerkResult.Success)
       assertEquals(currentSession, (result as ClerkResult.Success).value)
       assertEquals(currentSession.id, Clerk.client.lastActiveSessionId)
       assertEquals(currentSession, Clerk.sessionFlow.value)
       coVerify(exactly = 0) { clientApi.setActive(any(), any(), any()) }
+    }
+
+  @Test
+  fun `setActive switches to another session without an organization when organization selection is forced`() =
+    runTest {
+      setForceOrganizationSelection(true)
+      val currentSession = testSession("sess_1", lastActiveOrganizationId = "org_1")
+      val otherSession = testSession("sess_2")
+      val clientApi = mockk<ClientApi>()
+      mockkObject(ClerkApi)
+      every { ClerkApi.client } returns clientApi
+      coEvery { clientApi.setActive(otherSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
+        ClerkResult.success(otherSession)
+      coEvery { clientApi.get() } returns
+        ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(currentSession, otherSession),
+          lastActiveSessionId = currentSession.id,
+        )
+      )
+
+      val result = Auth().setActive(sessionId = otherSession.id)
+
+      assertTrue(result is ClerkResult.Success)
+      assertEquals(otherSession, (result as ClerkResult.Success).value)
+      assertEquals(otherSession.id, Clerk.client.lastActiveSessionId)
+      assertEquals(otherSession, Clerk.sessionFlow.value)
+      coVerify(exactly = 1) {
+        clientApi.setActive(otherSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG)
+      }
     }
 
   @Test
