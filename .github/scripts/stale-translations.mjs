@@ -4,12 +4,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RES = 'source/ui/src/main/res';
-const STRING = /<string\s+name="([^"]+)"([^>]*)>([\s\S]*?)<\/string>/g;
+const STRING = /<string\b([^>]*)>([\s\S]*?)<\/string>/g;
 
 export function parseStrings(xml) {
   const strings = new Map();
-  for (const [, name, attributes, text] of xml.matchAll(STRING)) {
-    if (!/translatable\s*=\s*"false"/.test(attributes)) strings.set(name, text);
+  for (const [, attributes, text] of xml.matchAll(STRING)) {
+    const name = /\bname\s*=\s*"([^"]+)"/.exec(attributes)?.[1];
+    if (name && !/translatable\s*=\s*"false"/.test(attributes)) strings.set(name, text);
   }
   return strings;
 }

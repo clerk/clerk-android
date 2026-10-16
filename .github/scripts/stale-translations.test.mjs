@@ -29,4 +29,9 @@ describe('staleTranslations', () => {
     const head = strings('<string name="brand" translatable="false">Clerk Inc</string>');
     assert.deepEqual(staleTranslations({ english: { base, head }, locales: { 'values-de': { base, head } } }), []);
   });
+
+  it('reads a string whose name is not its first attribute', () => {
+    const base = strings('<string translatable="true" name="advisory">Exists for %1$s.</string>', '<string translatable="false" name="brand">Clerk</string>');
+    assert.deepEqual([...base.keys()], ['advisory']);
+  });
 });
