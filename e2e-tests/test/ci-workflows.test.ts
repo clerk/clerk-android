@@ -234,7 +234,7 @@ describe('the Gradle state in the Actions cache', () => {
     })));
   };
 
-  const saving = (ref: string): string[] =>
+  const saving = (ref: string, { jdk }: { jdk: boolean }): string[] =>
     files.flatMap((file) => [...jobs(read(file))].flatMap(([name, text]) => matrixEntries(text).flatMap((matrix) => {
       const context: Context = { event: 'push', ref, matrix };
       return text
@@ -245,7 +245,8 @@ describe('the Gradle state in the Actions cache', () => {
             if (value === 'true' || value === 'false') return value === 'true';
             return value === undefined ? undefined : setting(value, context);
           };
-          if (/^ +(?:- )?uses: actions\/setup-java@/m.test(step)) return input('cache') !== undefined;
+          // setup-java saves on a key miss from any ref unless cache-read-only is set, and cache-jdk saves the JDK too.
+          if (/^ +(?:- )?uses: actions\/setup-java@/m.test(step)) return input('cache-read-only') !== true && (input('cache') !== undefined || (jdk && input('cache-jdk') === true));
           if (!/^ +(?:- )?uses: gradle\/actions\/setup-gradle@/m.test(step) || input('cache-disabled') === true) return false;
           // setup-gradle saves only from the default branch unless cache-read-only says otherwise.
           return input('cache-read-only') === undefined ? ref === 'refs/heads/main' : input('cache-read-only') !== true;
@@ -254,8 +255,8 @@ describe('the Gradle state in the Actions cache', () => {
     })));
 
   // GitHub keeps 10 GB per repository and evicts the least recently used entries first, which can be the state verify-remote sessions start from.
-  it('is saved from main only by the slowest pull request jobs and the end-to-end tests, and never from a pull request', () => {
-    assert.deepEqual(saving('refs/heads/main'), [
+  it('is saved from main only by the slowest pull request jobs and the end-to-end tests, and nothing is saved from a pull request or a release tag, not even the JDK', () => {
+    assert.deepEqual(saving('refs/heads/main', { jdk: false }), [
       'android-test.yml test-module source-api: Setup Gradle',
       'android-test.yml test-module source-ui-snapshots: Setup Gradle',
       'android-test.yml test-module source-ui-unit: Setup Gradle',
@@ -263,7 +264,8 @@ describe('the Gradle state in the Actions cache', () => {
       'detekt.yml detekt: Set up Gradle',
       'verify-e2e.yml e2e-tests: Setup Gradle',
     ]);
-    assert.deepEqual(saving('refs/pull/1148/merge'), []);
+    assert.deepEqual(saving('refs/pull/1148/merge', { jdk: true }), []);
+    assert.deepEqual(saving('refs/tags/1.2.3', { jdk: true }), []);
   });
 });
 
