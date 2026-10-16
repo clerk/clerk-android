@@ -22,7 +22,7 @@ permissions:
 jobs:
   integration-test:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Check that the integration tests have a key
@@ -42,10 +42,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

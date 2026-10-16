@@ -17,7 +17,7 @@ permissions:
 jobs:
   verify:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -32,6 +32,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Verify Paparazzi snapshots
         if: ${{ !inputs.record }}

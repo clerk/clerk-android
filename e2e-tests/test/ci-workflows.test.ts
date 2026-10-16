@@ -12,12 +12,13 @@ const files = readdirSync(WORKFLOWS).filter((file) => file.endsWith('.yml')).sor
 
 interface Context {
   readonly event: string;
+  readonly ref?: string;
   readonly repository?: string;
   readonly draft?: boolean;
   readonly cancelled?: boolean;
   readonly needs?: Readonly<Record<string, string>>;
   readonly inputs?: Readonly<Record<string, boolean>>;
-  readonly matrix?: Readonly<Record<string, string>>;
+  readonly matrix?: Readonly<Record<string, string | boolean>>;
   readonly earlierStepFailed?: boolean;
   readonly runnerFiles?: readonly string[];
 }
@@ -39,23 +40,28 @@ function eq(left: unknown, right: unknown): boolean {
 }
 
 function evaluate(condition: string, context: Context): boolean {
+  const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
+  // GitHub adds success() to a condition that calls no status function.
+  return Boolean(compute(/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`, context));
+}
+
+function compute(expression: string, context: Context): unknown {
   const value = (path: string): unknown => {
     if (path === 'github.event_name') return context.event;
     if (path === 'github.repository') return context.repository ?? 'clerk/clerk-android';
+    if (path === 'github.ref') return context.ref ?? 'refs/heads/main';
     if (path === 'github.event.pull_request.draft') return context.event === 'pull_request' ? (context.draft ?? false) : null;
     const need = /^needs\.([\w-]+)\.result$/.exec(path);
     if (need) return context.needs?.[need[1]!] ?? '';
     const input = /^inputs\.(\w+)$/.exec(path);
     if (input) return context.inputs?.[input[1]!] ?? null;
-    const entry = /^matrix\.(\w+)$/.exec(path);
+    const entry = /^matrix\.([\w-]+)$/.exec(path);
     if (entry) return context.matrix?.[entry[1]!] ?? null;
-    throw new Error(`no value for ${path} in ${condition}`);
+    throw new Error(`no value for ${path} in ${expression}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
   const results = Object.values(context.needs ?? {});
-  const bare = condition.replace(/^\$\{\{ (.+) \}\}$/, '$1');
-  // GitHub adds success() to a condition that calls no status function.
-  const script = (/\b(?:always|cancelled|failure|success)\(\)/.test(bare) ? bare : `success() && (${bare})`)
+  const script = expression
     .replaceAll(/hashFiles\('([^']*)'\)/g, (_, pattern: string) => JSON.stringify((context.runnerFiles ?? []).some((file) => matchesGlob(file, pattern)) ? 'hash' : ''))
     .replaceAll('success()', String(!(context.cancelled ?? false) && !(context.earlierStepFailed ?? false) && results.every((result) => result === 'success')))
     .replaceAll('failure()', String((context.earlierStepFailed ?? false) || results.includes('failure')))
@@ -66,7 +72,12 @@ function evaluate(condition: string, context: Context): boolean {
     .replaceAll(/\b(?:github|needs|inputs|matrix)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
   const contains = (list: readonly unknown[], item: unknown): boolean => list.some((entry) => eq(entry, item));
-  return Boolean(new Function('eq', 'contains', `return ${script};`)(eq, contains));
+  return new Function('eq', 'contains', `return ${script};`)(eq, contains);
+}
+
+function setting(text: string, context: Context): unknown {
+  const expression = /^\$\{\{ (.+) \}\}$/.exec(text)?.[1];
+  return expression === undefined ? text : compute(expression, context);
 }
 
 function ranJobs(context: Context): readonly string[] {
@@ -202,6 +213,59 @@ describe('the nightly run', () => {
       const notify = jobs(read(file)).get('notify') ?? '';
       assert.equal(/^ {4}secrets:\n((?: {6}.+\n)+)/m.exec(notify)?.[1], `      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${WEBHOOK}\n`, file);
     }
+  });
+});
+
+describe('the runners', () => {
+  it('are GitHub-hosted for every job, which costs this public repository nothing', () => {
+    const labels = files.flatMap((file) => [...jobs(read(file)).values()].flatMap((text) => /^ {4}runs-on: (.+)$/m.exec(text)?.[1] ?? []));
+    assert.deepEqual([...new Set(labels)].sort(), ['${{ needs.plan.outputs.runner }}', "${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}", 'ubuntu-26.04', 'ubuntu-latest']);
+  });
+});
+
+describe('the Gradle state in the Actions cache', () => {
+  const matrixEntries = (job: string): Record<string, string | boolean>[] => {
+    const include = /^ {8}include:\n((?: {10}.+\n)+)/m.exec(job)?.[1];
+    if (include === undefined) return [{}];
+    return include.split(/^ {10}- /m).slice(1).map((entry) => Object.fromEntries(entry.split('\n').filter(Boolean).map((line) => {
+      const [, key, raw] = /^\s*([\w-]+): (.+?)(?:\s+#.*)?$/.exec(line)!;
+      const text = raw!.replace(/^"(.*)"$/, '$1');
+      return [key!, text === 'true' ? true : text];
+    })));
+  };
+
+  const saving = (ref: string, { jdk }: { jdk: boolean }): string[] =>
+    files.flatMap((file) => [...jobs(read(file))].flatMap(([name, text]) => matrixEntries(text).flatMap((matrix) => {
+      const context: Context = { event: 'push', ref, matrix };
+      return text
+        .split(/\n(?= +- (?:name|uses):)/)
+        .filter((step) => {
+          const input = (key: string): unknown => {
+            const value = new RegExp(`^\\s+${key}: (.+)$`, 'm').exec(step)?.[1];
+            if (value === 'true' || value === 'false') return value === 'true';
+            return value === undefined ? undefined : setting(value, context);
+          };
+          // setup-java saves on a key miss from any ref unless cache-read-only is set, and cache-jdk saves the JDK too.
+          if (/^ +(?:- )?uses: actions\/setup-java@/m.test(step)) return input('cache-read-only') !== true && (input('cache') !== undefined || (jdk && input('cache-jdk') === true));
+          if (!/^ +(?:- )?uses: gradle\/actions\/setup-gradle@/m.test(step) || input('cache-disabled') === true) return false;
+          // setup-gradle saves only from the default branch unless cache-read-only says otherwise.
+          return input('cache-read-only') === undefined ? ref === 'refs/heads/main' : input('cache-read-only') !== true;
+        })
+        .map((step) => `${file} ${name}${typeof matrix.label === 'string' ? ` ${matrix.label}` : ''}: ${/- name: (.+)/.exec(step)?.[1] ?? /uses: (.+)/.exec(step)?.[1]}`);
+    })));
+
+  // GitHub keeps 10 GB per repository and evicts the least recently used entries first, which can be the state verify-remote sessions start from.
+  it('is saved from main only by the slowest pull request jobs and the end-to-end tests, and nothing is saved from a pull request or a release tag, not even the JDK', () => {
+    assert.deepEqual(saving('refs/heads/main', { jdk: false }), [
+      'android-test.yml test-module source-api: Setup Gradle',
+      'android-test.yml test-module source-ui-snapshots: Setup Gradle',
+      'android-test.yml test-module source-ui-unit: Setup Gradle',
+      'checks.yml checks: Set up Gradle',
+      'detekt.yml detekt: Set up Gradle',
+      'verify-e2e.yml e2e-tests: Setup Gradle',
+    ]);
+    assert.deepEqual(saving('refs/pull/1148/merge', { jdk: true }), []);
+    assert.deepEqual(saving('refs/tags/1.2.3', { jdk: true }), []);
   });
 });
 
