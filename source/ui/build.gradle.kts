@@ -43,7 +43,7 @@ val testJvm = providers.gradleProperty("clerk.testJvm")
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
-  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+  maxParallelForks = Runtime.getRuntime().availableProcessors()
   when (testJvm.orNull) {
     "own" -> {
       forkEvery = 1
