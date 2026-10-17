@@ -69,13 +69,13 @@ jobs:
             save-cache: true
           - module: ":source:ui"
             path: "source/ui"
-            label: "source-ui-snapshots"
-            task: "verifyPaparazziDebug --tests 'com.clerk.snapshot.*'"
+            label: "source-ui-own-jvm"
+            task: "verifyPaparazziDebug -Pclerk.testJvm=own"
             save-cache: true
           - module: ":source:ui"
             path: "source/ui"
-            label: "source-ui-unit"
-            task: "verifyPaparazziDebug --tests 'com.clerk.ui.*'"
+            label: "source-ui-shared-jvm"
+            task: "testDebugUnitTest -Pclerk.testJvm=shared"
             save-cache: true
           - module: ":source:telemetry"
             path: "source/telemetry"

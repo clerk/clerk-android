@@ -11,6 +11,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.base.OwnJvm
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,11 +28,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class AuthViewRestoreCredentialsTest {
 
   @get:Rule val composeTestRule = createComposeRule()

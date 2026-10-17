@@ -19,6 +19,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.user.User
 import com.clerk.api.user.activeSessions
+import com.clerk.base.OwnJvm
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialViewModel
 import io.mockk.coEvery
@@ -35,10 +36,12 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class UserProfileSecurityViewTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()

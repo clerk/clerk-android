@@ -12,6 +12,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailCode
 import com.clerk.api.signup.sendPhoneCode
+import com.clerk.base.OwnJvm
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthenticationViewState
@@ -34,11 +35,13 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class SignUpCodeDoublePushTest {
 
   private val testDispatcher = StandardTestDispatcher()

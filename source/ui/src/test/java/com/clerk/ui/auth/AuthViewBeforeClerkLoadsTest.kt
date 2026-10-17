@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.base.OwnJvm
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -12,10 +13,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class AuthViewBeforeClerkLoadsTest {
 
   @get:Rule val composeTestRule = createComposeRule()

@@ -108,6 +108,10 @@ CI runs these on every pull request, and the release workflow runs them before p
 ./gradlew verifyPublishedArtifacts
 ```
 
+Every `:source:ui` test class runs in a JVM of its own, because Paparazzi and Robolectric cannot
+share one. CI runs those tests in two jobs: `-Pclerk.testJvm=own` runs the classes in the `OwnJvm`
+category, one JVM each, and `-Pclerk.testJvm=shared` runs every other class in shared JVMs.
+
 ## License
 
 This project is licensed under the **MIT license**.

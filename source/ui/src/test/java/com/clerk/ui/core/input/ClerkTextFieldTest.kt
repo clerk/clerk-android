@@ -11,13 +11,16 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.clerk.base.OwnJvm
 import com.clerk.ui.R
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class ClerkTextFieldTest {
 
   @get:Rule val composeTestRule = createComposeRule()

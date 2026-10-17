@@ -1,4 +1,7 @@
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestResult
 
 plugins {
   alias(libs.plugins.android.library)
@@ -35,11 +38,43 @@ android {
 
 kotlin { explicitApi() }
 
+val testJvm = providers.gradleProperty("clerk.testJvm")
+
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
-  forkEvery = 1
+  maxParallelForks = Runtime.getRuntime().availableProcessors()
+  when (testJvm.orNull) {
+    "own" -> {
+      forkEvery = 1
+      useJUnit { includeCategories("com.clerk.base.OwnJvm") }
+    }
+    "shared" -> {
+      forkEvery = 0
+      useJUnit { excludeCategories("com.clerk.base.OwnJvm") }
+    }
+    null -> forkEvery = 1
+    else -> error("clerk.testJvm is own or shared, not ${testJvm.get()}")
+  }
   reports.html.required.set(false)
+  addTestListener(
+    object : TestListener {
+      override fun beforeSuite(suite: TestDescriptor) = Unit
+
+      override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+        if (suite.parent == null) {
+          logger.lifecycle(
+            "${result.testCount} tests ran: ${result.successfulTestCount} passed, " +
+              "${result.failedTestCount} failed, ${result.skippedTestCount} skipped"
+          )
+        }
+      }
+
+      override fun beforeTest(testDescriptor: TestDescriptor) = Unit
+
+      override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) = Unit
+    }
+  )
 }
 
 // Compose mapping collection can emit hundreds of parser/tokenizer warnings

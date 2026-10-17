@@ -15,6 +15,7 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.base.OwnJvm
 import com.clerk.ui.auth.AuthStartViewHelper
 import com.clerk.ui.auth.AuthStartViewImpl
 import com.clerk.ui.auth.AuthStartViewModel
@@ -34,10 +35,12 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class ClerkTestTagsTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()

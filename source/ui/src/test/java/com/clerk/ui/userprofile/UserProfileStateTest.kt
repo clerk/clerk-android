@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.base.OwnJvm
 import com.clerk.ui.userprofile.account.UserProfileAccountViewModel
 import com.clerk.ui.userprofile.account.UserProfileAccountViewModel.DeleteAccountState
 import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
@@ -14,10 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class UserProfileStateTest {
 
   @get:Rule val composeTestRule = createComposeRule()

@@ -25,6 +25,7 @@ import com.clerk.api.user.createTotp
 import com.clerk.api.user.getOrganizationInvitations
 import com.clerk.api.user.getOrganizationMemberships
 import com.clerk.api.user.getOrganizationSuggestions
+import com.clerk.base.OwnJvm
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import io.mockk.coEvery
@@ -40,12 +41,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 @Config(qualifiers = "w411dp-h891dp")
 class AuthViewMfaBackupCodesTest {
 

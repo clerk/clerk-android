@@ -28,6 +28,7 @@ import com.clerk.api.user.User
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.api.user.createTotp
 import com.clerk.api.user.phoneNumbersAvailableForMfa
+import com.clerk.base.OwnJvm
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -43,12 +44,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 @Config(qualifiers = "w411dp-h891dp")
 class SessionTaskMfaViewTest {
 

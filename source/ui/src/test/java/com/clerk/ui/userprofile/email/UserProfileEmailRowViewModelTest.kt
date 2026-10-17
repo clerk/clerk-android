@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.verification.Verification
+import com.clerk.base.OwnJvm
 import com.clerk.ui.theme.ClerkMaterialTheme
 import io.mockk.every
 import io.mockk.mockkObject
@@ -19,10 +20,12 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class UserProfileEmailRowViewModelTest {
 
   @get:Rule val composeTestRule = createComposeRule()

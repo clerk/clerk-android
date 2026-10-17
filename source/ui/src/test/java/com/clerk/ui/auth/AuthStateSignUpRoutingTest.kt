@@ -8,6 +8,7 @@ import com.clerk.api.Constants
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signup.SignUp
+import com.clerk.base.OwnJvm
 import com.clerk.ui.signup.collectfield.CollectField
 import io.mockk.every
 import io.mockk.mockk
@@ -15,10 +16,12 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class AuthStateSignUpRoutingTest {
 
   private lateinit var context: Context

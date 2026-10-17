@@ -13,7 +13,9 @@ import com.clerk.api.Clerk
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
+import org.junit.experimental.categories.Category
 
+@Category(OwnJvm::class)
 abstract class BaseSnapshotTest {
 
   @OptIn(DelicateCoilApi::class)

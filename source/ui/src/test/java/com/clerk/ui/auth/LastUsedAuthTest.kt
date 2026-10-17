@@ -4,16 +4,19 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Constants
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.base.OwnJvm
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class LastUsedAuthTest {
 
   private lateinit var context: Context

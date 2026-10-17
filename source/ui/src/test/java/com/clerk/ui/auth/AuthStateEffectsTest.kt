@@ -2,15 +2,18 @@ package com.clerk.ui.auth
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import com.clerk.base.OwnJvm
 import io.mockk.mockk
 import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.junit.Rule
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class AuthStateEffectsTest {
 
   @get:Rule val composeTestRule = createComposeRule()

@@ -3,6 +3,7 @@ package com.clerk.ui.input
 import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.base.OwnJvm
 import com.clerk.ui.core.input.CountryCodeUtils
 import com.clerk.ui.core.input.LocaleProvider
 import com.clerk.ui.core.input.Logger
@@ -20,10 +21,12 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@Category(OwnJvm::class)
 class PhoneInputUtilsTest {
 
   private lateinit var mockPhoneNumberUtilProvider: PhoneNumberUtilProvider

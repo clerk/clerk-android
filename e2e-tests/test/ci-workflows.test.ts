@@ -258,8 +258,8 @@ describe('the Gradle state in the Actions cache', () => {
   it('is saved from main only by the slowest pull request jobs and the end-to-end tests, and nothing is saved from a pull request or a release tag, not even the JDK', () => {
     assert.deepEqual(saving('refs/heads/main', { jdk: false }), [
       'android-test.yml test-module source-api: Setup Gradle',
-      'android-test.yml test-module source-ui-snapshots: Setup Gradle',
-      'android-test.yml test-module source-ui-unit: Setup Gradle',
+      'android-test.yml test-module source-ui-own-jvm: Setup Gradle',
+      'android-test.yml test-module source-ui-shared-jvm: Setup Gradle',
       'checks.yml checks: Set up Gradle',
       'detekt.yml detekt: Set up Gradle',
       'verify-e2e.yml e2e-tests: Setup Gradle',
@@ -583,20 +583,25 @@ describe('the Paparazzi screenshot tests', () => {
       [commands, nightly],
       [
         [
-          "./gradlew :source:ui:verifyPaparazziDebug --tests 'com.clerk.snapshot.*' --build-cache --parallel",
-          "./gradlew :source:ui:verifyPaparazziDebug --tests 'com.clerk.ui.*' --build-cache --parallel",
+          './gradlew :source:ui:verifyPaparazziDebug -Pclerk.testJvm=own --build-cache --parallel',
+          './gradlew :source:ui:testDebugUnitTest -Pclerk.testJvm=shared --build-cache --parallel',
         ],
         './gradlew :source:ui:verifyPaparazziDebug --stacktrace',
       ],
     );
-    const filters = commands.map((command) => new RegExp(`^${(/--tests '([^']+)'/.exec(command)?.[1] ?? '').replaceAll('.', '\\.').replaceAll('*', '.*')}$`));
+    const build = readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8');
+    const categories = (mode: string): string[] =>
+      [...(new RegExp(`^    "${mode}" -> \\{\\n((?: {6}.*\\n)+)`, 'm').exec(build)?.[1] ?? '').matchAll(/\b(include|exclude)Categories\("([\w.]+)"\)/g)].map(([, verb, name]) => `${verb} ${name}`);
+    assert.deepEqual([categories('own'), categories('shared')], [['include com.clerk.base.OwnJvm'], ['exclude com.clerk.base.OwnJvm']], 'the own half runs the OwnJvm category and the shared half the rest');
+    assert.equal((build.match(/\bexclude(?:Categories|TestsMatching)\b/g) ?? []).length, 1, 'source/ui leaves no other test out');
     const sources = join(WORKFLOWS, '..', '..', 'source', 'ui', 'src', 'test', 'java');
-    const classes = readdirSync(sources, { recursive: true, encoding: 'utf8' })
-      .filter((file) => file.endsWith('.kt') && /@(?:org\.junit\.)?Test\b/.test(readFileSync(join(sources, file), 'utf8')))
-      .map((file) => file.replace(/\.kt$/, '').replaceAll('/', '.'));
+    const source = (file: string): string => readFileSync(join(sources, file), 'utf8');
+    const classes = readdirSync(sources, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.kt') && /@(?:org\.junit\.)?Test\b/.test(source(file)));
     assert.ok(classes.length > 100, `${classes.length} test classes found`);
-    assert.deepEqual(classes.filter((name) => filters.filter((filter) => filter.test(name)).length !== 1), [], 'each test class runs in exactly one job');
-    assert.doesNotMatch(readFileSync(join(WORKFLOWS, '..', '..', 'source', 'ui', 'build.gradle.kts'), 'utf8'), /\bexclude(?:Categories|TestsMatching)\b/, 'source/ui leaves no test out');
+    const ownJvm = (text: string): boolean => /@Category\(OwnJvm::class\)/.test(text) || /: BaseSnapshotTest\(\)/.test(text);
+    const sandboxed = (text: string): boolean => /\bRobolectricTestRunner\b|\bapp\.cash\.paparazzi\b|: BaseSnapshotTest\(\)/.test(text);
+    assert.deepEqual(classes.filter((file) => ownJvm(source(file)) !== sandboxed(source(file))), [], 'the Robolectric and Paparazzi classes, and only they, run in a JVM of their own');
+    assert.match(source('com/clerk/base/BaseSnapshotTest.kt'), /@Category\(OwnJvm::class\)\nabstract class BaseSnapshotTest\b/);
   });
 
   it('tell the author of a pull request how to record the images again when one no longer matches, in the words of the nightly run', () => {
