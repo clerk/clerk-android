@@ -368,16 +368,18 @@ private fun PillActionButton(text: String, isEnabled: Boolean, onClick: () -> Un
 }
 
 private suspend fun loadDefaultLogoFile(context: Context, url: String): File? {
-  return withContext(Dispatchers.IO) {
-    runCatching {
-      URL(url).openStream().use { input ->
-        val file = File(context.cacheDir, "organization_default_logo_${System.nanoTime()}.jpg")
-        FileOutputStream(file).use { output -> input.copyTo(output) }
-        file
-      }
+  return withContext(Dispatchers.IO) { downloadDefaultLogoFile(context, url) }
+}
+
+private fun downloadDefaultLogoFile(context: Context, url: String): File? {
+  return runCatching {
+    URL(url).openStream().use { input ->
+      val file = File(context.cacheDir, "organization_default_logo_${System.nanoTime()}.jpg")
+      FileOutputStream(file).use { output -> input.copyTo(output) }
+      file
     }
-      .getOrNull()
   }
+    .getOrNull()
 }
 
 private fun createImageFileFromUri(context: Context, uri: Uri): File? {
