@@ -307,25 +307,28 @@ internal class ConfigurationManager(
     refreshJob?.cancel()
     refreshJob = scope.launch {
       while (isActive && !AppLifecycleListener.isInBackground) {
-        try {
-          val session = Clerk.session
-          if (session != null) {
-            if (Clerk.debugMode) {
-              ClerkLogger.d("Refreshing token for session: ${session.id}")
-            }
-            // Use async to avoid blocking the refresh loop
-            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-          } else {
-            if (Clerk.debugMode) {
-              ClerkLogger.d("No session available for token refresh")
-            }
-          }
-        } catch (e: Exception) {
-          ClerkLogger.w("Token refresh failed: ${e.message}")
-        }
-
+        startSessionTokenFetch()
         delay(REFRESH_TOKEN_INTERVAL.seconds)
       }
+    }
+  }
+
+  private fun CoroutineScope.startSessionTokenFetch() {
+    try {
+      val session = Clerk.session
+      if (session != null) {
+        if (Clerk.debugMode) {
+          ClerkLogger.d("Refreshing token for session: ${session.id}")
+        }
+        // Use async to avoid blocking the refresh loop
+        async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+      } else {
+        if (Clerk.debugMode) {
+          ClerkLogger.d("No session available for token refresh")
+        }
+      }
+    } catch (e: Exception) {
+      ClerkLogger.w("Token refresh failed: ${e.message}")
     }
   }
 
