@@ -8,5 +8,6 @@ import dev.detekt.api.RuleSetProvider
 class ClerkRuleSetProvider : RuleSetProvider {
   override val ruleSetId: RuleSetId = RuleSetId("clerk")
 
-  override fun instance(): RuleSet = RuleSet(ruleSetId, listOf(::ClerkResultThrows))
+  override fun instance(): RuleSet =
+    RuleSet(ruleSetId, listOf(::ClerkResultThrows, ::SwallowedCancellation))
 }
