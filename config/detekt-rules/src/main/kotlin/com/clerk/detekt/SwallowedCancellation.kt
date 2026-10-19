@@ -29,10 +29,13 @@ class SwallowedCancellation(config: Config = Config.empty) :
 
   override fun visitCallExpression(expression: KtCallExpression) {
     super.visitCallExpression(expression)
-    if (expression.calleeExpression?.text != "runCatching") return
     val guarded = expression.lambdaArguments.firstOrNull()?.getLambdaExpression()?.bodyExpression
-    if (guarded?.hasNoCalls() == true) return
-    if (!expression.isInSuspendCode() || expression.chainHandlesCancellation()) return
+    val swallows =
+      expression.calleeExpression?.text == "runCatching" &&
+        guarded?.hasNoCalls() != true &&
+        expression.isInSuspendCode() &&
+        !expression.chainHandlesCancellation()
+    if (!swallows) return
     report(
       Finding(
         Entity.from(expression),
