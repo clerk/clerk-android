@@ -513,6 +513,20 @@ public class Auth internal constructor() {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
+  /**
+   * Starts a native email-link sign-in flow secured by PKCE and sends the link to [emailAddressId],
+   * the `emailAddressId` of one of the sign-in's `email_link` first factors.
+   *
+   * Fails with reason code `email_link_not_supported` when the sign-in has no such factor. A null
+   * [emailAddressId] behaves like [startEmailLinkSignIn] without one.
+   */
+  public suspend fun startEmailLinkSignIn(
+    email: String,
+    emailAddressId: String?,
+  ): ClerkResult<SignIn, NativeMagicLinkError> {
+    return nativeMagicLink.startEmailLinkSignIn(email, emailAddressId)
+  }
+
   /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
   public suspend fun handleMagicLinkDeepLink(
     uri: Uri
