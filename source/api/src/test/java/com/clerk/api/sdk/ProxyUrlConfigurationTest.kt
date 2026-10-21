@@ -118,6 +118,34 @@ class ProxyUrlConfigurationTest {
   }
 
   @Test
+  fun `proxyUrl with a trailing space is rejected`() {
+    assertProxyUrlRejected("https://proxy.example.com/__clerk ")
+  }
+
+  @Test
+  fun `proxyUrl with a leading space is rejected`() {
+    assertProxyUrlRejected(" https://proxy.example.com/__clerk")
+  }
+
+  @Test
+  fun `proxyUrl with a trailing newline is rejected`() {
+    assertProxyUrlRejected("https://proxy.example.com/__clerk\n")
+  }
+
+  @Test
+  fun `rejected whitespace proxyUrl error does not echo the url`() {
+    val error =
+      assertThrows(IllegalArgumentException::class.java) {
+        configure(
+          "pk_test_dummy",
+          ClerkConfigurationOptions(proxyUrl = "https://proxy.example.com/__clerk "),
+        )
+      }
+
+    assertFalse(error.message.orEmpty().contains("proxy.example.com"))
+  }
+
+  @Test
   fun `rejected proxyUrl error does not echo credentials`() {
     val error =
       assertThrows(IllegalArgumentException::class.java) {
