@@ -46,7 +46,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -96,6 +95,8 @@ internal class ConfigurationManager(
   private val tokenRefreshLock = Any()
 
   private var refreshJob: Job? = null
+
+  private var refreshJobSessionId: String? = null
 
   private var activeSessionWatchJob: Job? = null
 
@@ -290,6 +291,7 @@ internal class ConfigurationManager(
     initializationJob = null
     initializationRetryJob = null
     refreshJob = null
+    refreshJobSessionId = null
     activeSessionWatchJob = null
     context = null
     storageInitialized = false
@@ -310,25 +312,39 @@ internal class ConfigurationManager(
     Clerk.sessionFlow
       .map { session -> session?.takeIf { it.status == Session.SessionStatus.ACTIVE }?.id }
       .distinctUntilChanged()
-      .drop(1)
       .filterNotNull()
-      .collect { startTokenRefresh() }
+      .collect { sessionId -> startTokenRefreshUnlessRunningFor(sessionId) }
   }
 
   private fun startTokenRefresh() {
+    if (!canStartTokenRefresh()) return
+    synchronized(tokenRefreshLock) { relaunchTokenRefresh() }
+  }
+
+  private fun startTokenRefreshUnlessRunningFor(sessionId: String) {
+    if (!canStartTokenRefresh()) return
+    synchronized(tokenRefreshLock) {
+      if (refreshJob?.isActive == true && refreshJobSessionId == sessionId) return
+      relaunchTokenRefresh()
+    }
+  }
+
+  private fun canStartTokenRefresh(): Boolean {
     ClerkLogger.d(
       "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
     )
 
     if (!hasConfigured) {
       ClerkLogger.w("Cannot start token refresh - not configured")
-      return
+      return false
     }
+    return true
+  }
 
-    synchronized(tokenRefreshLock) {
-      refreshJob?.cancel()
-      refreshJob = scope.launch { refreshActiveSessionTokenUntilBackgroundedOrSignedOut() }
-    }
+  private fun relaunchTokenRefresh() {
+    refreshJob?.cancel()
+    refreshJobSessionId = Clerk.activeSession?.id
+    refreshJob = scope.launch { refreshActiveSessionTokenUntilBackgroundedOrSignedOut() }
   }
 
   private suspend fun CoroutineScope.refreshActiveSessionTokenUntilBackgroundedOrSignedOut() {
@@ -646,11 +662,7 @@ internal class ConfigurationManager(
   }
 
   private fun launchPostRefreshTasks() {
-    scope.launch {
-      if (Clerk.session != null) {
-        startTokenRefresh()
-      }
-    }
+    scope.launch { Clerk.activeSession?.id?.let(::startTokenRefreshUnlessRunningFor) }
   }
 
   private fun handleRefreshFailure(

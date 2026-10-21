@@ -13,6 +13,7 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -25,6 +26,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -126,6 +128,31 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
       advanceTimeBy(15_001)
       assertEquals(2, tokenFetches)
     }
+
+  @Test
+  fun `token refresh starts for a session that is already active when the session watcher starts`() =
+    runTest {
+      val clientResponse = CompletableDeferred<ClerkResult<Client, ClerkErrorResponse>>()
+      coEvery { Client.get() } coAnswers { clientResponse.await() }
+      initialize()
+      Clerk.updateClient(signedInClient())
+
+      runCurrent()
+
+      assertEquals(1, tokenFetches)
+      advanceTimeBy(5_001)
+      assertEquals(2, tokenFetches)
+    }
+
+  @Test
+  fun `a signed-in initialization starts the refresh loop once`() = runTest {
+    initialize()
+    runCurrent()
+    assertEquals(1, tokenFetches)
+
+    advanceTimeBy(5_001)
+    assertEquals(2, tokenFetches)
+  }
 
   @Test
   fun `token refresh skips a pending session and starts once it becomes active`() = runTest {
