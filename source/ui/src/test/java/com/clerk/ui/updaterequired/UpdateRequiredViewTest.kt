@@ -26,14 +26,16 @@ class UpdateRequiredViewTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private val status = MutableStateFlow(unsupported(updateUrl = PLAY_URL))
+  private val applicationName = MutableStateFlow<String?>("Acme")
+  private val supportEmail = MutableStateFlow<String?>("support@example.com")
 
   @Before
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.appVersionSupportStatus } returns status
     every { Clerk.organizationLogoUrlFlow } returns MutableStateFlow(null)
-    every { Clerk.applicationName } returns "Acme"
-    every { Clerk.supportEmail } returns "support@example.com"
+    every { Clerk.applicationNameFlow } returns applicationName
+    every { Clerk.supportEmailFlow } returns supportEmail
   }
 
   @After
@@ -53,6 +55,25 @@ class UpdateRequiredViewTest {
       )
       .assertExists()
     composeTestRule.onNodeWithText("Can't update?").assertExists()
+    composeTestRule.onNodeWithText("Get help").assertExists()
+  }
+
+  @Test
+  fun `shows the app name and help link when the environment arrives after the screen`() {
+    applicationName.value = null
+    supportEmail.value = null
+    composeTestRule.setContent { UpdateRequiredView() }
+    composeTestRule.onNodeWithText("Get help").assertDoesNotExist()
+
+    applicationName.value = "Acme"
+    supportEmail.value = "support@example.com"
+
+    composeTestRule
+      .onNodeWithText(
+        "This version of Acme is no longer supported. To keep your account secure, please " +
+          "update to continue."
+      )
+      .assertExists()
     composeTestRule.onNodeWithText("Get help").assertExists()
   }
 
@@ -97,7 +118,7 @@ class UpdateRequiredViewTest {
   @Test
   fun `leaves out the store button and help link it has nothing for`() {
     status.value = unsupported(updateUrl = null)
-    every { Clerk.supportEmail } returns null
+    supportEmail.value = null
     composeTestRule.setContent { UpdateRequiredView() }
 
     composeTestRule.onNodeWithText("Update required").assertExists()

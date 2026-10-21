@@ -18,7 +18,13 @@ internal data class AppBuild(val packageName: String, val versionCode: Long) {
     fun from(context: Context): AppBuild? =
       try {
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-        AppBuild(context.packageName, PackageInfoCompat.getLongVersionCode(packageInfo))
+        val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
+        if (versionCode < 1) {
+          ClerkLogger.w("This app's versionCode is $versionCode, so Clerk won't check its version.")
+          null
+        } else {
+          AppBuild(context.packageName, versionCode)
+        }
       } catch (e: PackageManager.NameNotFoundException) {
         ClerkLogger.w("Couldn't read this app's versionCode: ${e.message}")
         null

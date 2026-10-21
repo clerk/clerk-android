@@ -1,5 +1,7 @@
 package com.clerk.api.appversion
 
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.After
@@ -11,6 +13,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class AppVersionSupportTest {
@@ -181,6 +184,36 @@ class AppVersionSupportTest {
     assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = null), status())
     assertNull(AppVersionSupport.build)
   }
+
+  @Test
+  fun `a build reads this app's versionCode`() {
+    setVersionCode(41)
+
+    assertEquals(
+      AppBuild(context.packageName, versionCode = 41),
+      AppBuild.from(context),
+    )
+  }
+
+  @Test
+  fun `a versionCode below 1 can't be checked, so the app is supported`() {
+    setVersionCode(0)
+    AppVersionSupport.configure(AppBuild.from(context))
+
+    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+
+    assertNull(AppVersionSupport.build)
+    assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = null), status())
+  }
+
+  private fun setVersionCode(versionCode: Long) {
+    shadowOf(context.packageManager)
+      .getInternalMutablePackageInfo(context.packageName)
+      .longVersionCode = versionCode
+  }
+
+  private val context: Application
+    get() = ApplicationProvider.getApplicationContext()
 
   private fun status() = AppVersionSupport.status.value
 }

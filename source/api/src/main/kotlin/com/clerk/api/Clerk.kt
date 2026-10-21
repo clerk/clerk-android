@@ -242,6 +242,9 @@ public object Clerk {
   public val applicationName: String?
     get() = environment?.displayConfig?.applicationName
 
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val applicationNameFlow: StateFlow<String?> = stateStore.applicationNameFlow
+
   /**
    * The support email address configured for this application in the Clerk Dashboard.
    *
@@ -250,6 +253,9 @@ public object Clerk {
    */
   public val supportEmail: String?
     get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
+
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow
 
   /**
    * Whether this build of your app meets the minimum version set for it in the Clerk Dashboard.

@@ -82,6 +82,8 @@ internal class ClientStateStore(
   private val _session = MutableStateFlow<Session?>(null)
   private val _user = MutableStateFlow<User?>(null)
   private val _organizationLogoUrl = MutableStateFlow<String?>(null)
+  private val _applicationName = MutableStateFlow<String?>(null)
+  private val _supportEmail = MutableStateFlow<String?>(null)
   private val _multiSessionModeIsEnabled = MutableStateFlow(false)
 
   val clientFlow: StateFlow<Client?> = _client.asStateFlow()
@@ -93,6 +95,10 @@ internal class ClientStateStore(
   val userFlow: StateFlow<User?> = _user.asStateFlow()
 
   val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrl.asStateFlow()
+
+  val applicationNameFlow: StateFlow<String?> = _applicationName.asStateFlow()
+
+  val supportEmailFlow: StateFlow<String?> = _supportEmail.asStateFlow()
 
   val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
 
@@ -402,6 +408,8 @@ internal class ClientStateStore(
     val previous = state.environment
     state = state.copy(environment = environment)
     _organizationLogoUrl.value = environment.displayConfig.logoImageUrl
+    _applicationName.value = environment.displayConfig.applicationName
+    _supportEmail.value = environment.displayConfig.supportEmail?.takeIf { it.isNotBlank() }
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     return previous
   }

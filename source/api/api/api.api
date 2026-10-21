@@ -12,6 +12,7 @@ public final class com/clerk/api/Clerk {
 	public final fun getActiveUser ()Lcom/clerk/api/user/User;
 	public final fun getAppVersionSupportStatus ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getApplicationName ()Ljava/lang/String;
+	public final fun getApplicationNameFlow ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getAuth ()Lcom/clerk/api/auth/Auth;
 	public final fun getBilling ()Lcom/clerk/api/billing/Billing;
 	public final fun getBiometricCredentialPromptAfterSignInIsEnabled ()Z
@@ -61,6 +62,7 @@ public final class com/clerk/api/Clerk {
 	public final fun getShouldShowDevelopmentModeWarning ()Z
 	public final fun getSocialProviders ()Ljava/util/Map;
 	public final fun getSupportEmail ()Ljava/lang/String;
+	public final fun getSupportEmailFlow ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getTelemetryEnabled ()Z
 	public final fun getTermsUrl ()Ljava/lang/String;
 	public final fun getUser ()Lcom/clerk/api/user/User;

@@ -28,8 +28,8 @@ class UpdateRequiredActivityTest {
     every { Clerk.appVersionSupportStatus } returns status
     every { Clerk.isInitialized } returns isInitialized
     every { Clerk.organizationLogoUrlFlow } returns MutableStateFlow(null)
-    every { Clerk.applicationName } returns "Acme"
-    every { Clerk.supportEmail } returns null
+    every { Clerk.applicationNameFlow } returns MutableStateFlow("Acme")
+    every { Clerk.supportEmailFlow } returns MutableStateFlow(null)
   }
 
   @After
