@@ -290,5 +290,4 @@
     <string name="update_app">Обновить приложение</string>
     <string name="cant_update">Не удается обновить?</string>
     <string name="your_version">Ваша версия</string>
-    <string name="required_version">Требуется</string>
 </resources>

@@ -28,16 +28,25 @@ class UpdateRequiredViewSnapshotTest : BaseSnapshotTest() {
         minimumVersion = 42,
         updateUrl = "https://play.google.com/store/apps/details?id=com.example.app",
       ),
+      versionName = "4.8.4",
       supportEmail = "support@example.com",
     )
   }
 
   @Test
   fun updateRequiredWithoutStoreLinkOrSupportEmail() {
-    snapshot(AppVersionSupportStatus(isSupported = false, currentVersion = 41), supportEmail = null)
+    snapshot(
+      AppVersionSupportStatus(isSupported = false, currentVersion = 41),
+      versionName = null,
+      supportEmail = null,
+    )
   }
 
-  private fun snapshot(status: AppVersionSupportStatus, supportEmail: String?) {
+  private fun snapshot(
+    status: AppVersionSupportStatus,
+    versionName: String?,
+    supportEmail: String?,
+  ) {
     paparazzi.snapshot {
       Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
       Box(Modifier.size(740.dp)) {
@@ -45,6 +54,7 @@ class UpdateRequiredViewSnapshotTest : BaseSnapshotTest() {
           UpdateRequiredContent(
             status = status,
             appName = "Acme",
+            versionName = versionName,
             supportEmail = supportEmail,
             modifier = Modifier.fillMaxSize(),
             logo = {

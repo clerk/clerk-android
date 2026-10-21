@@ -285,5 +285,4 @@
     <string name="update_app">ऐप अपडेट करें</string>
     <string name="cant_update">अपडेट नहीं कर पा रहे हैं?</string>
     <string name="your_version">आपका संस्करण</string>
-    <string name="required_version">आवश्यक</string>
 </resources>

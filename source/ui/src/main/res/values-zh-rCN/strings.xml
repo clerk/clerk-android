@@ -285,5 +285,4 @@
     <string name="update_app">更新应用</string>
     <string name="cant_update">无法更新？</string>
     <string name="your_version">您的版本</string>
-    <string name="required_version">要求版本</string>
 </resources>

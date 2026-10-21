@@ -57,18 +57,17 @@ class UpdateRequiredViewTest {
   }
 
   @Test
-  fun `compares this build's version code with the minimum`() {
+  fun `shows this build's version name`() {
+    setVersionName("4.8.4")
     composeTestRule.setContent { UpdateRequiredView() }
 
     composeTestRule.onNodeWithText("Your version").assertExists()
-    composeTestRule.onNodeWithText("41").assertExists()
-    composeTestRule.onNodeWithText("Required").assertExists()
-    composeTestRule.onNodeWithText("42+").assertExists()
+    composeTestRule.onNodeWithText("4.8.4").assertExists()
   }
 
   @Test
-  fun `leaves out the version comparison without a minimum`() {
-    status.value = AppVersionSupportStatus(isSupported = false, currentVersion = 41)
+  fun `leaves out the version when the app has no version name`() {
+    setVersionName(null)
     composeTestRule.setContent { UpdateRequiredView() }
 
     composeTestRule.onNodeWithText("Your version").assertDoesNotExist()
@@ -105,6 +104,13 @@ class UpdateRequiredViewTest {
     composeTestRule.onNodeWithText("Go to Google Play").assertDoesNotExist()
     composeTestRule.onNodeWithText("Update app").assertDoesNotExist()
     composeTestRule.onNodeWithText("Get help").assertDoesNotExist()
+  }
+
+  private fun setVersionName(versionName: String?) {
+    val application = ApplicationProvider.getApplicationContext<Application>()
+    shadowOf(application.packageManager)
+      .getInternalMutablePackageInfo(application.packageName)
+      .versionName = versionName
   }
 
   private fun unsupported(updateUrl: String?) =

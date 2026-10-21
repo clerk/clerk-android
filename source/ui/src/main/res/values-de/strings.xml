@@ -285,5 +285,4 @@
     <string name="update_app">App aktualisieren</string>
     <string name="cant_update">Aktualisierung nicht möglich?</string>
     <string name="your_version">Ihre Version</string>
-    <string name="required_version">Erforderlich</string>
 </resources>

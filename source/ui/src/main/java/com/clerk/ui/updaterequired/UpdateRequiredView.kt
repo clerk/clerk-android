@@ -3,20 +3,17 @@ package com.clerk.ui.updaterequired
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -98,6 +95,7 @@ public fun UpdateRequiredView(
     UpdateRequiredContent(
       status = status,
       appName = Clerk.applicationName ?: appLabel(LocalContext.current),
+      versionName = appVersionName(LocalContext.current),
       supportEmail = Clerk.supportEmail,
       modifier = modifier,
       logo = resolvedLogo ?: { InstanceOrAppLogo(organizationLogoUrl) },
@@ -109,6 +107,7 @@ public fun UpdateRequiredView(
 internal fun UpdateRequiredContent(
   status: AppVersionSupportStatus,
   appName: String,
+  versionName: String?,
   supportEmail: String?,
   modifier: Modifier = Modifier,
   logo: @Composable () -> Unit = { AppIconLogo() },
@@ -147,10 +146,8 @@ internal fun UpdateRequiredContent(
               type = HeaderType.Subtitle,
             )
           }
-          val currentVersion = status.currentVersion
-          val minimumVersion = status.minimumVersion
-          if (currentVersion != null && minimumVersion != null) {
-            VersionComparison(currentVersion = currentVersion, minimumVersion = minimumVersion)
+          if (!versionName.isNullOrBlank()) {
+            CurrentVersion(versionName)
           }
         }
 
@@ -176,50 +173,27 @@ internal fun UpdateRequiredContent(
 }
 
 @Composable
-private fun VersionComparison(currentVersion: Long, minimumVersion: Long) {
+private fun CurrentVersion(versionName: String) {
   val shape = RoundedCornerShape(dp12)
-  Row(
+  Column(
     modifier =
       Modifier.fillMaxWidth()
-        .height(IntrinsicSize.Min)
         .clip(shape)
         .background(ClerkMaterialTheme.colors.neutral.copy(alpha = VERSION_BOX_BACKGROUND_ALPHA))
         .border(dp1, ClerkMaterialTheme.computedColors.border, shape)
-        .padding(dp16),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    VersionColumn(
-      label = stringResource(R.string.your_version),
-      version = currentVersion.toString(),
-      modifier = Modifier.weight(1f),
-    )
-    Box(
-      modifier =
-        Modifier.width(dp1).fillMaxHeight().background(ClerkMaterialTheme.computedColors.border)
-    )
-    VersionColumn(
-      label = stringResource(R.string.required_version),
-      version = "$minimumVersion+",
-      modifier = Modifier.weight(1f),
-    )
-  }
-}
-
-@Composable
-private fun VersionColumn(label: String, version: String, modifier: Modifier = Modifier) {
-  Column(
-    modifier = modifier.semantics(mergeDescendants = true) {},
+        .padding(dp16)
+        .semantics(mergeDescendants = true) {},
     verticalArrangement = Arrangement.spacedBy(dp2),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     Text(
-      text = label,
+      text = stringResource(R.string.your_version),
       style = ClerkMaterialTheme.typography.titleSmall,
       color = ClerkMaterialTheme.colors.mutedForeground,
       textAlign = TextAlign.Center,
     )
     Text(
-      text = version,
+      text = versionName,
       style = ClerkMaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
       color = ClerkMaterialTheme.colors.foreground,
       textAlign = TextAlign.Center,
@@ -269,6 +243,13 @@ private fun openUpdateUrl(context: Context, updateUrl: String) {
 private fun appLabel(context: Context): String =
   context.applicationInfo.loadLabel(context.packageManager).toString()
 
+private fun appVersionName(context: Context): String? =
+  try {
+    context.packageManager.getPackageInfo(context.packageName, 0).versionName
+  } catch (_: PackageManager.NameNotFoundException) {
+    null
+  }
+
 private const val GOOGLE_PLAY_HOST = "play.google.com"
 private const val VERSION_BOX_BACKGROUND_ALPHA = 0.02f
 private val dp320 = 320.dp
@@ -286,6 +267,7 @@ private fun PreviewUpdateRequiredContent() {
           updateUrl = "https://play.google.com/store/apps/details?id=com.example",
         ),
       appName = "Acme",
+      versionName = "4.8.4",
       supportEmail = "support@example.com",
     )
   }
@@ -298,6 +280,7 @@ private fun PreviewUpdateRequiredContentWithoutLinks() {
     UpdateRequiredContent(
       status = AppVersionSupportStatus(isSupported = false, currentVersion = 41),
       appName = "Acme",
+      versionName = null,
       supportEmail = null,
     )
   }
