@@ -13,6 +13,7 @@ import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.api.UserApi
+import com.clerk.api.network.middleware.incoming.AppVersionStatusMiddleware
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.api.network.middleware.outgoing.RequestLoggingMiddleware
@@ -140,6 +141,7 @@ internal object ClerkApi {
           addInterceptor(ClientSyncingMiddleware(json = json))
           addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
           addInterceptor(DeviceTokenSavingMiddleware())
+          addInterceptor(AppVersionStatusMiddleware(json = json))
           addInterceptor(UrlAppendingMiddleware())
 
           if (Clerk.debugMode) {

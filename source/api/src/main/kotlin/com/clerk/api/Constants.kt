@@ -98,7 +98,7 @@ public object Constants {
   public object Http {
     public const val NO_CONTENT: Int = 204
     public const val RESET_CONTENT: Int = 205
-    public const val CURRENT_API_VERSION: String = "2026-08-20"
+    public const val CURRENT_API_VERSION: String = "2026-10-09"
     public const val CURRENT_SDK_VERSION: String = BuildConfig.SDK_VERSION
     public const val IS_MOBILE_HEADER_VALUE: String = "1"
     public const val AUTHORIZATION_HEADER: String = "Authorization"

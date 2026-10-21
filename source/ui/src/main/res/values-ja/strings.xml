@@ -279,4 +279,9 @@
     <string name="switch_organization">組織を切り替え</string>
     <string name="current_organization">現在の組織</string>
     <string name="open_organization_switcher">組織スイッチャーを開く</string>
+    <string name="update_required">アップデートが必要です</string>
+    <string name="this_version_of_app_is_no_longer_supported">このバージョンの%1$sはサポートされなくなりました。アカウントを安全に保つため、アップデートしてから続行してください。</string>
+    <string name="go_to_google_play">Google Playへ</string>
+    <string name="update_app">アプリをアップデート</string>
+    <string name="cant_update">アップデートできない場合</string>
 </resources>

@@ -8,12 +8,16 @@ import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
+import com.clerk.api.appversion.AppBuild
+import com.clerk.api.appversion.AppVersionSupport
+import com.clerk.api.appversion.UpdateRequiredViewLauncher
 import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.incoming.UNSUPPORTED_APP_VERSION_CODE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -204,6 +208,8 @@ internal class ConfigurationManager(
     val baseUrl = options?.proxyUrl ?: PublishableKeyHelper().extractApiUrl(publishableKey)
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
+    AppVersionSupport.configure(AppBuild.from(context.applicationContext))
+    UpdateRequiredViewLauncher.start(enabled = options?.updateRequiredViewEnabled != false)
 
     StorageHelper.prepare(context.applicationContext)
     Clerk.configureSharedSessionSync(
@@ -314,6 +320,7 @@ internal class ConfigurationManager(
   }
 
   private fun CoroutineScope.startSessionTokenFetch() {
+    if (!AppVersionSupport.status.value.isSupported) return
     try {
       val session = Clerk.session
       if (session != null) {
@@ -572,13 +579,17 @@ internal class ConfigurationManager(
             clientUpdateCountAtStart = clientUpdateCountAtStart,
             environment = environmentResult.value,
           )
-        else ->
+        else -> {
+          if (environmentResult is ClerkResult.Success && clientResult.isUnsupportedAppVersion()) {
+            Clerk.updateEnvironment(environmentResult.value)
+          }
           handleRefreshFailure(
             clientResult = clientResult,
             environmentResult = environmentResult,
             mode = mode,
             attempt = attempt,
           )
+        }
       }
     }
   }
@@ -810,6 +821,10 @@ internal class ConfigurationManager(
 }
 
 private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
+
+private fun ClerkResult<*, ClerkErrorResponse>.isUnsupportedAppVersion(): Boolean =
+  this is ClerkResult.Failure &&
+    error?.errors.orEmpty().any { it.code == UNSUPPORTED_APP_VERSION_CODE }
 
 /**
  * Whether [next] belongs to a different client than the in-memory state, so that state must be

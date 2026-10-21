@@ -279,4 +279,9 @@
     <string name="switch_organization">تبديل المؤسسة</string>
     <string name="current_organization">المؤسسة الحالية</string>
     <string name="open_organization_switcher">فتح مبدل المؤسسات</string>
+    <string name="update_required">التحديث مطلوب</string>
+    <string name="this_version_of_app_is_no_longer_supported">لم يعد هذا الإصدار من %1$s مدعومًا. للحفاظ على أمان حسابك، يُرجى التحديث للمتابعة.</string>
+    <string name="go_to_google_play">الانتقال إلى Google Play</string>
+    <string name="update_app">تحديث التطبيق</string>
+    <string name="cant_update">لا يمكنك التحديث؟</string>
 </resources>

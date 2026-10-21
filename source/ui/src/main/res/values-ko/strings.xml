@@ -279,4 +279,9 @@
     <string name="switch_organization">조직 전환</string>
     <string name="current_organization">현재 조직</string>
     <string name="open_organization_switcher">조직 전환기 열기</string>
+    <string name="update_required">업데이트 필요</string>
+    <string name="this_version_of_app_is_no_longer_supported">이 버전의 %1$s은(는) 더 이상 지원되지 않습니다. 계정을 안전하게 보호하려면 업데이트한 후 계속하세요.</string>
+    <string name="go_to_google_play">Google Play로 이동</string>
+    <string name="update_app">앱 업데이트</string>
+    <string name="cant_update">업데이트할 수 없나요?</string>
 </resources>

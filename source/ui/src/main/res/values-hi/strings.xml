@@ -279,4 +279,9 @@
     <string name="switch_organization">संगठन बदलें</string>
     <string name="current_organization">वर्तमान संगठन</string>
     <string name="open_organization_switcher">संगठन स्विचर खोलें</string>
+    <string name="update_required">अपडेट आवश्यक है</string>
+    <string name="this_version_of_app_is_no_longer_supported">%1$s का यह संस्करण अब समर्थित नहीं है। अपने खाते को सुरक्षित रखने के लिए, जारी रखने हेतु कृपया अपडेट करें।</string>
+    <string name="go_to_google_play">Google Play पर जाएं</string>
+    <string name="update_app">ऐप अपडेट करें</string>
+    <string name="cant_update">अपडेट नहीं कर पा रहे हैं?</string>
 </resources>

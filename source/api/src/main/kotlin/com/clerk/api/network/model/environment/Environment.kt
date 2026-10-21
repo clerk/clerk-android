@@ -14,6 +14,9 @@ internal data class Environment(
   @SerialName("organization_settings")
   val organizationSettings: OrganizationSettings = OrganizationSettings(),
   @SerialName("commerce_settings") val commerceSettings: CommerceSettings = CommerceSettings(),
+  @Serializable(with = NativeAppSettingsOrDefaultSerializer::class)
+  @SerialName("native_app_settings")
+  val nativeAppSettings: NativeAppSettings = NativeAppSettings(),
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }

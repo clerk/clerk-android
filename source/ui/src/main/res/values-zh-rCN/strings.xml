@@ -279,4 +279,9 @@
     <string name="switch_organization">切换组织</string>
     <string name="current_organization">当前组织</string>
     <string name="open_organization_switcher">打开组织切换器</string>
+    <string name="update_required">需要更新</string>
+    <string name="this_version_of_app_is_no_longer_supported">此版本的 %1$s 已不再受支持。为确保您的账户安全，请更新后继续。</string>
+    <string name="go_to_google_play">前往 Google Play</string>
+    <string name="update_app">更新应用</string>
+    <string name="cant_update">无法更新？</string>
 </resources>
