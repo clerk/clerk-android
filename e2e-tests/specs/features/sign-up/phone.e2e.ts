@@ -1,5 +1,6 @@
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
 import { asShownByClerk, nationalDigits } from '../../phone.ts';
+import { runPassword } from '../../support/clerk.ts';
 
 test('signs up with a phone number, then gives the email and password the instance requires', async ({ host, screen }) => {
   const phone = await host.newPhone();
@@ -14,7 +15,7 @@ test('signs up with a phone number, then gives the email and password the instan
   await host.fill(screen.getByTestId('clerk.auth.signUp.emailAddress'), email);
   await host.tap(screen.getByTestId('clerk.auth.signUp.continue'));
   await expect(screen.getByTestId('clerk.auth.signUp.password')).toBeVisible({ timeout: 20_000 });
-  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), `Verify-${host.runId}-Pw1!`);
+  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), runPassword(host.runId));
   await host.tap(screen.getByTestId('clerk.auth.signUp.continue'));
   await expect(screen.getByText('Check your email')).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText(email)).toBeVisible();

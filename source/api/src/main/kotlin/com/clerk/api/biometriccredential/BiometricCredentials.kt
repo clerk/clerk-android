@@ -189,7 +189,7 @@ public object BiometricCredentials {
       is ClerkResult.Success -> {
         val biometricCredential = enrollmentResult.value
         saveLocalCredential(biometricCredential, localKey, userId, identifierHint)?.let { failure ->
-          runCatching { keyManager.deleteKey(localKey.localKeyId) }
+          deleteKeyIgnoringFailure(localKey.localKeyId)
           return failure
         }
         onStorage {
@@ -198,7 +198,7 @@ public object BiometricCredentials {
         enrollmentResult
       }
       is ClerkResult.Failure -> {
-        runCatching { keyManager.deleteKey(localKey.localKeyId) }
+        deleteKeyIgnoringFailure(localKey.localKeyId)
         enrollmentResult
       }
     }
@@ -729,6 +729,10 @@ public object BiometricCredentials {
   }
 
   private suspend fun <T> onStorage(block: () -> T): T = withContext(storageDispatcher) { block() }
+
+  private fun deleteKeyIgnoringFailure(localKeyId: String) {
+    runCatching { keyManager.deleteKey(localKeyId) }
+  }
 
   private fun deleteLocalCredential(
     credential: BiometricCredentialLocalRecord,

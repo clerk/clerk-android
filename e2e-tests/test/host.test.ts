@@ -97,7 +97,7 @@ describe('the clerk-android host with a remote device', () => {
     assert.ok(workflow.includes('src/platform/android/session-lane.ts" boot "$VERIFY_SESSION_WORK"'));
   });
 
-  it('has the session workflow start on the three runner labels this repository uses, and fail for any other', () => {
+  it('has the session workflow start on the two runner labels this repository uses, and fail for any other', () => {
     const lines = readFileSync(join(PACKAGE_DIR, '..', '.github', 'workflows', 'verify-remote.yml'), 'utf8').split('\n').map((line) => line.trim());
     const first = lines.indexOf('case "$RUNNER_LABEL" in');
     const check = lines.slice(first, lines.indexOf('esac', first) + 1).join('\n');
@@ -106,8 +106,8 @@ describe('the clerk-android host with a remote device', () => {
       return { status: ran.status, stdout: ran.stdout };
     };
     assert.ok(first > 0, 'the label check is in the workflow');
-    for (const label of ['ubuntu-24.04', 'ubuntu-latest', 'blacksmith-4vcpu-ubuntu-2404']) assert.deepEqual(checked(label), { status: 0, stdout: '' }, label);
-    assert.deepEqual(checked('macos-15-xlarge'), { status: 1, stdout: '::error title=verify-remote::no session started: the runner label macos-15-xlarge is not ubuntu-24.04, ubuntu-latest, or blacksmith-4vcpu-ubuntu-2404\n' });
+    for (const label of ['ubuntu-24.04', 'ubuntu-latest']) assert.deepEqual(checked(label), { status: 0, stdout: '' }, label);
+    assert.deepEqual(checked('macos-15-xlarge'), { status: 1, stdout: '::error title=verify-remote::no session started: the runner label macos-15-xlarge is not ubuntu-24.04 or ubuntu-latest\n' });
   });
 
   describe('in a session', () => {

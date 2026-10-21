@@ -88,7 +88,7 @@
     <string name="load_more">Загрузить еще</string>
     <string name="try_again">Повторить попытку</string>
     <string name="enter_a_valid_organization_slug">Введите slug, используя строчные буквы, цифры и дефисы.</string>
-    <string name="organization_already_exists_advisory">Для обнаруженного названия компании (%1$s) и %2$s уже существует организация. Присоединитесь по приглашению.</string>
+    <string name="organization_already_exists_advisory">Для обнаруженного названия компании (%1$s) и домена %2$s уже существует организация. Присоединитесь по приглашению.</string>
     <string name="back">Назад</string>
     <string name="enter_a_backup_code">Введите резервный код</string>
     <string name="your_backup_code">Резервный код вы получаете при настройке двухэтапной аутентификации.</string>

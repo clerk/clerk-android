@@ -97,11 +97,16 @@ function readDevice(platform: Platform, env: Env): Device {
 
 export function readTarget(app: TestApp, env: Env): Target {
   const platform = readPlatform(app, env);
+  const device = readDevice(platform, env);
+  const devServer = given(env, NAMES.devServer);
+  if (platform === 'android' && device.kind === 'borrowed' && devServer !== null) {
+    throw new Error(`${NAMES.devServer} and ${NAMES.daemonUrl} are both set; a dev-client app on Android starts through adb on this machine, and a borrowed emulator is on the session runner, so unset ${NAMES.devServer} and install a standalone build`);
+  }
   return {
     platform,
-    device: readDevice(platform, env),
+    device,
     session: given(env, NAMES.session) ?? `clerk-e2e-${platform}`,
-    build: { path: given(env, NAMES.appPath), devServer: given(env, NAMES.devServer) },
+    build: { path: given(env, NAMES.appPath), devServer },
   };
 }
 
@@ -135,12 +140,17 @@ export function runIdParts(run: string): { readonly time: string; readonly tag: 
   return { time: parts.time!, tag: parts.tag! };
 }
 
-export function newRunId(): RunId {
+export function newRunId(takenTags: readonly string[] = []): RunId {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
   const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-  return `r${date}-${time}-${randomBytes(2).toString('hex')}` as RunId;
+  const taken = new Set(takenTags);
+  if (taken.size === 0x10000) throw new Error('every run tag is taken; run down to delete the application');
+  let tag: string;
+  do tag = randomBytes(2).toString('hex');
+  while (taken.has(tag));
+  return `r${date}-${time}-${tag}` as RunId;
 }
 
 export function readRun(env: Env): RunId {

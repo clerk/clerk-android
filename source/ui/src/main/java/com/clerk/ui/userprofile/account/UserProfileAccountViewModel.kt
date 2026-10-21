@@ -54,17 +54,19 @@ internal class UserProfileAccountViewModel(
   }
 
   private suspend fun forgetBiometricLocalCredentials(deletedUserId: String) {
-    withContext(workDispatcher) {
-      runCatching {
-        Clerk.biometricCredentials.forgetLocalCredentialsAfterAccountDeletion(deletedUserId)
-      }
-        .onFailure {
-          ClerkLog.e(
-            "Failed to delete biometric local credentials after account deletion. " +
-              "This is non-critical."
-          )
-        }
+    withContext(workDispatcher) { forgetLocalCredentialsIgnoringFailure(deletedUserId) }
+  }
+
+  private fun forgetLocalCredentialsIgnoringFailure(deletedUserId: String) {
+    runCatching {
+      Clerk.biometricCredentials.forgetLocalCredentialsAfterAccountDeletion(deletedUserId)
     }
+      .onFailure {
+        ClerkLog.e(
+          "Failed to delete biometric local credentials after account deletion. " +
+            "This is non-critical."
+        )
+      }
   }
 
   fun resetState() {
