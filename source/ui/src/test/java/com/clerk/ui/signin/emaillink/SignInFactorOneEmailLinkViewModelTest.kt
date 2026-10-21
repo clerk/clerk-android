@@ -8,6 +8,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -53,7 +54,7 @@ class SignInFactorOneEmailLinkViewModelTest {
   @Test
   fun `sendLink surfaces backend long message for rate limits`() = runTest {
     every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
-    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev") } returns
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns
       ClerkResult.apiFailure(
         NativeMagicLinkError(
           reasonCode = "too_many_requests",
@@ -63,13 +64,30 @@ class SignInFactorOneEmailLinkViewModelTest {
 
     val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
     advanceUntilIdle()
-    viewModel.sendLink()
+    viewModel.sendLink("idn_123")
     advanceUntilIdle()
 
     assertEquals(
       AuthenticationViewState.Error("Too many requests, retry later"),
       viewModel.state.value,
     )
+  }
+
+  @Test
+  fun `sendLink sends the link to the given email address`() = runTest {
+    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
+    coEvery { auth.startEmailLinkSignIn(any(), any()) } returns
+      ClerkResult.apiFailure(NativeMagicLinkError(reasonCode = "email_link_not_supported"))
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_second") } returns
+      ClerkResult.success(SignIn(id = "sia_123"))
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendLink("idn_second")
+    advanceUntilIdle()
+
+    assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
+    coVerify(exactly = 1) { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_second") }
   }
 
   @Test
