@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.account
 
+import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.model.deleted.DeletedObject
@@ -24,6 +25,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -108,6 +110,26 @@ class UserProfileAccountViewModelTest {
   }
 
   @Test
+  fun deleteAccount_profileClosedOnceDeleteSucceeds_stillForgetsLocalBiometricCredentials() =
+    runTest {
+      val user = givenSignedInUser(deleteResult = ClerkResult.success(mockk()))
+      every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1") } returns 1
+      val viewModel = UserProfileAccountViewModel(workDispatcher = testDispatcher)
+      coEvery { user.delete() } coAnswers
+        {
+          viewModel.viewModelScope.cancel()
+          ClerkResult.success(mockk())
+        }
+
+      viewModel.deleteAccount()
+      advanceUntilIdle()
+
+      verify(exactly = 1) {
+        BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
+      }
+    }
+
+  @Test
   fun deleteAccount_failure_setsErrorStateAndKeepsLocalBiometricCredentials() = runTest {
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     givenSignedInUser(deleteResult = ClerkResult.Failure(error))
@@ -121,12 +143,15 @@ class UserProfileAccountViewModelTest {
     verify(exactly = 0) { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion(any()) }
   }
 
-  private fun givenSignedInUser(deleteResult: ClerkResult<DeletedObject, ClerkErrorResponse>) {
+  private fun givenSignedInUser(
+    deleteResult: ClerkResult<DeletedObject, ClerkErrorResponse>
+  ): User {
     val user = mockk<User>()
     every { user.id } returns "user_1"
     every { Clerk.user } returns user
     mockkStatic("com.clerk.api.user.UserKt")
     coEvery { user.delete() } returns deleteResult
     mockkObject(BiometricCredentials)
+    return user
   }
 }

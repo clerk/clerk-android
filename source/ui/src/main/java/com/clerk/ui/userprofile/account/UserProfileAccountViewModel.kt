@@ -11,6 +11,7 @@ import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -54,7 +55,9 @@ internal class UserProfileAccountViewModel(
   }
 
   private suspend fun forgetBiometricLocalCredentials(deletedUserId: String) {
-    withContext(workDispatcher) { forgetLocalCredentialsIgnoringFailure(deletedUserId) }
+    withContext(NonCancellable + workDispatcher) {
+      forgetLocalCredentialsIgnoringFailure(deletedUserId)
+    }
   }
 
   private fun forgetLocalCredentialsIgnoringFailure(deletedUserId: String) {
