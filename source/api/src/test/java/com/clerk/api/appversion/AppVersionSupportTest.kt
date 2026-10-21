@@ -117,6 +117,26 @@ class AppVersionSupportTest {
   }
 
   @Test
+  fun `a rejected request falls back to the environment for what its meta leaves out`() {
+    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+
+    AppVersionSupport.applyUnsupportedAppVersion(
+      buildJsonObject { put("update_url", JsonPrimitive("")) },
+      AppVersionSupport.generation,
+    )
+
+    assertEquals(
+      AppVersionSupportStatus(
+        isSupported = false,
+        currentVersion = 41,
+        minimumVersion = 42,
+        updateUrl = TEST_PLAY_URL,
+      ),
+      status(),
+    )
+  }
+
+  @Test
   fun `a fetched environment replaces what an earlier response said`() {
     AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
 

@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.appversion.AppBuild
 import com.clerk.api.appversion.AppVersionSupport
+import com.clerk.api.appversion.TEST_PLAY_URL
 import com.clerk.api.appversion.androidPolicy
 import com.clerk.api.appversion.appVersionTestEnvironment
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
@@ -23,6 +24,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -80,6 +83,37 @@ class ConfigurationManagerAppVersionTest {
     assertFalse(AppVersionSupport.status.value.isSupported)
     assertEquals(42L, AppVersionSupport.status.value.minimumVersion)
   }
+
+  @Test
+  fun `a rejected client keeps the app blocked when the environment has no minimum for it`() =
+    runTest {
+      coEvery { Environment.get() } returns
+        ClerkResult.success(appVersionTestEnvironment(applicationName = "Blocked App"))
+      coEvery { Client.get() } returns
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors =
+              listOf(
+                Error(
+                  code = "unsupported_app_version",
+                  meta =
+                    buildJsonObject {
+                      put("minimum_version", JsonPrimitive("42"))
+                      put("update_url", JsonPrimitive(TEST_PLAY_URL))
+                    },
+                )
+              )
+          )
+        )
+
+      initialize()
+      runCurrent()
+
+      assertEquals("Blocked App", Clerk.applicationName)
+      assertFalse(AppVersionSupport.status.value.isSupported)
+      assertEquals(42L, AppVersionSupport.status.value.minimumVersion)
+      assertEquals(TEST_PLAY_URL, AppVersionSupport.status.value.updateUrl)
+    }
 
   @Test
   fun `another client failure still leaves the environment unloaded`() = runTest {

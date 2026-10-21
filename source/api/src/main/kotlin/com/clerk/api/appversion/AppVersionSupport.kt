@@ -68,8 +68,10 @@ internal object AppVersionSupport {
         AppVersionSupportStatus(
           isSupported = false,
           currentVersion = meta.string("current_version")?.toVersionCode() ?: build?.versionCode,
-          minimumVersion = meta.string("minimum_version")?.toVersionCode(),
-          updateUrl = meta.string("update_url")?.takeIf(::isStoreUrl),
+          minimumVersion =
+            meta.string("minimum_version")?.toVersionCode() ?: environmentStatus?.minimumVersion,
+          updateUrl =
+            meta.string("update_url")?.takeIf(::isStoreUrl) ?: environmentStatus?.updateUrl,
         )
       publishLocked()
     }

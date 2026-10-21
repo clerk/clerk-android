@@ -21,6 +21,7 @@ import com.clerk.api.network.middleware.incoming.UNSUPPORTED_APP_VERSION_CODE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.redirect.RedirectCoordinator
@@ -580,8 +581,13 @@ internal class ConfigurationManager(
             environment = environmentResult.value,
           )
         else -> {
-          if (environmentResult is ClerkResult.Success && clientResult.isUnsupportedAppVersion()) {
+          val unsupportedAppVersion = clientResult.unsupportedAppVersionError()
+          if (environmentResult is ClerkResult.Success && unsupportedAppVersion != null) {
             Clerk.updateEnvironment(environmentResult.value)
+            AppVersionSupport.applyUnsupportedAppVersion(
+              meta = unsupportedAppVersion.meta,
+              generation = AppVersionSupport.generation,
+            )
           }
           handleRefreshFailure(
             clientResult = clientResult,
@@ -822,9 +828,10 @@ internal class ConfigurationManager(
 
 private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
 
-private fun ClerkResult<*, ClerkErrorResponse>.isUnsupportedAppVersion(): Boolean =
-  this is ClerkResult.Failure &&
-    error?.errors.orEmpty().any { it.code == UNSUPPORTED_APP_VERSION_CODE }
+private fun ClerkResult<*, ClerkErrorResponse>.unsupportedAppVersionError(): Error? =
+  (this as? ClerkResult.Failure)?.error?.errors?.firstOrNull {
+    it.code == UNSUPPORTED_APP_VERSION_CODE
+  }
 
 /**
  * Whether [next] belongs to a different client than the in-memory state, so that state must be
