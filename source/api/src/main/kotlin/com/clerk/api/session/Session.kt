@@ -46,9 +46,10 @@ public data class Session(
   val status: SessionStatus = SessionStatus.UNKNOWN,
   /**
    * When the session reaches its maximum lifetime, in milliseconds since epoch. Zero means the
-   * session has no maximum lifetime; see [hasMaximumLifetime].
+   * session has no maximum lifetime; see [hasMaximumLifetime]. A response that omits `expire_at` or
+   * sends `null` decodes as zero.
    */
-  @SerialName("expire_at") val expireAt: Long,
+  @SerialName("expire_at") val expireAt: Long = 0L,
   /**
    * When the session will be abandoned due to inactivity, in milliseconds since epoch. Zero means
    * the session has no inactivity deadline.

@@ -1,7 +1,6 @@
 package com.clerk.api.session
 
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.clerk.api.network.ClerkApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,40 +10,53 @@ class SessionLifetimeTest {
 
   @Test
   fun `a zero expire_at has no maximum lifetime`() {
-    assertFalse(indefiniteSession().hasMaximumLifetime)
+    assertFalse(decodeSession(deadlines = """"expire_at":0,""").hasMaximumLifetime)
   }
 
   @Test
   fun `a future expire_at has a maximum lifetime`() {
-    assertTrue(indefiniteSession().copy(expireAt = 2_000_000_000_000L).hasMaximumLifetime)
+    assertTrue(decodeSession(deadlines = """"expire_at":2000000000000,""").hasMaximumLifetime)
   }
 
   @Test
   fun `a revoked session with a zero expire_at has no maximum lifetime`() {
-    assertFalse(indefiniteSession().copy(status = Session.SessionStatus.REVOKED).hasMaximumLifetime)
+    val revoked =
+      decodeSession(deadlines = """"expire_at":0,""").copy(status = Session.SessionStatus.REVOKED)
+
+    assertFalse(revoked.hasMaximumLifetime)
   }
 
   @Test
-  fun `zero deadlines decode as zero`() {
-    val session = indefiniteSession()
-
-    assertEquals(0L, session.expireAt)
-    assertEquals(0L, session.abandonAt)
-    assertEquals(Session.SessionStatus.ACTIVE, session.status)
+  fun `a zero expire_at decodes as zero`() {
+    assertEquals(0L, decodeSession(deadlines = """"expire_at":0,""").expireAt)
   }
 
   @Test
-  fun `an indefinite session survives a serialization round trip`() {
-    val session = indefiniteSession()
-
-    assertEquals(session, Json.decodeFromString<Session>(Json.encodeToString(session)))
+  fun `a missing expire_at decodes as zero`() {
+    assertEquals(0L, decodeSession(deadlines = "").expireAt)
   }
 
-  private fun indefiniteSession(): Session =
-    Json.decodeFromString(
-      """{
-        "id":"sess_native","status":"active","expire_at":0,"abandon_at":0,
-        "last_active_at":1,"created_at":1,"updated_at":1
-      }"""
+  @Test
+  fun `a null expire_at decodes as zero`() {
+    assertEquals(0L, decodeSession(deadlines = """"expire_at":null,""").expireAt)
+  }
+
+  @Test
+  fun `a zero abandon_at decodes as zero`() {
+    assertEquals(0L, decodeSession(deadlines = """"abandon_at":0,""").abandonAt)
+  }
+
+  @Test
+  fun `a session without a maximum lifetime survives a serialization round trip`() {
+    val session = decodeSession(deadlines = """"expire_at":0,"abandon_at":0,""")
+    val encoded = ClerkApi.json.encodeToString(Session.serializer(), session)
+
+    assertEquals(session, ClerkApi.json.decodeFromString(Session.serializer(), encoded))
+  }
+
+  private fun decodeSession(deadlines: String): Session =
+    ClerkApi.json.decodeFromString(
+      Session.serializer(),
+      """{"id":"sess_native","status":"active",$deadlines"last_active_at":1,"created_at":1,"updated_at":1}""",
     )
 }
