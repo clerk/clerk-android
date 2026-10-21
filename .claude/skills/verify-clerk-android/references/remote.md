@@ -70,7 +70,7 @@ A session keeps the package's code of the commit it started on. The build steps 
 
 ## Cost and lifetime
 
-A session holds a CI runner until it stops, and on a Blacksmith label it is billed by the minute. It stops itself after 15 minutes without a call from the CLI, and always after 60 minutes. The CLI ends a session that is not ready 40 minutes after it asked for the build, and `up` then fails with `NOT_READY`. `down` stops it at once. After an idle stop, the next `up` or `run` prints `lost ... renewing` and starts a new session. A session with under two minutes left before its cap is replaced the same way. Set `VERIFY_REMOTE_IDLE_MINUTES` or `VERIFY_REMOTE_CAP_MINUTES` before `up` to change either.
+A session holds a CI runner until it stops. It stops itself after 15 minutes without a call from the CLI, and always after 60 minutes. The CLI ends a session that is not ready 40 minutes after it asked for the build, and `up` then fails with `NOT_READY`. `down` stops it at once. After an idle stop, the next `up` or `run` prints `lost ... renewing` and starts a new session. A session with under two minutes left before its cap is replaced the same way. Set `VERIFY_REMOTE_IDLE_MINUTES` or `VERIFY_REMOTE_CAP_MINUTES` before `up` to change either.
 
 Each checkout has a random id, and its sessions carry it. When the checkout holds no lease, `up` and `run` end any session with that id that is still running, and `down --stale` does so at any time. The idle stop ends whatever they miss, such as the session of a checkout that was deleted.
 
@@ -125,7 +125,7 @@ If the description has no evidence a few minutes after `down`, read the newest r
 
 The default label is `ubuntu-24.04`, a GitHub-hosted runner that costs nothing for a public repository. It names the Ubuntu version, so a new `ubuntu-latest` image cannot change the machine under the emulator. The session's 60 minutes start when the runner starts, so about 50 are left after `up`.
 
-`--runner blacksmith-4vcpu-ubuntu-2404` uses a Blacksmith runner instead, which is billed by the minute. `verify-remote.yml` starts a session only on `ubuntu-24.04`, `ubuntu-latest`, or `blacksmith-4vcpu-ubuntu-2404`, and fails its first job for any other label. To add a label, add it to the `Check the runner label` step there; it needs Linux x64 with KVM, the Android SDK command-line tools, and `sudo`. A held session keeps its label, and `--runner` with another label fails until `down`.
+`verify-remote.yml` starts a session only on `ubuntu-24.04` or `ubuntu-latest`, and fails its first job for any other label. To add a label, add it to the `Check the runner label` step there; it needs Linux x64 with KVM, the Android SDK command-line tools, and `sudo`. A held session keeps its label, and `--runner` with another label fails until `down`.
 
 Before the session's runner starts, a job of a few seconds reads the request. That job runs on `ubuntu-latest`, a free GitHub-hosted label, whatever the session's label.
 

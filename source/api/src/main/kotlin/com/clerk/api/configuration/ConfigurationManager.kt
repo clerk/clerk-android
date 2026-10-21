@@ -340,17 +340,20 @@ internal class ConfigurationManager(
         }
         return
       }
-      try {
-        if (Clerk.debugMode) {
-          ClerkLogger.d("Refreshing token for session: ${session.id}")
-        }
-        // Use async to avoid blocking the refresh loop
-        async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-      } catch (e: Exception) {
-        ClerkLogger.w("Token refresh failed: ${e.message}")
-      }
-
+      startSessionTokenFetch(session)
       delay(REFRESH_TOKEN_INTERVAL.seconds)
+    }
+  }
+
+  private fun CoroutineScope.startSessionTokenFetch(session: Session) {
+    try {
+      if (Clerk.debugMode) {
+        ClerkLogger.d("Refreshing token for session: ${session.id}")
+      }
+      // Use async to avoid blocking the refresh loop
+      async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+    } catch (e: Exception) {
+      ClerkLogger.w("Token refresh failed: ${e.message}")
     }
   }
 

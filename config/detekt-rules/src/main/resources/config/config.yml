@@ -1,3 +1,6 @@
 clerk:
   ClerkResultThrows:
     active: true
+  SwallowedCancellation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/testFixtures/**']

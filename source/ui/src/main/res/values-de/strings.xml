@@ -234,7 +234,7 @@
     <string name="load_more">Mehr laden</string>
     <string name="try_again">Erneut versuchen</string>
     <string name="enter_a_valid_organization_slug">Geben Sie einen Slug mit Kleinbuchstaben, Zahlen und Bindestrichen ein.</string>
-    <string name="organization_already_exists_advisory">Für den erkannten Firmennamen (%1$s) und %2$s existiert bereits eine Organisation. Treten Sie per Einladung bei.</string>
+    <string name="organization_already_exists_advisory">Für den erkannten Firmennamen (%1$s) und die Domain %2$s existiert bereits eine Organisation. Treten Sie per Einladung bei.</string>
     <string name="organization">Organisation</string>
     <string name="update_profile">Profil aktualisieren</string>
     <string name="members">Mitglieder</string>
