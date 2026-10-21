@@ -13,7 +13,9 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.restorecredentials.RestoreCredentialManager
 import com.clerk.api.restorecredentials.RestoreCredentialManagerImpl
+import com.clerk.api.restorecredentials.RestoreCredentialStore
 import com.clerk.api.restorecredentials.RestoreCredentials
+import com.clerk.api.restorecredentials.RestorePasskey
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -175,6 +177,30 @@ class SignOutServiceTest {
 
     coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
+
+  @Test
+  fun `signOut forgets the device restore credential but keeps its passkey for cleanup`() =
+    runTest {
+      setupActiveSession()
+      Clerk.applicationContext = WeakReference(context)
+      val credentialManager = mockk<RestoreCredentialManager>()
+      coEvery { credentialManager.clearCredentialState(any(), any()) } just runs
+      RestoreCredentials.credentialManager = credentialManager
+      val createdPasskey = RestorePasskey(userId = "user_1", passkeyId = "passkey_1")
+      RestoreCredentialStore.reset()
+      RestoreCredentialStore.update {
+        it.copy(deviceKeyUserId = "user_1", createdPasskey = createdPasskey)
+      }
+      coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+      coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+      SignOutService.signOut()
+
+      val state = RestoreCredentialStore.read()
+      assertNull(state.deviceKeyUserId)
+      assertEquals(createdPasskey, state.createdPasskey)
+      RestoreCredentialStore.reset()
+    }
 
   @Test
   fun `signOut clears session and user state on successful sign-out`() = runTest {

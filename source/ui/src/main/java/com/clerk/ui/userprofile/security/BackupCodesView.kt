@@ -31,13 +31,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.log.ClerkLog
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import java.io.File

@@ -14,7 +14,7 @@ import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkError
 import com.clerk.api.magiclink.NativeMagicLinkManager
@@ -91,7 +91,7 @@ public class Auth internal constructor() {
   internal fun send(event: AuthEvent) {
     val emitted = _events.tryEmit(event)
     if (!emitted) {
-      ClerkLog.w("Dropped auth event due to backpressure: ${event::class.simpleName}")
+      ClerkLogger.w("Dropped auth event due to backpressure: ${event::class.simpleName}")
     }
   }
 
@@ -513,6 +513,20 @@ public class Auth internal constructor() {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
+  /**
+   * Starts a native email-link sign-in flow secured by PKCE and sends the link to [emailAddressId],
+   * the `emailAddressId` of one of the sign-in's `email_link` first factors.
+   *
+   * Fails with reason code `email_link_not_supported` when the sign-in has no such factor. A null
+   * [emailAddressId] behaves like [startEmailLinkSignIn] without one.
+   */
+  public suspend fun startEmailLinkSignIn(
+    email: String,
+    emailAddressId: String?,
+  ): ClerkResult<SignIn, NativeMagicLinkError> {
+    return nativeMagicLink.startEmailLinkSignIn(email, emailAddressId)
+  }
+
   /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
   public suspend fun handleMagicLinkDeepLink(
     uri: Uri
@@ -787,7 +801,7 @@ public class Auth internal constructor() {
               .withTags(clientResult.tags),
         )
       is ClerkResult.Failure ->
-        ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
+        ClerkLogger.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
     }
   }
 

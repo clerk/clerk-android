@@ -8,6 +8,11 @@
       "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",
       "matchFileNames": ["e2e-tests/**"],
       "enabled": false
+    },
+    {
+      "description": "androidx.lifecycle 2.11 needs compileSdk 37 and Android Gradle plugin 9.1, and our AARs would pass both floors on to every app. React Native and Expo apps build with Android Gradle plugin 8, so lifecycle stays on 2.10 until they move.",
+      "matchPackageNames": ["androidx.lifecycle:**"],
+      "allowedVersions": "<2.11.0"
     }
   ],
   "vulnerabilityAlerts": {

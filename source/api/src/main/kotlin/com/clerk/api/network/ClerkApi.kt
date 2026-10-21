@@ -63,7 +63,8 @@ internal object ClerkApi {
   val user: UserApi
     get() = _user ?: error("ClerkApi is not configured.")
 
-  private var _organization: OrganizationApi? = null
+  @Suppress("DEPRECATION") private var _organization: OrganizationApi? = null
+  @Suppress("DEPRECATION")
   val organization: OrganizationApi
     get() = _organization ?: error("ClerkApi is not configured.")
 
@@ -91,7 +92,7 @@ internal object ClerkApi {
   internal var configuredCustomHeaders: Map<String, String> = emptyMap()
     private set
 
-  @Suppress("UnusedParameter")
+  @Suppress("UnusedParameter", "DEPRECATION")
   fun configure(
     baseUrl: String,
     context: Context,

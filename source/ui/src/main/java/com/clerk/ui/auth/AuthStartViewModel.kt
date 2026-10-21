@@ -9,7 +9,6 @@ import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -21,11 +20,16 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.ui.core.extensions.isEmailAddress
+import com.clerk.ui.core.log.ClerkLog
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +49,8 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
   private var automaticPasskeySignInJob: Job? = null
 
+  private var restoreCredentialSignIn: Deferred<Boolean>? = null
+
   /**
    * Resets the current state back to [AuthState.Idle].
    *
@@ -53,6 +59,28 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
    */
   internal fun resetState() {
     _state.value = AuthState.Idle
+  }
+
+  internal fun startRestoreCredentialSignIn() {
+    if (restoreCredentialSignIn != null) return
+    ClerkLog.d("Starting restore credential sign-in")
+    restoreCredentialSignIn =
+      viewModelScope.async(ioDispatcher) {
+        when (val result = Clerk.restoreCredentials.signInOnFirstLaunch()) {
+          is ClerkResult.Success -> {
+            ClerkLog.d("Restore credential sign-in succeeded with status ${result.value.status}")
+            handleSignInSuccess(result.value)
+            true
+          }
+          is ClerkResult.Failure -> {
+            ClerkLog.d(
+              "Restore credential sign-in finished without signing in: " +
+                (result.throwable?.javaClass?.simpleName ?: result.errorMessage)
+            )
+            false
+          }
+        }
+      }
   }
 
   internal fun startAutomaticPasskeySignIn() {
@@ -65,6 +93,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     val job =
       viewModelScope.launch(ioDispatcher, start = CoroutineStart.LAZY) {
         try {
+          if (restoreCredentialSignedIn()) return@launch
           when (
             val result = Clerk.auth.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
           ) {
@@ -99,10 +128,26 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     job.start()
   }
 
+  private suspend fun restoreCredentialSignedIn(): Boolean {
+    val restore = restoreCredentialSignIn ?: return false
+    return try {
+      restore.await()
+    } catch (e: CancellationException) {
+      if (!restore.isCancelled) throw e
+      coroutineContext.ensureActive()
+      false
+    }
+  }
+
   internal fun cancelAutomaticPasskeySignIn() {
     val job = automaticPasskeySignInJob ?: return
     automaticPasskeySignInJob = null
     job.cancel()
+  }
+
+  internal fun cancelAutomaticSignIn() {
+    restoreCredentialSignIn?.cancel()
+    cancelAutomaticPasskeySignIn()
   }
 
   /**
@@ -114,7 +159,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ) {
-    cancelAutomaticPasskeySignIn()
+    cancelAutomaticSignIn()
     _state.value = AuthState.BiometricCredentialState.Loading
     viewModelScope.launch(Dispatchers.IO) {
       Clerk.biometricCredentials
@@ -144,7 +189,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     identifier: String,
     unsafeMetadata: Map<String, Any>? = null,
   ) {
-    cancelAutomaticPasskeySignIn()
+    cancelAutomaticSignIn()
     when (authMode) {
       AuthMode.SignIn ->
         signIn(
@@ -237,7 +282,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     startOAuthWithSignUp: Boolean = false,
     unsafeMetadata: Map<String, Any>? = null,
   ) {
-    cancelAutomaticPasskeySignIn()
+    cancelAutomaticSignIn()
     _state.value = AuthState.OAuthState.Loading
     if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap(provider, transferable, startOAuthWithSignUp, unsafeMetadata)

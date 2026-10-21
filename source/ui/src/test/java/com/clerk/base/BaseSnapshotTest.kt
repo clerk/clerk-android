@@ -2,6 +2,9 @@ package com.clerk.base
 
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.annotation.DelicateCoilApi
 import com.android.ide.common.rendering.api.SessionParams
 import com.android.resources.LayoutDirection
 import com.android.resources.NightMode
@@ -13,9 +16,13 @@ import org.junit.Rule
 
 abstract class BaseSnapshotTest {
 
+  @OptIn(DelicateCoilApi::class)
   @Before
   fun setUp() {
     Clerk.customTheme = null
+    SingletonImageLoader.setUnsafe { context ->
+      ErrorImageLoader(ImageLoader.Builder(context).build())
+    }
   }
 
   @After

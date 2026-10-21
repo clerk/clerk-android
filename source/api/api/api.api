@@ -282,6 +282,7 @@ public final class com/clerk/api/auth/Auth {
 	public final synthetic fun signUpWithOAuth (Lcom/clerk/api/sso/OAuthProvider;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun signUpWithOAuth$default (Lcom/clerk/api/auth/Auth;Lcom/clerk/api/sso/OAuthProvider;Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun signUpWithTicket (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun startEmailLinkSignIn (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun startEmailLinkSignIn (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun startHostedAuth (Lcom/clerk/api/auth/HostedAuthMode;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun startHostedAuth$default (Lcom/clerk/api/auth/Auth;Lcom/clerk/api/auth/HostedAuthMode;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -2556,6 +2557,7 @@ public abstract interface class com/clerk/api/magiclink/NativeMagicLinkManager {
 	public abstract fun getAttestationProvider ()Lcom/clerk/api/magiclink/NativeMagicLinkAttestationProvider;
 	public abstract fun handleMagicLinkDeepLink (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setAttestationProvider (Lcom/clerk/api/magiclink/NativeMagicLinkAttestationProvider;)V
+	public abstract fun startEmailLinkSignIn (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun startEmailLinkSignIn (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -4537,7 +4539,9 @@ public final class com/clerk/api/restorecredentials/RestoreCredentials {
 	public final fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun create (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun create$default (Lcom/clerk/api/restorecredentials/RestoreCredentials;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createIfMissing (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun signIn (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun signInOnFirstLaunch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/clerk/api/session/GetTokenOptions {

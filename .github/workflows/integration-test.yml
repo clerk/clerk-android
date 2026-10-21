@@ -1,15 +1,40 @@
 name: Integration Tests
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      require_key:
+        description: Fail when CLERK_INTEGRATION_TEST_PK is empty, instead of skipping every test.
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      CLERK_INTEGRATION_TEST_PK:
+        required: true
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:
+        required: false
+  schedule:
+    - cron: "17 7 * * *"
+
+permissions:
+  contents: read
 
 jobs:
   integration-test:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
+      - name: Check that the integration tests have a key
+        if: inputs.require_key
+        env:
+          CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
+        run: |
+          if [ -z "$CLERK_INTEGRATION_TEST_PK" ]; then
+            echo "::error title=Integration tests::The CLERK_INTEGRATION_TEST_PK secret is empty, so every integration test would be skipped."
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
 
       - name: Set up JDK 21
@@ -17,10 +42,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -33,6 +61,7 @@ jobs:
           echo '{"with-email-codes":{"pk":"'"$CLERK_INTEGRATION_TEST_PK"'"}}' > .keys.json
 
       - name: Run integration tests
+        timeout-minutes: 20
         run: ./gradlew :source:api:testDebugUnitTest --tests "com.clerk.api.integration.*" --build-cache
 
       - name: Upload test results
@@ -44,3 +73,19 @@ jobs:
             source/api/build/test-results/**
             source/api/build/reports/tests/**
           if-no-files-found: warn
+
+  notify:
+    needs: integration-test
+    if: ${{ always() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: integration tests
+      workflows: |
+        integration-test.yml
+        manual-release.yml=integration-test / integration-test
+    secrets:
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}

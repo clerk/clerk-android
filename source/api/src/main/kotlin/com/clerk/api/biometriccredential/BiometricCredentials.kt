@@ -5,7 +5,7 @@ import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.Strategy
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -189,7 +189,7 @@ public object BiometricCredentials {
       is ClerkResult.Success -> {
         val biometricCredential = enrollmentResult.value
         saveLocalCredential(biometricCredential, localKey, userId, identifierHint)?.let { failure ->
-          runCatching { keyManager.deleteKey(localKey.localKeyId) }
+          deleteKeyIgnoringFailure(localKey.localKeyId)
           return failure
         }
         onStorage {
@@ -198,7 +198,7 @@ public object BiometricCredentials {
         enrollmentResult
       }
       is ClerkResult.Failure -> {
-        runCatching { keyManager.deleteKey(localKey.localKeyId) }
+        deleteKeyIgnoringFailure(localKey.localKeyId)
         enrollmentResult
       }
     }
@@ -284,7 +284,7 @@ public object BiometricCredentials {
         forgetLocalCredentials(deletedUserId)
         BiometricCredentialPendingCleanupStore.remove(deletedUserId)
       }
-        .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
+        .onFailure { ClerkLogger.w("Failed to retry biometric local credential cleanup.") }
     }
   }
 
@@ -573,7 +573,7 @@ public object BiometricCredentials {
       .filter { it.userId == userId && it.id != keeping.id }
       .forEach { credential ->
         runCatching { deleteLocalCredential(credential) }
-          .onFailure { ClerkLog.w("Failed to remove replaced biometric credential locally.") }
+          .onFailure { ClerkLogger.w("Failed to remove replaced biometric credential locally.") }
       }
   }
 
@@ -730,17 +730,25 @@ public object BiometricCredentials {
 
   private suspend fun <T> onStorage(block: () -> T): T = withContext(storageDispatcher) { block() }
 
+  private fun deleteKeyIgnoringFailure(localKeyId: String) {
+    runCatching { keyManager.deleteKey(localKeyId) }
+  }
+
   private fun deleteLocalCredential(
     credential: BiometricCredentialLocalRecord,
     propagateFailures: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
-    keyDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric-credential private key.") }
+    keyDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric-credential private key.")
+    }
     if (propagateFailures) {
       keyDeletionResult.getOrThrow()
     }
     val recordDeletionResult = runCatching { credentialStore.delete(credential.id) }
-    recordDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric credential metadata.") }
+    recordDeletionResult.onFailure {
+      ClerkLogger.w("Failed to delete biometric credential metadata.")
+    }
     if (propagateFailures) {
       recordDeletionResult.getOrThrow()
     }

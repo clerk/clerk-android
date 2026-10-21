@@ -128,7 +128,7 @@ export function localAndroidBackend(options: LocalAndroidOptions = {}): DeviceBa
     const marked = (await devices()).has(serial) && (await isOwnLane(serial, nonce));
     const owned = ownedProcess(slot, nonce);
     if (marked) await adb(serial, ['emu', 'kill']);
-    else if (owned !== null) process.kill(-owned.pid, 'SIGTERM');
+    else if (owned !== null) terminateGroup(owned.pid);
     else {
       forgetProcess(slot, nonce);
       return;
@@ -413,28 +413,74 @@ interface ScreenrecordOptions {
   readonly adbBin: string;
   readonly serial: string;
   readonly into: EvidencePath;
+  readonly now?: () => number;
+}
+
+const ADB_CLOCK_SLACK_MS = 100;
+
+const WRITER_STARTED = /^\s*([\d.]+)\s+(\d+)\s+\d+\s+I MPEG4Writer: Earliest track starting time: (\d+)/;
+
+function writerStarts(logcat: string, pid: string): readonly { readonly at: number; readonly firstFrameUs: number }[] {
+  return logcat.split('\n').flatMap((line) => {
+    const match = WRITER_STARTED.exec(line);
+    return match !== null && match[2] === pid ? [{ at: Number(match[1]) * 1000, firstFrameUs: Number(match[3]) }] : [];
+  });
+}
+
+async function deviceAhead(shell: (command: string) => Promise<string>, now: () => number): Promise<number | null> {
+  let best: { readonly roundTrip: number; readonly by: number } | null = null;
+  for (let i = 0; i < 3; i++) {
+    const sent = now();
+    const deviceNs = Number(await shell('date +%s%N'));
+    const back = now();
+    if (best === null || back - sent < best.roundTrip) best = { roundTrip: back - sent, by: deviceNs / 1e6 - (sent + back) / 2 };
+  }
+  return Number.isFinite(best!.by) ? best!.by : null;
+}
+
+// The video's time zero is its first frame, captured up to seconds before the encoder writes it on a cold emulator. The MP4 writer logs that frame's CLOCK_MONOTONIC time, and the same log line in both clocks maps it to the device's wall clock.
+async function firstFrameAt(shell: (command: string) => Promise<string>, pid: string, spawnedAt: number, now: () => number, deadline: number): Promise<number | null> {
+  const ahead = await deviceAhead(shell, now);
+  if (ahead === null) return null;
+  for (;;) {
+    const epoch = writerStarts(await shell('logcat -d -v epoch -s MPEG4Writer:I'), pid).findLast((start) => start.at - ahead >= spawnedAt - ADB_CLOCK_SLACK_MS);
+    const monotonic = epoch === undefined ? undefined : writerStarts(await shell('logcat -d -v monotonic -s MPEG4Writer:I'), pid).findLast((start) => start.firstFrameUs === epoch.firstFrameUs);
+    if (epoch !== undefined && monotonic !== undefined) return epoch.at - (monotonic.at - epoch.firstFrameUs / 1000) - ahead;
+    if (now() >= deadline) return null;
+    await sleep(50);
+  }
 }
 
 export async function startScreenrecord(options: ScreenrecordOptions): Promise<Recording> {
   const { adbBin, serial, into } = options;
   const shell = async (command: string) => (await run(adbBin, ['-s', serial, 'shell', command])).stdout.trim();
   const remote = recordingOnDevice(basename(into));
+  const now = options.now ?? Date.now;
   const child = spawn(adbBin, ['-s', serial, ...screenrecordArgs(remote)], { stdio: ['ignore', 'pipe', 'pipe'] });
-  const startedAt = Date.now();
+  const startedAt = now();
   let output = '';
   child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
   child.stderr.on('data', (chunk: Buffer) => (output += chunk.toString()));
   const done = new Promise<number>((resolve) => child.on('close', (code) => resolve(code ?? 1)));
-  const deadline = Date.now() + 10_000;
-  while ((await shell('pidof screenrecord')) === '') {
+  const deadline = now() + 10_000;
+  let pid = '';
+  while ((pid = await shell('pidof screenrecord')) === '') {
     const exited = await Promise.race([done, sleep(500).then(() => null)]);
-    if (exited !== null || Date.now() >= deadline) {
+    if (exited !== null || now() >= deadline) {
       child.kill();
       throw new VerifyFailure('NOT_READY', `screenrecord did not start on ${serial}: ${output.trim() || `exit ${exited}`}`, 'rerun with --no-video, or `{cli} down` and `{cli} up`');
     }
   }
+  const appearedAt = now();
+  const firstFrame = await firstFrameAt(shell, pid, startedAt, now, deadline);
   return {
     process: { pid: child.pid ?? 0, startedAt },
+    ...(firstFrame === null
+      ? {
+          videoStartsAt: appearedAt,
+          videoStartGuess: "screenrecord's MP4 writer never logged its first frame, so this run times the video from when screenrecord started, and its tap pulses can land up to a second or two late",
+        }
+      : { videoStartsAt: firstFrame }),
     async stop() {
       await shell('pkill -INT screenrecord');
       const stopDeadline = Date.now() + 30_000;

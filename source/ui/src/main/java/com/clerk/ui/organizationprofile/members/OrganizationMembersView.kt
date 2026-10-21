@@ -270,10 +270,7 @@ private fun LazyListScope.membersTab(
           description = stringResource(R.string.no_members_search_results_description),
         )
       } else {
-        EmptyState(
-          modifier = Modifier.padding(horizontal = dp18),
-          text = stringResource(R.string.no_members_found),
-        )
+        EmptyState(text = stringResource(R.string.no_members_found))
       }
     }
   } else {
@@ -320,6 +317,7 @@ private fun LazyListScope.invitationsTab(
       InvitationRow(
         modifier = Modifier.padding(horizontal = dp18),
         invitation = invitation,
+        roleName = invitation.displayRole(state.roles),
         isLoading = state.activeMutationId == invitation.id,
         onRevoke = { actions.onRevokeInvitation(invitation) },
       )
@@ -553,6 +551,7 @@ private fun MemberAvatar(publicUserData: PublicUserData?) {
 @Composable
 private fun InvitationRow(
   invitation: OrganizationInvitation,
+  roleName: String,
   isLoading: Boolean,
   onRevoke: () -> Unit,
   modifier: Modifier = Modifier,
@@ -573,7 +572,7 @@ private fun InvitationRow(
           overflow = TextOverflow.Ellipsis,
         )
         Text(
-          text = invitation.role,
+          text = roleName,
           style = ClerkMaterialTheme.typography.bodySmall,
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
@@ -812,9 +811,9 @@ private fun LoadingState(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun EmptyState(text: String, modifier: Modifier = Modifier) {
+private fun EmptyState(text: String) {
   Text(
-    modifier = modifier.fillMaxWidth().padding(vertical = dp24),
+    modifier = Modifier.fillMaxWidth().padding(horizontal = dp18, vertical = dp24),
     text = text,
     style = ClerkMaterialTheme.typography.bodyMedium,
     color = ClerkMaterialTheme.colors.mutedForeground,
@@ -937,6 +936,10 @@ private fun OrganizationMembership.isSameMembership(other: OrganizationMembershi
 
 private fun OrganizationMembership.displayRole(): String {
   return roleName.ifBlank { role }
+}
+
+private fun OrganizationInvitation.displayRole(roles: List<Role>): String {
+  return roles.firstOrNull { it.key == role }?.name ?: role
 }
 
 private fun formattedMembershipDate(timestampMillis: Long): String {

@@ -3,22 +3,22 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   e2e-runner-tests:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       PACKAGE: e2e-tests
       WATCHED: >-
         e2e-tests
-        .github/workflows/android-test.yml
-        .github/workflows/verify-remote.yml
-        .github/workflows/verify-attach.yml
+        .github/workflows
         .github/scripts
     steps:
       - uses: actions/checkout@v7
@@ -52,13 +52,13 @@ jobs:
         if: steps.changed.outputs.package == 'true'
         run: npm run typecheck --prefix "$PACKAGE"
 
-      - name: Run the verify-attach script's tests
+      - name: Run the tests of the scripts in .github/scripts
         if: steps.changed.outputs.package == 'true'
-        run: node --test .github/scripts/verify-attach.test.mjs
+        run: node --test .github/scripts/*.test.mjs
 
   test-module:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
@@ -66,10 +66,17 @@ jobs:
             path: "source/api"
             label: "source-api"   # <— safe artifact label (no /)
             task: "testDebugUnitTest"
+            save-cache: true
           - module: ":source:ui"
             path: "source/ui"
-            label: "source-ui"
-            task: "testDebugUnitTest"
+            label: "source-ui-snapshots"
+            task: "verifyPaparazziDebug --tests 'com.clerk.snapshot.*'"
+            save-cache: true
+          - module: ":source:ui"
+            path: "source/ui"
+            label: "source-ui-unit"
+            task: "verifyPaparazziDebug --tests 'com.clerk.ui.*'"
+            save-cache: true
           - module: ":source:telemetry"
             path: "source/telemetry"
             label: "source-telemetry"
@@ -85,10 +92,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # GitHub keeps 10 GB of Actions cache per repository, so only the slowest jobs save their Gradle state from main.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' || !matrix.save-cache }}
       
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -106,9 +117,29 @@ jobs:
             ${{ matrix.path }}/build/reports/tests/**
           if-no-files-found: warn
 
+      - name: Upload Paparazzi report
+        if: failure() && matrix.module == ':source:ui' && hashFiles('source/ui/build/paparazzi/failures/**') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: paparazzi-report-${{ matrix.label }}
+          retention-days: 7
+          path: |
+            source/ui/build/reports/paparazzi/**
+            source/ui/build/paparazzi/**
+
+      - name: Add run summary
+        if: failure() && matrix.module == ':source:ui' && hashFiles('source/ui/build/paparazzi/failures/**') != ''
+        run: |
+          {
+            echo "### Paparazzi differences detected";
+            echo "";
+            echo "- An artifact whose name starts with **paparazzi-report** was uploaded with the HTML report and image diffs.";
+            echo "- If the change is intended, start the **Paparazzi Verify** workflow on your branch with **record** checked and commit the images from its **paparazzi-snapshots** artifact. Snapshots recorded on another machine render differently.";
+          } >> "$GITHUB_STEP_SUMMARY"
+
   api-check:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -120,10 +151,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

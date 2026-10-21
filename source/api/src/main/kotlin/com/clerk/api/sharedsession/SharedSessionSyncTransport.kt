@@ -7,7 +7,7 @@ import android.database.ContentObserver
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 
@@ -101,7 +101,7 @@ internal class ContentProviderSharedSessionSyncTransport(context: Context) :
       runCatching { resolver.registerContentObserver(uri, false, observer) }
         .onSuccess { observers[uri] = observer }
         .onFailure { error ->
-          ClerkLog.w("Failed to observe shared Clerk state at $uri: ${error.message}")
+          ClerkLogger.w("Failed to observe shared Clerk state at $uri: ${error.message}")
         }
     }
   }
@@ -117,13 +117,13 @@ internal class ContentProviderSharedSessionSyncTransport(context: Context) :
       }
   }
     .onFailure { error ->
-      ClerkLog.w("Failed to read shared Clerk state from $uri: ${error.message}")
+      ClerkLogger.w("Failed to read shared Clerk state from $uri: ${error.message}")
     }
     .getOrNull()
 
   private fun String.decodeSnapshot(): SharedSessionSyncSnapshot? = runCatching {
     SharedSessionSyncSnapshot.decode(this)
   }
-    .onFailure { error -> ClerkLog.w("Failed to decode shared Clerk state: ${error.message}") }
+    .onFailure { error -> ClerkLogger.w("Failed to decode shared Clerk state: ${error.message}") }
     .getOrNull()
 }

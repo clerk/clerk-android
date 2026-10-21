@@ -1,4 +1,4 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect } from '../../fixtures.ts';
 import { totp } from '../../totp.ts';
 
@@ -9,7 +9,7 @@ test('enrolls an authenticator app to finish the setup-MFA task', async ({ host,
   await host.tap(host.app.signInFullScreen);
   await expect(authenticatorApp).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByTestId('clerk.auth.sessionTask.setupMfa.smsCode')).toBeVisible();
-  await host.screenshot('session-task');
+  await host.screenshot('session-task-before-totp');
   await host.tap(authenticatorApp);
   const key = screen.getByText(/^[A-Z2-7]{16,}$/);
   await expect(key).toBeVisible({ timeout: 20_000 });
@@ -21,7 +21,7 @@ test('enrolls an authenticator app to finish the setup-MFA task', async ({ host,
   await expect(screen.getByText('Backup codes')).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText(/^[a-z0-9]{8}$/)).toHaveCount(10);
   await host.screenshot('backup-codes');
-  await tapMiddle(screen.getByLabel('Close'));
+  await host.tap(middleOf(screen.getByLabel('Close')));
   await host.expectSignedInAs(user, 30_000);
   await host.screenshot('task-complete');
 });

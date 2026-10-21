@@ -6,7 +6,7 @@ import androidx.core.content.edit
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
@@ -136,9 +136,9 @@ class DeviceTokenDecryptCountTest {
     StorageHelper.initialize(context)
     val readSawNoCipher = CountDownLatch(1)
     val releaseRead = CountDownLatch(1)
-    mockkObject(ClerkLog)
+    mockkObject(ClerkLogger)
     try {
-      every { ClerkLog.w(any()) } answers
+      every { ClerkLogger.w(any()) } answers
         {
           if (firstArg<String>().startsWith("Encrypted storage is unavailable, returning null")) {
             readSawNoCipher.countDown()
@@ -162,7 +162,7 @@ class DeviceTokenDecryptCountTest {
       assertEquals("token_1", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
     } finally {
       releaseRead.countDown()
-      unmockkObject(ClerkLog)
+      unmockkObject(ClerkLogger)
     }
   }
 

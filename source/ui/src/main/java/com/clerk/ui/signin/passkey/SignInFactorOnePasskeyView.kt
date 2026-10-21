@@ -39,7 +39,7 @@ import com.clerk.ui.theme.DefaultColors
  * @param modifier The modifier to be applied to the component.
  */
 @Composable
-public fun SignInFactorOnePasskeyView(
+internal fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

@@ -234,7 +234,7 @@
     <string name="load_more">تحميل المزيد</string>
     <string name="try_again">حاول مرة أخرى</string>
     <string name="enter_a_valid_organization_slug">أدخل معرّفًا قصيرًا باستخدام أحرف صغيرة وأرقام وشرطات.</string>
-    <string name="organization_already_exists_advisory">توجد مؤسسة بالفعل لاسم الشركة المكتشف (%1$s) و %2$s. انضم عن طريق دعوة.</string>
+    <string name="organization_already_exists_advisory">توجد مؤسسة بالفعل لاسم الشركة المكتشف (%1$s) والنطاق %2$s. انضم عن طريق دعوة.</string>
     <string name="organization">المنظمة</string>
     <string name="update_profile">تحديث الملف الشخصي</string>
     <string name="members">الأعضاء</string>

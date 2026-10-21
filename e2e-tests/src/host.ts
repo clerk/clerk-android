@@ -7,7 +7,7 @@ import { remoteBackend } from './core/remote/backend.ts';
 import { VerifyFailure, type HostAdapter, type ScratchPath } from './core/types.ts';
 import { localAndroidBackend } from './platform/android/local.ts';
 import { AVD_NAME, resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
-import { APK, ASSEMBLE_HOST } from './host-app.ts';
+import { APK, ASSEMBLE_HOST, BUILD_INPUTS } from './host-app.ts';
 import { APP_ID, app } from '../specs/app.ts';
 
 const PACKAGE_DIR = fileURLToPath(new URL('../', import.meta.url));
@@ -20,7 +20,7 @@ export const host: HostAdapter = {
   platforms: ['android'],
   githubRepo: GITHUB_REPO,
   appId: app.id,
-  buildInputs: () => ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew'],
+  buildInputs: () => BUILD_INPUTS,
   async build(platform, key, into) {
     const java = resolveJavaHome();
     if (!java.ok) throw new VerifyFailure('NOT_READY', java.detail, java.fix);

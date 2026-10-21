@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.biometriccredential.BiometricCredentialValidationResult
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
@@ -51,6 +50,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.extensions.isEmailAddress
 import com.clerk.ui.core.input.ClerkPhoneNumberFieldImpl
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.log.ClerkLog
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -60,12 +60,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-public fun AuthStartView(
+internal fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   logo: (@Composable () -> Unit)? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  enableRestoreCredentials: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
@@ -75,6 +76,7 @@ public fun AuthStartView(
       modifier = modifier.clerkTestTagsAsResourceIds(),
       preferGoogleOneTap = preferGoogleOneTap,
       startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      enableRestoreCredentials = enableRestoreCredentials,
       isDismissible = isDismissible,
       onDismiss = onDismiss,
       onAuthComplete = onAuthComplete,
@@ -92,6 +94,7 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  enableRestoreCredentials: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
@@ -152,6 +155,24 @@ internal fun AuthStartViewImpl(
   val dismissHandler = rememberDismissHandler(onDismiss)
   val lockedInitialIdentifierIsActive =
     authState.authStartIdentifierLocked || authState.authStartPhoneNumberLocked
+  val restoreCredentialSignInIsEnabled =
+    shouldStartRestoreCredentialSignIn(
+      restoreCredentialsAreEnabled = enableRestoreCredentials,
+      authMode = authState.mode,
+      lockedInitialIdentifierIsActive = lockedInitialIdentifierIsActive,
+      restoreCredentialSignInConfigIsEnabled =
+        authViewHelper.restoreCredentialSignInConfigIsEnabled,
+      hasSession = Clerk.session != null,
+    )
+  var restoreCredentialSignInHasStarted by rememberSaveable { mutableStateOf(false) }
+
+  LaunchedEffect(restoreCredentialSignInIsEnabled) {
+    if (restoreCredentialSignInIsEnabled && !restoreCredentialSignInHasStarted) {
+      restoreCredentialSignInHasStarted = true
+      authStartViewModel.startRestoreCredentialSignIn()
+    }
+  }
+
   val passkeySignInConfigIsEnabled = authViewHelper.passkeySignInConfigIsEnabled
   val automaticPasskeySignInIsEnabled =
     shouldStartAutomaticPasskeySignIn(
@@ -189,7 +210,7 @@ internal fun AuthStartViewImpl(
   }
 
   DisposableEffect(authStartViewModel) {
-    onDispose { authStartViewModel.cancelAutomaticPasskeySignIn() }
+    onDispose { authStartViewModel.cancelAutomaticSignIn() }
   }
 
   val signInWithBiometricsTitle = stringResource(R.string.sign_in_with_biometrics)

@@ -8,7 +8,7 @@ import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
@@ -83,11 +83,11 @@ internal object SSOService {
     return when (initialResult) {
       is ClerkResult.Failure -> {
         val message = initialResult.errorMessage
-        ClerkLog.e("Failed to authenticate with redirect: $message")
+        ClerkLogger.e("Failed to authenticate with redirect: $message")
         initialResult.signInToOAuthResult()
       }
       is ClerkResult.Success -> {
-        ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
+        ClerkLogger.d("Successfully created sign-in for redirect: $initialResult")
         when (
           val prepareResult =
             initialResult.value.prepareFirstFactorImpl(
@@ -96,7 +96,7 @@ internal object SSOService {
         ) {
           is ClerkResult.Failure -> {
             val message = prepareResult.errorMessage
-            ClerkLog.e("Failed to prepare redirect first factor: $message")
+            ClerkLogger.e("Failed to prepare redirect first factor: $message")
             prepareResult.signInToOAuthResult()
           }
           is ClerkResult.Success -> {
@@ -111,7 +111,7 @@ internal object SSOService {
   }
 
   private fun missingExternalUrlFailure(): ClerkResult.Failure<ClerkErrorResponse> {
-    ClerkLog.e("Redirect authentication response is missing the external verification URL")
+    ClerkLogger.e("Redirect authentication response is missing the external verification URL")
     return localFailure(
       code = LocalFailureCodes.MISSING_RESOURCE_DATA,
       longMessage = "Redirect authentication response is missing the external verification URL",
@@ -156,7 +156,7 @@ internal object SSOService {
     return when (initialResult) {
       is ClerkResult.Failure -> {
         val message = initialResult.errorMessage
-        ClerkLog.e("Failed to authenticate sign-up with redirect: $message")
+        ClerkLogger.e("Failed to authenticate sign-up with redirect: $message")
         initialResult.signUpToOAuthResult()
       }
       is ClerkResult.Success -> {
@@ -229,7 +229,7 @@ internal object SSOService {
   }
 
   private fun redirectNotPreparedFailure(): ClerkResult.Failure<ClerkErrorResponse> {
-    ClerkLog.e("Redirect was not prepared in this process; its callback cannot be verified")
+    ClerkLogger.e("Redirect was not prepared in this process; its callback cannot be verified")
     return localFailure(
       code = LocalFailureCodes.REDIRECT_NOT_PREPARED,
       longMessage =
@@ -252,7 +252,7 @@ internal object SSOService {
    *    verification is transferable. If the reload fails, that failure is returned.
    */
   internal suspend fun completeRedirect(pendingAuth: PendingRedirect.Sso, uri: Uri) {
-    ClerkLog.d("Completing authentication with redirect")
+    ClerkLogger.d("Completing authentication with redirect")
     val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
     val result =
       when (pendingAuth.redirectFlow) {
@@ -342,7 +342,7 @@ internal object SSOService {
       .signInToOAuthResult()
 
   private suspend fun handleSignUpTransfer(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    ClerkLog.d("Handling sign-up transfer")
+    ClerkLogger.d("Handling sign-up transfer")
     return Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
   }
 
@@ -355,14 +355,14 @@ internal object SSOService {
   private suspend fun handleSignInTransfer(
     signUp: SignUp?
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    ClerkLog.d("Handling sign-in transfer")
+    ClerkLogger.d("Handling sign-in transfer")
     return requireNotNull(signUp ?: Clerk.auth.currentSignUp)
       .get()
       .signUpToOAuthResultWithTransfer()
   }
 
   private fun transferBlocked(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    ClerkLog.d("Sign-up transfer blocked: transferable is false")
+    ClerkLogger.d("Sign-up transfer blocked: transferable is false")
     return ClerkResult.apiFailure(
       ClerkErrorResponse(
         errors =
@@ -383,7 +383,7 @@ internal object SSOService {
         ?: uri.getQueryParameter(ERROR)
         ?: uri.getQueryParameter(CLERK_ERROR_CODE)
         ?: AUTHENTICATION_CANCELLED
-    ClerkLog.d("Redirect authentication cancelled")
+    ClerkLogger.d("Redirect authentication cancelled")
     return ClerkResult.unknownFailure(SSOCancellationException(reason))
   }
 

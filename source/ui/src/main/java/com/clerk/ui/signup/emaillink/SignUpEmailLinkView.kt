@@ -39,7 +39,7 @@ import com.clerk.ui.util.EmailAppLauncher
 import kotlinx.coroutines.launch
 
 @Composable
-public fun SignUpEmailLinkView(
+internal fun SignUpEmailLinkView(
   emailAddress: String,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

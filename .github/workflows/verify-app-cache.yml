@@ -1,0 +1,107 @@
+name: verify-app-cache
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - source/**
+      - e2e/**
+      - gradle/**
+      - build.gradle.kts
+      - settings.gradle.kts
+      - gradle.properties
+      - gradlew
+      - e2e-tests/src/host-app.ts
+      - e2e-tests/src/platform/android/**
+      - .github/workflows/verify-app-cache.yml
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-app-cache-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SESSION_BUILD: e2e-tests/src/platform/android/session-build.ts
+
+jobs:
+  store:
+    name: Store the e2e APK and the Gradle build state for verify-remote sessions
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-java@v6
+        with:
+          java-version: "21"
+          distribution: zulu
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+
+      # A cache restores to the path it was saved from, so these are the paths of verify-remote.yml.
+      - name: Name the directory that verify-remote sessions use
+        run: |
+          mkdir -p "$RUNNER_TEMP/verify-remote"
+          echo "VERIFY_SESSION_WORK=$RUNNER_TEMP/verify-remote" >> "$GITHUB_ENV"
+
+      - name: Install the Android platform the build compiles against
+        run: |
+          for package in $(node "$SESSION_BUILD" platform "$VERIFY_SESSION_WORK"); do
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "$package" < /dev/null > /dev/null && break
+          done
+
+      - name: Name the APK
+        id: app
+        run: node "$SESSION_BUILD" name "$VERIFY_SESSION_WORK"
+
+      - name: Look for the stored APK
+        id: stored
+        if: steps.app.outputs.key != ''
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/verify-remote/apks/${{ steps.app.outputs.key }}
+          key: verify-e2e-apk-${{ steps.app.outputs.key }}
+          lookup-only: true
+
+      - name: Build the e2e APK from nothing
+        id: report
+        if: steps.app.outputs.key != '' && steps.stored.outputs.cache-hit != 'true'
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          node "$SESSION_BUILD" build "$VERIFY_SESSION_WORK"
+          node "$SESSION_BUILD" outcome "$VERIFY_SESSION_WORK"
+          ./gradlew --stop
+
+      - name: Store the APK
+        if: steps.report.outputs.store != ''
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/verify-remote/apks/${{ steps.report.outputs.store }}
+          key: verify-e2e-apk-${{ steps.report.outputs.store }}
+
+      - name: Store the build state
+        if: steps.report.outputs.built != ''
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            !~/.gradle/caches/build-cache-1
+            ~/.gradle/wrapper
+            .gradle
+            e2e/build
+            source/api/build
+            source/ui/build
+            source/telemetry/build
+          key: verify-gradle-${{ steps.app.outputs.toolchain }}-${{ steps.report.outputs.built }}

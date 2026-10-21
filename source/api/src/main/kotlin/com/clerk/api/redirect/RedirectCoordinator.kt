@@ -9,7 +9,7 @@ import com.clerk.api.hostedauth.HostedAuthCallback
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.hostedauth.matchesHostedAuthRedirectUrl
 import com.clerk.api.hostedauth.validateHostedAuthCallback
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
@@ -147,7 +147,7 @@ internal object RedirectCoordinator {
             )
             throw cancellation
           } catch (error: Exception) {
-            ClerkLog.e("Redirect completion failed: ${error.message}")
+            ClerkLogger.e("Redirect completion failed: ${error.message}")
             finish(redirect, ClerkResult.unknownFailure(error))
           }
         }
@@ -283,12 +283,12 @@ internal object RedirectCoordinator {
     } catch (cancellation: CancellationException) {
       throw cancellation
     } catch (error: Exception) {
-      ClerkLog.w("Background magic link completion failed: ${error.message}")
+      ClerkLogger.w("Background magic link completion failed: ${error.message}")
       false
     }
 
   private fun logDroppedCallback(uri: Uri, reason: String) {
-    ClerkLog.w("Dropped redirect callback ($reason): ${SafeUriLog.describe(uri)}")
+    ClerkLogger.w("Dropped redirect callback ($reason): ${SafeUriLog.describe(uri)}")
   }
 
   private fun detach(matches: (PendingRedirect<*>) -> Boolean): PendingRedirect<*>? =

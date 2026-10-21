@@ -13,6 +13,7 @@ import { host } from '../src/host.ts';
 import { LANE_FAILED, LANE_READY, LOG_FILTER, RECORD_SIZE } from '../src/platform/android/emulator.ts';
 import { localAndroidBackend } from '../src/platform/android/local.ts';
 import { systemImage, type Machine } from '../src/platform/android/sdk.ts';
+import { answer } from '../src/core/remote/recipe.ts';
 import sessionDevice from '../src/platform/android/session-device.ts';
 
 const PACKAGE_DIR = join(import.meta.dirname, '..');
@@ -96,7 +97,7 @@ describe('the clerk-android host with a remote device', () => {
     assert.ok(workflow.includes('src/platform/android/session-lane.ts" boot "$VERIFY_SESSION_WORK"'));
   });
 
-  it('has the session workflow start on the three runner labels this repository uses, and fail for any other', () => {
+  it('has the session workflow start on the two runner labels this repository uses, and fail for any other', () => {
     const lines = readFileSync(join(PACKAGE_DIR, '..', '.github', 'workflows', 'verify-remote.yml'), 'utf8').split('\n').map((line) => line.trim());
     const first = lines.indexOf('case "$RUNNER_LABEL" in');
     const check = lines.slice(first, lines.indexOf('esac', first) + 1).join('\n');
@@ -105,20 +106,55 @@ describe('the clerk-android host with a remote device', () => {
       return { status: ran.status, stdout: ran.stdout };
     };
     assert.ok(first > 0, 'the label check is in the workflow');
-    for (const label of ['ubuntu-24.04', 'ubuntu-latest', 'blacksmith-4vcpu-ubuntu-2404']) assert.deepEqual(checked(label), { status: 0, stdout: '' }, label);
-    assert.deepEqual(checked('macos-15-xlarge'), { status: 1, stdout: '::error title=verify-remote::no session started: the runner label macos-15-xlarge is not ubuntu-24.04, ubuntu-latest, or blacksmith-4vcpu-ubuntu-2404\n' });
+    for (const label of ['ubuntu-24.04', 'ubuntu-latest']) assert.deepEqual(checked(label), { status: 0, stdout: '' }, label);
+    assert.deepEqual(checked('macos-15-xlarge'), { status: 1, stdout: '::error title=verify-remote::no session started: the runner label macos-15-xlarge is not ubuntu-24.04 or ubuntu-latest\n' });
   });
 
   describe('in a session', () => {
     const device = sessionDevice({ id: 'emulator-5560', platform: 'android' });
     const line = (command: { command: string; args: readonly string[] }) => `${command.command} ${command.args.join(' ')}`;
 
-    it('assembles the e2e host, waits for the emulator, then installs the debug APK it built', () => {
+    it('builds or takes the stored e2e APK, waits for the emulator, then installs the APK the build step handed over', () => {
       const steps = device.build('/work');
-      assert.deepEqual(steps.map((step) => step.command), ['./gradlew', 'sh', 'adb']);
-      assert.deepEqual(steps[0]!.args, [':e2e:assembleDebug', '--console=plain', '--quiet']);
+      assert.deepEqual(steps.map((step) => step.command), [process.execPath, 'sh', 'sh']);
+      assert.deepEqual(steps[0]!.args, [join(PACKAGE_DIR, 'src', 'platform', 'android', 'session-build.ts'), 'build', '/work']);
+      assert.equal(steps[0]!.cwd, `${join(PACKAGE_DIR, '..')}/`);
       assert.equal(steps[1]!.args.at(-1), '/work');
-      assert.equal(line(steps[2]!), 'adb -s emulator-5560 install -r -t e2e/build/outputs/apk/debug/e2e-debug.apk');
+      assert.deepEqual(steps[2]!.args.slice(2), ['emulator-5560', '/work/e2e-debug.apk', 'com.clerk.e2e']);
+    });
+
+    function installed(answers: readonly string[]): { readonly status: number | null; readonly calls: readonly string[] } {
+      const work = mkdtempSync(join(tmpdir(), 'verify-host-install-'));
+      mkdirSync(join(work, 'bin'));
+      writeFileSync(join(work, 'answers'), `${answers.join('\n')}\n`);
+      writeFileSync(join(work, 'calls'), '');
+      writeFileSync(join(work, 'bin', 'adb'), `#!/bin/sh\necho "$*" >> "${work}/calls"\nanswer=$(sed -n "$(wc -l < "${work}/calls" | tr -d ' ')p" "${work}/answers")\necho "$answer"\n[ "$answer" = Success ]\n`, { mode: 0o755 });
+      const install = device.build('/work')[2]!;
+      const ran = spawnSync(install.command, [...install.args], { env: { PATH: `${join(work, 'bin')}:${process.env.PATH}` }, encoding: 'utf8' });
+      const calls = readFileSync(join(work, 'calls'), 'utf8').split('\n').filter((call) => call !== '');
+      rmSync(work, { recursive: true, force: true });
+      return { status: ran.status, calls };
+    }
+
+    it('replaces the app in place when it can', () => {
+      assert.deepEqual(installed(['Success']), { status: 0, calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk'] });
+    });
+
+    it('uninstalls an app that another machine signed, such as a stored APK, then installs the new build', () => {
+      const refused = 'adb: failed to install /work/e2e-debug.apk: Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.clerk.e2e signatures do not match newer version; ignoring!]';
+      assert.deepEqual(installed([refused, 'Success', 'Success']), {
+        status: 0,
+        calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk', '-s emulator-5560 uninstall com.clerk.e2e', '-s emulator-5560 install -t /work/e2e-debug.apk'],
+      });
+    });
+
+    it('fails, and uninstalls nothing, when the install fails for another reason', () => {
+      assert.deepEqual(installed(['adb: failed to install: Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]']), { status: 1, calls: ['-s emulator-5560 install -r -t /work/e2e-debug.apk'] });
+    });
+
+    it('lets a patch change exactly the paths the CLI sends from the tree', () => {
+      assert.deepEqual(answer(device, { op: 'inputs' }), host.buildInputs('android', 'remote'));
+      assert.deepEqual(device.inputs, ['source', 'e2e', 'gradle', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradlew']);
     });
 
     it('records to a file on the emulator, stops screenrecord there, then pulls the file', () => {

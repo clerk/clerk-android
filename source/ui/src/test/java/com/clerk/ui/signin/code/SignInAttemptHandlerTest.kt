@@ -1,13 +1,13 @@
 package com.clerk.ui.signin.code
 
 import com.clerk.api.auth.types.MfaType
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.verifyMfaCode
+import com.clerk.ui.core.log.ClerkLog
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

@@ -3,14 +3,16 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   build-module:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         module: [":source:api", ":source:ui"]
@@ -21,15 +23,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Assemble ${{ matrix.module }}
         run: ./gradlew ${{ matrix.module }}:assembleDebug --build-cache --parallel
-
-  # Optional: a final step that depends on both module builds
-  verify:
-    runs-on: macos-latest-xlarge
-    needs: [build-module]
-    steps:
-      - run: echo "All module builds finished."

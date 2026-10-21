@@ -23,6 +23,10 @@ internal interface GoogleCredentialManager {
   fun getGoogleIdOption(): GetGoogleIdOption
 }
 
+@Deprecated(
+  "GoogleCredentialManagerImpl is an SDK implementation detail and will become internal in the " +
+    "next major version."
+)
 public class GoogleCredentialManagerImpl : GoogleCredentialManager {
   override suspend fun getSignInWithGoogleCredential(): GetCredentialResponse {
     val activity = Clerk.credentialActivity() ?: throw CredentialFlowException.MissingActivity()

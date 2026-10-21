@@ -3,15 +3,17 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   checks:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: format, lint, published artifacts
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
@@ -21,7 +23,8 @@ jobs:
         with:
           java-version: "21"
           distribution: zulu
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -34,6 +37,12 @@ jobs:
           :source:telemetry:lint
           verifyPublishedArtifacts
           --build-cache --parallel --continue
+
+      - name: Check translations of changed strings
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          node .github/scripts/stale-translations.mjs FETCH_HEAD
 
       - name: Upload lint reports
         if: failure()

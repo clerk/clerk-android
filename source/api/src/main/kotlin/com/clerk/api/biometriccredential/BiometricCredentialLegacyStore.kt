@@ -1,6 +1,6 @@
 package com.clerk.api.biometriccredential
 
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import kotlinx.serialization.SerialName
@@ -48,12 +48,12 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
       v1Json.parseToJsonElement(json).jsonArray
     }
       .getOrElse {
-        ClerkLog.w("Legacy biometric credential metadata is malformed, dropping it.")
+        ClerkLogger.w("Legacy biometric credential metadata is malformed, dropping it.")
         return emptyList()
       }
     return elements.mapNotNull { element ->
       runCatching { v1Json.decodeFromJsonElement(LegacyRecord.serializer(), element) }
-        .onFailure { ClerkLog.w("Dropping malformed legacy biometric credential record.") }
+        .onFailure { ClerkLogger.w("Dropping malformed legacy biometric credential record.") }
         .getOrNull()
         ?.toRecord()
     }
@@ -67,7 +67,7 @@ internal object StorageHelperLegacyBiometricCredentialStore : BiometricCredentia
       .filterTo(mutableSetOf()) { it.isNotBlank() }
   }
     .getOrElse {
-      ClerkLog.w("Legacy biometric credential cleanup metadata is malformed, dropping it.")
+      ClerkLogger.w("Legacy biometric credential cleanup metadata is malformed, dropping it.")
       emptySet()
     }
 

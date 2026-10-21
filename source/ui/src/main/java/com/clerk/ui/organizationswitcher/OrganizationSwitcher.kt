@@ -294,6 +294,10 @@ internal fun OrganizationSwitcherImpl(
   val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
   val dismissActiveSheet = { sheetDestination = null }
   val clearErrorAction = remember(viewModel) { { viewModel.clearError() } }
+  val reloadAccountList = {
+    viewModel.reset()
+    viewModel.load()
+  }
   val manageOrganizationAction =
     onManageOrganization?.let { manageOrganization ->
       { membership: OrganizationMembership ->
@@ -325,10 +329,7 @@ internal fun OrganizationSwitcherImpl(
     userId = user?.id,
     sessionId = session?.id,
     hasUser = user != null,
-    onSessionChanged = {
-      viewModel.reset()
-      viewModel.load()
-    },
+    onSessionChanged = reloadAccountList,
   )
 
   val shouldShow =
@@ -371,18 +372,19 @@ internal fun OrganizationSwitcherImpl(
         onDismissOrganizationProfile = { showOrganizationProfile = false },
         onOrganizationProfileComplete = {
           showOrganizationProfile = false
-          viewModel.reset()
-          viewModel.load()
+          reloadAccountList()
           sheetDestination = OrganizationSwitcherSheetDestination.AccountList
         },
         onDismissOrganizationCreate = {
           showOrganizationCreate = false
           organizationCreateDefaults = null
+          reloadAccountList()
         },
         onShowPostCreateInvitations = { organization ->
           showOrganizationCreate = false
           organizationCreateDefaults = null
           postCreateInviteOrganization = organization
+          reloadAccountList()
         },
         onDismissPostCreateInvitations = { postCreateInviteOrganization = null },
         onManageOrganization = manageOrganizationAction,

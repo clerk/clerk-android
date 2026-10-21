@@ -6,6 +6,10 @@ on:
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY:
         required: true
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL:
+        required: false
+  schedule:
+    - cron: "17 7 * * *"
 
 permissions:
   contents: read
@@ -16,8 +20,9 @@ concurrency:
 
 jobs:
   e2e-tests:
+    if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
     runs-on: ${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
-    timeout-minutes: 40
+    timeout-minutes: 60
     permissions:
       contents: read
     env:
@@ -43,7 +48,8 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-          cache: gradle
+          cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -71,18 +77,19 @@ jobs:
         run: npm ci --prefix "$PACKAGE" --no-audit --no-fund
 
       - name: Build the e2e host and boot an emulator
+        timeout-minutes: 15
         env:
           CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
         run: |
           "$CLI" up --backend local
 
       - name: Run the end-to-end tests
-        timeout-minutes: 20
+        timeout-minutes: 35
         env:
           CLERK_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          "$CLI" run --all --backend local --retries 1 --github-report
+          "$CLI" run --all --backend local --retries 1 --max-failures 5 --github-report
 
       - name: Release the emulator and delete the Clerk application
         if: always() && steps.install.outcome == 'success'
@@ -99,7 +106,7 @@ jobs:
             const fs = require("fs");
             const path = require("path");
             const runs = path.join(process.env.PACKAGE, ".verify", "runs");
-            const ids = fs.existsSync(runs) ? fs.readdirSync(runs) : [];
+            const ids = fs.existsSync(runs) ? fs.readdirSync(runs).filter((id) => !id.startsWith(".")) : [];
             let upload = ids.length > 0;
             for (const id of ids) {
               let record = null;
@@ -132,3 +139,19 @@ jobs:
             ${{ env.PACKAGE }}/.verify/runs/*/e2e*/artifacts
           retention-days: 3
           if-no-files-found: warn
+
+  notify:
+    needs: e2e-tests
+    if: ${{ always() && github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    uses: ./.github/workflows/notify-nightly-failure.yml
+    with:
+      checks: end-to-end tests
+      workflows: |
+        verify-e2e.yml
+        manual-release.yml=verify-e2e / e2e-tests
+    secrets:
+      SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL: ${{ secrets.SLACK_MOBILE_TEAM_ALERTS_WEBHOOK_URL }}

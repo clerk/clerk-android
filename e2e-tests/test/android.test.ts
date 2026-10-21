@@ -60,9 +60,9 @@ describe('android lanes', () => {
     assert.deepEqual(emulatorArgs(5560, 'linux'), ['-avd', 'Clerk_Verify_Pixel', '-read-only', '-no-window', '-no-audio', '-no-boot-anim', '-gpu', 'swiftshader_indirect', '-port', '5560']);
   });
 
-  it('turns off the window, transition, and animator animations on a lane, and reads the same settings back', () => {
+  it('turns on the window, transition, and animator animations on a lane at the device default of 1, rather than leaving what the AVD holds, and reads the same settings back', () => {
     for (const scale of ['window_animation_scale', 'transition_animation_scale', 'animator_duration_scale']) {
-      assert.ok(laneSettingsCommand().split(' && ').includes(`settings put global ${scale} 0`), scale);
+      assert.ok(laneSettingsCommand().split(' && ').includes(`settings put global ${scale} 1`), scale);
       assert.ok(laneSettingsReadCommand().split(' && ').includes(`settings get global ${scale}`), scale);
     }
     assert.equal(laneSettingsCommand().split(' && ').length, laneSettingsReadCommand().split(' && ').length);
@@ -76,8 +76,8 @@ describe('android lanes', () => {
   it('counts a lane as set up only when every setting reads back as written', () => {
     const written = laneSettingsCommand().split(' && ').map((command) => command.split(' ').at(-1) as string);
     assert.equal(laneSettingsHold(written.join('\n')), true);
-    assert.equal(laneSettingsHold(`${written.map((value) => `${value}.0`).join('\n')}\n`), true, 'the settings provider may print 0 as 0.0');
-    assert.equal(laneSettingsHold(['1.0', ...written.slice(1)].join('\n')), false, 'one animation scale still on');
+    assert.equal(laneSettingsHold(`${written.map((value) => `${value}.0`).join('\n')}\n`), true, 'the settings provider may print 1 as 1.0');
+    assert.equal(laneSettingsHold(['0', ...written.slice(1)].join('\n')), false, 'one animation scale still off');
     assert.equal(laneSettingsHold([...written.slice(0, -1), '0'].join('\n')), false, 'error dialogs still shown');
     assert.equal(laneSettingsHold(written.slice(1).join('\n')), false, 'a setting that did not answer');
     assert.equal(laneSettingsHold(written.map(() => 'null').join('\n')), false, 'a device that never had them set');
@@ -131,6 +131,8 @@ describe('android screenrecord', () => {
         'case "$*" in',
         '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
         '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+        '  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+        '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) echo "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
         '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
         '  *" pull "*) echo mp4 > "${@: -1}" ;;',
         'esac',
@@ -156,6 +158,47 @@ describe('android screenrecord', () => {
     assert.ok(calls.some((c) => c.includes('rm -f /data/local/tmp/verify-r20261003-040814-846e.mp4')), 'removes the device copy');
   });
 
+  it('starts the video at the first frame the MP4 writer logged for this recording, on the host clock, not at an older record of a reused pid or when the process started', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
+    const adb = fakeTool(dir, 'adb', [
+      `state=${dir}/recording`,
+      'case "$*" in',
+      '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
+      '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+      `  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075600.000  4242  4250 I MPEG4Writer: Earliest track starting time: 1000"; [ "$(grep -c 'v epoch' ${dir}/calls.log)" -ge 3 ] && echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;`,
+      '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) printf "%s\\n" "     1.000  4242  4250 I MPEG4Writer: Earliest track starting time: 1000" "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+      '  *"shell date +%s%N"*) echo 1792075718500000000 ;;',
+      '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
+      'esac',
+    ]);
+    const into = join(dir, 'r20261003-040814-846e') as EvidencePath;
+    mkdirSync(into);
+    const recording = await startScreenrecord({ adbBin: adb, serial: 'emulator-5560', into, now: () => 1_792_075_718_000 });
+    await recording.stop().catch(() => undefined);
+    assert.equal(recording.videoStartsAt?.toFixed(3), '1792075718600.316');
+  });
+
+  it('starts the video when screenrecord appeared when the MP4 writer never logs its first frame, and says that the start is a guess', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
+    const adb = fakeTool(dir, 'adb', [
+      `state=${dir}/recording`,
+      'case "$*" in',
+      '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
+      `  *"shell pidof screenrecord"*) [ -f ${dir}/stopped ] || echo 4242 ;;`,
+      '  *"shell date +%s%N"*) echo 1792075718500000000 ;;',
+      `  *"shell pkill -INT screenrecord"*) rm -f "$state"; touch ${dir}/stopped ;;`,
+      'esac',
+    ]);
+    const into = join(dir, 'r20261003-040814-846e') as EvidencePath;
+    mkdirSync(into);
+    const spawned = Date.now();
+    let clock = spawned;
+    const recording = await startScreenrecord({ adbBin: adb, serial: 'emulator-5560', into, now: () => (clock += 1_000) });
+    await recording.stop().catch(() => undefined);
+    assert.ok(recording.videoStartsAt !== undefined && recording.videoStartsAt > spawned && recording.videoStartsAt < spawned + 10_000, `the video starts ${recording.videoStartsAt === undefined ? 'unknown' : recording.videoStartsAt - spawned} ms after the spawn`);
+    assert.equal(recording.videoStartGuess, "screenrecord's MP4 writer never logged its first frame, so this run times the video from when screenrecord started, and its tap pulses can land up to a second or two late");
+  });
+
   it('fails stop with adb\'s error when the pull fails', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'verify-adb-'));
     const adb = fakeTool(dir, 'adb', [
@@ -163,6 +206,8 @@ describe('android screenrecord', () => {
       'case "$*" in',
       '  *"shell screenrecord"*) touch "$state"; while [ -f "$state" ]; do sleep 0.1; done ;;',
       '  *"shell pidof screenrecord"*) [ -f "$state" ] && echo 4242 ;;',
+      '  *"logcat -d -v epoch -s MPEG4Writer:I"*) echo "         1792075719.366  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
+      '  *"logcat -d -v monotonic -s MPEG4Writer:I"*) echo "   152.908  4242  4262 I MPEG4Writer: Earliest track starting time: 152642316" ;;',
       '  *"shell pkill -INT screenrecord"*) rm -f "$state" ;;',
       '  *" pull "*) echo "adb: error: remote object does not exist" >&2; exit 1 ;;',
       'esac',
@@ -220,6 +265,16 @@ describe('android lane ownership', () => {
     assert.equal(await backend.check(lease), 'held');
     await backend.release(lease);
     assert.match(calls(), /-s emulator-5560 emu kill/);
+  });
+
+  it('frees the claim when the process group of the emulator it booted is gone by the time it stops it', async () => {
+    const { backend, lease, dir } = setup('Clerk_Verify_Pixel', (own) => own);
+    writeFileSync(join(dir, 'killed'), '');
+    const emulator = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 1500)', '--', '-avd', 'Clerk_Verify_Pixel', '-port', '5560'], { stdio: 'ignore' });
+    mkdirSync(join(dir, '.verify', 'emulators'), { recursive: true });
+    writeFileSync(join(dir, '.verify', 'emulators', 'android-1.pid'), JSON.stringify({ pid: emulator.pid, startedAt: Date.now(), nonce: lease.claimNonce }));
+    await backend.release(lease);
+    assert.equal(readClaim(join(dir, 'claims'), 'android', 1).claim, null);
   });
 
   it('doctor flags a foreign emulator on a lane port with a kill command for its owner', async () => {

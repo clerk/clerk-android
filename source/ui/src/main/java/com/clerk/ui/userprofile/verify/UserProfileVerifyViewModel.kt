@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -14,6 +13,7 @@ import com.clerk.api.phonenumber.attemptVerification
 import com.clerk.api.phonenumber.prepareVerification
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

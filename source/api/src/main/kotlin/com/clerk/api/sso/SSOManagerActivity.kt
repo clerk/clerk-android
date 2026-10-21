@@ -10,7 +10,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.ClerkLogger
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.redirect.CallbackOutcome
 import com.clerk.api.redirect.PendingRedirect
@@ -50,7 +50,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
     if (!authorizationStarted) {
       try {
-        ClerkLog.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
+        ClerkLogger.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
         CustomTabsIntent.Builder().build().launchUrl(this, desiredUri)
         authorizationStarted = true
       } catch (_: UninitializedPropertyAccessException) {
@@ -106,7 +106,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
         lifecycleScopeCancelled = true
         throw cancellation
       } catch (t: Throwable) {
-        ClerkLog.e("authorizationComplete failed: ${t.message}")
+        ClerkLogger.e("authorizationComplete failed: ${t.message}")
         setResult(RESULT_CANCELED, Intent())
       } finally {
         if (!lifecycleScopeCancelled) failHostedFlowIfUnfinished(flowThisActivityHosted)

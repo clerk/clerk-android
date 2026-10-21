@@ -1,6 +1,7 @@
-import { tapMiddle } from '../../compose.ts';
+import { middleOf } from '../../compose.ts';
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
 import { totp } from '../../totp.ts';
+import { runPassword } from '../../support/clerk.ts';
 
 test('a sign-up on an MFA-required instance moves straight into the setup-MFA task, and an authenticator code finishes it', async ({ host, screen }) => {
   const email = await host.newEmail();
@@ -9,7 +10,7 @@ test('a sign-up on an MFA-required instance moves straight into the setup-MFA ta
   await host.fill(screen.getByTestId('clerk.auth.start.identifier'), email);
   await host.tap(screen.getByTestId('clerk.auth.start.continue'));
   await expect(screen.getByTestId('clerk.auth.signUp.password')).toBeVisible({ timeout: 20_000 });
-  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), `Verify-${host.runId}-Pw1!`);
+  await host.fill(screen.getByTestId('clerk.auth.signUp.password'), runPassword(host.runId));
   await host.tap(screen.getByTestId('clerk.auth.signUp.continue'));
   await expect(screen.getByTestId('clerk.auth.signUp.code')).toBeVisible({ timeout: 20_000 });
   await host.fill(screen.getByTestId('clerk.auth.signUp.code'), CLERK_TEST_CODE);
@@ -25,7 +26,7 @@ test('a sign-up on an MFA-required instance moves straight into the setup-MFA ta
   await expect(screen.getByText('Verify authenticator app')).toBeVisible({ timeout: 20_000 });
   await host.fill(screen.getByRole('textbox'), totp(secret, Date.now() / 1000));
   await expect(screen.getByText('Backup codes')).toBeVisible({ timeout: 20_000 });
-  await tapMiddle(screen.getByLabel('Close'));
+  await host.tap(middleOf(screen.getByLabel('Close')));
   await host.expectSignedInAs(email, 30_000);
   await host.screenshot('sign-up-task-complete');
 });
