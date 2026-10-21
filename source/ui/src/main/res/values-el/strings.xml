@@ -284,4 +284,6 @@
     <string name="go_to_google_play">Μετάβαση στο Google Play</string>
     <string name="update_app">Ενημέρωση εφαρμογής</string>
     <string name="cant_update">Δεν μπορείτε να κάνετε ενημέρωση;</string>
+    <string name="your_version">Η έκδοσή σας</string>
+    <string name="required_version">Απαιτείται</string>
 </resources>

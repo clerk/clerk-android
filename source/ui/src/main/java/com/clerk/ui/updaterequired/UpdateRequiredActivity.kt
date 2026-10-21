@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.clerk.api.Clerk
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -26,7 +27,10 @@ internal class UpdateRequiredActivity : ComponentActivity() {
     )
     lifecycleScope.launch {
       repeatOnLifecycle(Lifecycle.State.STARTED) {
-        Clerk.appVersionSupportStatus.first { it.isSupported }
+        combine(Clerk.isInitialized, Clerk.appVersionSupportStatus) { initialized, status ->
+            initialized && status.isSupported
+          }
+          .first { it }
         finish()
       }
     }

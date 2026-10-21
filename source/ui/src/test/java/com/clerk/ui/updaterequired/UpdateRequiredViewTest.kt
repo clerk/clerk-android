@@ -57,6 +57,24 @@ class UpdateRequiredViewTest {
   }
 
   @Test
+  fun `compares this build's version code with the minimum`() {
+    composeTestRule.setContent { UpdateRequiredView() }
+
+    composeTestRule.onNodeWithText("Your version").assertExists()
+    composeTestRule.onNodeWithText("41").assertExists()
+    composeTestRule.onNodeWithText("Required").assertExists()
+    composeTestRule.onNodeWithText("42+").assertExists()
+  }
+
+  @Test
+  fun `leaves out the version comparison without a minimum`() {
+    status.value = AppVersionSupportStatus(isSupported = false, currentVersion = 41)
+    composeTestRule.setContent { UpdateRequiredView() }
+
+    composeTestRule.onNodeWithText("Your version").assertDoesNotExist()
+  }
+
+  @Test
   fun `opens the store page`() {
     composeTestRule.setContent { UpdateRequiredView() }
 

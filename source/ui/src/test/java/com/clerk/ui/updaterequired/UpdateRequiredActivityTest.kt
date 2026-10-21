@@ -20,11 +20,13 @@ import org.robolectric.shadows.ShadowLooper
 class UpdateRequiredActivityTest {
   private val status =
     MutableStateFlow(AppVersionSupportStatus(isSupported = false, currentVersion = 41))
+  private val isInitialized = MutableStateFlow(true)
 
   @Before
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.appVersionSupportStatus } returns status
+    every { Clerk.isInitialized } returns isInitialized
     every { Clerk.organizationLogoUrlFlow } returns MutableStateFlow(null)
     every { Clerk.applicationName } returns "Acme"
     every { Clerk.supportEmail } returns null
@@ -42,6 +44,21 @@ class UpdateRequiredActivityTest {
     activity.onBackPressedDispatcher.onBackPressed()
 
     assertFalse(activity.isFinishing)
+  }
+
+  @Test
+  fun `a screen recreated before Clerk loads waits for a resolved answer`() {
+    isInitialized.value = false
+    status.value = AppVersionSupportStatus(isSupported = true, currentVersion = null)
+    val activity = Robolectric.buildActivity(UpdateRequiredActivity::class.java).setup().get()
+    ShadowLooper.idleMainLooper()
+
+    assertFalse(activity.isFinishing)
+
+    isInitialized.value = true
+    ShadowLooper.idleMainLooper()
+
+    assertTrue(activity.isFinishing)
   }
 
   @Test

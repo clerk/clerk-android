@@ -3,28 +3,41 @@ package com.clerk.ui.updaterequired
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.SnackbarDuration
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
@@ -33,16 +46,24 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalClerkLogoContent
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp2
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.dimens.dp40
+import com.clerk.ui.core.dimens.dp64
+import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.header.HeaderTextView
+import com.clerk.ui.core.header.HeaderType
 import com.clerk.ui.core.log.ClerkLog
-import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
-import com.clerk.ui.core.spacers.Spacers
-import com.clerk.ui.signin.help.supportEmailIntent
+import com.clerk.ui.signin.help.rememberEmailSupport
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
-import kotlinx.coroutines.launch
 
 /**
  * A full-screen view telling the user to update the app because its `versionCode` is older than the
@@ -71,19 +92,16 @@ public fun UpdateRequiredView(
 ) {
   val status by Clerk.appVersionSupportStatus.collectAsStateWithLifecycle()
   val organizationLogoUrl by Clerk.organizationLogoUrlFlow.collectAsStateWithLifecycle()
-  val customLogo = logo ?: LocalClerkLogoContent.current
-  val resolvedLogo =
-    customLogo ?: if (organizationLogoUrl.isNullOrBlank()) ({ AppIconLogo() }) else null
+  val resolvedLogo = logo ?: LocalClerkLogoContent.current
 
   ClerkThemeOverrideProvider(clerkTheme) {
-    ClerkLogoProvider(resolvedLogo) {
-      UpdateRequiredContent(
-        status = status,
-        appName = Clerk.applicationName ?: appLabel(LocalContext.current),
-        supportEmail = Clerk.supportEmail,
-        modifier = modifier,
-      )
-    }
+    UpdateRequiredContent(
+      status = status,
+      appName = Clerk.applicationName ?: appLabel(LocalContext.current),
+      supportEmail = Clerk.supportEmail,
+      modifier = modifier,
+      logo = resolvedLogo ?: { InstanceOrAppLogo(organizationLogoUrl) },
+    )
   }
 }
 
@@ -93,58 +111,143 @@ internal fun UpdateRequiredContent(
   appName: String,
   supportEmail: String?,
   modifier: Modifier = Modifier,
+  logo: @Composable () -> Unit = { AppIconLogo() },
 ) {
   val context = LocalContext.current
   val snackbarHostState = remember { SnackbarHostState() }
-  val scope = rememberCoroutineScope()
-  val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
-  val emailSupportTitle = stringResource(R.string.email_support)
+  val emailSupport = rememberEmailSupport(snackbarHostState)
 
-  ClerkThemedAuthScaffold(
-    modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds().then(modifier),
-    title = stringResource(R.string.update_required),
-    subtitle = stringResource(R.string.this_version_of_app_is_no_longer_supported, appName),
-    snackbarHostState = snackbarHostState,
-    hasBackButton = false,
-    showSignedInUserButton = false,
-  ) {
-    status.updateUrl?.let { updateUrl ->
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = stringResource(storeButtonText(updateUrl)),
-        onClick = { openUpdateUrl(context, updateUrl) },
-      )
-    }
-
-    if (supportEmail != null) {
-      Spacers.Vertical.Spacer12()
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+  ClerkMaterialTheme {
+    Scaffold(
+      modifier = Modifier.fillMaxSize().clerkTestTagsAsResourceIds().then(modifier),
+      containerColor = ClerkMaterialTheme.colors.background,
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    ) { innerPadding ->
+      Column(
+        modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = dp24),
+        horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        Text(
-          text = stringResource(R.string.cant_update),
-          style = ClerkMaterialTheme.typography.bodyMedium,
-          color = ClerkMaterialTheme.colors.mutedForeground,
-        )
-        ClerkTextButton(text = stringResource(R.string.get_help)) {
-          try {
-            context.startActivity(
-              Intent.createChooser(supportEmailIntent(supportEmail), emailSupportTitle)
+        Column(
+          modifier =
+            Modifier.weight(1f)
+              .fillMaxWidth()
+              .verticalScroll(rememberScrollState())
+              .padding(top = dp64),
+          verticalArrangement = Arrangement.spacedBy(dp24),
+          horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          logo()
+          Column(
+            verticalArrangement = Arrangement.spacedBy(dp8),
+            horizontalAlignment = Alignment.CenterHorizontally,
+          ) {
+            HeaderTextView(text = stringResource(R.string.update_required), type = HeaderType.Title)
+            HeaderTextView(
+              text = stringResource(R.string.this_version_of_app_is_no_longer_supported, appName),
+              type = HeaderType.Subtitle,
             )
-          } catch (_: ActivityNotFoundException) {
-            ClerkLog.e("No email clients installed on device.")
-            scope.launch {
-              snackbarHostState.showSnackbar(
-                message = noEmailClientsMessage,
-                duration = SnackbarDuration.Short,
-              )
-            }
+          }
+          val currentVersion = status.currentVersion
+          val minimumVersion = status.minimumVersion
+          if (currentVersion != null && minimumVersion != null) {
+            VersionComparison(currentVersion = currentVersion, minimumVersion = minimumVersion)
+          }
+        }
+
+        Column(
+          modifier =
+            Modifier.widthIn(max = dp320).fillMaxWidth().padding(top = dp16, bottom = dp40),
+          verticalArrangement = Arrangement.spacedBy(dp12),
+        ) {
+          status.updateUrl?.let { updateUrl ->
+            ClerkButton(
+              modifier = Modifier.fillMaxWidth(),
+              text = stringResource(storeButtonText(updateUrl)),
+              onClick = { openUpdateUrl(context, updateUrl) },
+            )
+          }
+          if (supportEmail != null) {
+            GetHelpButton(onClick = { emailSupport(supportEmail) })
           }
         }
       }
     }
+  }
+}
+
+@Composable
+private fun VersionComparison(currentVersion: Long, minimumVersion: Long) {
+  val shape = RoundedCornerShape(dp12)
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .height(IntrinsicSize.Min)
+        .clip(shape)
+        .background(ClerkMaterialTheme.colors.neutral.copy(alpha = VERSION_BOX_BACKGROUND_ALPHA))
+        .border(dp1, ClerkMaterialTheme.computedColors.border, shape)
+        .padding(dp16),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    VersionColumn(
+      label = stringResource(R.string.your_version),
+      version = currentVersion.toString(),
+      modifier = Modifier.weight(1f),
+    )
+    Box(
+      modifier =
+        Modifier.width(dp1).fillMaxHeight().background(ClerkMaterialTheme.computedColors.border)
+    )
+    VersionColumn(
+      label = stringResource(R.string.required_version),
+      version = "$minimumVersion+",
+      modifier = Modifier.weight(1f),
+    )
+  }
+}
+
+@Composable
+private fun VersionColumn(label: String, version: String, modifier: Modifier = Modifier) {
+  Column(
+    modifier = modifier.semantics(mergeDescendants = true) {},
+    verticalArrangement = Arrangement.spacedBy(dp2),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Text(
+      text = label,
+      style = ClerkMaterialTheme.typography.titleSmall,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+      textAlign = TextAlign.Center,
+    )
+    Text(
+      text = version,
+      style = ClerkMaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+      color = ClerkMaterialTheme.colors.foreground,
+      textAlign = TextAlign.Center,
+    )
+  }
+}
+
+@Composable
+private fun GetHelpButton(onClick: () -> Unit) {
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .height(dp32)
+        .clip(ClerkMaterialTheme.shape)
+        .clickable(role = Role.Button, onClick = onClick),
+    horizontalArrangement = Arrangement.spacedBy(dp4, Alignment.CenterHorizontally),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(
+      text = stringResource(R.string.cant_update),
+      style = ClerkMaterialTheme.typography.titleSmall,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    Text(
+      text = stringResource(R.string.get_help),
+      style = ClerkMaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+      color = ClerkMaterialTheme.colors.primary,
+    )
   }
 }
 
@@ -163,33 +266,12 @@ private fun openUpdateUrl(context: Context, updateUrl: String) {
   }
 }
 
-@Composable
-private fun AppIconLogo() {
-  val context = LocalContext.current
-  val size = ClerkMaterialTheme.design.logoMaxHeight
-  val sizePx = with(LocalDensity.current) { size.roundToPx() }
-  val icon = remember(context, sizePx) { appIcon(context, sizePx) } ?: return
-  Image(
-    bitmap = icon,
-    contentDescription = stringResource(R.string.logo),
-    modifier = Modifier.size(size),
-  )
-}
-
-private fun appIcon(context: Context, sizePx: Int): ImageBitmap? =
-  sizePx
-    .takeIf { it > 0 }
-    ?.let {
-      context.packageManager
-        .getApplicationIcon(context.applicationInfo)
-        .toBitmap(width = it, height = it)
-        .asImageBitmap()
-    }
-
 private fun appLabel(context: Context): String =
   context.applicationInfo.loadLabel(context.packageManager).toString()
 
 private const val GOOGLE_PLAY_HOST = "play.google.com"
+private const val VERSION_BOX_BACKGROUND_ALPHA = 0.02f
+private val dp320 = 320.dp
 
 @PreviewLightDark
 @Composable

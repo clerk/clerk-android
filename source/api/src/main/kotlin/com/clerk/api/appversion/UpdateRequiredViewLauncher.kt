@@ -16,14 +16,15 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 internal object UpdateRequiredViewLauncher {
-  // The api library can't depend on the UI library, so it names the UI library's activity.
-  internal const val ACTIVITY_CLASS_NAME = "com.clerk.ui.updaterequired.UpdateRequiredActivity"
+  internal const val UI_LIBRARY_ACTIVITY_CLASS_NAME =
+    "com.clerk.ui.updaterequired.UpdateRequiredActivity"
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
   private var job: Job? = null
 
   @Volatile private var enabled = false
 
+  @Synchronized
   fun start(enabled: Boolean) {
     stop()
     this.enabled = enabled
@@ -36,6 +37,7 @@ internal object UpdateRequiredViewLauncher {
     }
   }
 
+  @Synchronized
   fun stop() {
     enabled = false
     job?.cancel()
@@ -47,8 +49,8 @@ internal object UpdateRequiredViewLauncher {
   }
 
   private fun launch(activity: Activity) {
-    if (activity.javaClass.name == ACTIVITY_CLASS_NAME || activity.isFinishing) return
-    val component = ComponentName(activity, ACTIVITY_CLASS_NAME)
+    if (activity.javaClass.name == UI_LIBRARY_ACTIVITY_CLASS_NAME || activity.isFinishing) return
+    val component = ComponentName(activity, UI_LIBRARY_ACTIVITY_CLASS_NAME)
     try {
       activity.packageManager.getActivityInfo(component, 0)
     } catch (_: PackageManager.NameNotFoundException) {

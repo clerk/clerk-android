@@ -46,7 +46,7 @@ class UpdateRequiredViewLauncherTest {
     UpdateRequiredViewLauncher.onActivityResumed(activity)
 
     assertEquals(
-      UpdateRequiredViewLauncher.ACTIVITY_CLASS_NAME,
+      UpdateRequiredViewLauncher.UI_LIBRARY_ACTIVITY_CLASS_NAME,
       shadowOf(activity).nextStartedActivity?.component?.className,
     )
   }
@@ -61,7 +61,7 @@ class UpdateRequiredViewLauncherTest {
     shadowOf(Looper.getMainLooper()).idle()
 
     assertEquals(
-      UpdateRequiredViewLauncher.ACTIVITY_CLASS_NAME,
+      UpdateRequiredViewLauncher.UI_LIBRARY_ACTIVITY_CLASS_NAME,
       shadowOf(activity).nextStartedActivity?.component?.className,
     )
   }
@@ -104,7 +104,10 @@ class UpdateRequiredViewLauncherTest {
   private fun includeUiLibrary() {
     shadowOf(activity.packageManager)
       .addActivityIfNotPresent(
-        ComponentName(activity.packageName, UpdateRequiredViewLauncher.ACTIVITY_CLASS_NAME)
+        ComponentName(
+          activity.packageName,
+          UpdateRequiredViewLauncher.UI_LIBRARY_ACTIVITY_CLASS_NAME,
+        )
       )
   }
 }

@@ -1,9 +1,12 @@
 package com.clerk.snapshot.updaterequired
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.appversion.AppVersionSupportStatus
@@ -44,6 +47,13 @@ class UpdateRequiredViewSnapshotTest : BaseSnapshotTest() {
             appName = "Acme",
             supportEmail = supportEmail,
             modifier = Modifier.fillMaxSize(),
+            logo = {
+              Box(
+                Modifier.size(44.dp)
+                  .clip(RoundedCornerShape(10.dp))
+                  .background(ClerkMaterialTheme.colors.primary)
+              )
+            },
           )
         }
       }

@@ -308,4 +308,6 @@
     <string name="go_to_google_play">Go to Google Play</string>
     <string name="update_app">Update app</string>
     <string name="cant_update">Can\'t update?</string>
+    <string name="your_version">Your version</string>
+    <string name="required_version">Required</string>
 </resources>

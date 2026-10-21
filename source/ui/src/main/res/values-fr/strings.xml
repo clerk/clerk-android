@@ -284,4 +284,6 @@
     <string name="go_to_google_play">Aller sur Google Play</string>
     <string name="update_app">Mettre à jour l\'application</string>
     <string name="cant_update">Impossible de mettre à jour ?</string>
+    <string name="your_version">Votre version</string>
+    <string name="required_version">Requise</string>
 </resources>

@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
 internal fun SignInGetHelpView(modifier: Modifier = Modifier) {
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
-  val scope = rememberCoroutineScope()
   ClerkThemedAuthScaffold(
     snackbarHostState = snackbarHostState,
     modifier = modifier,
@@ -35,35 +34,43 @@ internal fun SignInGetHelpView(modifier: Modifier = Modifier) {
     subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
     onBackPressed = { authState.navigateBack() },
   ) {
-    val context = LocalContext.current
     val defaultSupportEmail = stringResource(R.string.support_clerk_com)
     val supportEmail = Clerk.supportEmail ?: defaultSupportEmail
-    val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
-    val emailSupportTitle = stringResource(R.string.email_support)
-    val emailIntent = remember(supportEmail) { supportEmailIntent(supportEmail) }
+    val emailSupport = rememberEmailSupport(snackbarHostState)
 
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.email_support),
-      onClick = {
-        try {
-          context.startActivity(Intent.createChooser(emailIntent, emailSupportTitle))
-        } catch (_: ActivityNotFoundException) {
-          ClerkLog.e("No email clients installed on device.")
-          scope.launch {
-            snackbarHostState.showSnackbar(
-              message = noEmailClientsMessage,
-              duration = SnackbarDuration.Short,
-            )
-          }
-        }
-      },
+      onClick = { emailSupport(supportEmail) },
     )
   }
 }
 
 internal fun supportEmailIntent(supportEmail: String): Intent =
   Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", supportEmail, null))
+
+@Composable
+internal fun rememberEmailSupport(snackbarHostState: SnackbarHostState): (String) -> Unit {
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+  val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
+  val chooserTitle = stringResource(R.string.email_support)
+  return remember(context, scope, snackbarHostState, noEmailClientsMessage, chooserTitle) {
+    { supportEmail ->
+      try {
+        context.startActivity(Intent.createChooser(supportEmailIntent(supportEmail), chooserTitle))
+      } catch (_: ActivityNotFoundException) {
+        ClerkLog.e("No email clients installed on device.")
+        scope.launch {
+          snackbarHostState.showSnackbar(
+            message = noEmailClientsMessage,
+            duration = SnackbarDuration.Short,
+          )
+        }
+      }
+    }
+  }
+}
 
 @PreviewLightDark
 @Composable

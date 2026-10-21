@@ -289,4 +289,6 @@
     <string name="go_to_google_play">Mergi la Google Play</string>
     <string name="update_app">Actualizează aplicația</string>
     <string name="cant_update">Nu poți actualiza?</string>
+    <string name="your_version">Versiunea ta</string>
+    <string name="required_version">Necesară</string>
 </resources>
