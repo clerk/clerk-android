@@ -13,6 +13,7 @@ import com.clerk.api.signup.sendPhoneCode
 import com.clerk.api.signup.verifyCode
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
+import com.clerk.ui.auth.guardSignUp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -42,23 +43,24 @@ internal class SignUpCodeViewModel : ViewModel() {
   }
 
   fun attempt(code: String, field: SignUpCodeField) {
-    _verificationState.value = VerificationUiState.Verifying
-    val signUp = Clerk.auth.currentSignUp ?: return
-    viewModelScope.launch {
-      val signUp =
-        when (field) {
-          is SignUpCodeField.Email -> signUp.verifyCode(code, VerificationType.EMAIL)
-          is SignUpCodeField.Phone -> signUp.verifyCode(code, VerificationType.PHONE)
-        }
-      signUp
-        .onSuccess {
-          _verificationState.value = VerificationUiState.Verified
-          _state.value = AuthenticationViewState.Success.SignUp(it)
-        }
-        .onFailure {
-          _verificationState.value = VerificationUiState.Error(it.errorMessage)
-          _state.value = AuthenticationViewState.Error(it.errorMessage)
-        }
+    guardSignUp(_state) { signUp ->
+      _verificationState.value = VerificationUiState.Verifying
+      viewModelScope.launch {
+        val verified =
+          when (field) {
+            is SignUpCodeField.Email -> signUp.verifyCode(code, VerificationType.EMAIL)
+            is SignUpCodeField.Phone -> signUp.verifyCode(code, VerificationType.PHONE)
+          }
+        verified
+          .onSuccess {
+            _verificationState.value = VerificationUiState.Verified
+            _state.value = AuthenticationViewState.Success.SignUp(it)
+          }
+          .onFailure {
+            _verificationState.value = VerificationUiState.Error(it.errorMessage)
+            _state.value = AuthenticationViewState.Error(it.errorMessage)
+          }
+      }
     }
   }
 

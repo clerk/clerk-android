@@ -8,6 +8,8 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailCode
 import com.clerk.api.signup.sendPhoneCode
 import com.clerk.api.signup.verifyCode
+import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.VerificationUiState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,6 +25,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -74,5 +77,19 @@ class SignUpCodeViewModelTest {
 
       coVerify(exactly = 1) { signUp.verifyCode("123456", VerificationType.EMAIL) }
       coVerify(exactly = 1) { signUp.verifyCode("654321", VerificationType.PHONE) }
+    }
+
+  @Test
+  fun `attempt without a sign-up in progress leaves verification idle and returns to the start`() =
+    runTest(testDispatcher) {
+      every { auth.currentSignUp } returns null
+      val viewModel = SignUpCodeViewModel()
+
+      viewModel.attempt("123456", SignUpCodeField.Email("user@example.com"))
+      advanceUntilIdle()
+
+      assertEquals(VerificationUiState.Idle, viewModel.verificationState.value)
+      assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
+      coVerify(exactly = 0) { signUp.verifyCode(any(), any()) }
     }
 }
