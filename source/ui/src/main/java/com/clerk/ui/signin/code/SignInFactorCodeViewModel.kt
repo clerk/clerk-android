@@ -88,8 +88,8 @@ internal class SignInFactorCodeViewModel(
   }
 
   fun attempt(factor: Factor, isSecondFactor: Boolean, code: String) {
-    _verificationUiState.value = VerificationUiState.Verifying
     guardSignIn(_state) { inProgressSignIn ->
+      _verificationUiState.value = VerificationUiState.Verifying
       _state.value = AuthenticationViewState.Loading
       val onSuccessCallback = { signIn: SignIn ->
         _verificationUiState.value = VerificationUiState.Verified
