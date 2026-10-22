@@ -209,7 +209,8 @@ internal class ConfigurationManager(
     this.context = WeakReference(context.applicationContext)
     this.storedOptions = options
     this.publishableKey = publishableKey
-    Clerk.publishableKey = publishableKey
+    Clerk.configuredPublishableKey = publishableKey
+    Clerk.initializedPublishableKey = publishableKey
     LocaleProvider.initialize()
 
     val baseUrl =

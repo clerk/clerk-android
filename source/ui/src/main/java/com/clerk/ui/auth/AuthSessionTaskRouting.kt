@@ -14,7 +14,7 @@ internal fun SignIn.pendingSessionTaskKey(
 }
 
 internal fun SignIn.correspondingSession(): Session? {
-  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  val sessions = Clerk.clientFlow.value?.sessions.orEmpty()
   return resolveCorrespondingSession(
     createdSessionId = createdSessionId,
     sessions = sessions,
@@ -29,7 +29,7 @@ internal fun SignUp.pendingSessionTaskKey(
 }
 
 internal fun SignUp.correspondingSession(): Session? {
-  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  val sessions = Clerk.clientFlow.value?.sessions.orEmpty()
   return resolveCorrespondingSession(
     createdSessionId = createdSessionId,
     sessions = sessions,

@@ -19,6 +19,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 
+@Suppress("DEPRECATION")
 class TelemetryCollectorTest {
 
   @AfterTest

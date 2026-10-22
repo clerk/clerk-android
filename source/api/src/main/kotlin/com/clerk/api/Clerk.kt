@@ -167,13 +167,20 @@ public object Clerk {
    *
    * Contains information about active sessions, sign-in attempts, and device-specific data. This is
    * initialized after the SDK's `initialize` method has been successfully called.
+   *
+   * Reading this before Clerk has a client throws [UninitializedPropertyAccessException]. Use
+   * [clientFlow]`.value` for a read that returns `null` instead, or [Auth.currentSignIn],
+   * [Auth.currentSignUp] and [Auth.sessions] for the parts of the client most flows need.
    */
   public val client: Client
     get() =
-      stateStore.client
+      clientOrNull
         ?: throw UninitializedPropertyAccessException(
           "lateinit property client has not been initialized"
         )
+
+  internal val clientOrNull: Client?
+    get() = stateStore.client
 
   /**
    * Reactive state for the current client.
@@ -185,7 +192,7 @@ public object Clerk {
   public val clientFlow: StateFlow<Client?> = stateStore.clientFlow
 
   internal val clientInitialized: Boolean
-    get() = stateStore.client != null
+    get() = clientOrNull != null
 
   /**
    * Reactive state indicating whether the Clerk SDK has completed initialization.
@@ -199,9 +206,24 @@ public object Clerk {
   /**
    * The publishable key from Clerk Dashboard used for API authentication.
    *
-   * This key determines the API base URL and connects the app to the correct Clerk instance.
+   * This key determines the API base URL and connects the app to the correct Clerk instance. Set it
+   * with [initialize], or change it with [switchConfiguration].
    */
-  public var publishableKey: String? = null
+  public var publishableKey: String?
+    get() = configuredPublishableKey
+    @Deprecated(
+      "Assigning publishableKey does not reconfigure Clerk: the API base URL, the network " +
+        "client, cached state and shared session sync keep using the key passed to initialize. " +
+        "Use Clerk.switchConfiguration(context, publishableKey) to change keys. This setter " +
+        "will become private in the next major version."
+    )
+    set(value) {
+      configuredPublishableKey = value
+    }
+
+  internal var configuredPublishableKey: String? = null
+
+  internal var initializedPublishableKey: String? = null
 
   /**
    * Whether to enable telemetry for the SDK.
@@ -874,7 +896,8 @@ public object Clerk {
     SessionTokensCache.clear()
     LocaleProvider.cleanup()
     ClerkApi.reset()
-    publishableKey = null
+    configuredPublishableKey = null
+    initializedPublishableKey = null
     baseUrl = ""
     proxyUrl = null
     debugMode = false
@@ -1054,7 +1077,7 @@ public object Clerk {
   }
 
   private fun cachedStateConfiguration(): CachedStateConfiguration? {
-    val cachedPublishableKey = publishableKey
+    val cachedPublishableKey = initializedPublishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
     return if (cachedPublishableKey != null && cachedBaseUrl != null) {
       CachedStateConfiguration(publishableKey = cachedPublishableKey, baseUrl = cachedBaseUrl)

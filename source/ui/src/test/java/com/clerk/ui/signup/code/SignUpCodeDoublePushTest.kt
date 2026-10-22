@@ -6,7 +6,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
-import com.clerk.api.network.model.client.Client
+import com.clerk.api.auth.Auth
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
@@ -42,14 +42,14 @@ import org.robolectric.RobolectricTestRunner
 class SignUpCodeDoublePushTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private val client = mockk<Client>(relaxed = true)
+  private val auth = mockk<Auth>(relaxed = true)
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
     mockkStatic("com.clerk.api.signup.SignUpKt")
-    every { Clerk.client } returns client
+    every { Clerk.auth } returns auth
   }
 
   @After
@@ -60,7 +60,7 @@ class SignUpCodeDoublePushTest {
 
   @Test
   fun preparingAnEmailCodeDoesNotPushTheCodeScreenAgain() = runTest {
-    every { client.signUp } returns emailUnverifiedSignUp()
+    every { auth.currentSignUp } returns emailUnverifiedSignUp()
     coEvery { any<SignUp>().sendEmailCode() } returns ClerkResult.success(emailUnverifiedSignUp())
 
     assertPrepareKeepsBackStack(SignUpCodeField.Email("sam@clerk.dev"))
@@ -69,7 +69,7 @@ class SignUpCodeDoublePushTest {
 
   @Test
   fun preparingAPhoneCodeDoesNotPushTheCodeScreenAgain() = runTest {
-    every { client.signUp } returns phoneUnverifiedSignUp()
+    every { auth.currentSignUp } returns phoneUnverifiedSignUp()
     coEvery { any<SignUp>().sendPhoneCode() } returns ClerkResult.success(phoneUnverifiedSignUp())
 
     assertPrepareKeepsBackStack(SignUpCodeField.Phone("+15555550100"))
