@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-module:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         module:
@@ -30,8 +30,11 @@ jobs:
           java-version: '21'
           distribution: 'zulu'
           cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Assemble ${{ matrix.module }}

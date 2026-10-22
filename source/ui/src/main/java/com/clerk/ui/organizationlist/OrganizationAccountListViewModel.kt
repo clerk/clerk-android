@@ -42,6 +42,15 @@ internal open class OrganizationAccountListViewModel(
   val state = mutableState.asStateFlow()
 
   private var listJob = newListJob()
+  private var loadedAccount: LoadedAccount? = null
+
+  fun load(userId: String?, sessionId: String?) {
+    val account = LoadedAccount(userId = userId, sessionId = sessionId)
+    if (account == loadedAccount) return
+    loadedAccount = account
+    reset()
+    load()
+  }
 
   fun load() {
     if (mutableState.value.initialLoadAttempted) return
@@ -411,6 +420,8 @@ internal open class OrganizationAccountListViewModel(
       }
     }
   }
+
+  private data class LoadedAccount(val userId: String?, val sessionId: String?)
 
   private sealed interface InitialLoadResult {
     data class Success(

@@ -70,13 +70,12 @@ public class AndroidTelemetryEventThrottler(
   }
 
   private suspend fun loadCache(): Map<String, Long> =
-    withContext(Dispatchers.IO) {
-      val raw = prefs.getString(KEY_STORAGE, null) ?: return@withContext emptyMap()
-      runCatching {
-        json.decodeFromString(MapSerializer(String.serializer(), Long.serializer()), raw)
-      }
-        .getOrElse { emptyMap() }
-    }
+    withContext(Dispatchers.IO) { prefs.getString(KEY_STORAGE, null)?.let(::decodeCache).orEmpty() }
+
+  private fun decodeCache(raw: String): Map<String, Long> = runCatching {
+    json.decodeFromString(MapSerializer(String.serializer(), Long.serializer()), raw)
+  }
+    .getOrElse { emptyMap() }
 
   private suspend fun saveCache(cache: Map<String, Long>) {
     withContext(Dispatchers.IO) {

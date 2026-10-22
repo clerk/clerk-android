@@ -14,6 +14,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.core.content.ContextCompat
 import com.clerk.api.Clerk
+import java.io.IOException
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.KeyPairGenerator
@@ -22,6 +23,7 @@ import java.security.ProviderException
 import java.security.Signature
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
@@ -203,9 +205,10 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
       )
     }
 
-    val signature = initializedSignature(localKeyId)
-    val authenticatedSignature =
+    val authenticatedSignature = mappingKeystoreFailuresToSigningFailed {
+      val signature = initializedSignature(localKeyId)
       authenticateWithBiometricPrompt(signature, policy, promptTitle, promptSubtitle)
+    }
 
     try {
       authenticatedSignature.update(clientData.toByteArray(Charsets.UTF_8))
@@ -218,13 +221,30 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     } catch (e: BiometricCredentialKeyManagerException) {
       throw e
     } catch (e: Exception) {
-      throw BiometricCredentialKeyManagerException(
-        BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
-        "Unable to sign the biometric-credential challenge.",
-        e,
-      )
+      throw signingFailure(e)
     }
   }
+
+  private inline fun <T> mappingKeystoreFailuresToSigningFailed(block: () -> T): T =
+    try {
+      block()
+    } catch (e: Exception) {
+      throw when (e) {
+        is CancellationException -> e
+        is GeneralSecurityException,
+        is IOException,
+        is ProviderException,
+        is IllegalStateException -> signingFailure(e)
+        else -> e
+      }
+    }
+
+  private fun signingFailure(cause: Exception): BiometricCredentialKeyManagerException =
+    BiometricCredentialKeyManagerException(
+      BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
+      "Unable to sign the biometric-credential challenge.",
+      cause,
+    )
 
   override fun hasKey(localKeyId: String): Boolean {
     return keyStore().containsAlias(keyAlias(localKeyId))

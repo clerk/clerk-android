@@ -234,7 +234,7 @@
     <string name="load_more">और लोड करें</string>
     <string name="try_again">फिर से प्रयास करें</string>
     <string name="enter_a_valid_organization_slug">छोटे अक्षरों, अंकों और हाइफ़न का उपयोग करके स्लग दर्ज करें.</string>
-    <string name="organization_already_exists_advisory">पहचाने गए कंपनी नाम (%1$s) और %2$s के लिए पहले से एक संगठन मौजूद है। आमंत्रण से शामिल हों।</string>
+    <string name="organization_already_exists_advisory">पहचाने गए कंपनी नाम (%1$s) और डोमेन %2$s के लिए पहले से एक संगठन मौजूद है। आमंत्रण से शामिल हों।</string>
     <string name="organization">संगठन</string>
     <string name="update_profile">प्रोफ़ाइल अपडेट करें</string>
     <string name="members">सदस्य</string>

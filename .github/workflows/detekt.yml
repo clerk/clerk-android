@@ -13,7 +13,7 @@ jobs:
   detekt:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: detekt
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
 
     steps:
       - name: Clone repo
@@ -29,6 +29,7 @@ jobs:
           java-version: "21"
           distribution: zulu
           cache-jdk: true
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
