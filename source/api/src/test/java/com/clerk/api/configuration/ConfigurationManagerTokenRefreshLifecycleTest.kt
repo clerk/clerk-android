@@ -155,6 +155,24 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
   }
 
   @Test
+  fun `token refresh restarts immediately when the same session becomes active again within an interval`() =
+    runTest {
+      initialize()
+      runCurrent()
+      assertEquals(1, tokenFetches)
+      advanceTimeBy(1_000)
+
+      Clerk.updateClient(signedOutClient())
+      runCurrent()
+      Clerk.updateClient(signedInClient())
+      runCurrent()
+
+      assertEquals(2, tokenFetches)
+      advanceTimeBy(5_001)
+      assertEquals(3, tokenFetches)
+    }
+
+  @Test
   fun `token refresh skips a pending session and starts once it becomes active`() = runTest {
     coEvery { Client.get() } returns
       ClerkResult.success(signedInClient(status = Session.SessionStatus.PENDING))

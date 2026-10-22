@@ -46,7 +46,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -316,8 +315,17 @@ internal class ConfigurationManager(
     Clerk.sessionFlow
       .map { session -> session?.takeIf { it.status == Session.SessionStatus.ACTIVE }?.id }
       .distinctUntilChanged()
-      .filterNotNull()
-      .collect { sessionId -> startTokenRefreshUnlessRunningFor(sessionId) }
+      .collect { sessionId ->
+        if (sessionId == null) stopTokenRefresh() else startTokenRefreshUnlessRunningFor(sessionId)
+      }
+  }
+
+  private fun stopTokenRefresh() {
+    synchronized(tokenRefreshLock) {
+      refreshJob?.cancel()
+      refreshJob = null
+      refreshJobSessionId = null
+    }
   }
 
   private fun startTokenRefresh() {
