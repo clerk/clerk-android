@@ -47,7 +47,7 @@ internal class SignInFactorOneEmailLinkViewModel(
     syncCurrentSignInState()
   }
 
-  fun sendLink() {
+  fun sendLink(emailAddressId: String?) {
     _state.value = AuthenticationViewState.Loading
 
     guardSignIn(_state) { inProgressSignIn ->
@@ -59,7 +59,7 @@ internal class SignInFactorOneEmailLinkViewModel(
 
       viewModelScope.launch(ioDispatcher) {
         Clerk.auth
-          .startEmailLinkSignIn(identifier)
+          .startEmailLinkSignIn(identifier, emailAddressId)
           .onSuccess { _state.value = AuthenticationViewState.Idle }
           .onFailure { failure ->
             _state.value = AuthenticationViewState.Error(failure.error?.message)

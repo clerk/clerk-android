@@ -6,8 +6,7 @@ asm = "9.11"
 automap = "0.1.3"
 binaryCompatibilityValidator = "0.18.2"
 composeBom = "2026.06.01"
-core = "1.7.0"
-coreKtxVersion = "1.7.0"
+androidxTest = "1.7.0"
 # detekt 1.23.x embeds the Kotlin 2.0 compiler, which cannot read Kotlin 2.4 metadata, so type
 # resolution (InjectDispatcher and friends) only works on the 2.x line. Keep the pre-commit
 # checksum in config/bin/tool-checksums.sha256 in sync when bumping.
@@ -17,6 +16,7 @@ dokka = "2.2.0"
 firebase-appDistrubution = "5.3.0"
 googleGms = "4.5.0"
 ksp = "2.3.12"
+ktor = "3.5.2"
 lifecycle = "2.10.0"
 material3 = "1.4.0"
 materialKolor = "4.1.1"
@@ -30,9 +30,7 @@ sortDependencies = "0.21.0"
 spotless = "8.10.4"
 turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.12.1"
-kotlinStdlib = "2.4.21"
-kotlinTest = "2.4.21"
-paparazziPlugin = "2.0.0-alpha05.1"
+paparazzi = "2.0.0-alpha05.1"
 
 # Build Versions -- Do not delete
 # JDK the build and unit tests run on (Robolectric and Paparazzi need 21). Bytecode targets jvmTarget.
@@ -56,7 +54,7 @@ androidx-browser = "androidx.browser:browser:1.10.0"
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-icons = "org.jetbrains.compose.material:material-icons-core:1.7.3"
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
-androidx-core = { module = "androidx.test:core", version.ref = "core" }
+androidx-core = { module = "androidx.test:core", version.ref = "androidxTest" }
 androidx-credentials = "androidx.credentials:credentials:1.6.0"
 androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycle" }
@@ -72,34 +70,33 @@ androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
 coil = "io.coil-kt.coil3:coil-compose:3.5.0"
 coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.5.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.6.1"
-core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 detekt-api = { module = "dev.detekt:detekt-api", version.ref = "detekt" }
 detekt-test = { module = "dev.detekt:detekt-test", version.ref = "detekt" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.2.1"
 google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.41"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.1.0"
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
-kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
-kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlinTest" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
+kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0"
 kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
-ktor-client-core = "io.ktor:ktor-client-core:3.5.2"
-ktor-client-negototiation = "io.ktor:ktor-client-content-negotiation:3.5.2"
-ktor-client-mock = "io.ktor:ktor-client-mock:3.5.2"
-ktor-client-okhttp = "io.ktor:ktor-client-okhttp:3.5.2"
-ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:3.5.2"
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-negototiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
-mockito = "org.mockito:mockito-core:5.24.0"
 mockk = "io.mockk:mockk:1.14.11"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
@@ -112,7 +109,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" 
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
-paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha05.1"
+paparazzi = { module = "app.cash.paparazzi:paparazzi", version.ref = "paparazzi" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activityKtx" }
 
 [plugins]
@@ -129,6 +126,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
-paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziPlugin" }
+paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

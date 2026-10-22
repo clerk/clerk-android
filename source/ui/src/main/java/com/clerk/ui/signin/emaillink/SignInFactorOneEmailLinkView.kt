@@ -69,7 +69,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
   val snackbarHostState = remember { SnackbarHostState() }
   val state by viewModel.state.collectAsStateWithLifecycle()
 
-  LaunchedEffect(Unit) { viewModel.sendLink() }
+  LaunchedEffect(Unit) { viewModel.sendLink(factor.emailAddressId) }
   ObserveHostResume(onHostResumed = viewModel::onHostResumed)
 
   AuthStateEffects(
@@ -95,7 +95,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
     OpenEmailAppButton(snackbarHostState = snackbarHostState)
     Spacers.Vertical.Spacer24()
     SignInEmailLinkSecondaryActions(
-      onResendClick = viewModel::sendLink,
+      onResendClick = { viewModel.sendLink(factor.emailAddressId) },
       onUseAnotherMethodClick = {
         authState.navigateToAlternativeMethods(factor)
       },

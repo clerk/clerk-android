@@ -116,6 +116,7 @@ internal fun OrganizationMembersView(
       membership = membership,
       domainsEnabled = Clerk.organizationDomainsIsEnabled,
       initialTab = initialTab,
+      refreshKey = refreshKey,
     )
   }
 

@@ -282,13 +282,74 @@ class OrganizationVerifiedDomainsViewModelTest {
     )
   }
 
+  @Test
+  fun `load with the same organization and membership keeps loaded pages without refetching`() =
+    runTest {
+      val organization = organization()
+      val first = domain(id = "dom_1", name = "example.com")
+      val second = domain(id = "dom_2", name = "clerk.com")
+      coEvery { organization.getDomains(limit = 1, offset = 0) } returns
+        ClerkResult.success(ClerkPaginatedResponse(data = listOf(first), totalCount = 2))
+      coEvery { organization.getDomains(limit = 1, offset = 1) } returns
+        ClerkResult.success(ClerkPaginatedResponse(data = listOf(second), totalCount = 2))
+
+      val viewModel = viewModel(pageSize = 1)
+      viewModel.load(organization = organization, membership = viewerMembership())
+      advanceUntilIdle()
+      viewModel.loadMoreDomains()
+      advanceUntilIdle()
+
+      viewModel.load(organization = organization, membership = viewerMembership())
+      assertFalse(viewModel.state.value.isLoadingInitial)
+      advanceUntilIdle()
+
+      assertEquals(listOf(first, second), viewModel.state.value.domains)
+      coVerify(exactly = 1) { organization.getDomains(limit = 1, offset = 0) }
+    }
+
+  @Test
+  fun `load with a different organization reloads domains`() = runTest {
+    val acme = organization(id = "org_acme")
+    val globex = organization(id = "org_globex")
+    val acmeDomain = domain(id = "dom_1", name = "acme.com")
+    val globexDomain = domain(id = "dom_2", name = "globex.com")
+    coEvery { acme.getDomains(limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = listOf(acmeDomain), totalCount = 1))
+    coEvery { globex.getDomains(limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = listOf(globexDomain), totalCount = 1))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(organization = acme, membership = viewerMembership())
+    advanceUntilIdle()
+    viewModel.load(organization = globex, membership = viewerMembership())
+    advanceUntilIdle()
+
+    assertEquals(listOf(globexDomain), viewModel.state.value.domains)
+    coVerify(exactly = 1) { globex.getDomains(limit = 2, offset = 0) }
+  }
+
+  @Test
+  fun `retry reloads domains for the same organization`() = runTest {
+    val organization = organization()
+    coEvery { organization.getDomains(limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(organization = organization, membership = viewerMembership())
+    advanceUntilIdle()
+    viewModel.retry()
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { organization.getDomains(limit = 2, offset = 0) }
+  }
+
   private fun viewModel(pageSize: Int): OrganizationVerifiedDomainsViewModel {
     return OrganizationVerifiedDomainsViewModel(pageSize = pageSize, dispatcher = dispatcher)
   }
 
-  private fun organization(): Organization {
+  private fun organization(id: String = "org_123"): Organization {
     return Organization(
-      id = "org_123",
+      id = id,
       name = "Acme",
       slug = "acme",
       imageUrl = "",

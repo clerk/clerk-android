@@ -234,7 +234,7 @@
     <string name="load_more">加载更多</string>
     <string name="try_again">重试</string>
     <string name="enter_a_valid_organization_slug">请输入仅包含小写字母、数字和连字符的 slug。</string>
-    <string name="organization_already_exists_advisory">检测到的公司名称（%1$s）和 %2$s 已有组织。请通过邀请加入。</string>
+    <string name="organization_already_exists_advisory">检测到的公司名称（%1$s）和域名 %2$s 已有组织。请通过邀请加入。</string>
     <string name="organization">组织</string>
     <string name="update_profile">更新个人资料</string>
     <string name="members">成员</string>

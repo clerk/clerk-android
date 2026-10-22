@@ -33,6 +33,17 @@ public interface NativeMagicLinkManager {
 
   public suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError>
 
+  /**
+   * Starts a native email-link sign-in that sends the link to [emailAddressId], the
+   * `emailAddressId` of one of the sign-in's `email_link` first factors. Fails with reason code
+   * `email_link_not_supported` when the sign-in has no such factor. A null [emailAddressId] uses
+   * the first `email_link` factor.
+   */
+  public suspend fun startEmailLinkSignIn(
+    email: String,
+    emailAddressId: String?,
+  ): ClerkResult<SignIn, NativeMagicLinkError>
+
   public suspend fun handleMagicLinkDeepLink(
     uri: Uri
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError>
@@ -60,6 +71,11 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
 
   override suspend fun startEmailLinkSignIn(
     email: String
+  ): ClerkResult<SignIn, NativeMagicLinkError> = startEmailLinkSignIn(email, null)
+
+  override suspend fun startEmailLinkSignIn(
+    email: String,
+    emailAddressId: String?,
   ): ClerkResult<SignIn, NativeMagicLinkError> {
     NativeMagicLinkLogger.start()
     val identifier = email.trim()
@@ -72,11 +88,12 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
         null
       }
 
-    return invalidIdentifierFailure ?: createAndPrepareEmailLinkSignIn(identifier)
+    return invalidIdentifierFailure ?: createAndPrepareEmailLinkSignIn(identifier, emailAddressId)
   }
 
   private suspend fun createAndPrepareEmailLinkSignIn(
-    identifier: String
+    identifier: String,
+    emailAddressId: String?,
   ): ClerkResult<SignIn, NativeMagicLinkError> {
     val signInResult =
       ClerkApi.signIn.createSignIn(
@@ -89,14 +106,15 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
           signInResult.toNativeMagicLinkError(NativeMagicLinkReason.START_FAILED)
         )
 
-      is ClerkResult.Success -> prepareEmailLinkSignIn(signInResult.value)
+      is ClerkResult.Success -> prepareEmailLinkSignIn(signInResult.value, emailAddressId)
     }
   }
 
   private suspend fun prepareEmailLinkSignIn(
-    signIn: SignIn
+    signIn: SignIn,
+    requestedEmailAddressId: String?,
   ): ClerkResult<SignIn, NativeMagicLinkError> {
-    val emailAddressId = signIn.emailLinkAddressId()
+    val emailAddressId = signIn.emailLinkAddressId(requestedEmailAddressId)
     val redirectUri = resolveNativeEmailLinkRedirectUri()
     val missingReason =
       when {
@@ -483,9 +501,13 @@ internal fun queryOrFragmentParam(uri: Uri, key: String): String? {
   return queryValue ?: fragmentValue
 }
 
-private fun SignIn.emailLinkAddressId(): String? {
+private fun SignIn.emailLinkAddressId(requested: String?): String? {
   return supportedFirstFactors
-    ?.firstOrNull { it.strategyType == Strategy.EmailLink && it.emailAddressId != null }
+    ?.firstOrNull {
+      it.strategyType == Strategy.EmailLink &&
+        it.emailAddressId != null &&
+        (requested == null || it.emailAddressId == requested)
+    }
     ?.emailAddressId
 }
 

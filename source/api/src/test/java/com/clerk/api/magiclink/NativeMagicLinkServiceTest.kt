@@ -461,6 +461,62 @@ class NativeMagicLinkServiceTest {
     )
   }
 
+  private fun twoEmailLinkSignIn(): SignIn {
+    return SignIn(
+      id = "sign_in_123",
+      supportedFirstFactors =
+        listOf(
+          Factor(strategy = "email_link", emailAddressId = "email_first"),
+          Factor(strategy = "email_link", emailAddressId = "email_second"),
+        ),
+    )
+  }
+
+  private fun capturedPreparedEmailAddressId(): String? {
+    val prepareFields = slot<Map<String, String>>()
+    coVerify(exactly = 1) { signInApi.prepareSignInFirstFactor(any(), capture(prepareFields)) }
+    return prepareFields.captured["email_address_id"]
+  }
+
+  @Test
+  fun `start email link without an email address id prepares the first email link factor`() =
+    runTest {
+      val signIn = twoEmailLinkSignIn()
+      mockEmailLinkPrepare(signIn, signIn)
+
+      val result = NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
+
+      assertTrue(result is ClerkResult.Success)
+      assertEquals("email_first", capturedPreparedEmailAddressId())
+    }
+
+  @Test
+  fun `start email link with an email address id prepares that email link factor`() = runTest {
+    val signIn = twoEmailLinkSignIn()
+    mockEmailLinkPrepare(signIn, signIn)
+
+    val result = NativeMagicLinkService.startEmailLinkSignIn("user@example.com", "email_second")
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals("email_second", capturedPreparedEmailAddressId())
+  }
+
+  @Test
+  fun `start email link with an unknown email address id fails without preparing`() = runTest {
+    val signIn = twoEmailLinkSignIn()
+    mockEmailLinkPrepare(signIn, signIn)
+
+    val result = NativeMagicLinkService.startEmailLinkSignIn("user@example.com", "email_unknown")
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals(
+      NativeMagicLinkReason.EMAIL_LINK_NOT_SUPPORTED.code,
+      (result as ClerkResult.Failure).error?.reasonCode,
+    )
+    coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+    assertNull(PersistentPendingNativeMagicLinkStore().load())
+  }
+
   private fun mockEmailLinkPrepare(initialSignIn: SignIn, preparedSignIn: SignIn) {
     coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(initialSignIn)
     coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns

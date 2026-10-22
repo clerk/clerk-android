@@ -234,7 +234,7 @@
     <string name="load_more">Φόρτωση περισσότερων</string>
     <string name="try_again">Δοκιμάστε ξανά</string>
     <string name="enter_a_valid_organization_slug">Εισαγάγετε ένα slug με πεζά γράμματα, αριθμούς και παύλες.</string>
-    <string name="organization_already_exists_advisory">Υπάρχει ήδη οργανισμός για το εντοπισμένο όνομα εταιρείας (%1$s) και %2$s. Συμμετάσχετε μέσω πρόσκλησης.</string>
+    <string name="organization_already_exists_advisory">Υπάρχει ήδη οργανισμός για το εντοπισμένο όνομα εταιρείας (%1$s) και τον τομέα %2$s. Συμμετάσχετε μέσω πρόσκλησης.</string>
     <string name="organization">Οργανισμός</string>
     <string name="update_profile">Ενημέρωση προφίλ</string>
     <string name="members">Μέλη</string>
