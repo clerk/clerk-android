@@ -41,7 +41,7 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 
 A verb prints progress lines to stderr while it works and its result to stdout when it ends. An error goes to stderr as two lines: `error`, the error code, and the message, then `fix:` and what to do.
 
-With `--json` a verb prints no progress lines, and prints one JSON object to stdout. On success the object is `{ "ok": true, "verb": "<verb>", ... }`. The remaining keys depend on the verb. `src/core/types.ts` defines them as `DoctorReport`, `UpResult`, `RunResult`, `ScreenResult`, `AttachResult`, and `DownResult`. On an error the object is `{ "ok": false, "error": { "code", "message", "fix", "retryable" } }`.
+With `--json` a verb prints no progress lines, and prints one JSON object to stdout. On success the object is `{ "ok": true, "verb": "<verb>", ... }`. The remaining keys depend on the verb. `src/core/types.ts` of `@clerk/internal-mobile-e2e` defines them as `DoctorReport`, `UpResult`, `RunResult`, `ScreenResult`, `AttachResult`, and `DownResult`. On an error the object is `{ "ok": false, "error": { "code", "message", "fix", "retryable" } }`.
 
 `doctor --json` prints its report even when a check fails, with `ok: false` and no `error`. Each check has `id`, `ok`, `detail`, and a `fix` when there is one. A warning has `ok: true` and `state: "warning"`. A check that did not run has `ok: true` and `state: "not-run"`.
 

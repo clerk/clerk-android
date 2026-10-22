@@ -4,12 +4,12 @@
 
 ## The standard settings
 
-`src/core/instances/base.json` defines the standard instance, with everything that can coexist switched on except the email link: email code, phone code, password, username, TOTP, backup codes, organizations, and social buttons. The email link is off so that an email sign-in opens on the code screen. It has two parts.
+`src/core/instances/base.json` of `@clerk/internal-mobile-e2e` defines the standard instance, with everything that can coexist switched on except the email link: email code, phone code, password, username, TOTP, backup codes, organizations, and social buttons. The email link is off so that an email sign-in opens on the code screen. It has two parts.
 
 - `config` is the whole body of the Platform API request that puts an instance on the standard settings.
 - `environment` lists the 62 leaves of the instance's public `/v1/environment` that a spec cannot run without. One of them, `user_settings.actions.delete_self`, has no `config` key. A new application lets a user delete their own account, and the check fails if Clerk changes that.
 
-After the CLI configures a new application it reads that public environment. A difference in one of those leaves fails with `INSTANCE_MISCONFIGURED` and names the setting. Run `down`, then `up` once more. If it fails again, Clerk changed what a setting does. Say so in your report, and do not edit the file as part of unrelated work, because `src/core` is shared with other repos.
+After the CLI configures a new application it reads that public environment. A difference in one of those leaves fails with `INSTANCE_MISCONFIGURED` and names the setting. Run `down`, then `up` once more. If it fails again, Clerk changed what a setting does. Say so in your report, and do not edit the file as part of unrelated work, because the package is shared with other repos.
 
 The CLI checks those 62 leaves and the leaves a settings file declares, and no others. The public environment has about 150 more leaves. One of them can differ between two applications, or move when a declaration is applied, and no check reports it. A spec that depends on such a leaf lists it in its settings file.
 

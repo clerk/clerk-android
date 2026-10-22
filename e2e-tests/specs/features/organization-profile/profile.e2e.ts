@@ -1,8 +1,8 @@
 import { signInWithNewOrganization, middleOf } from '../../compose.ts';
 import { test, expect, CLERK_TEST_CODE } from '../../fixtures.ts';
-import type { HostFixture } from '../../support/types.ts';
+import type { HostFixture } from '@clerk/internal-mobile-e2e/specs/support/types';
 import type { Screen } from 'e2e';
-import { runPassword } from '../../support/clerk.ts';
+import { runPassword } from '@clerk/internal-mobile-e2e/specs/support/clerk';
 
 async function openManageOrganization(host: HostFixture, screen: Screen, name: string): Promise<void> {
   const { switcher } = await signInWithNewOrganization(host, screen, name);

@@ -1,4 +1,4 @@
-import type { TestPhone } from './support/types.ts';
+import type { TestPhone } from '@clerk/internal-mobile-e2e/specs/support/types';
 
 export const nationalDigits = (phone: TestPhone): string => phone.slice(2);
 
