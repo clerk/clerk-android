@@ -143,6 +143,8 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
+  testImplementation(libs.okhttp.mockwebserver)
+  testImplementation(libs.okhttp.tls)
   testImplementation(libs.robolectric)
 
   dokkaPlugin(libs.versioning.plugin)

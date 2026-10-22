@@ -1,5 +1,6 @@
 package com.clerk.telemetry
 
+import com.clerk.api.network.forbiddingCertificates
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -49,7 +50,9 @@ private constructor(
     client: OkHttpClient? = null,
   ) : this(
     options,
-    OkHttpTelemetryTransport(client?.let { lazyOf(it) } ?: lazy { OkHttpClient() }),
+    OkHttpTelemetryTransport(
+      client?.let { lazyOf(it) } ?: lazy { OkHttpClient().forbiddingCertificates() }
+    ),
     environment,
     throttler,
     json,
