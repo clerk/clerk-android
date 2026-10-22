@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "specs/**/*.ts", "test/**/*.ts", "testing/**/*.ts", "e2e.config.ts"]
+  "include": ["src/**/*.ts", "specs/**/*.ts", "test/**/*.ts", "e2e.config.ts"]
 }

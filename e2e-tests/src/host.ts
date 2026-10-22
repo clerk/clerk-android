@@ -1,10 +1,10 @@
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { run } from './core/exec.ts';
-import { withoutClerkKeys } from './core/keys.ts';
-import { remoteBackend } from './core/remote/backend.ts';
-import { VerifyFailure, type HostAdapter, type ScratchPath } from './core/types.ts';
+import { run } from '@clerk/internal-mobile-e2e/core/exec';
+import { withoutClerkKeys } from '@clerk/internal-mobile-e2e/core/keys';
+import { remoteBackend } from '@clerk/internal-mobile-e2e/core/remote/backend';
+import { VerifyFailure, type HostAdapter, type ScratchPath } from '@clerk/internal-mobile-e2e/core/types';
 import { localAndroidBackend } from './platform/android/local.ts';
 import { AVD_NAME, resolveJavaHome, sdkRoot } from './platform/android/sdk.ts';
 import { APK, ASSEMBLE_HOST, BUILD_INPUTS } from './host-app.ts';
