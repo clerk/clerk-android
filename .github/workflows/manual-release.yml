@@ -208,7 +208,7 @@ jobs:
             TASKS=""
 
             if [ "$PUBLISH_API" = "true" ]; then
-              TASKS="$TASKS :source:api:publishMavenPublicationToMavenCentralRepository"
+              TASKS="$TASKS :source:api:publishAndReleaseToMavenCentral"
             fi
             if [ "$PUBLISH_UI" = "true" ]; then
               TASKS="$TASKS :source:ui:publishAndReleaseToMavenCentral"

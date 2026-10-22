@@ -824,7 +824,9 @@ public object Clerk {
    *   [ClerkConfigurationOptions] for details.
    * @param theme Optional theme to customize the appearance of Clerk UI components. See
    *   [ClerkTheme] for details.
-   * @throws IllegalArgumentException if the publishable key format is invalid.
+   * @throws IllegalArgumentException if the publishable key format is invalid, or if
+   *   [ClerkConfigurationOptions.proxyUrl] is not an https URL with a host and no credentials,
+   *   query or fragment.
    */
   public fun initialize(
     context: Context,
@@ -1306,8 +1308,8 @@ public object Clerk {
  * @property enableDebugMode If `true`, enables verbose logging for SDK operations and API calls.
  *   Defaults to `false`.
  * @property proxyUrl Optional proxy URL for network requests Your Clerk app's proxy URL. Required
- *   for applications that run behind a reverse proxy. Must be a full URL (for example,
- *   https://proxy.example.com/__clerk).
+ *   for applications that run behind a reverse proxy. Must be a full https URL (for example,
+ *   https://proxy.example.com/__clerk) with no credentials, query or fragment.
  * @property telemetryEnabled Whether to enable telemetry for this SDK instance.
  * @property sharedSessionSync Optional configuration for synchronizing Clerk state between
  *   same-signed sibling apps that use the same publishable key.
