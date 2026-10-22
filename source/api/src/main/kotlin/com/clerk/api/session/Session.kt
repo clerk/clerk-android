@@ -45,9 +45,9 @@ public data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
   /**
-   * When the session reaches its maximum lifetime, in milliseconds since epoch. Zero means the
-   * session has no maximum lifetime; see [hasMaximumLifetime]. A response that omits `expire_at` or
-   * sends `null` decodes as zero.
+   * When the session reaches its maximum lifetime, in milliseconds since epoch. `0` means the
+   * session has no maximum lifetime. A response that omits `expire_at` or sends `null` decodes as
+   * `0`.
    */
   @SerialName("expire_at") val expireAt: Long = 0L,
   /**
@@ -74,6 +74,11 @@ public data class Session(
    * Whether the session has a maximum lifetime. False when [expireAt] is zero. This says nothing
    * about whether the session is active; use [status] for that.
    */
+  @Deprecated(
+    message = "Compare expireAt with 0 instead.",
+    replaceWith = ReplaceWith("expireAt != 0L"),
+    level = DeprecationLevel.WARNING,
+  )
   public val hasMaximumLifetime: Boolean
     get() = expireAt > 0
 

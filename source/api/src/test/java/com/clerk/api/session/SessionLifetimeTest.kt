@@ -3,6 +3,7 @@ package com.clerk.api.session
 import com.clerk.api.network.ClerkApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -10,12 +11,12 @@ class SessionLifetimeTest {
 
   @Test
   fun `a zero expire_at has no maximum lifetime`() {
-    assertFalse(decodeSession(deadlines = """"expire_at":0,""").hasMaximumLifetime)
+    assertEquals(0L, decodeSession(deadlines = """"expire_at":0,""").expireAt)
   }
 
   @Test
   fun `a future expire_at has a maximum lifetime`() {
-    assertTrue(decodeSession(deadlines = """"expire_at":2000000000000,""").hasMaximumLifetime)
+    assertNotEquals(0L, decodeSession(deadlines = """"expire_at":2000000000000,""").expireAt)
   }
 
   @Test
@@ -23,12 +24,13 @@ class SessionLifetimeTest {
     val revoked =
       decodeSession(deadlines = """"expire_at":0,""").copy(status = Session.SessionStatus.REVOKED)
 
-    assertFalse(revoked.hasMaximumLifetime)
+    assertEquals(0L, revoked.expireAt)
   }
 
   @Test
-  fun `a zero expire_at decodes as zero`() {
-    assertEquals(0L, decodeSession(deadlines = """"expire_at":0,""").expireAt)
+  fun `the deprecated hasMaximumLifetime still reports whether expire_at is set`() {
+    assertFalse(decodeSession(deadlines = """"expire_at":0,""").hasMaximumLifetime)
+    assertTrue(decodeSession(deadlines = """"expire_at":2000000000000,""").hasMaximumLifetime)
   }
 
   @Test
