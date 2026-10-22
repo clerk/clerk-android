@@ -130,7 +130,7 @@ internal object AppVersionSupport {
 
 private val versionCodePattern = Regex("^[1-9]\\d*$")
 
-internal fun String.toVersionCode(): Long? = takeIf(versionCodePattern::matches)?.toLongOrNull()
+private fun String.toVersionCode(): Long? = takeIf(versionCodePattern::matches)?.toLongOrNull()
 
 private fun isStoreUrl(value: String): Boolean {
   val uri = value.toUri()

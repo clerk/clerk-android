@@ -42,6 +42,7 @@ import com.clerk.api.appversion.AppVersionSupportStatus
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.clerkTestTagsAsResourceIds
+import com.clerk.ui.core.avatar.OrganizationLogo
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp1
@@ -79,7 +80,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param modifier The [Modifier] to apply to the view.
  * @param clerkTheme Overrides the theme passed to [Clerk.initialize] for this view.
  * @param logo Replaces the logo. When omitted, the view shows the logo set in the Clerk Dashboard,
- *   or your app's icon when there's none. The SDK applies no sizing or spacing to it.
+ *   like [com.clerk.ui.auth.AuthView]. The SDK applies no sizing or spacing to it.
  */
 @Composable
 public fun UpdateRequiredView(
@@ -99,8 +100,8 @@ public fun UpdateRequiredView(
       appName = applicationName ?: appLabel(LocalContext.current),
       versionName = appVersionName(LocalContext.current),
       supportEmail = supportEmail,
+      logo = resolvedLogo ?: { OrganizationLogo(imageUrl = organizationLogoUrl) },
       modifier = modifier,
-      logo = resolvedLogo ?: { InstanceOrAppLogo(organizationLogoUrl) },
     )
   }
 }
@@ -111,8 +112,8 @@ internal fun UpdateRequiredContent(
   appName: String,
   versionName: String?,
   supportEmail: String?,
+  logo: @Composable () -> Unit,
   modifier: Modifier = Modifier,
-  logo: @Composable () -> Unit = { AppIconLogo() },
 ) {
   val context = LocalContext.current
   val snackbarHostState = remember { SnackbarHostState() }
@@ -271,6 +272,7 @@ private fun PreviewUpdateRequiredContent() {
       appName = "Acme",
       versionName = "4.8.4",
       supportEmail = "support@example.com",
+      logo = { OrganizationLogo(imageUrl = null) },
     )
   }
 }
@@ -284,6 +286,7 @@ private fun PreviewUpdateRequiredContentWithoutLinks() {
       appName = "Acme",
       versionName = null,
       supportEmail = null,
+      logo = { OrganizationLogo(imageUrl = null) },
     )
   }
 }
