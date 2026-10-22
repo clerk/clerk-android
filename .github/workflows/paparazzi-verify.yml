@@ -8,6 +8,11 @@ on:
         type: boolean
         default: false
   workflow_call:
+    inputs:
+      runner:
+        description: The runner label for the job. The release passes a Blacksmith label; every other run uses GitHub's runner.
+        required: false
+        type: string
   schedule:
     - cron: "17 7 * * *"
 
@@ -17,7 +22,7 @@ permissions:
 jobs:
   verify:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 30
 
     steps:
