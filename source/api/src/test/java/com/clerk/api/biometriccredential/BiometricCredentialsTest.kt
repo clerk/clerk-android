@@ -26,6 +26,7 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import java.io.File
 import java.io.IOException
+import java.security.KeyStoreException
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -33,9 +34,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.After
@@ -170,6 +174,30 @@ class BiometricCredentialsTest {
       assertTrue(credentialStore.credentials.isEmpty())
       assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
     }
+
+  @Test
+  fun `enrollment returns a failure and deletes the new key when signing throws`() = runTest {
+    mockEnrollment()
+    keyManager.onSign = { throw KeyStoreException("corrupt key") }
+
+    val result = BiometricCredentials.enroll()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+  }
+
+  @Test
+  fun `enrollment cancelled during the biometric prompt deletes the new key`() = runTest {
+    mockEnrollment()
+    keyManager.onSign = { awaitCancellation() }
+
+    val job = launch { BiometricCredentials.enroll() }
+    runCurrent()
+    job.cancelAndJoin()
+
+    assertTrue(job.isCancelled)
+    assertEquals(listOf("key_1"), keyManager.deletedKeyIds)
+  }
 
   @Test
   fun `default enrollment availability requires strong biometrics`() {
@@ -434,6 +462,7 @@ class BiometricCredentialsTest {
     var supportedPolicies = BiometricCredentialPolicy.entries.toSet()
     var deleteFailuresRemaining = 0
     var hasKeys = true
+    var onSign: suspend () -> Unit = {}
 
     override fun isSupported(policy: BiometricCredentialPolicy): Boolean =
       policy in supportedPolicies
@@ -451,6 +480,7 @@ class BiometricCredentialsTest {
       promptSubtitle: String?,
     ): BiometricCredentialKeySignature {
       signingPolicies += policy
+      onSign()
       return BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
     }
 
