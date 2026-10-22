@@ -88,7 +88,9 @@ internal object AppVersionSupport {
   fun applySupportedAppVersion(generation: Long) =
     synchronized(lock) {
       if (generation != this.generation) return@synchronized
-      serverStatus = AppVersionSupportStatus.supported(build?.versionCode)
+      serverStatus =
+        environmentStatus?.takeIf { it.isSupported }
+          ?: AppVersionSupportStatus.supported(build?.versionCode)
       publishLocked()
     }
 

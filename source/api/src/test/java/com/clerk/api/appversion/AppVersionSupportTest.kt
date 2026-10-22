@@ -84,6 +84,32 @@ class AppVersionSupportTest {
   }
 
   @Test
+  fun `a supported response keeps the minimum and store page the environment set`() {
+    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("40")))
+
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+
+    assertEquals(
+      AppVersionSupportStatus(
+        isSupported = true,
+        currentVersion = 41,
+        minimumVersion = 40,
+        updateUrl = TEST_PLAY_URL,
+      ),
+      status(),
+    )
+  }
+
+  @Test
+  fun `a supported response drops a minimum the server no longer enforces`() {
+    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+
+    assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = 41), status())
+  }
+
+  @Test
   fun `a rejected request blocks the app until a later response marks it supported`() {
     AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment())
     val generation = AppVersionSupport.generation
