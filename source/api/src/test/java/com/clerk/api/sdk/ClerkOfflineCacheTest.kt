@@ -73,7 +73,7 @@ class ClerkOfflineCacheTest {
   fun `client and environment updates persist a complete snapshot`() {
     val client = Client(id = "client_persisted")
     val environment = testEnvironment("Persisted App")
-    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.initializedPublishableKey = PUBLISHABLE_KEY
     Clerk.baseUrl = PROXY_URL
 
     Clerk.updateClient(client = client, serverFetchAtMillis = SERVER_FETCH_AT_MILLIS)
@@ -89,8 +89,24 @@ class ClerkOfflineCacheTest {
   }
 
   @Test
+  fun `assigning the deprecated publishableKey setter keeps the cache keyed to the initialized key`() =
+    runBlocking {
+      stubNeverCompletingRefresh()
+      initialize()
+
+      @Suppress("DEPRECATION")
+      Clerk.publishableKey = OTHER_PUBLISHABLE_KEY
+      Clerk.updateClient(client = Client(id = "client_123"), serverFetchAtMillis = 1)
+      Clerk.updateEnvironment(testEnvironment("Persisted App"))
+      Clerk.stateStore.flushPersistence()
+
+      assertEquals(OTHER_PUBLISHABLE_KEY, Clerk.publishableKey)
+      assertEquals(PUBLISHABLE_KEY, loadCachedState()?.publishableKey)
+    }
+
+  @Test
   fun `environment without a client does not persist an incomplete snapshot`() {
-    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.initializedPublishableKey = PUBLISHABLE_KEY
     Clerk.baseUrl = PROXY_URL
 
     Clerk.updateEnvironment(testEnvironment("Environment Only"))
@@ -101,7 +117,7 @@ class ClerkOfflineCacheTest {
 
   @Test
   fun `sign-out persists the signed-out snapshot before returning`() {
-    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.initializedPublishableKey = PUBLISHABLE_KEY
     Clerk.baseUrl = PROXY_URL
     val session =
       Session(
@@ -127,7 +143,7 @@ class ClerkOfflineCacheTest {
 
   @Test
   fun `reset discards a pending coalesced write`() = runBlocking {
-    Clerk.publishableKey = PUBLISHABLE_KEY
+    Clerk.initializedPublishableKey = PUBLISHABLE_KEY
     Clerk.baseUrl = PROXY_URL
     Clerk.updateEnvironment(testEnvironment("Persisted App"))
     Clerk.updateClient(client = Client(id = "client_123"), serverFetchAtMillis = 1)
@@ -494,6 +510,7 @@ class ClerkOfflineCacheTest {
 
   private companion object {
     const val PUBLISHABLE_KEY = "pk_test_cache_state"
+    const val OTHER_PUBLISHABLE_KEY = "pk_test_other_cache_state"
     const val PROXY_URL = "https://proxy.example.com/__clerk"
     const val SERVER_FETCH_AT_MILLIS = 1_786_464_000_000L
     const val LIVE_FETCH_AT = 1_786_464_999_000L

@@ -52,7 +52,7 @@ internal class SignUpEmailLinkViewModel(
   fun sendLink() {
     _state.value = AuthenticationViewState.Loading
 
-    val signUp = Clerk.client.signUp
+    val signUp = Clerk.auth.currentSignUp
     if (signUp == null || signUp.emailAddress.isNullOrBlank()) {
       _state.value = AuthenticationViewState.Error(null)
       return

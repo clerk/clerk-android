@@ -56,17 +56,16 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
   }
 
   private fun currentTaskSessionId(): String? {
-    val clientSession = runCatching {
-      val client = Clerk.client
-      val pendingChooseOrganizationSession =
-        client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-      val lastActiveSession =
-        client.lastActiveSessionId?.let { lastActiveSessionId ->
-          client.sessions.firstOrNull { it.id == lastActiveSessionId }
-        }
-      pendingChooseOrganizationSession ?: lastActiveSession
-    }
-      .getOrNull()
+    val clientSession =
+      Clerk.clientFlow.value?.let { client ->
+        val pendingChooseOrganizationSession =
+          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+        val lastActiveSession =
+          client.lastActiveSessionId?.let { lastActiveSessionId ->
+            client.sessions.firstOrNull { it.id == lastActiveSessionId }
+          }
+        pendingChooseOrganizationSession ?: lastActiveSession
+      }
 
     return clientSession?.id ?: Clerk.session?.id
   }
