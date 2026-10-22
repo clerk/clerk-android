@@ -329,7 +329,7 @@ internal fun OrganizationSwitcherImpl(
     userId = user?.id,
     sessionId = session?.id,
     hasUser = user != null,
-    onSessionChanged = reloadAccountList,
+    onSessionChanged = { viewModel.load(userId = user?.id, sessionId = session?.id) },
   )
 
   val shouldShow =
@@ -465,8 +465,7 @@ private fun OrganizationSwitcherSheetImpl(
     sessionId = session?.id,
     hasUser = user != null,
     onSessionChanged = {
-      viewModel.reset()
-      viewModel.load()
+      viewModel.load(userId = user?.id, sessionId = session?.id)
       sheetDestination = OrganizationSwitcherSheetDestination.Overview
     },
   )

@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>ForbiddenVoid:UserProfileUpdateProfileView.kt:Void?</ID>
     <ID>InjectDispatcher:AddEmailViewModel.kt:AddEmailViewModel$IO</ID>
-    <ID>InjectDispatcher:AllDevicesViewModel.kt:AllDevicesViewModel$IO</ID>
     <ID>InjectDispatcher:AuthStartView.kt:IO</ID>
     <ID>InjectDispatcher:AuthStartViewModel.kt:AuthStartViewModel$IO</ID>
     <ID>InjectDispatcher:BiometricCredentialEnrollmentViewModel.kt:BiometricCredentialEnrollmentViewModel$IO</ID>

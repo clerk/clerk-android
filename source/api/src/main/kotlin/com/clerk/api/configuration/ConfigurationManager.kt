@@ -168,7 +168,9 @@ internal class ConfigurationManager(
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
    * @param options Additional configuration options.
    * @throws IllegalStateException if called multiple times.
-   * @throws IllegalArgumentException if publishableKey format is invalid.
+   * @throws IllegalArgumentException if publishableKey format is invalid, or if
+   *   [ClerkConfigurationOptions.proxyUrl] is not an https URL with a host and no credentials,
+   *   query or fragment.
    */
   @Synchronized
   fun configure(
@@ -211,7 +213,9 @@ internal class ConfigurationManager(
     Clerk.publishableKey = publishableKey
     LocaleProvider.initialize()
 
-    val baseUrl = options?.proxyUrl ?: PublishableKeyHelper().extractApiUrl(publishableKey)
+    val baseUrl =
+      options?.proxyUrl?.let(ProxyUrlValidator::requireSecure)
+        ?: PublishableKeyHelper().extractApiUrl(publishableKey)
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
 

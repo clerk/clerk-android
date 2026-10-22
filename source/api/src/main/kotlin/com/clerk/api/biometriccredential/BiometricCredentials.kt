@@ -10,6 +10,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.catchingClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import kotlin.coroutines.cancellation.CancellationException
@@ -184,7 +185,14 @@ public object BiometricCredentials {
       }
 
     val enrollmentResult =
-      performEnrollment(localKey, appIdentifier, name, promptTitle, promptSubtitle)
+      try {
+        catchingClerkResult {
+          performEnrollment(localKey, appIdentifier, name, promptTitle, promptSubtitle)
+        }
+      } catch (e: CancellationException) {
+        runCatching { keyManager.deleteKey(localKey.localKeyId) }
+        throw e
+      }
     return when (enrollmentResult) {
       is ClerkResult.Success -> {
         val biometricCredential = enrollmentResult.value

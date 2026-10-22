@@ -1,11 +1,33 @@
 package com.clerk.api.biometriccredential
 
+import java.security.KeyStoreException
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class BiometricCredentialKeyManagerTest {
+
+  @Test
+  fun `signing reports a Keystore failure as SIGNING_FAILED`() = runTest {
+    val exception =
+      assertFailsWith<BiometricCredentialKeyManagerException> {
+        DefaultBiometricCredentialKeyManager.sign(
+          clientData = "client-data",
+          localKeyId = "tdlk_1",
+          policy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
+          promptTitle = "Sign in",
+        )
+      }
+
+    assertEquals(BiometricCredentialKeyManagerException.Code.SIGNING_FAILED, exception.code)
+    assertIs<KeyStoreException>(exception.cause)
+  }
 
   @Test
   fun `raw ES256 signature converts DER encoded signature`() {
