@@ -513,6 +513,20 @@ public class Auth internal constructor() {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
+  /**
+   * Starts a native email-link sign-in flow secured by PKCE and sends the link to [emailAddressId],
+   * the `emailAddressId` of one of the sign-in's `email_link` first factors.
+   *
+   * Fails with reason code `email_link_not_supported` when the sign-in has no such factor. A null
+   * [emailAddressId] behaves like [startEmailLinkSignIn] without one.
+   */
+  public suspend fun startEmailLinkSignIn(
+    email: String,
+    emailAddressId: String?,
+  ): ClerkResult<SignIn, NativeMagicLinkError> {
+    return nativeMagicLink.startEmailLinkSignIn(email, emailAddressId)
+  }
+
   /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
   public suspend fun handleMagicLinkDeepLink(
     uri: Uri
@@ -862,11 +876,13 @@ public class Auth internal constructor() {
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val previousClient = if (Clerk.clientInitialized) Clerk.client else null
-    if (organizationId.isNullOrBlank() && Clerk.organizationSelectionIsForced) {
-      return Clerk.session?.let { ClerkResult.success(it) }
-        ?: ClerkResult.unknownFailure(
-          IllegalStateException("Cannot select a personal account without an active session.")
-        )
+    val currentSession = Clerk.session
+    if (
+      organizationId.isNullOrBlank() &&
+        Clerk.organizationSelectionIsForced &&
+        currentSession?.id == sessionId
+    ) {
+      return ClerkResult.success(currentSession)
     }
 
     val result =

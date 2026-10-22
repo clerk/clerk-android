@@ -137,21 +137,13 @@ dependencies {
   testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.androidx.compose.foundation)
-  testImplementation(libs.core.ktx)
+  testImplementation(libs.androidx.test.core.ktx)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(libs.mockito)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
-
-  androidTestImplementation(libs.androidx.arch.test)
-  androidTestImplementation(libs.junit)
-  androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(libs.mockito)
-  androidTestImplementation(libs.mockk)
-  androidTestImplementation(libs.robolectric)
 
   dokkaPlugin(libs.versioning.plugin)
 

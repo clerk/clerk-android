@@ -302,6 +302,89 @@ class OrganizationMembersViewModelTest {
     assertFalse(viewModel.state.value.isLoadingInitial)
   }
 
+  @Test
+  fun `load with the same organization and membership keeps loaded pages without refetching`() =
+    runTest {
+      val organization = organization()
+      val viewer = viewerMembership()
+      val first = member("mem_1", "Ada")
+      val second = member("mem_2", "Grace")
+      stubManageResources(organization)
+      coEvery {
+        organization.getOrganizationMemberships(query = null, limit = 1, offset = 0)
+      } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(first), totalCount = 2))
+      coEvery {
+        organization.getOrganizationMemberships(query = null, limit = 1, offset = 1)
+      } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(second), totalCount = 2))
+
+      val viewModel = viewModel(pageSize = 1)
+      viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
+      advanceUntilIdle()
+      viewModel.loadMoreMembers()
+      advanceUntilIdle()
+
+      viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
+      assertFalse(viewModel.state.value.isLoadingInitial)
+      advanceUntilIdle()
+
+      assertEquals(listOf(first, second), viewModel.state.value.members)
+      coVerify(exactly = 1) {
+        organization.getOrganizationMemberships(query = null, limit = 1, offset = 0)
+      }
+    }
+
+  @Test
+  fun `load with a different organization reloads members`() = runTest {
+    val acme = organization(id = "org_acme")
+    val globex = organization(id = "org_globex")
+    val viewer = viewerMembership()
+    val ada = member("mem_1", "Ada")
+    val grace = member("mem_2", "Grace")
+    stubManageResources(acme)
+    stubManageResources(globex)
+    coEvery { acme.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = listOf(ada), totalCount = 1))
+    coEvery { globex.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = listOf(grace), totalCount = 1))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(organization = acme, membership = viewer, domainsEnabled = true)
+    advanceUntilIdle()
+    viewModel.load(organization = globex, membership = viewer, domainsEnabled = true)
+    advanceUntilIdle()
+
+    assertEquals(listOf(grace), viewModel.state.value.members)
+    coVerify(exactly = 1) {
+      globex.getOrganizationMemberships(query = null, limit = 2, offset = 0)
+    }
+  }
+
+  @Test
+  fun `a new refresh key or a retry reloads members`() = runTest {
+    val organization = organization()
+    val viewer =
+      viewerMembership(permissions = listOf(OrganizationSystemPermission.READ_MEMBERSHIPS))
+    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(organization = organization, membership = viewer, domainsEnabled = false)
+    advanceUntilIdle()
+    viewModel.load(
+      organization = organization,
+      membership = viewer,
+      domainsEnabled = false,
+      refreshKey = 1,
+    )
+    advanceUntilIdle()
+    viewModel.retry()
+    advanceUntilIdle()
+
+    coVerify(exactly = 3) {
+      organization.getOrganizationMemberships(query = null, limit = 2, offset = 0)
+    }
+  }
+
   private fun viewModel(pageSize: Int): OrganizationMembersViewModel {
     return OrganizationMembersViewModel(pageSize = pageSize, dispatcher = dispatcher)
   }
@@ -327,12 +410,13 @@ class OrganizationMembersViewModelTest {
   }
 
   private fun organization(
+    id: String = "org_123",
     maxAllowedMemberships: Int = 0,
     membersCount: Int? = null,
     pendingCount: Int? = null,
   ): Organization {
     return Organization(
-      id = "org_123",
+      id = id,
       name = "Acme",
       slug = "acme",
       imageUrl = "",

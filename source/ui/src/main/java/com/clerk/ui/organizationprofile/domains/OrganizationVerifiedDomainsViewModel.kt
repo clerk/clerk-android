@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class OrganizationVerifiedDomainsViewModel(
@@ -34,12 +35,36 @@ internal class OrganizationVerifiedDomainsViewModel(
   private var organization: Organization? = null
   private var membership: OrganizationMembership? = null
   private var domainsEnabled: Boolean = false
+  private var lastLoadRequest: DomainsLoadRequest? = null
 
   fun load(
     organization: Organization,
     membership: OrganizationMembership?,
     domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
     enrollmentModes: List<String> = Clerk.organizationDomainEnrollmentModes,
+  ) {
+    val request =
+      DomainsLoadRequest(organizationId = organization.id, membershipId = membership?.id)
+    if (request == lastLoadRequest) return
+    lastLoadRequest = request
+    reload(organization, membership, domainsEnabled, enrollmentModes)
+  }
+
+  fun retry() {
+    val currentOrganization = organization ?: return
+    reload(
+      organization = currentOrganization,
+      membership = membership,
+      domainsEnabled = domainsEnabled,
+      enrollmentModes = Clerk.organizationDomainEnrollmentModes,
+    )
+  }
+
+  private fun reload(
+    organization: Organization,
+    membership: OrganizationMembership?,
+    domainsEnabled: Boolean,
+    enrollmentModes: List<String>,
   ) {
     this.organization = organization
     this.membership = membership
@@ -50,43 +75,30 @@ internal class OrganizationVerifiedDomainsViewModel(
     val options = enrollmentModeOptions(enrollmentModes)
     val shouldLoad = domainsEnabled && (canReadDomains || canManageDomains)
 
-    mutableState.value =
-      mutableState.value.copy(
-        domainsEnabled = domainsEnabled,
-        canReadDomains = canReadDomains,
-        canManageDomains = canManageDomains,
-        enrollmentModeOptions = options,
-        selectedEnrollmentMode =
-          mutableState.value.selectedEnrollmentMode.takeIf { it in options } ?: options.first(),
-        isLoadingInitial = shouldLoad,
-        errorMessage = null,
-      )
-
-    if (!shouldLoad) {
-      mutableState.value =
-        mutableState.value.copy(
-          isLoadingInitial = false,
-          domains = emptyList(),
-          totalCount = 0,
-          hasNextPage = false,
+    mutableState.update { current ->
+      val permitted =
+        current.copy(
+          domainsEnabled = domainsEnabled,
+          canReadDomains = canReadDomains,
+          canManageDomains = canManageDomains,
+          enrollmentModeOptions = options,
+          selectedEnrollmentMode =
+            current.selectedEnrollmentMode.takeIf { it in options } ?: options.first(),
+          isLoadingInitial = shouldLoad,
+          errorMessage = null,
         )
-      return
+      if (shouldLoad) {
+        permitted
+      } else {
+        permitted.copy(domains = emptyList(), totalCount = 0, hasNextPage = false)
+      }
     }
+    if (!shouldLoad) return
 
     viewModelScope.launch(dispatcher) {
       loadDomains(reset = true)
-      mutableState.value = mutableState.value.copy(isLoadingInitial = false)
+      mutableState.update { it.copy(isLoadingInitial = false) }
     }
-  }
-
-  fun retry() {
-    val currentOrganization = organization ?: return
-    load(
-      organization = currentOrganization,
-      membership = membership,
-      domainsEnabled = domainsEnabled,
-      enrollmentModes = Clerk.organizationDomainEnrollmentModes,
-    )
   }
 
   fun loadMoreDomains() {
@@ -96,53 +108,53 @@ internal class OrganizationVerifiedDomainsViewModel(
   }
 
   fun showAddDomain() {
-    if (!mutableState.value.canManageDomains) return
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update { current ->
+      if (!current.canManageDomains) return@update current
+      current.copy(
         flow = OrganizationVerifiedDomainsFlow.AddDomain,
         domainName = "",
         errorMessage = null,
       )
+    }
   }
 
   fun showVerifyEmail(domain: OrganizationDomain) {
-    if (!mutableState.value.canManageDomains) return
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update { current ->
+      if (!current.canManageDomains) return@update current
+      current.copy(
         flow = OrganizationVerifiedDomainsFlow.VerifyEmail(domain),
         affiliationEmailLocalPart = domain.affiliationEmailAddress?.substringBefore("@").orEmpty(),
         verificationCode = "",
         errorMessage = null,
       )
+    }
   }
 
   fun showEnrollmentMode(domain: OrganizationDomain) {
-    val current = mutableState.value
-    if (!current.canManageDomains || !domain.isVerified) return
-    val selected =
-      domain.enrollmentModeType.takeIf {
-        it !is OrganizationDomain.EnrollmentMode.Unknown && it in current.enrollmentModeOptions
-      } ?: current.enrollmentModeOptions.first()
-    mutableState.value =
+    mutableState.update { current ->
+      if (!current.canManageDomains || !domain.isVerified) return@update current
+      val selected =
+        domain.enrollmentModeType.takeIf {
+          it !is OrganizationDomain.EnrollmentMode.Unknown && it in current.enrollmentModeOptions
+        } ?: current.enrollmentModeOptions.first()
       current.copy(
         flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
         selectedEnrollmentMode = selected,
         errorMessage = null,
       )
+    }
   }
 
   fun showDeleteDomain(domain: OrganizationDomain) {
-    if (!mutableState.value.canManageDomains) return
-    mutableState.value =
-      mutableState.value.copy(
-        flow = OrganizationVerifiedDomainsFlow.DeleteDomain(domain),
-        errorMessage = null,
-      )
+    mutableState.update { current ->
+      if (!current.canManageDomains) return@update current
+      current.copy(flow = OrganizationVerifiedDomainsFlow.DeleteDomain(domain), errorMessage = null)
+    }
   }
 
   fun dismissFlow() {
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update {
+      it.copy(
         flow = OrganizationVerifiedDomainsFlow.DomainsList,
         domainName = "",
         affiliationEmailLocalPart = "",
@@ -150,10 +162,11 @@ internal class OrganizationVerifiedDomainsViewModel(
         activeMutationId = null,
         errorMessage = null,
       )
+    }
   }
 
   fun setDomainName(domainName: String) {
-    mutableState.value = mutableState.value.copy(domainName = domainName)
+    mutableState.update { it.copy(domainName = domainName) }
   }
 
   fun createDomain() {
@@ -162,31 +175,32 @@ internal class OrganizationVerifiedDomainsViewModel(
     val name = current.domainName.trim()
     if (!current.canCreateDomain || name.isEmpty()) return
 
-    mutableState.value =
-      current.copy(activeMutationId = CREATE_DOMAIN_MUTATION_ID, errorMessage = null)
+    mutableState.update {
+      it.copy(activeMutationId = CREATE_DOMAIN_MUTATION_ID, errorMessage = null)
+    }
     viewModelScope.launch(dispatcher) {
       when (val result = currentOrganization.createDomain(name = name)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
-          mutableState.value =
-            mutableState.value.copy(
-              activeMutationId = null,
-              domainName = "",
-              affiliationEmailLocalPart =
-                result.value.affiliationEmailAddress?.substringBefore("@").orEmpty(),
-              flow =
-                if (result.value.isVerified) OrganizationVerifiedDomainsFlow.DomainsList
-                else OrganizationVerifiedDomainsFlow.VerifyEmail(result.value),
-            )
-        }
+        is ClerkResult.Success ->
+          mutableState.update {
+            it
+              .withUpsertedDomain(result.value)
+              .copy(
+                activeMutationId = null,
+                domainName = "",
+                affiliationEmailLocalPart =
+                  result.value.affiliationEmailAddress?.substringBefore("@").orEmpty(),
+                flow =
+                  if (result.value.isVerified) OrganizationVerifiedDomainsFlow.DomainsList
+                  else OrganizationVerifiedDomainsFlow.VerifyEmail(result.value),
+              )
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
   }
 
   fun setAffiliationEmailLocalPart(localPart: String) {
-    mutableState.value =
-      mutableState.value.copy(affiliationEmailLocalPart = localPart.sanitizedLocalPart())
+    mutableState.update { it.copy(affiliationEmailLocalPart = localPart.sanitizedLocalPart()) }
   }
 
   fun sendAffiliationEmail(domain: OrganizationDomain) {
@@ -199,7 +213,7 @@ internal class OrganizationVerifiedDomainsViewModel(
   }
 
   fun setVerificationCode(code: String) {
-    mutableState.value = mutableState.value.copy(verificationCode = code)
+    mutableState.update { it.copy(verificationCode = code) }
   }
 
   fun verifyCode(domain: OrganizationDomain) {
@@ -207,19 +221,19 @@ internal class OrganizationVerifiedDomainsViewModel(
     val code = current.verificationCode.trim()
     if (!current.canVerifyCode || code.isEmpty()) return
 
-    mutableState.value =
-      current.copy(activeMutationId = VERIFY_CODE_MUTATION_ID, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = VERIFY_CODE_MUTATION_ID, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       when (val result = domain.verifyCode(code = code)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
-          mutableState.value =
-            mutableState.value.copy(
-              activeMutationId = null,
-              verificationCode = "",
-              flow = OrganizationVerifiedDomainsFlow.DomainsList,
-            )
-        }
+        is ClerkResult.Success ->
+          mutableState.update {
+            it
+              .withUpsertedDomain(result.value)
+              .copy(
+                activeMutationId = null,
+                verificationCode = "",
+                flow = OrganizationVerifiedDomainsFlow.DomainsList,
+              )
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
@@ -231,28 +245,29 @@ internal class OrganizationVerifiedDomainsViewModel(
   }
 
   fun selectEnrollmentMode(mode: OrganizationDomain.EnrollmentMode) {
-    if (mode !in mutableState.value.enrollmentModeOptions) return
-    mutableState.value = mutableState.value.copy(selectedEnrollmentMode = mode)
+    mutableState.update { current ->
+      if (mode in current.enrollmentModeOptions) current.copy(selectedEnrollmentMode = mode)
+      else current
+    }
   }
 
   fun updateEnrollmentMode(domain: OrganizationDomain) {
     val current = mutableState.value
     if (!current.canUpdateEnrollmentMode) return
 
-    mutableState.value =
-      current.copy(activeMutationId = UPDATE_ENROLLMENT_MUTATION_ID, errorMessage = null)
+    mutableState.update {
+      it.copy(activeMutationId = UPDATE_ENROLLMENT_MUTATION_ID, errorMessage = null)
+    }
     viewModelScope.launch(dispatcher) {
       when (
         val result = domain.updateEnrollmentMode(enrollmentMode = current.selectedEnrollmentMode)
       ) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
-          mutableState.value =
-            mutableState.value.copy(
-              activeMutationId = null,
-              flow = OrganizationVerifiedDomainsFlow.DomainsList,
-            )
-        }
+        is ClerkResult.Success ->
+          mutableState.update {
+            it
+              .withUpsertedDomain(result.value)
+              .copy(activeMutationId = null, flow = OrganizationVerifiedDomainsFlow.DomainsList)
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
@@ -261,26 +276,27 @@ internal class OrganizationVerifiedDomainsViewModel(
   fun deleteDomain(domain: OrganizationDomain) {
     if (!mutableState.value.canManageDomains || mutableState.value.activeMutationId != null) return
 
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = DELETE_DOMAIN_MUTATION_ID, errorMessage = null)
+    mutableState.update {
+      it.copy(activeMutationId = DELETE_DOMAIN_MUTATION_ID, errorMessage = null)
+    }
     viewModelScope.launch(dispatcher) {
       when (val result = domain.delete()) {
-        is ClerkResult.Success -> {
-          mutableState.value =
-            mutableState.value.copy(
+        is ClerkResult.Success ->
+          mutableState.update { current ->
+            current.copy(
               activeMutationId = null,
               flow = OrganizationVerifiedDomainsFlow.DomainsList,
-              domains = mutableState.value.domains.filterNot { it.id == domain.id },
-              totalCount = (mutableState.value.totalCount - 1).coerceAtLeast(0),
+              domains = current.domains.filterNot { it.id == domain.id },
+              totalCount = (current.totalCount - 1).coerceAtLeast(0),
             )
-        }
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
   }
 
   fun clearError() {
-    mutableState.value = mutableState.value.copy(errorMessage = null)
+    mutableState.update { it.copy(errorMessage = null) }
   }
 
   private suspend fun loadDomains(reset: Boolean) {
@@ -288,71 +304,72 @@ internal class OrganizationVerifiedDomainsViewModel(
     val current = mutableState.value
     if (!current.canLoadDomains) return
 
-    mutableState.value = current.copy(isLoadingMore = !reset, errorMessage = null)
+    mutableState.update { it.copy(isLoadingMore = !reset, errorMessage = null) }
     val offset = if (reset) 0 else current.domains.size
     when (val result = currentOrganization.getDomains(limit = pageSize, offset = offset)) {
       is ClerkResult.Success -> applyDomainPage(page = result.value, append = !reset)
       is ClerkResult.Failure ->
-        mutableState.value =
-          mutableState.value.copy(isLoadingMore = false, errorMessage = result.errorMessage)
+        mutableState.update { it.copy(isLoadingMore = false, errorMessage = result.errorMessage) }
     }
   }
 
   private fun applyDomainPage(page: ClerkPaginatedResponse<OrganizationDomain>, append: Boolean) {
-    val domains = if (append) mutableState.value.domains + page.data else page.data
-    mutableState.value =
-      mutableState.value.copy(
+    mutableState.update { current ->
+      val domains = if (append) current.domains + page.data else page.data
+      current.copy(
         domains = domains,
         totalCount = page.totalCount,
         hasNextPage = domains.size < page.totalCount,
         isLoadingMore = false,
       )
+    }
   }
 
   private fun sendEmailCode(domain: OrganizationDomain, emailAddress: String, nextFlow: Boolean) {
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = SEND_CODE_MUTATION_ID, errorMessage = null)
+    mutableState.update { it.copy(activeMutationId = SEND_CODE_MUTATION_ID, errorMessage = null) }
     viewModelScope.launch(dispatcher) {
       when (val result = domain.sendEmailCode(affiliationEmailAddress = emailAddress)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
-          mutableState.value =
-            mutableState.value.copy(
-              activeMutationId = null,
-              verificationCode = "",
-              flow =
-                if (nextFlow) {
-                  OrganizationVerifiedDomainsFlow.VerifyCode(
-                    domain = result.value,
-                    emailAddress = emailAddress,
-                  )
-                } else {
-                  mutableState.value.flow
-                },
-            )
-        }
+        is ClerkResult.Success ->
+          mutableState.update { current ->
+            current
+              .withUpsertedDomain(result.value)
+              .copy(
+                activeMutationId = null,
+                verificationCode = "",
+                flow =
+                  if (nextFlow) {
+                    OrganizationVerifiedDomainsFlow.VerifyCode(
+                      domain = result.value,
+                      emailAddress = emailAddress,
+                    )
+                  } else {
+                    current.flow
+                  },
+              )
+          }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
       }
     }
   }
 
-  private fun upsertDomain(domain: OrganizationDomain) {
-    val current = mutableState.value
-    val exists = current.domains.any { it.id == domain.id }
-    val domains =
-      if (exists) {
-        current.domains.map { existing -> if (existing.id == domain.id) domain else existing }
-      } else {
-        listOf(domain) + current.domains
-      }
-    mutableState.value =
-      current.copy(domains = domains, totalCount = current.totalCount + if (exists) 0 else 1)
+  private fun mutationFailed(errorMessage: String) {
+    mutableState.update { it.copy(activeMutationId = null, errorMessage = errorMessage) }
   }
 
-  private fun mutationFailed(errorMessage: String) {
-    mutableState.value =
-      mutableState.value.copy(activeMutationId = null, errorMessage = errorMessage)
-  }
+  private data class DomainsLoadRequest(val organizationId: String, val membershipId: String?)
+}
+
+private fun OrganizationVerifiedDomainsState.withUpsertedDomain(
+  domain: OrganizationDomain
+): OrganizationVerifiedDomainsState {
+  val exists = domains.any { it.id == domain.id }
+  val updatedDomains =
+    if (exists) {
+      domains.map { existing -> if (existing.id == domain.id) domain else existing }
+    } else {
+      listOf(domain) + domains
+    }
+  return copy(domains = updatedDomains, totalCount = totalCount + if (exists) 0 else 1)
 }
 
 private fun String.sanitizedLocalPart(): String {

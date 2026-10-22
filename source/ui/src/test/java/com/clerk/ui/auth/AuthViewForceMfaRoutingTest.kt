@@ -30,6 +30,14 @@ class AuthViewForceMfaRoutingTest {
   }
 
   @Test
+  fun `leaves the mfa task to hand off itself when another task is pending`() {
+    assertEquals(
+      AuthNavigationCommand.None,
+      pendingTaskCommand(task = "choose-organization", top = AuthDestination.SessionTaskMfa),
+    )
+  }
+
+  @Test
   fun `does not route when no task is pending`() {
     assertEquals(
       AuthNavigationCommand.None,

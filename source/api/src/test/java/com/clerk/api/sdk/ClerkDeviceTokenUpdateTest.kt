@@ -542,10 +542,22 @@ class ClerkDeviceTokenUpdateTest {
 
   /** Active jobs launched by the configuration manager; a queued refresh shows up here. */
   private fun configurationScopeChildren(): Set<Job> {
-    val field = ConfigurationManager::class.java.getDeclaredField("scope")
+    val manager = configurationManager()
+    val scope = configurationManagerField(manager, "scope") as CoroutineScope
+    val tokenRefreshJobs =
+      setOf(
+        configurationManagerField(manager, "refreshJob"),
+        configurationManagerField(manager, "activeSessionWatchJob"),
+      )
+    return scope.coroutineContext.job.children
+      .filter { it.isActive && it !in tokenRefreshJobs }
+      .toSet()
+  }
+
+  private fun configurationManagerField(manager: ConfigurationManager, name: String): Any? {
+    val field = ConfigurationManager::class.java.getDeclaredField(name)
     field.isAccessible = true
-    val scope = field.get(configurationManager()) as CoroutineScope
-    return scope.coroutineContext.job.children.filter { it.isActive }.toSet()
+    return field.get(manager)
   }
 
   /** Joins every job the configuration manager launched, including ones launched while joining. */

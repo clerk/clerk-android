@@ -100,6 +100,7 @@ export interface HostFixture {
   readonly runId: RunId;
   readonly app: AppLocators;
   newEmail(options?: EmailOptions): Promise<TestEmail>;
+  newOrganizationName(): string;
   newPhone(): Promise<TestPhone>;
   seedUser(options?: SeedOptions): Promise<SeededUser>;
   seedOrganization<Seed extends OrganizationSeed>(seed: Seed): Promise<SeededOrganization<Seed>>;
@@ -109,6 +110,7 @@ export interface HostFixture {
   expectVisible(target: Locator, what: string, timeoutMs?: number): Promise<void>;
   screenshot(label: string): Promise<void>;
   tap(target: Locator): Promise<void>;
+  back(): Promise<void>;
   fill(target: Locator, text: string | SecretLike): Promise<void>;
   evidence<T>(label: string, body: () => Promise<T>): Promise<T>;
 }

@@ -132,10 +132,8 @@ internal fun AuthStartViewImpl(
       biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
   }
 
-  val lastAuthenticationStrategy = runCatching {
-    Clerk.client.lastAuthenticationStrategy
-  }
-    .getOrNull()
+  val client by Clerk.clientFlow.collectAsStateWithLifecycle()
+  val lastAuthenticationStrategy = client?.lastAuthenticationStrategy
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,

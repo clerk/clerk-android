@@ -53,7 +53,6 @@ dependencies {
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview)
-  implementation(libs.core.ktx)
   implementation(libs.material3)
   implementation(libs.processPhoenix)
   implementation(projects.source.api)
