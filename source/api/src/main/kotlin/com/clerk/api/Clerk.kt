@@ -223,6 +223,8 @@ public object Clerk {
 
   internal var configuredPublishableKey: String? = null
 
+  internal var initializedPublishableKey: String? = null
+
   /**
    * Whether to enable telemetry for the SDK.
    *
@@ -893,6 +895,7 @@ public object Clerk {
     LocaleProvider.cleanup()
     ClerkApi.reset()
     configuredPublishableKey = null
+    initializedPublishableKey = null
     baseUrl = ""
     proxyUrl = null
     debugMode = false
@@ -1072,7 +1075,7 @@ public object Clerk {
   }
 
   private fun cachedStateConfiguration(): CachedStateConfiguration? {
-    val cachedPublishableKey = publishableKey
+    val cachedPublishableKey = initializedPublishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
     return if (cachedPublishableKey != null && cachedBaseUrl != null) {
       CachedStateConfiguration(publishableKey = cachedPublishableKey, baseUrl = cachedBaseUrl)
