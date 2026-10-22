@@ -4644,6 +4644,7 @@ public final class com/clerk/api/session/Session {
 	public final fun getCurrentTask ()Lcom/clerk/api/session/SessionTask;
 	public final fun getExpireAt ()J
 	public final fun getFactorVerificationAge ()Ljava/util/List;
+	public final fun getHasMaximumLifetime ()Z
 	public final fun getId ()Ljava/lang/String;
 	public final fun getLastActiveAt ()J
 	public final fun getLastActiveOrganizationId ()Ljava/lang/String;
