@@ -25,10 +25,15 @@ internal class UpdateRequiredActivity : ComponentActivity() {
         }
       },
     )
+    val resetsAtStart = Clerk.appVersionSupportResets.value
     lifecycleScope.launch {
       repeatOnLifecycle(Lifecycle.State.STARTED) {
-        combine(Clerk.isInitialized, Clerk.appVersionSupportStatus) { initialized, status ->
-            initialized && status.isSupported
+        combine(
+            Clerk.isInitialized,
+            Clerk.appVersionSupportStatus,
+            Clerk.appVersionSupportResets,
+          ) { initialized, status, resets ->
+            (initialized && status.isSupported) || resets != resetsAtStart
           }
           .first { it }
         finish()

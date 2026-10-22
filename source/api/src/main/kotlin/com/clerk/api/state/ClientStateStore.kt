@@ -267,6 +267,9 @@ internal class ClientStateStore(
       _sessions.value = emptyList()
       _session.value = null
       _user.value = null
+      _organizationLogoUrl.value = null
+      _applicationName.value = null
+      _supportEmail.value = null
       notifySessionStateLocked(previousSession, null)
     }
     clearPersistedState()

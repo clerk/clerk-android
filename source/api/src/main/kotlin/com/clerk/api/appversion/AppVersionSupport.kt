@@ -48,6 +48,9 @@ internal object AppVersionSupport {
   private val _status = MutableStateFlow(AppVersionSupportStatus.supported(currentVersion = null))
   val status: StateFlow<AppVersionSupportStatus> = _status.asStateFlow()
 
+  private val _resets = MutableStateFlow(0L)
+  val resets: StateFlow<Long> = _resets.asStateFlow()
+
   fun configure(build: AppBuild?) =
     synchronized(lock) {
       this.build = build
@@ -92,6 +95,7 @@ internal object AppVersionSupport {
   fun reset() =
     synchronized(lock) {
       generation += 1
+      _resets.value += 1
       build = null
       environmentStatus = null
       serverStatus = null

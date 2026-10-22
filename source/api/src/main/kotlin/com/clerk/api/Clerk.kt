@@ -279,6 +279,9 @@ public object Clerk {
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow
 
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val appVersionSupportResets: StateFlow<Long> = AppVersionSupport.resets
+
   /**
    * Whether this build of your app meets the minimum version set for it in the Clerk Dashboard.
    *

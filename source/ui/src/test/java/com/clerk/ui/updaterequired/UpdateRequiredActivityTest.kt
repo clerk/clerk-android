@@ -21,12 +21,14 @@ class UpdateRequiredActivityTest {
   private val status =
     MutableStateFlow(AppVersionSupportStatus(isSupported = false, currentVersion = 41))
   private val isInitialized = MutableStateFlow(true)
+  private val resets = MutableStateFlow(0L)
 
   @Before
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.appVersionSupportStatus } returns status
     every { Clerk.isInitialized } returns isInitialized
+    every { Clerk.appVersionSupportResets } returns resets
     every { Clerk.organizationLogoUrlFlow } returns MutableStateFlow(null)
     every { Clerk.applicationNameFlow } returns MutableStateFlow("Acme")
     every { Clerk.supportEmailFlow } returns MutableStateFlow(null)
@@ -56,6 +58,18 @@ class UpdateRequiredActivityTest {
     assertFalse(activity.isFinishing)
 
     isInitialized.value = true
+    ShadowLooper.idleMainLooper()
+
+    assertTrue(activity.isFinishing)
+  }
+
+  @Test
+  fun `the screen closes when Clerk resets`() {
+    val activity = Robolectric.buildActivity(UpdateRequiredActivity::class.java).setup().get()
+
+    isInitialized.value = false
+    status.value = AppVersionSupportStatus(isSupported = true, currentVersion = null)
+    resets.value += 1
     ShadowLooper.idleMainLooper()
 
     assertTrue(activity.isFinishing)
