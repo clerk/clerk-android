@@ -17,7 +17,7 @@ interface Context {
   readonly draft?: boolean;
   readonly cancelled?: boolean;
   readonly needs?: Readonly<Record<string, string>>;
-  readonly inputs?: Readonly<Record<string, boolean>>;
+  readonly inputs?: Readonly<Record<string, boolean | string>>;
   readonly matrix?: Readonly<Record<string, string | boolean>>;
   readonly earlierStepFailed?: boolean;
   readonly runnerFiles?: readonly string[];
@@ -57,6 +57,8 @@ function compute(expression: string, context: Context): unknown {
     if (input) return context.inputs?.[input[1]!] ?? null;
     const entry = /^matrix\.([\w-]+)$/.exec(path);
     if (entry) return context.matrix?.[entry[1]!] ?? null;
+    // An unset repository variable reads as an empty string.
+    if (path.startsWith('vars.')) return '';
     throw new Error(`no value for ${path} in ${expression}`);
   };
   const literal = String.raw`"(?:[^"\\]|\\.)*"|null|true|false`;
@@ -69,7 +71,7 @@ function compute(expression: string, context: Context): unknown {
     .replaceAll('always()', 'true')
     .replaceAll('needs.*.result', JSON.stringify(results))
     .replaceAll(/'([^']*)'/g, (_, text: string) => JSON.stringify(text))
-    .replaceAll(/\b(?:github|needs|inputs|matrix)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
+    .replaceAll(/\b(?:github|needs|inputs|matrix|vars)\.[\w.-]+/g, (path) => JSON.stringify(value(path)))
     .replaceAll(new RegExp(`(${literal}) (==|!=) (${literal})`, 'g'), (_, left: string, op: string, right: string) => `${op === '!=' ? '!' : ''}eq(${left}, ${right})`);
   const contains = (list: readonly unknown[], item: unknown): boolean => list.some((entry) => eq(entry, item));
   return new Function('eq', 'contains', `return ${script};`)(eq, contains);
@@ -217,9 +219,38 @@ describe('the nightly run', () => {
 });
 
 describe('the runners', () => {
-  it('are GitHub-hosted for every job, which costs this public repository nothing', () => {
-    const labels = files.flatMap((file) => [...jobs(read(file)).values()].flatMap((text) => /^ {4}runs-on: (.+)$/m.exec(text)?.[1] ?? []));
-    assert.deepEqual([...new Set(labels)].sort(), ['${{ needs.plan.outputs.runner }}', "${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}", 'ubuntu-26.04', 'ubuntu-latest']);
+  const BLACKSMITH = 'blacksmith-4vcpu-ubuntu-2404';
+  const runsOn = (text: string, context: Context): string => {
+    const label = /^ {4}runs-on: (.+)$/m.exec(text)?.[1] ?? '';
+    return label.includes('needs.') ? label : String(setting(label, context));
+  };
+
+  it('are Blacksmith for the release checks a person waits on, and GitHub-hosted for the release jobs that tag, publish or post', () => {
+    const labels = [...jobs(read('manual-release.yml'))].flatMap(([name, text]) => {
+      const called = /^ {4}uses: \.\/\.github\/workflows\/(.+)$/m.exec(text)?.[1];
+      if (called === undefined) return [`${name}: ${runsOn(text, { event: 'workflow_dispatch' })}`];
+      const inputs = Object.fromEntries((/^ {4}with:\n((?: {6}.+\n)+)/m.exec(text)?.[1] ?? '').trim().split('\n').map((line) => {
+        const [, key, value] = /^\s*([\w-]+): (.+)$/.exec(line)!;
+        return [key!, value === 'true' ? true : value!];
+      }));
+      return [...jobs(read(called))].filter(([, job]) => /^ {4}runs-on:/m.test(job)).map(([job, jobText]) => `${name} / ${job}: ${runsOn(jobText, { event: 'workflow_call', inputs })}`);
+    });
+    assert.deepEqual(labels, [
+      `verify: ${BLACKSMITH}`,
+      `verify-e2e / e2e-tests: ${BLACKSMITH}`,
+      `integration-test / integration-test: ${BLACKSMITH}`,
+      `paparazzi-verify / verify: ${BLACKSMITH}`,
+      'create-release: ubuntu-latest',
+      'publish: ubuntu-latest',
+      'open-expo-android-release-pr: ubuntu-latest',
+      'notify-slack: ubuntu-latest',
+      'notify-blocked-release: ubuntu-latest',
+    ]);
+  });
+
+  it('are GitHub-hosted, which costs this public repository nothing, for pull requests, pushes to main, the nightly run, the docs and remote sessions', () => {
+    const labels = files.filter((file) => file !== 'manual-release.yml').flatMap((file) => [...jobs(read(file)).values()].flatMap((text) => /^ {4}runs-on:/m.test(text) ? [runsOn(text, { event: 'schedule' })] : []));
+    assert.deepEqual([...new Set(labels)].sort(), ['${{ needs.plan.outputs.runner }}', 'ubuntu-24.04', 'ubuntu-26.04', 'ubuntu-latest']);
   });
 });
 
@@ -359,7 +390,7 @@ describe('a release', () => {
   it('runs the integration tests with only the key they need, and asks them to require it', () => {
     assert.equal(
       release.get('integration-test'),
-      '  integration-test:\n    uses: ./.github/workflows/integration-test.yml\n    with:\n      require_key: true\n    secrets:\n      CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}\n',
+      '  integration-test:\n    uses: ./.github/workflows/integration-test.yml\n    with:\n      require_key: true\n      runner: blacksmith-4vcpu-ubuntu-2404\n    secrets:\n      CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}\n',
     );
   });
 
@@ -390,7 +421,7 @@ describe('a release', () => {
   });
 
   it('runs the Paparazzi screenshot tests with no secrets', () => {
-    assert.equal(release.get('paparazzi-verify'), '  paparazzi-verify:\n    uses: ./.github/workflows/paparazzi-verify.yml\n');
+    assert.equal(release.get('paparazzi-verify'), '  paparazzi-verify:\n    uses: ./.github/workflows/paparazzi-verify.yml\n    with:\n      runner: blacksmith-4vcpu-ubuntu-2404\n');
   });
 
   it('creates no release and publishes nothing unless the integration tests and the Paparazzi screenshot tests pass', () => {

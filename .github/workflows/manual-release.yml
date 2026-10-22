@@ -23,7 +23,7 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -63,6 +63,8 @@ jobs:
 
   verify-e2e:
     uses: ./.github/workflows/verify-e2e.yml
+    with:
+      runner: blacksmith-4vcpu-ubuntu-2404
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY: ${{ secrets.MOBILE_VERIFICATION_PLATFORM_API_KEY }}
 
@@ -70,11 +72,14 @@ jobs:
     uses: ./.github/workflows/integration-test.yml
     with:
       require_key: true
+      runner: blacksmith-4vcpu-ubuntu-2404
     secrets:
       CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
 
   paparazzi-verify:
     uses: ./.github/workflows/paparazzi-verify.yml
+    with:
+      runner: blacksmith-4vcpu-ubuntu-2404
 
   create-release:
     runs-on: ubuntu-latest

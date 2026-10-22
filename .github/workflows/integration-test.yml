@@ -8,6 +8,10 @@ on:
         required: false
         type: boolean
         default: false
+      runner:
+        description: The runner label for the job. The release passes a Blacksmith label; every other run uses GitHub's runner.
+        required: false
+        type: string
     secrets:
       CLERK_INTEGRATION_TEST_PK:
         required: true
@@ -22,7 +26,7 @@ permissions:
 jobs:
   integration-test:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 30
     steps:
       - name: Check that the integration tests have a key
