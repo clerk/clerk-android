@@ -70,18 +70,6 @@ public data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
-  /**
-   * Whether the session has a maximum lifetime. False when [expireAt] is zero. This says nothing
-   * about whether the session is active; use [status] for that.
-   */
-  @Deprecated(
-    message = "Compare expireAt with 0 instead.",
-    replaceWith = ReplaceWith("expireAt != 0L"),
-    level = DeprecationLevel.WARNING,
-  )
-  public val hasMaximumLifetime: Boolean
-    get() = expireAt > 0
-
   @OptIn(ExperimentalSerializationApi::class)
   @KeepGeneratedSerializer
   @Serializable(with = SessionStatus.Serializer::class)

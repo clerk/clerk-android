@@ -2,9 +2,7 @@ package com.clerk.api.session
 
 import com.clerk.api.network.ClerkApi
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SessionLifetimeTest {
@@ -25,12 +23,6 @@ class SessionLifetimeTest {
       decodeSession(deadlines = """"expire_at":0,""").copy(status = Session.SessionStatus.REVOKED)
 
     assertEquals(0L, revoked.expireAt)
-  }
-
-  @Test
-  fun `the deprecated hasMaximumLifetime still reports whether expire_at is set`() {
-    assertFalse(decodeSession(deadlines = """"expire_at":0,""").hasMaximumLifetime)
-    assertTrue(decodeSession(deadlines = """"expire_at":2000000000000,""").hasMaximumLifetime)
   }
 
   @Test
