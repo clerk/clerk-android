@@ -1,6 +1,9 @@
 package com.clerk.ui.core.input
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.click
@@ -9,9 +12,13 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import com.clerk.ui.R
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,5 +80,24 @@ class ClerkTextFieldTest {
     composeTestRule.onNodeWithContentDescription("Show password").performClick()
     composeTestRule.onNodeWithContentDescription("Hide password").performClick()
     composeTestRule.onNodeWithContentDescription("Show password").assertExists()
+  }
+
+  @Test
+  fun longValueDoesNotSoftWrap() {
+    composeTestRule.setContent {
+      ClerkTextField(
+        value = "a.very.long.email.address@example.com",
+        onValueChange = {},
+        modifier = Modifier.width(120.dp),
+      )
+    }
+
+    val layouts = mutableListOf<TextLayoutResult>()
+    composeTestRule.onNode(hasSetTextAction()).performSemanticsAction(
+      SemanticsActions.GetTextLayoutResult
+    ) {
+      it(layouts)
+    }
+    assertFalse(layouts.single().layoutInput.softWrap)
   }
 }
