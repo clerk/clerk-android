@@ -30,7 +30,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `an app with no minimum is supported`() {
-    AppVersionSupport.applyFetchedEnvironment(
+    AppVersionSupport.applyEnvironment(
       appVersionTestEnvironment(androidPolicy("50", packageName = "com.example.other"))
     )
 
@@ -39,7 +39,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `an app older than its minimum is unsupported`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     assertEquals(
       AppVersionSupportStatus(
@@ -54,7 +54,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `an app at its minimum is supported`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("41")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("41")))
 
     assertTrue(status().isSupported)
   }
@@ -62,9 +62,7 @@ class AppVersionSupportTest {
   @Test
   fun `an unreadable minimum fails open`() {
     listOf("", "0", "4.2", "042", "abc").forEach { minimumVersion ->
-      AppVersionSupport.applyFetchedEnvironment(
-        appVersionTestEnvironment(androidPolicy(minimumVersion))
-      )
+      AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy(minimumVersion)))
 
       assertTrue(minimumVersion, status().isSupported)
       assertNull(minimumVersion, status().minimumVersion)
@@ -74,7 +72,7 @@ class AppVersionSupportTest {
   @Test
   fun `an update URL that isn't a web page is dropped`() {
     listOf("market://details?id=com.example.app", "javascript:alert(1)", "https://").forEach {
-      AppVersionSupport.applyFetchedEnvironment(
+      AppVersionSupport.applyEnvironment(
         appVersionTestEnvironment(androidPolicy("42", updateUrl = it))
       )
 
@@ -85,7 +83,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `a supported response keeps the minimum and store page the environment set`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("40")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("40")))
 
     AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
 
@@ -102,7 +100,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `a supported response drops a minimum the server no longer enforces`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
 
@@ -111,7 +109,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `a rejected request blocks the app until a later response marks it supported`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment())
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment())
     val generation = AppVersionSupport.generation
 
     AppVersionSupport.applyUnsupportedAppVersion(
@@ -147,7 +145,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `a rejected request falls back to the environment for what its meta leaves out`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     AppVersionSupport.applyUnsupportedAppVersion(
       buildJsonObject { put("update_url", JsonPrimitive("")) },
@@ -166,26 +164,43 @@ class AppVersionSupportTest {
   }
 
   @Test
-  fun `a fetched environment replaces what an earlier response said`() {
+  fun `an environment doesn't lift a block a response set`() {
     AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
 
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("41")))
-
-    assertTrue(status().isSupported)
-  }
-
-  @Test
-  fun `a saved environment doesn't replace what a response said`() {
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
-
-    AppVersionSupport.applySavedEnvironment(appVersionTestEnvironment())
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("41")))
 
     assertFalse(status().isSupported)
   }
 
   @Test
+  fun `an environment doesn't block an app a response marked supported`() {
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+
+    assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = 41), status())
+  }
+
+  @Test
+  fun `a supported response shows the minimum a later environment sets`() {
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("40")))
+
+    assertEquals(
+      AppVersionSupportStatus(
+        isSupported = true,
+        currentVersion = 41,
+        minimumVersion = 40,
+        updateUrl = TEST_PLAY_URL,
+      ),
+      status(),
+    )
+  }
+
+  @Test
   fun `a saved environment blocks the app before any response`() {
-    AppVersionSupport.applySavedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     assertFalse(status().isSupported)
   }
@@ -203,7 +218,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `reset forgets the block and the build`() {
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     AppVersionSupport.reset()
 
@@ -226,7 +241,7 @@ class AppVersionSupportTest {
     setVersionCode(0)
     AppVersionSupport.configure(AppBuild.from(context))
 
-    AppVersionSupport.applyFetchedEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
     assertNull(AppVersionSupport.build)
     assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = null), status())

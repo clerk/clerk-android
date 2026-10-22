@@ -1203,11 +1203,8 @@ public object Clerk {
       current: Environment,
       restoredFromCache: Boolean,
     ) {
-      if (restoredFromCache) {
-        AppVersionSupport.applySavedEnvironment(current)
-        return
-      }
-      AppVersionSupport.applyFetchedEnvironment(current)
+      AppVersionSupport.applyEnvironment(current)
+      if (restoredFromCache) return
       sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
     }
   }

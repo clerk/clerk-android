@@ -32,10 +32,16 @@ internal data class AppBuild(val packageName: String, val versionCode: Long) {
   }
 }
 
+private sealed interface ServerAnswer {
+  data object Supported : ServerAnswer
+
+  data class Unsupported(val status: AppVersionSupportStatus) : ServerAnswer
+}
+
 internal object AppVersionSupport {
   private val lock = Any()
   private var environmentStatus: AppVersionSupportStatus? = null
-  private var serverStatus: AppVersionSupportStatus? = null
+  private var serverAnswer: ServerAnswer? = null
 
   @Volatile
   var build: AppBuild? = null
@@ -57,15 +63,8 @@ internal object AppVersionSupport {
       publishLocked()
     }
 
-  fun applySavedEnvironment(environment: Environment) =
+  fun applyEnvironment(environment: Environment) =
     synchronized(lock) {
-      environmentStatus = resolve(environment)
-      publishLocked()
-    }
-
-  fun applyFetchedEnvironment(environment: Environment) =
-    synchronized(lock) {
-      serverStatus = null
       environmentStatus = resolve(environment)
       publishLocked()
     }
@@ -73,14 +72,16 @@ internal object AppVersionSupport {
   fun applyUnsupportedAppVersion(meta: JsonObject?, generation: Long) =
     synchronized(lock) {
       if (generation != this.generation) return@synchronized
-      serverStatus =
-        AppVersionSupportStatus(
-          isSupported = false,
-          currentVersion = meta.string("current_version")?.toVersionCode() ?: build?.versionCode,
-          minimumVersion =
-            meta.string("minimum_version")?.toVersionCode() ?: environmentStatus?.minimumVersion,
-          updateUrl =
-            meta.string("update_url")?.takeIf(::isStoreUrl) ?: environmentStatus?.updateUrl,
+      serverAnswer =
+        ServerAnswer.Unsupported(
+          AppVersionSupportStatus(
+            isSupported = false,
+            currentVersion = meta.string("current_version")?.toVersionCode() ?: build?.versionCode,
+            minimumVersion =
+              meta.string("minimum_version")?.toVersionCode() ?: environmentStatus?.minimumVersion,
+            updateUrl =
+              meta.string("update_url")?.takeIf(::isStoreUrl) ?: environmentStatus?.updateUrl,
+          )
         )
       publishLocked()
     }
@@ -88,9 +89,7 @@ internal object AppVersionSupport {
   fun applySupportedAppVersion(generation: Long) =
     synchronized(lock) {
       if (generation != this.generation) return@synchronized
-      serverStatus =
-        environmentStatus?.takeIf { it.isSupported }
-          ?: AppVersionSupportStatus.supported(build?.versionCode)
+      serverAnswer = ServerAnswer.Supported
       publishLocked()
     }
 
@@ -100,7 +99,7 @@ internal object AppVersionSupport {
       _resets.value += 1
       build = null
       environmentStatus = null
-      serverStatus = null
+      serverAnswer = null
       publishLocked()
     }
 
@@ -124,7 +123,13 @@ internal object AppVersionSupport {
 
   private fun publishLocked() {
     _status.value =
-      serverStatus ?: environmentStatus ?: AppVersionSupportStatus.supported(build?.versionCode)
+      when (val answer = serverAnswer) {
+        is ServerAnswer.Unsupported -> answer.status
+        ServerAnswer.Supported ->
+          environmentStatus?.takeIf { it.isSupported }
+            ?: AppVersionSupportStatus.supported(build?.versionCode)
+        null -> environmentStatus ?: AppVersionSupportStatus.supported(build?.versionCode)
+      }
   }
 }
 
