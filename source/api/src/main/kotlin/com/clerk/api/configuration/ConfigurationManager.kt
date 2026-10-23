@@ -525,7 +525,7 @@ internal class ConfigurationManager(
   internal fun hasPendingAuthFlow(): Boolean = RedirectCoordinator.hasPendingRedirect.value
 
   internal fun shouldRefreshOnForeground(options: ClerkConfigurationOptions?): Boolean =
-    options?.autoRefreshOnForeground != false
+    options?.autoRefreshOnForeground != false || !AppVersionSupport.status.value.isSupported
 
   private suspend fun refreshClientAndEnvironment(
     attempt: RefreshAttempt,

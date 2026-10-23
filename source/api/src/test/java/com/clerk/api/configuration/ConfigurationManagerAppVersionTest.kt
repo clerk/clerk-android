@@ -3,6 +3,7 @@ package com.clerk.api.configuration
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.FrameworkIntegrationApi
 import com.clerk.api.appversion.AppBuild
 import com.clerk.api.appversion.AppVersionSupport
 import com.clerk.api.appversion.TEST_PLAY_URL
@@ -19,6 +20,7 @@ import com.clerk.api.storage.StorageHelper
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -40,7 +42,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-@OptIn(ExperimentalCoroutinesApi::class)
+private const val PROXY_URL = "https://proxy.example.com"
+
+@OptIn(ExperimentalCoroutinesApi::class, FrameworkIntegrationApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ConfigurationManagerAppVersionTest {
   private lateinit var context: Context
@@ -141,6 +145,29 @@ class ConfigurationManagerAppVersionTest {
   }
 
   @Test
+  fun `a blocked app refreshes on foreground even when the foreground refresh is off`() = runTest {
+    val onForeground = slot<() -> Unit>()
+    every { AppLifecycleListener.configure(capture(onForeground)) } returns Unit
+    var clientRequests = 0
+    coEvery { Client.get() } answers
+      {
+        clientRequests++
+        clientFailure("unsupported_app_version")
+      }
+
+    initialize(
+      options = ClerkConfigurationOptions(proxyUrl = PROXY_URL).withForegroundRefreshDisabled()
+    )
+    runCurrent()
+    val requestsAtLaunch = clientRequests
+
+    onForeground.captured()
+    runCurrent()
+
+    assertEquals(requestsAtLaunch + 1, clientRequests)
+  }
+
+  @Test
   fun `another client failure still leaves the environment unloaded`() = runTest {
     coEvery { Client.get() } returns clientFailure("authorization_invalid")
 
@@ -151,14 +178,13 @@ class ConfigurationManagerAppVersionTest {
     assertNotNull(manager.initializationError.value)
   }
 
-  private fun TestScope.initialize() {
+  private fun TestScope.initialize(
+    options: ClerkConfigurationOptions = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
+    versionCode: Long = 41,
+  ) {
     manager = ConfigurationManager(backgroundScope)
-    manager.configure(
-      context = context,
-      publishableKey = "pk_test_app_version",
-      options = ClerkConfigurationOptions(proxyUrl = "https://proxy.example.com"),
-    )
-    AppVersionSupport.configure(AppBuild(context.packageName, versionCode = 41))
+    manager.configure(context = context, publishableKey = "pk_test_app_version", options = options)
+    AppVersionSupport.configure(AppBuild(context.packageName, versionCode = versionCode))
   }
 
   private fun clientFailure(code: String): ClerkResult<Client, ClerkErrorResponse> =

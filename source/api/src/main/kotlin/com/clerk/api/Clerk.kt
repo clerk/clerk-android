@@ -1376,7 +1376,8 @@ public data class ClerkConfigurationOptions(
    * Returns a copy of these options that skips the client and environment refresh on app
    * foreground. Intended for host SDKs (for example, the Expo SDK) that own client state and
    * perform their own refreshes; the initial refresh during [Clerk.initialize] and periodic session
-   * token refresh are unaffected.
+   * token refresh are unaffected. While [Clerk.appVersionSupportStatus] is unsupported, the
+   * foreground refresh still runs, so lowering the minimum in the Clerk Dashboard lifts the block.
    */
   @FrameworkIntegrationApi
   public fun withForegroundRefreshDisabled(): ClerkConfigurationOptions =
