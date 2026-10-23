@@ -29,6 +29,7 @@ import kotlinx.serialization.json.buildJsonObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -82,6 +83,8 @@ class ConfigurationManagerAppVersionTest {
     assertEquals("Blocked App", Clerk.applicationName)
     assertFalse(AppVersionSupport.status.value.isSupported)
     assertEquals(42L, AppVersionSupport.status.value.minimumVersion)
+    assertFalse(manager.isInitialized.value)
+    assertNull(manager.initializationError.value)
   }
 
   @Test
@@ -89,22 +92,19 @@ class ConfigurationManagerAppVersionTest {
     runTest {
       coEvery { Environment.get() } returns
         ClerkResult.success(appVersionTestEnvironment(applicationName = "Blocked App"))
-      coEvery { Client.get() } returns
-        ClerkResult.apiFailure(
-          ClerkErrorResponse(
-            errors =
-              listOf(
-                Error(
-                  code = "unsupported_app_version",
-                  meta =
-                    buildJsonObject {
-                      put("minimum_version", JsonPrimitive("42"))
-                      put("update_url", JsonPrimitive(TEST_PLAY_URL))
-                    },
-                )
-              )
+      val meta = buildJsonObject {
+        put("minimum_version", JsonPrimitive("42"))
+        put("update_url", JsonPrimitive(TEST_PLAY_URL))
+      }
+      coEvery { Client.get() } answers
+        {
+          AppVersionSupport.applyUnsupportedAppVersion(meta, AppVersionSupport.generation)
+          ClerkResult.apiFailure(
+            ClerkErrorResponse(
+              errors = listOf(Error(code = "unsupported_app_version", meta = meta))
+            )
           )
-        )
+        }
 
       initialize()
       runCurrent()
@@ -123,6 +123,7 @@ class ConfigurationManagerAppVersionTest {
     runCurrent()
 
     assertNull(Clerk.applicationName)
+    assertNotNull(manager.initializationError.value)
   }
 
   private fun TestScope.initialize() {
