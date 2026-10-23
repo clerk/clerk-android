@@ -39,7 +39,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.appversion.AppVersionSupportStatus
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.clerkTestTagsAsResourceIds
 import com.clerk.ui.core.avatar.OrganizationLogo
@@ -63,47 +62,24 @@ import com.clerk.ui.signin.help.rememberEmailSupport
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/**
- * A full-screen view telling the user to update the app because its `versionCode` is older than the
- * minimum set in the Clerk Dashboard.
- *
- * Clerk shows this view over your app automatically. To place it yourself, call
- * [com.clerk.api.ClerkConfigurationOptions.withUpdateRequiredViewDisabled] and show it while
- * [Clerk.appVersionSupportStatus] is unsupported:
- * ```kotlin
- * val status by Clerk.appVersionSupportStatus.collectAsStateWithLifecycle()
- * if (!status.isSupported) {
- *   UpdateRequiredView()
- * }
- * ```
- *
- * @param modifier The [Modifier] to apply to the view.
- * @param clerkTheme Overrides the theme passed to [Clerk.initialize] for this view.
- * @param logo Replaces the logo. When omitted, the view shows the logo set in the Clerk Dashboard,
- *   like [com.clerk.ui.auth.AuthView]. The SDK applies no sizing or spacing to it.
- */
 @Composable
-public fun UpdateRequiredView(
-  modifier: Modifier = Modifier,
-  clerkTheme: ClerkTheme? = null,
-  logo: (@Composable () -> Unit)? = null,
-) {
+internal fun UpdateRequiredView(modifier: Modifier = Modifier) {
   val status by Clerk.appVersionSupportStatus.collectAsStateWithLifecycle()
   val organizationLogoUrl by Clerk.organizationLogoUrlFlow.collectAsStateWithLifecycle()
   val applicationName by Clerk.applicationNameFlow.collectAsStateWithLifecycle()
   val supportEmail by Clerk.supportEmailFlow.collectAsStateWithLifecycle()
-  val resolvedLogo = logo ?: LocalClerkLogoContent.current
+  val logo = LocalClerkLogoContent.current
   val context = LocalContext.current
   val appLabel = remember(context) { appLabel(context) }
   val versionName = remember(context) { appVersionName(context) }
 
-  ClerkThemeOverrideProvider(clerkTheme) {
+  ClerkThemeOverrideProvider(clerkTheme = null) {
     UpdateRequiredContent(
       status = status,
       appName = applicationName ?: appLabel,
       versionName = versionName,
       supportEmail = supportEmail,
-      logo = resolvedLogo ?: { OrganizationLogo(imageUrl = organizationLogoUrl) },
+      logo = logo ?: { OrganizationLogo(imageUrl = organizationLogoUrl) },
       modifier = modifier,
     )
   }

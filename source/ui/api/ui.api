@@ -460,10 +460,6 @@ public final class com/clerk/ui/signup/collectfield/CollectField : java/lang/Enu
 	public static fun values ()[Lcom/clerk/ui/signup/collectfield/CollectField;
 }
 
-public final class com/clerk/ui/updaterequired/UpdateRequiredViewKt {
-	public static final fun UpdateRequiredView (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
-}
-
 public final class com/clerk/ui/userbutton/UserButtonKt {
 	public static final fun UserButton (Lcom/clerk/api/ui/ClerkTheme;ZZLjava/util/List;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }

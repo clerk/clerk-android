@@ -286,10 +286,9 @@ public object Clerk {
    * Whether this build of your app meets the minimum version set for it in the Clerk Dashboard.
    *
    * Collect this to show your own update screen after calling
-   * [ClerkConfigurationOptions.withUpdateRequiredViewDisabled], or to place the UI library's
-   * `UpdateRequiredView` yourself. While Clerk rejects this build at launch, [initializationError]
-   * stays null, and [isInitialized] stays false unless the SDK restored state saved by an earlier
-   * launch, so check this before waiting on either.
+   * [ClerkConfigurationOptions.withUpdateRequiredViewDisabled]. While Clerk rejects this build at
+   * launch, [initializationError] stays null, and [isInitialized] stays false unless the SDK
+   * restored state saved by an earlier launch, so check this before waiting on either.
    */
   public val appVersionSupportStatus: StateFlow<AppVersionSupportStatus> = AppVersionSupport.status
 
@@ -1387,7 +1386,7 @@ public data class ClerkConfigurationOptions(
   /**
    * Returns a copy of these options that stops the UI library from showing its update-required
    * screen automatically. Collect [Clerk.appVersionSupportStatus] to show your own update UI
-   * instead, or to place the UI library's `UpdateRequiredView` yourself.
+   * instead.
    */
   public fun withUpdateRequiredViewDisabled(): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._updateRequiredViewEnabled = false }
