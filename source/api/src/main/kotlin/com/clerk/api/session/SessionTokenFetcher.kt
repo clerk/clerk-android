@@ -74,14 +74,15 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private val sessionGenerations = mutableMapOf<String, Long>()
 
   /**
-   * Releases deduplicated waiters with a superseded failure and removes requests registered by the
-   * previous Clerk runtime.
+   * Clears cached tokens, releases deduplicated waiters with a superseded failure, and removes
+   * requests registered by the previous Clerk runtime.
    */
   internal fun reset() {
     val tasksToRelease =
       synchronized(runtimeLock) {
         runtimeGeneration += 1
         sessionGenerations.clear()
+        SessionTokensCache.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
