@@ -6,6 +6,10 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.appversion.AppBuild
+import com.clerk.api.appversion.AppVersionSupport
+import com.clerk.api.appversion.androidPolicy
+import com.clerk.api.appversion.appVersionTestEnvironment
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.network.model.client.Client
@@ -107,6 +111,25 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
 
     advanceTimeBy(5_001)
     assertTrue(tokenFetches > fetchesAfterForeground)
+  }
+
+  @Test
+  fun `token refresh pauses while the app version is unsupported`() = runTest {
+    coEvery { Environment.get() } returns
+      ClerkResult.success(
+        appVersionTestEnvironment(androidPolicy("42", packageName = context.packageName))
+      )
+    initialize()
+    AppVersionSupport.configure(AppBuild(context.packageName, versionCode = 41))
+    runCurrent()
+
+    advanceTimeBy(10_001)
+    assertFalse(AppVersionSupport.status.value.isSupported)
+    assertEquals(0, tokenFetches)
+
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    advanceTimeBy(5_001)
+    assertTrue(tokenFetches >= 1)
   }
 
   @Test

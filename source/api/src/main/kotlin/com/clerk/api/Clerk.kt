@@ -11,6 +11,9 @@ import com.clerk.api.Clerk.initialize
 import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
+import com.clerk.api.appversion.AppVersionSupport
+import com.clerk.api.appversion.AppVersionSupportStatus
+import com.clerk.api.appversion.UpdateRequiredViewLauncher
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.auth.types.Strategy
@@ -118,6 +121,7 @@ public object Clerk {
 
       override fun onActivityResumed(activity: Activity) {
         currentActivity = WeakReference(activity)
+        UpdateRequiredViewLauncher.onActivityResumed(activity)
       }
 
       override fun onActivityPaused(activity: Activity) = Unit
@@ -259,6 +263,9 @@ public object Clerk {
   public val applicationName: String?
     get() = environment?.displayConfig?.applicationName
 
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val applicationNameFlow: StateFlow<String?> = stateStore.applicationNameFlow
+
   /**
    * The support email address configured for this application in the Clerk Dashboard.
    *
@@ -267,6 +274,22 @@ public object Clerk {
    */
   public val supportEmail: String?
     get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
+
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow
+
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val appVersionSupportResets: StateFlow<Long> = AppVersionSupport.resets
+
+  /**
+   * Whether this build of your app meets the minimum version set for it in the Clerk Dashboard.
+   *
+   * Collect this to show your own update screen after calling
+   * [ClerkConfigurationOptions.withUpdateRequiredViewDisabled]. While Clerk rejects this build at
+   * launch, [initializationError] stays null, and [isInitialized] stays false unless the SDK
+   * restored state saved by an earlier launch, so check this before waiting on either.
+   */
+  public val appVersionSupportStatus: StateFlow<AppVersionSupportStatus> = AppVersionSupport.status
 
   /**
    * The current version of the Clerk Android SDK.
@@ -887,6 +910,8 @@ public object Clerk {
   public fun reset() {
     RedirectCoordinator.cancelPending()
     configurationManager.reset()
+    UpdateRequiredViewLauncher.stop()
+    AppVersionSupport.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
     stateStore.reset()
@@ -1177,6 +1202,7 @@ public object Clerk {
       current: Environment,
       restoredFromCache: Boolean,
     ) {
+      AppVersionSupport.applyEnvironment(current)
       if (restoredFromCache) return
       sharedSessionSyncCoordinator?.handleEnvironmentChange(previous, current)
     }
@@ -1324,6 +1350,15 @@ public data class ClerkConfigurationOptions(
 
   private var _autoRefreshOnForeground: Boolean = true
 
+  private var _updateRequiredViewEnabled: Boolean = true
+
+  /**
+   * Whether the UI library shows its update-required screen over your app automatically when the
+   * app's `versionCode` is older than the minimum set in the Clerk Dashboard. Defaults to `true`.
+   */
+  val updateRequiredViewEnabled: Boolean
+    get() = _updateRequiredViewEnabled
+
   /**
    * Whether the client and environment are refreshed from the server every time the app returns to
    * the foreground. Defaults to `true`.
@@ -1339,16 +1374,26 @@ public data class ClerkConfigurationOptions(
    * Returns a copy of these options that skips the client and environment refresh on app
    * foreground. Intended for host SDKs (for example, the Expo SDK) that own client state and
    * perform their own refreshes; the initial refresh during [Clerk.initialize] and periodic session
-   * token refresh are unaffected.
+   * token refresh are unaffected. While [Clerk.appVersionSupportStatus] is unsupported, the
+   * foreground refresh still runs, so lowering the minimum in the Clerk Dashboard lifts the block.
    */
   @FrameworkIntegrationApi
   public fun withForegroundRefreshDisabled(): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._autoRefreshOnForeground = false }
 
+  /**
+   * Returns a copy of these options that stops the UI library from showing its update-required
+   * screen automatically. Collect [Clerk.appVersionSupportStatus] to show your own update UI
+   * instead.
+   */
+  public fun withUpdateRequiredViewDisabled(): ClerkConfigurationOptions =
+    copyWithNonConstructorState().also { it._updateRequiredViewEnabled = false }
+
   private fun copyWithNonConstructorState(): ClerkConfigurationOptions =
     copy().also {
       it._customHeaders = _customHeaders
       it._autoRefreshOnForeground = _autoRefreshOnForeground
+      it._updateRequiredViewEnabled = _updateRequiredViewEnabled
     }
 }
 

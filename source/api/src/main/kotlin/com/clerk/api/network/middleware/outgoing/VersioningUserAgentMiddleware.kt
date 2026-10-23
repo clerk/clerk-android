@@ -2,6 +2,7 @@ package com.clerk.api.network.middleware.outgoing
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
+import com.clerk.api.appversion.AppVersionSupport
 import com.clerk.api.configuration.DeviceIdGenerator
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.storage.StorageHelper
@@ -37,6 +38,12 @@ internal class VersioningUserAgentMiddleware(customHeaders: Map<String, String> 
       }
     }
 
+    AppVersionSupport.build?.let {
+      newRequestBuilder
+        .addHeader(OutgoingHeaders.X_PACKAGE_NAME.header, it.packageName)
+        .addHeader(OutgoingHeaders.X_APP_VERSION.header, it.versionCode.toString())
+    }
+
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
     }
@@ -59,4 +66,6 @@ private enum class OutgoingHeaders(val header: String) {
   AUTHORIZATION("Authorization"),
   X_CLERK_CLIENT_ID("x-clerk-client-id"),
   X_CLERK_DEVICE_ID("x-native-device-id"),
+  X_PACKAGE_NAME("x-package-name"),
+  X_APP_VERSION("x-app-version"),
 }
