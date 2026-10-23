@@ -287,7 +287,8 @@ public object Clerk {
    *
    * Collect this to show your own update screen after calling
    * [ClerkConfigurationOptions.withUpdateRequiredViewDisabled], or to place the UI library's
-   * `UpdateRequiredView` yourself.
+   * `UpdateRequiredView` yourself. While Clerk rejects this build at launch, [isInitialized] stays
+   * false and [initializationError] stays null, so check this before waiting on either.
    */
   public val appVersionSupportStatus: StateFlow<AppVersionSupportStatus> = AppVersionSupport.status
 

@@ -760,6 +760,9 @@ internal class ConfigurationManager(
     ClerkLogger.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
 
     delay(attempt.retryDelaySeconds.seconds)
+    while (AppLifecycleListener.isInBackground && !AppVersionSupport.status.value.isSupported) {
+      delay(attempt.retryDelaySeconds.seconds)
+    }
 
     if (attempt.expectedConfigurationVersion != configurationVersion) {
       return

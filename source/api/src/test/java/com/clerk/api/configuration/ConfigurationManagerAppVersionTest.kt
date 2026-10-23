@@ -20,8 +20,11 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
@@ -114,6 +117,28 @@ class ConfigurationManagerAppVersionTest {
       assertEquals(42L, AppVersionSupport.status.value.minimumVersion)
       assertEquals(TEST_PLAY_URL, AppVersionSupport.status.value.updateUrl)
     }
+
+  @Test
+  fun `a blocked app retries initialization only while it's in the foreground`() = runTest {
+    var clientRequests = 0
+    coEvery { Client.get() } answers
+      {
+        clientRequests++
+        clientFailure("unsupported_app_version")
+      }
+    every { AppLifecycleListener.isInBackground } returns true
+
+    initialize()
+    runCurrent()
+    assertEquals(1, clientRequests)
+
+    advanceTimeBy(10.minutes)
+    assertEquals(1, clientRequests)
+
+    every { AppLifecycleListener.isInBackground } returns false
+    advanceTimeBy(6.seconds)
+    assertEquals(2, clientRequests)
+  }
 
   @Test
   fun `another client failure still leaves the environment unloaded`() = runTest {
