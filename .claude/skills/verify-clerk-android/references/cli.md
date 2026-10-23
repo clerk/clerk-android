@@ -7,11 +7,11 @@ e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runn
 e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--max-failures <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
-e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label>... | --video [--both] [--before <run-id>]
+e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label>... | --video [--before <run-id>]
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
 ```
 
-`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both and no `--both`. `SKILL.md` has the choice under Evidence.
+`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both. `SKILL.md` has the choice under Evidence.
 
 Every verb takes `--json`. [Output](#output) has what each verb prints, and the exit codes and error codes are below it.
 
