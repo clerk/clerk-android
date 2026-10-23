@@ -49,10 +49,7 @@ class UpdateRequiredViewTest {
 
     composeTestRule.onNodeWithText("Update required").assertExists()
     composeTestRule
-      .onNodeWithText(
-        "This version of Acme is no longer supported. To keep your account secure, please " +
-          "update to continue."
-      )
+      .onNodeWithText("This version of Acme is no longer supported. Please update to continue.")
       .assertExists()
     composeTestRule.onNodeWithText("Can't update?").assertExists()
     composeTestRule.onNodeWithText("Get help").assertExists()
@@ -69,10 +66,7 @@ class UpdateRequiredViewTest {
     supportEmail.value = "support@example.com"
 
     composeTestRule
-      .onNodeWithText(
-        "This version of Acme is no longer supported. To keep your account secure, please " +
-          "update to continue."
-      )
+      .onNodeWithText("This version of Acme is no longer supported. Please update to continue.")
       .assertExists()
     composeTestRule.onNodeWithText("Get help").assertExists()
   }

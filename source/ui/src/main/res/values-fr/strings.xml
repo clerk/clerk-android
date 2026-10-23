@@ -280,7 +280,7 @@
     <string name="current_organization">Organisation actuelle</string>
     <string name="open_organization_switcher">Ouvrir le sélecteur d’organisation</string>
     <string name="update_required">Mise à jour requise</string>
-    <string name="this_version_of_app_is_no_longer_supported">Cette version de %1$s n\'est plus prise en charge. Pour sécuriser votre compte, veuillez mettre à jour l\'application pour continuer.</string>
+    <string name="this_version_of_app_is_no_longer_supported">Cette version de %1$s n\'est plus prise en charge. Veuillez mettre à jour l\'application pour continuer.</string>
     <string name="go_to_google_play">Aller sur Google Play</string>
     <string name="update_app">Mettre à jour l\'application</string>
     <string name="cant_update">Impossible de mettre à jour ?</string>
