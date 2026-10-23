@@ -93,12 +93,15 @@ public fun UpdateRequiredView(
   val applicationName by Clerk.applicationNameFlow.collectAsStateWithLifecycle()
   val supportEmail by Clerk.supportEmailFlow.collectAsStateWithLifecycle()
   val resolvedLogo = logo ?: LocalClerkLogoContent.current
+  val context = LocalContext.current
+  val appLabel = remember(context) { appLabel(context) }
+  val versionName = remember(context) { appVersionName(context) }
 
   ClerkThemeOverrideProvider(clerkTheme) {
     UpdateRequiredContent(
       status = status,
-      appName = applicationName ?: appLabel(LocalContext.current),
-      versionName = appVersionName(LocalContext.current),
+      appName = applicationName ?: appLabel,
+      versionName = versionName,
       supportEmail = supportEmail,
       logo = resolvedLogo ?: { OrganizationLogo(imageUrl = organizationLogoUrl) },
       modifier = modifier,
