@@ -44,16 +44,7 @@ import kotlinx.serialization.Serializable
 public data class Session(
   val id: String,
   val status: SessionStatus = SessionStatus.UNKNOWN,
-  /**
-   * When the session reaches its maximum lifetime, in milliseconds since epoch. `0` means the
-   * session has no maximum lifetime. A response that omits `expire_at` or sends `null` decodes as
-   * `0`.
-   */
-  @SerialName("expire_at") val expireAt: Long = 0L,
-  /**
-   * When the session will be abandoned due to inactivity, in milliseconds since epoch. Zero means
-   * the session has no inactivity deadline.
-   */
+  @SerialName("expire_at") val expireAt: Long,
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
