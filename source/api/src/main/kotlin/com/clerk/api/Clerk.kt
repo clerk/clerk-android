@@ -264,7 +264,7 @@ public object Clerk {
   public val applicationName: String?
     get() = environment?.displayConfig?.applicationName
 
-  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val applicationNameFlow: StateFlow<String?> = stateStore.applicationNameFlow
 
   /**
@@ -276,10 +276,10 @@ public object Clerk {
   public val supportEmail: String?
     get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
 
-  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow
 
-  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val appVersionSupportResets: StateFlow<Long> = AppVersionSupport.resets
 
   /**
