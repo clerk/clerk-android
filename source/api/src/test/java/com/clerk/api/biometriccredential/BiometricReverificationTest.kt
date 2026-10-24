@@ -177,7 +177,10 @@ class BiometricReverificationTest {
     val returnedSession = checkNotNull(started.session)
     assertNull(returnedSession.user)
     SessionTokensCache.setToken("sess_123-organization-", TokenResource(jwt = "stale"))
-    SessionTokensCache.setToken("sess_123-template-test", TokenResource(jwt = "stale-template"))
+    SessionTokensCache.setToken(
+      "sess_123-organization--template-test",
+      TokenResource(jwt = "stale-template"),
+    )
     SessionTokensCache.setToken("sess_other-organization-", TokenResource(jwt = "other"))
 
     val result =
@@ -202,7 +205,7 @@ class BiometricReverificationTest {
     }
     coVerify(exactly = 0) { signInApi.createSignIn(any()) }
     assertNull(SessionTokensCache.getToken("sess_123-organization-"))
-    assertNull(SessionTokensCache.getToken("sess_123-template-test"))
+    assertNull(SessionTokensCache.getToken("sess_123-organization--template-test"))
     assertEquals("other", SessionTokensCache.getToken("sess_other-organization-")?.jwt)
   }
 
