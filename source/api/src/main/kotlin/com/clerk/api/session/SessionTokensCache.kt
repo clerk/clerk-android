@@ -59,4 +59,4 @@ internal object SessionTokensCache {
 }
 
 internal fun String.belongsToSession(sessionId: String): Boolean =
-  startsWith("$sessionId-organization-") || startsWith("$sessionId-template-")
+  startsWith("$sessionId-organization-")

@@ -146,7 +146,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken uses template in API call when provided`() = runTest {
     val template = "custom_template"
-    val cacheKey = "session_123-template-custom_template"
+    val cacheKey = "session_123-organization--template-custom_template"
     val options = GetTokenOptions(template = template)
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
@@ -622,7 +622,7 @@ class SessionTokenFetcherTest {
 
     val cacheKey = mockSession.tokenCacheKey(template)
 
-    assertEquals("session_456-template-admin_template", cacheKey)
+    assertEquals("session_456-organization--template-admin_template", cacheKey)
   }
 
   @Test

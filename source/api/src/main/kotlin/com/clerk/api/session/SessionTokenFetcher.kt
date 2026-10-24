@@ -394,5 +394,7 @@ public data class GetTokenOptions(
   val expirationBuffer: Long = 10, // seconds
 )
 
-internal fun Session.tokenCacheKey(template: String?): String =
-  template?.let { "$id-template-$it" } ?: "$id-organization-${lastActiveOrganizationId.orEmpty()}"
+internal fun Session.tokenCacheKey(template: String?): String {
+  val organizationKey = "$id-organization-${lastActiveOrganizationId.orEmpty()}"
+  return template?.let { "$organizationKey-template-$it" } ?: organizationKey
+}
