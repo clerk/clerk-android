@@ -27,7 +27,7 @@ SDK paths below are under `source/api/src/main/kotlin/com/clerk/api/`.
 ## Don't flag
 
 - Formatting, import order, or wildcard imports. Spotless and detekt run in CI.
-- A `ClerkResult` function that throws, or a swallowed `CancellationException`. The detekt rules `ClerkResultThrows` and `SwallowedCancellation` catch those.
+- A `throw`, `error()`, or `!!` written directly in a `ClerkResult` function, and a broad `catch` or `runCatching` in suspend code. The detekt rules `ClerkResultThrows` and `SwallowedCancellation` catch those. Still flag a throw that reaches a `ClerkResult` function through a helper, and a `catch (e: CancellationException)` that doesn't rethrow.
 - Binary compatibility or a missing deprecation cycle. `apiCheck` makes every public API change show in the `.api` dump, and the team decides release policy.
 - Cancellation handling in a scope that is cancelled only at teardown, such as `viewModelScope`.
 - Behavior that matches clerk-js. Check `clerk/javascript` before you call a difference a bug.
@@ -44,7 +44,7 @@ These are generated or mechanical. `.coderabbit.yaml` excludes them too.
 
 ## How to report
 
-- Tie every finding to a file and line in the diff. If you can't point at a line, don't post the finding. Never guess a file name.
+- Tie every finding to a file and line. A new finding points at a line in the diff, and a Pre-existing one points at the unchanged line it is about. If you can't point at a line, don't post the finding. Never guess a file name.
 - Label each finding with one severity:
   - **Important.** It breaks behavior, security, user data, or a release. It blocks the merge.
   - **Nit.** It is worth fixing but doesn't block. Post at most three per review.
