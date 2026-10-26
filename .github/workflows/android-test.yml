@@ -12,7 +12,8 @@ permissions:
 
 jobs:
   e2e-runner-tests:
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # Pull requests can read only the caches main saves, so a push to main runs just the jobs that save the Gradle cache.
+    if: github.event_name != 'push' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -139,7 +140,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   api-check:
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # Pull requests can read only the caches main saves, so a push to main runs just the jobs that save the Gradle cache.
+    if: github.event_name != 'push' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     permissions:
       contents: read

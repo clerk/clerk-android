@@ -123,8 +123,12 @@ describe('a pull request', () => {
     assert.deepEqual(ranJobs({ event: 'pull_request', draft: true }), []);
   });
 
-  it('runs the same jobs again when it is merged, as a push to main', () => {
-    assert.deepEqual(ranJobs({ event: 'push' }), PULL_REQUEST_JOBS);
+  it('runs the same jobs in the merge queue, on the commit main will get', () => {
+    assert.deepEqual(ranJobs({ event: 'merge_group' }), PULL_REQUEST_JOBS);
+  });
+
+  it('runs again on the push to main only in the jobs that save the Gradle cache, the one cache pull requests read', () => {
+    assert.deepEqual(ranJobs({ event: 'push' }), ['android-test.yml test-module', 'checks.yml checks', 'detekt.yml detekt']);
   });
 
   // setup-gradle restores nothing when another step has already created ~/.gradle/caches, as setup-java's Gradle cache does.
