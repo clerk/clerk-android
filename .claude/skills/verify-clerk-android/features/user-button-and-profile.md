@@ -22,7 +22,7 @@ Preconditions:
 
 - Each test seeds a `+clerk_test` user on the standard instance and signs in with a ticket on the home (`host.launch({ signedInAs })`). The launch lands when the home shows that user's email and user ID.
 
-- **Profile.** Run `e2e-tests/bin/control-clerk-android run user-button-and-profile`. The first test taps `clerk.userButton.profile` and expects `Edit profile`. Screenshot `user-button-profile`. It taps `clerk.userProfile.row.manageAccount` and expects the user's email. Screenshot `profile`.
+- **Profile.** Run `e2e-tests/bin/control-clerk-android run user-button-and-profile/profile`. The first test taps `clerk.userButton.profile` and expects `Edit profile`. Screenshot `user-button-profile`. It taps `clerk.userProfile.row.manageAccount` and expects the user's email. Screenshot `profile`.
 - **Sections and back.** The second test seeds a user with a phone. It taps `clerk.userButton.profile` and expects `Edit profile`. Screenshot `profile-before-sections`. It taps `clerk.userProfile.row.manageAccount` and expects the user's email, `PHONE NUMBER`, the user's number as Clerk formats it, and `CONNECTED ACCOUNTS`. It presses back and expects `Edit profile`. It taps `clerk.userProfile.row.security`, expects `ACTIVE DEVICES`, presses back, and expects `Edit profile` with no `ACTIVE DEVICES`. Screenshots `manage-account-sections` and `profile-after-back`.
 - **Add account.** The third test opens the profile the same way, taps `clerk.userProfile.row.addAccount`, and expects `clerk.auth.start.continue`. Screenshot `add-account`.
 - **Sign out.** The fourth test taps `e2e.auth.signOut` and waits for the home to show `Signed out` with no user ID and no session ID, then expects `e2e.auth.signIn`. Screenshot `signed-out`.
