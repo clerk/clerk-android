@@ -85,7 +85,7 @@ class AppVersionSupportTest {
   fun `a supported response keeps the minimum and store page the environment set`() {
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("40")))
 
-    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
 
     assertEquals(
       AppVersionSupportStatus(
@@ -102,7 +102,7 @@ class AppVersionSupportTest {
   fun `a supported response drops a minimum the server no longer enforces`() {
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
-    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
 
     assertEquals(AppVersionSupportStatus(isSupported = true, currentVersion = 41), status())
   }
@@ -110,7 +110,6 @@ class AppVersionSupportTest {
   @Test
   fun `a rejected request blocks the app until a later response marks it supported`() {
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment())
-    val generation = AppVersionSupport.generation
 
     AppVersionSupport.applyUnsupportedAppVersion(
       buildJsonObject {
@@ -118,7 +117,7 @@ class AppVersionSupportTest {
         put("minimum_version", JsonPrimitive("43"))
         put("update_url", JsonPrimitive(TEST_PLAY_URL))
       },
-      generation,
+      AppVersionSupport.nextRequest(),
     )
 
     assertEquals(
@@ -131,14 +130,14 @@ class AppVersionSupportTest {
       status(),
     )
 
-    AppVersionSupport.applySupportedAppVersion(generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
 
     assertTrue(status().isSupported)
   }
 
   @Test
   fun `a rejected request without meta still blocks the app`() {
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
 
     assertEquals(AppVersionSupportStatus(isSupported = false, currentVersion = 41), status())
   }
@@ -149,7 +148,7 @@ class AppVersionSupportTest {
 
     AppVersionSupport.applyUnsupportedAppVersion(
       buildJsonObject { put("update_url", JsonPrimitive("")) },
-      AppVersionSupport.generation,
+      AppVersionSupport.nextRequest(),
     )
 
     assertEquals(
@@ -165,7 +164,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `an environment doesn't lift a block a response set`() {
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
 
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("41")))
 
@@ -174,7 +173,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `an environment doesn't block an app a response marked supported`() {
-    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
 
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
 
@@ -183,7 +182,7 @@ class AppVersionSupportTest {
 
   @Test
   fun `a supported response shows the minimum a later environment sets`() {
-    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
 
     AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("40")))
 
@@ -206,12 +205,32 @@ class AppVersionSupportTest {
   }
 
   @Test
+  fun `a late rejection can't block again after a newer supported answer`() {
+    val olderRequest = AppVersionSupport.nextRequest()
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
+
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, olderRequest)
+
+    assertTrue(status().isSupported)
+  }
+
+  @Test
+  fun `a late supported answer can't lift a newer block`() {
+    val olderRequest = AppVersionSupport.nextRequest()
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
+
+    AppVersionSupport.applySupportedAppVersion(olderRequest)
+
+    assertFalse(status().isSupported)
+  }
+
+  @Test
   fun `a response to a request sent before reset is ignored`() {
-    val generation = AppVersionSupport.generation
+    val request = AppVersionSupport.nextRequest()
     AppVersionSupport.reset()
     AppVersionSupport.configure(AppBuild(TEST_PACKAGE_NAME, versionCode = 41))
 
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, generation)
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, request)
 
     assertTrue(status().isSupported)
   }

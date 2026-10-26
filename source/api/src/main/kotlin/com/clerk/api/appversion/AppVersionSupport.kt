@@ -6,6 +6,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.model.environment.Environment
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,9 +48,8 @@ internal object AppVersionSupport {
   var build: AppBuild? = null
     private set
 
-  @Volatile
-  var generation: Long = 0
-    private set
+  private val requestSequence = AtomicLong(0)
+  private var lastAnsweredRequest = 0L
 
   private val _status = MutableStateFlow(AppVersionSupportStatus.supported(currentVersion = null))
   val status: StateFlow<AppVersionSupportStatus> = _status.asStateFlow()
@@ -69,9 +69,11 @@ internal object AppVersionSupport {
       publishLocked()
     }
 
-  fun applyUnsupportedAppVersion(meta: JsonObject?, generation: Long) =
+  fun nextRequest(): Long = requestSequence.incrementAndGet()
+
+  fun applyUnsupportedAppVersion(meta: JsonObject?, request: Long) =
     synchronized(lock) {
-      if (generation != this.generation) return@synchronized
+      if (!acceptAnswerLocked(request)) return@synchronized
       serverAnswer =
         ServerAnswer.Unsupported(
           AppVersionSupportStatus(
@@ -86,22 +88,28 @@ internal object AppVersionSupport {
       publishLocked()
     }
 
-  fun applySupportedAppVersion(generation: Long) =
+  fun applySupportedAppVersion(request: Long) =
     synchronized(lock) {
-      if (generation != this.generation) return@synchronized
+      if (!acceptAnswerLocked(request)) return@synchronized
       serverAnswer = ServerAnswer.Supported
       publishLocked()
     }
 
   fun reset() =
     synchronized(lock) {
-      generation += 1
+      lastAnsweredRequest = requestSequence.get()
       _resets.value += 1
       build = null
       environmentStatus = null
       serverAnswer = null
       publishLocked()
     }
+
+  private fun acceptAnswerLocked(request: Long): Boolean {
+    if (request <= lastAnsweredRequest) return false
+    lastAnsweredRequest = request
+    return true
+  }
 
   private fun resolve(environment: Environment): AppVersionSupportStatus {
     val build = build

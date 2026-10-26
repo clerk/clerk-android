@@ -105,7 +105,7 @@ class ConfigurationManagerAppVersionTest {
       }
       coEvery { Client.get() } answers
         {
-          AppVersionSupport.applyUnsupportedAppVersion(meta, AppVersionSupport.generation)
+          AppVersionSupport.applyUnsupportedAppVersion(meta, AppVersionSupport.nextRequest())
           ClerkResult.apiFailure(
             ClerkErrorResponse(
               errors = listOf(Error(code = "unsupported_app_version", meta = meta))

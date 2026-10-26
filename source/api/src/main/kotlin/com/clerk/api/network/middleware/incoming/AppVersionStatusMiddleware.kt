@@ -17,18 +17,18 @@ private const val MAX_ERROR_BODY_BYTES = 64L * 1024
 
 internal class AppVersionStatusMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
-    val generation = AppVersionSupport.generation
+    val request = AppVersionSupport.nextRequest()
     val response = chain.proceed(chain.request())
 
     val unsupportedAppVersionError =
       if (response.code == HTTP_FORBIDDEN) unsupportedAppVersionError(response) else null
     when {
       unsupportedAppVersionError != null ->
-        AppVersionSupport.applyUnsupportedAppVersion(unsupportedAppVersionError.meta, generation)
+        AppVersionSupport.applyUnsupportedAppVersion(unsupportedAppVersionError.meta, request)
       response
         .header(APP_VERSION_STATUS_HEADER)
         .equals(APP_VERSION_STATUS_SUPPORTED, ignoreCase = true) ->
-        AppVersionSupport.applySupportedAppVersion(generation)
+        AppVersionSupport.applySupportedAppVersion(request)
     }
     return response
   }

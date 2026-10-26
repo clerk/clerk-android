@@ -37,7 +37,7 @@ class ConfigurationManagerForegroundRefreshTest {
   @Test
   fun `foreground refresh runs while the app is unsupported even when disabled`() {
     AppVersionSupport.configure(AppBuild("com.example.app", versionCode = 41))
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
 
     assertTrue(
       ConfigurationManager()

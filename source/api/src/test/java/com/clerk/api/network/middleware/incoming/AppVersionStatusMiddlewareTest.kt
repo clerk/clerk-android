@@ -84,6 +84,20 @@ class AppVersionStatusMiddlewareTest {
     assertTrue(AppVersionSupport.status.value.isSupported)
   }
 
+  @Test
+  fun `a rejection that arrives after a newer request's supported answer is ignored`() {
+    val chain = chain(code = 403, body = UNSUPPORTED_APP_VERSION_BODY)
+    every { chain.proceed(any()) } answers
+      {
+        intercept(code = 200, body = "{}", appVersionStatus = "supported")
+        response(code = 403, body = UNSUPPORTED_APP_VERSION_BODY, appVersionStatus = null)
+      }
+
+    AppVersionStatusMiddleware(ClerkApi.json).intercept(chain)
+
+    assertTrue(AppVersionSupport.status.value.isSupported)
+  }
+
   private fun intercept(code: Int, body: String, appVersionStatus: String? = null): Response =
     AppVersionStatusMiddleware(ClerkApi.json)
       .intercept(chain(code = code, body = body, appVersionStatus = appVersionStatus))

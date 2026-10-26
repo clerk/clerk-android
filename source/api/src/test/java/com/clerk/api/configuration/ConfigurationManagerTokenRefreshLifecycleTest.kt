@@ -127,7 +127,7 @@ class ConfigurationManagerTokenRefreshLifecycleTest {
     assertFalse(AppVersionSupport.status.value.isSupported)
     assertEquals(0, tokenFetches)
 
-    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.generation)
+    AppVersionSupport.applySupportedAppVersion(AppVersionSupport.nextRequest())
     advanceTimeBy(5_001)
     assertTrue(tokenFetches >= 1)
   }

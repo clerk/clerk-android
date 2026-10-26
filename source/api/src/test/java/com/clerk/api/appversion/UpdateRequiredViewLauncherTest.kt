@@ -98,7 +98,7 @@ class UpdateRequiredViewLauncherTest {
   }
 
   private fun block() {
-    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.generation)
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
   }
 
   private fun includeUiLibrary() {
