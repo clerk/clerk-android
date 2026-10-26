@@ -1,0 +1,27 @@
+# High-risk paths only. Everything else needs no specific owner.
+
+/.github/workflows/ @clerk/team-mobile
+/.github/CODEOWNERS @clerk/team-mobile
+/.github/scripts/ @clerk/team-mobile
+/.coderabbit.yaml @clerk/team-mobile
+/AGENTS.md @clerk/team-mobile
+/REVIEW.md @clerk/team-mobile
+
+/gradle.properties @clerk/team-mobile
+/source/api/build.gradle.kts @clerk/team-mobile
+/source/ui/build.gradle.kts @clerk/team-mobile
+/source/telemetry/build.gradle.kts @clerk/team-mobile
+/source/api/consumer-rules.pro @clerk/team-mobile
+/source/ui/consumer-rules.pro @clerk/team-mobile
+/source/telemetry/consumer-rules.pro @clerk/team-mobile
+/config/bin/tool-checksums.sha256 @clerk/team-mobile
+
+/source/api/src/main/kotlin/com/clerk/api/storage/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/session/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/sharedsession/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/state/ClientStateStore.kt @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/configuration/CachedClerkState.kt @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/hostedauth/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/sso/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/passkeys/ @clerk/team-mobile
+/source/api/src/main/kotlin/com/clerk/api/network/middleware/ @clerk/team-mobile

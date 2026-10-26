@@ -26,3 +26,7 @@ The skill is `.claude/skills/verify-clerk-android/`. The tests and the CLI that 
 The loop is `doctor`, `up`, `run`, `screen`, `attach`, and `down`, each a verb of `e2e-tests/bin/control-clerk-android`.
 
 Use only test users: `+clerk_test` emails, phones 555-0100 to 555-0199, and the code `424242`. Never type real credentials.
+
+## Reviewing
+
+Before you review a pull request, read `REVIEW.md`. It says what counts as a failure here, what not to flag, and how to report findings.

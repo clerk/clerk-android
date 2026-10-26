@@ -5,3 +5,14 @@ reviews:
     drafts: false
   request_changes_workflow: true
   allow_author_approval: false
+  path_filters:
+    - "!source/*/api/*.api"
+    - "!**/detekt-baseline.xml"
+    - "!source/ui/lint-baseline.xml"
+    - "!source/ui/src/test/**/snapshots/images/**"
+    - "!**/package-lock.json"
+
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - "REVIEW.md"
