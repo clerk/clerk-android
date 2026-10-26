@@ -2,6 +2,8 @@
 
 /.github/workflows/ @clerk/team-mobile
 /.github/CODEOWNERS @clerk/team-mobile
+/.github/scripts/ @clerk/team-mobile
+/.coderabbit.yaml @clerk/team-mobile
 
 /gradle.properties @clerk/team-mobile
 /source/api/build.gradle.kts @clerk/team-mobile
