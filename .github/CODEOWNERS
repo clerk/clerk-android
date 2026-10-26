@@ -4,6 +4,8 @@
 /.github/CODEOWNERS @clerk/team-mobile
 /.github/scripts/ @clerk/team-mobile
 /.coderabbit.yaml @clerk/team-mobile
+/AGENTS.md @clerk/team-mobile
+/REVIEW.md @clerk/team-mobile
 
 /gradle.properties @clerk/team-mobile
 /source/api/build.gradle.kts @clerk/team-mobile
