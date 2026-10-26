@@ -80,7 +80,7 @@ compose-lints = "com.slack.lint.compose:compose-lint-checks:1.6.1"
 detekt-api = { module = "dev.detekt:detekt-api", version.ref = "detekt" }
 detekt-test = { module = "dev.detekt:detekt-test", version.ref = "detekt" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.2.1"
-google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.41"
+google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.42"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.1.0"
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
