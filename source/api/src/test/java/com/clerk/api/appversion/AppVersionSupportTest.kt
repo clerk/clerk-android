@@ -163,6 +163,27 @@ class AppVersionSupportTest {
   }
 
   @Test
+  fun `a rejection fills what its meta leaves out from the latest environment`() {
+    val newerPlayUrl = "https://play.google.com/store/apps/details?id=com.example.app.new"
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
+
+    AppVersionSupport.applyEnvironment(
+      appVersionTestEnvironment(androidPolicy("43", updateUrl = newerPlayUrl))
+    )
+
+    assertEquals(
+      AppVersionSupportStatus(
+        isSupported = false,
+        currentVersion = 41,
+        minimumVersion = 43,
+        updateUrl = newerPlayUrl,
+      ),
+      status(),
+    )
+  }
+
+  @Test
   fun `an environment doesn't lift a block a response set`() {
     AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
 

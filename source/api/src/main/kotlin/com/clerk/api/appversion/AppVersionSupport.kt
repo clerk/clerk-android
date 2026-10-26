@@ -36,7 +36,7 @@ internal data class AppBuild(val packageName: String, val versionCode: Long) {
 private sealed interface ServerAnswer {
   data object Supported : ServerAnswer
 
-  data class Unsupported(val status: AppVersionSupportStatus) : ServerAnswer
+  data class Unsupported(val meta: JsonObject?) : ServerAnswer
 }
 
 internal object AppVersionSupport {
@@ -74,17 +74,7 @@ internal object AppVersionSupport {
   fun applyUnsupportedAppVersion(meta: JsonObject?, request: Long) =
     synchronized(lock) {
       if (!acceptAnswerLocked(request)) return@synchronized
-      serverAnswer =
-        ServerAnswer.Unsupported(
-          AppVersionSupportStatus(
-            isSupported = false,
-            currentVersion = meta.string("current_version")?.toVersionCode() ?: build?.versionCode,
-            minimumVersion =
-              meta.string("minimum_version")?.toVersionCode() ?: environmentStatus?.minimumVersion,
-            updateUrl =
-              meta.string("update_url")?.takeIf(::isStoreUrl) ?: environmentStatus?.updateUrl,
-          )
-        )
+      serverAnswer = ServerAnswer.Unsupported(meta)
       publishLocked()
     }
 
@@ -129,10 +119,19 @@ internal object AppVersionSupport {
     )
   }
 
+  private fun rejectionStatus(meta: JsonObject?) =
+    AppVersionSupportStatus(
+      isSupported = false,
+      currentVersion = meta.string("current_version")?.toVersionCode() ?: build?.versionCode,
+      minimumVersion =
+        meta.string("minimum_version")?.toVersionCode() ?: environmentStatus?.minimumVersion,
+      updateUrl = meta.string("update_url")?.takeIf(::isStoreUrl) ?: environmentStatus?.updateUrl,
+    )
+
   private fun publishLocked() {
     _status.value =
       when (val answer = serverAnswer) {
-        is ServerAnswer.Unsupported -> answer.status
+        is ServerAnswer.Unsupported -> rejectionStatus(answer.meta)
         ServerAnswer.Supported ->
           environmentStatus?.takeIf { it.isSupported }
             ?: AppVersionSupportStatus.supported(build?.versionCode)
