@@ -3,6 +3,7 @@ package com.clerk.api.appversion
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import com.clerk.api.Clerk
@@ -22,13 +23,13 @@ internal object UpdateRequiredViewLauncher {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
   private var job: Job? = null
 
-  @Volatile private var enabled = false
+  @Volatile private var updateScreen: ComponentName? = null
 
   @Synchronized
-  fun start(enabled: Boolean) {
+  fun start(context: Context, enabled: Boolean) {
     stop()
-    this.enabled = enabled
     if (!enabled) return
+    updateScreen = uiLibraryActivity(context) ?: return
     job = scope.launch {
       AppVersionSupport.status
         .distinctUntilChangedBy { it.isSupported }
@@ -39,23 +40,28 @@ internal object UpdateRequiredViewLauncher {
 
   @Synchronized
   fun stop() {
-    enabled = false
+    updateScreen = null
     job?.cancel()
     job = null
   }
 
   fun onActivityResumed(activity: Activity) {
-    if (enabled && !AppVersionSupport.status.value.isSupported) launch(activity)
+    if (!AppVersionSupport.status.value.isSupported) launch(activity)
+  }
+
+  private fun uiLibraryActivity(context: Context): ComponentName? {
+    val component = ComponentName(context, UI_LIBRARY_ACTIVITY_CLASS_NAME)
+    return try {
+      context.packageManager.getActivityInfo(component, 0)
+      component
+    } catch (_: PackageManager.NameNotFoundException) {
+      null
+    }
   }
 
   private fun launch(activity: Activity) {
+    val component = updateScreen ?: return
     if (activity.javaClass.name == UI_LIBRARY_ACTIVITY_CLASS_NAME || activity.isFinishing) return
-    val component = ComponentName(activity, UI_LIBRARY_ACTIVITY_CLASS_NAME)
-    try {
-      activity.packageManager.getActivityInfo(component, 0)
-    } catch (_: PackageManager.NameNotFoundException) {
-      return
-    }
     try {
       activity.startActivity(
         Intent().setComponent(component).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)

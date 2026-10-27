@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -49,9 +49,9 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp40
+import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp64
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.error.ClerkErrorSnackbar
@@ -188,7 +188,7 @@ private fun GetHelpButton(onClick: () -> Unit) {
   Row(
     modifier =
       Modifier.fillMaxWidth()
-        .height(dp32)
+        .heightIn(min = dp48)
         .clip(ClerkMaterialTheme.shape)
         .clickable(role = Role.Button, onClick = onClick),
     horizontalArrangement = Arrangement.spacedBy(dp4, Alignment.CenterHorizontally),

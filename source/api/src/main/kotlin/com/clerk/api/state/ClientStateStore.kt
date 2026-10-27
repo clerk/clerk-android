@@ -5,6 +5,7 @@ import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.environment.supportEmailOrNull
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -412,7 +413,7 @@ internal class ClientStateStore(
     state = state.copy(environment = environment)
     _organizationLogoUrl.value = environment.displayConfig.logoImageUrl
     _applicationName.value = environment.displayConfig.applicationName
-    _supportEmail.value = environment.displayConfig.supportEmail?.takeIf { it.isNotBlank() }
+    _supportEmail.value = environment.displayConfig.supportEmailOrNull
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     return previous
   }

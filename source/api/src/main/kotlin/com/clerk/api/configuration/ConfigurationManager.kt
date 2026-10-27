@@ -223,7 +223,10 @@ internal class ConfigurationManager(
     Clerk.baseUrl = baseUrl
     Clerk.applicationId = context.applicationContext.packageName
     AppVersionSupport.configure(AppBuild.from(context.applicationContext))
-    UpdateRequiredViewLauncher.start(enabled = options?.updateRequiredViewEnabled != false)
+    UpdateRequiredViewLauncher.start(
+      context = context.applicationContext,
+      enabled = options?.updateRequiredViewEnabled != false,
+    )
 
     StorageHelper.prepare(context.applicationContext)
     Clerk.configureSharedSessionSync(

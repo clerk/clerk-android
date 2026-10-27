@@ -30,6 +30,7 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
+import com.clerk.api.network.model.environment.supportEmailOrNull
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
@@ -274,7 +275,7 @@ public object Clerk {
    * if the SDK is not initialized or no support email is configured.
    */
   public val supportEmail: String?
-    get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
+    get() = environment?.displayConfig?.supportEmailOrNull
 
   @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow

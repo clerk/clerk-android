@@ -40,7 +40,7 @@ class UpdateRequiredViewLauncherTest {
   @Test
   fun `an unsupported app shows the update screen when an activity resumes`() {
     includeUiLibrary()
-    UpdateRequiredViewLauncher.start(enabled = true)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
     block()
 
     UpdateRequiredViewLauncher.onActivityResumed(activity)
@@ -55,7 +55,7 @@ class UpdateRequiredViewLauncherTest {
   fun `the update screen shows over the current activity when the app becomes unsupported`() {
     includeUiLibrary()
     Clerk.currentActivity = WeakReference(activity)
-    UpdateRequiredViewLauncher.start(enabled = true)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
 
     block()
     shadowOf(Looper.getMainLooper()).idle()
@@ -69,7 +69,7 @@ class UpdateRequiredViewLauncherTest {
   @Test
   fun `a supported app shows nothing`() {
     includeUiLibrary()
-    UpdateRequiredViewLauncher.start(enabled = true)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
 
     UpdateRequiredViewLauncher.onActivityResumed(activity)
 
@@ -79,7 +79,7 @@ class UpdateRequiredViewLauncherTest {
   @Test
   fun `an app that turned the update screen off shows nothing`() {
     includeUiLibrary()
-    UpdateRequiredViewLauncher.start(enabled = false)
+    UpdateRequiredViewLauncher.start(activity, enabled = false)
     block()
 
     UpdateRequiredViewLauncher.onActivityResumed(activity)
@@ -89,7 +89,7 @@ class UpdateRequiredViewLauncherTest {
 
   @Test
   fun `an app without the UI library shows nothing`() {
-    UpdateRequiredViewLauncher.start(enabled = true)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
     block()
 
     UpdateRequiredViewLauncher.onActivityResumed(activity)
