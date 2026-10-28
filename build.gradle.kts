@@ -1,7 +1,13 @@
+import com.autonomousapps.tasks.FilterAdviceTask
+import com.autonomousapps.tasks.ProjectHealthTask
+import com.clerk.gradle.RakeDependenciesTask
+import com.clerk.gradle.ToolJar
+import com.clerk.gradle.UpdateToolJarsTask
 import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
+import java.util.concurrent.TimeUnit
 import kotlinx.validation.KotlinApiBuildTask
 import kotlinx.validation.KotlinApiCompareTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -20,6 +26,7 @@ plugins {
   alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.compose) apply false
   alias(libs.plugins.binaryCompatibilityValidator) apply false
+  alias(libs.plugins.dependencyAnalysis)
 }
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -102,6 +109,69 @@ allprojects {
 }
 
 dokka { dokkaPublications.html { outputDirectory.set(rootDir.resolve("docs/")) } }
+
+val libraryAccessors =
+  projectLibs.libraryAliases.groupBy(
+    keySelector = { projectLibs.findLibrary(it).get().get().module.toString() },
+    valueTransform = { "libs." + it.replace('-', '.').replace('_', '.') },
+  )
+
+val toolJars =
+  listOf(
+    ToolJar("com.facebook:ktfmt", "with-dependencies", versionKey = "ktfmt"),
+    ToolJar("dev.detekt:detekt-cli", "all", versionKey = "detekt"),
+    ToolJar("com.squareup:sort-gradle-dependencies-app", "all", versionKey = "sortDependencies"),
+  )
+
+// Matches the cache directory in config/bin/lib/tool-jar.sh.
+val toolJarCache =
+  providers
+    .environmentVariable("CLERK_TOOLS_CACHE")
+    .orElse(
+      providers
+        .environmentVariable("XDG_CACHE_HOME")
+        .orElse(providers.systemProperty("user.home").map { "$it/.cache" })
+        .map { "$it/clerk-android/tools" }
+    )
+
+fun registerToolJarsTask(name: String, description: String, latest: Boolean) {
+  val jars =
+    configurations.create("${name}Jars") {
+      isCanBeConsumed = false
+      isTransitive = false
+      if (latest) resolutionStrategy.cacheDynamicVersionsFor(0, TimeUnit.SECONDS)
+    }
+  toolJars.forEach { tool ->
+    val version =
+      if (latest) "latest.release"
+      else projectLibs.findVersion(tool.versionKey).get().requiredVersion
+    dependencies.add(jars.name, "${tool.module}:$version:${tool.classifier}")
+  }
+  tasks.register<UpdateToolJarsTask>(name) {
+    group = "tools"
+    this.description = description
+    artifacts.set(jars.incoming.artifacts.resolvedArtifacts)
+    this.jars.from(jars)
+    versionKeys.set(toolJars.associate { it.module to it.versionKey })
+    bumpCatalog.set(latest)
+    repositoryUrl.set("https://repo1.maven.org/maven2/")
+    catalogFile.set(layout.projectDirectory.file("gradle/libs.versions.toml"))
+    checksumsFile.set(layout.projectDirectory.file("config/bin/tool-checksums.sha256"))
+    cacheDirectory.fileProvider(toolJarCache.map(::File))
+  }
+}
+
+registerToolJarsTask(
+  "downloadToolJars",
+  "Downloads the config/bin tool jars at the catalog's versions and pins their checksums.",
+  latest = false,
+)
+
+registerToolJarsTask(
+  "updateToolJars",
+  "Bumps the config/bin tools to their latest releases, then downloads and pins them.",
+  latest = true,
+)
 
 dependencies {
   dokka(project(":source:api"))
@@ -281,6 +351,45 @@ subprojects {
 }
 
 subprojects {
+  apply(plugin = "com.autonomousapps.dependency-analysis")
+  if (buildFile.isFile) {
+    tasks.register<RakeDependenciesTask>("rakeDependencies") {
+      group = "dependencies"
+      description = "Removes the dependency declarations that projectHealth reports as unused."
+      advice.set(tasks.named<ProjectHealthTask>("projectHealth").flatMap { it.projectAdvice })
+      dependencyGraphs.from(
+        tasks.named<FilterAdviceTask>("filterAdvice").map { it.dependencyGraphViews }
+      )
+      catalogAccessors.set(libraryAccessors)
+      classpathConfigurations.set(
+        provider {
+          configurations
+            .filter {
+              it.isCanBeResolved &&
+                (it.name == "compileClasspath" || it.name.endsWith("CompileClasspath"))
+            }
+            .associate { classpath ->
+              classpath.name to classpath.hierarchy.map { it.name }.toSet()
+            }
+        }
+      )
+      declarations.set(
+        provider {
+          configurations
+            .filter { it.isCanBeDeclared }
+            .associate { configuration ->
+              configuration.name to
+                configuration.dependencies
+                  .map { if (it is ProjectDependency) it.path else "${it.group}:${it.name}" }
+                  .toSet()
+            }
+        }
+      )
+      projectPath.set(project.path)
+      buildFile.set(project.buildFile)
+    }
+  }
+
   plugins.withType<JavaPlugin> {
     the<JavaPluginExtension>().apply {
       toolchain.languageVersion.set(buildJdk)

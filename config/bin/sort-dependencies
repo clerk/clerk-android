@@ -1,3 +1,29 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:34b814d4395bae01551294232e357bc8cf03855e1b86c02d3c301f3258084541
-size 29280610
+#!/bin/sh
+# Runs the same sort-dependencies version as the Gradle plugin (the
+# `sortDependencies` entry in gradle/libs.versions.toml). Arguments are passed
+# through, e.g.
+#   ./config/bin/sort-dependencies path/to/build.gradle.kts
+
+REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"
+
+version="$(catalog_version sortDependencies)" || exit 1
+jar="$(tool_jar "com/squareup/sort-gradle-dependencies-app/$version" "sort-gradle-dependencies-app-$version-all.jar")" || exit 1
+java="$(java_cmd)" || exit 1
+
+# The sorter parses build scripts with javac's internals, which the JDK hides
+# behind module boundaries.
+exec "$java" -Xmx512m \
+  --add-opens java.base/java.lang=ALL-UNNAMED \
+  --add-opens java.base/java.util=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
+  -jar "$jar" "$@"
