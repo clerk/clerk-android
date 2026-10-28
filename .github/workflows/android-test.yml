@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-node@v7
         if: steps.changed.outputs.package == 'true'
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Install the test package's dependencies
         if: steps.changed.outputs.package == 'true'
