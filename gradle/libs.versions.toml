@@ -1,6 +1,6 @@
 [versions]
 activityKtx = "1.13.0"
-agp = "9.4.1"
+agp = "9.5.0"
 appcompat = "1.8.0"
 asm = "9.11.1"
 automap = "0.1.3"
