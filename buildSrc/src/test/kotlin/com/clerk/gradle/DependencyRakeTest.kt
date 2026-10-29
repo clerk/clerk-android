@@ -80,6 +80,26 @@ class DependencyRakeTest {
   }
 
   @Test
+  fun `adds nothing for a removal that can't be made`() {
+    val removal = removal("testImplementation", "androidx.test:core-ktx")
+    val plan =
+      rake(
+        advice = listOf(removal, addition("testImplementation", "androidx.test:core")),
+        edges =
+          mapOf(
+            ROOT to setOf("androidx.test:core-ktx"),
+            "androidx.test:core-ktx" to setOf("androidx.test:core"),
+          ),
+        declarations = mapOf("testImplementation" to setOf("androidx.test:core-ktx")),
+        unremovable = mapOf(removal to "not found"),
+      )
+
+    assertEquals(emptyList(), plan.removals)
+    assertEquals(emptyList(), plan.additions)
+    assertEquals(mapOf(removal to "not found"), plan.kept)
+  }
+
+  @Test
   fun `keeps a test declaration of a dependency main declares compileOnly`() {
     val plan =
       rake(
@@ -103,6 +123,7 @@ class DependencyRakeTest {
     advice: List<Advice>,
     edges: Map<String, Set<String>>,
     declarations: Map<String, Set<String>>,
+    unremovable: Map<Advice, String> = emptyMap(),
   ): RakePlan =
     DependencyRake(
         advice = advice,
@@ -111,7 +132,7 @@ class DependencyRakeTest {
         declarations = declarations,
         notations = notations,
       )
-      .plan()
+      .plan(unremovable)
 
   private fun removal(configuration: String, id: String) =
     Advice(Coordinate("module", id), from = configuration, to = null)

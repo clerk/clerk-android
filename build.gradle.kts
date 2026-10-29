@@ -3,6 +3,8 @@ import com.autonomousapps.tasks.ProjectHealthTask
 import com.clerk.gradle.RakeDependenciesTask
 import com.clerk.gradle.ToolJar
 import com.clerk.gradle.UpdateToolJarsTask
+import com.clerk.gradle.isPreRelease
+import com.clerk.gradle.toolJarCacheDirectory
 import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
@@ -123,28 +125,27 @@ val toolJars =
     ToolJar("com.squareup:sort-gradle-dependencies-app", "all", versionKey = "sortDependencies"),
   )
 
-// Matches the cache directory in config/bin/lib/tool-jar.sh.
-val toolJarCache =
-  providers
-    .environmentVariable("CLERK_TOOLS_CACHE")
-    .orElse(
-      providers
-        .environmentVariable("XDG_CACHE_HOME")
-        .orElse(providers.systemProperty("user.home").map { "$it/.cache" })
-        .map { "$it/clerk-android/tools" }
-    )
+val pinnedToolVersions = toolJars.associate {
+  it.module to projectLibs.findVersion(it.versionKey).get().requiredVersion
+}
 
 fun registerToolJarsTask(name: String, description: String, latest: Boolean) {
   val jars =
     configurations.create("${name}Jars") {
       isCanBeConsumed = false
       isTransitive = false
-      if (latest) resolutionStrategy.cacheDynamicVersionsFor(0, TimeUnit.SECONDS)
+      if (latest) {
+        resolutionStrategy.cacheDynamicVersionsFor(0, TimeUnit.SECONDS)
+        resolutionStrategy.componentSelection.all {
+          val pinned = pinnedToolVersions.getValue(candidate.moduleIdentifier.toString())
+          if (isPreRelease(candidate.version) && !isPreRelease(pinned)) {
+            reject("$pinned is a release, so a pre-release doesn't replace it")
+          }
+        }
+      }
     }
   toolJars.forEach { tool ->
-    val version =
-      if (latest) "latest.release"
-      else projectLibs.findVersion(tool.versionKey).get().requiredVersion
+    val version = if (latest) "latest.release" else pinnedToolVersions.getValue(tool.module)
     dependencies.add(jars.name, "${tool.module}:$version:${tool.classifier}")
   }
   tasks.register<UpdateToolJarsTask>(name) {
@@ -157,7 +158,7 @@ fun registerToolJarsTask(name: String, description: String, latest: Boolean) {
     repositoryUrl.set("https://repo1.maven.org/maven2/")
     catalogFile.set(layout.projectDirectory.file("gradle/libs.versions.toml"))
     checksumsFile.set(layout.projectDirectory.file("config/bin/tool-checksums.sha256"))
-    cacheDirectory.fileProvider(toolJarCache.map(::File))
+    cacheDirectory.fileProvider(provider { File(toolJarCacheDirectory(System::getenv)) })
   }
 }
 
@@ -386,6 +387,7 @@ subprojects {
         }
       )
       projectPath.set(project.path)
+      rootProjectName.set(rootProject.name)
       buildFile.set(project.buildFile)
     }
   }

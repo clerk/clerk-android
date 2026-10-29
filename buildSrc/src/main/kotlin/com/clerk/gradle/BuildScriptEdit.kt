@@ -3,18 +3,33 @@ package com.clerk.gradle
 /** Line edits to the top-level `dependencies { }` block of a Kotlin build script. */
 internal class BuildScriptEdit(lines: List<String>) {
   private val lines = lines.toMutableList()
-  private val start = lines.indexOf("dependencies {")
-  private var end = if (start < 0) -1 else lines.subList(start, lines.size).indexOf("}") + start
+  private val start: Int
+  private var end: Int
+
+  init {
+    val open = lines.indexOf("dependencies {")
+    val close = if (open < 0) -1 else lines.subList(open, lines.size).indexOf("}")
+    start = if (close < 0) -1 else open
+    end = if (close < 0) -1 else open + close
+  }
+
+  /** Whether the block has a single-line `configuration(notation)`. */
+  fun declares(configuration: String, notations: List<String>): Boolean =
+    declarationLines(configuration, notations).isNotEmpty()
 
   /** Removes every single-line `configuration(notation)`; returns whether any was found. */
   fun remove(configuration: String, notations: List<String>): Boolean {
-    if (start < 0) return false
-    val pattern =
-      Regex("""^\s*${Regex.escape(configuration)}\(\s*(${notations.joinToString("|")})\s*\)\s*$""")
-    val matches = (start + 1 until end).filter { pattern.matches(lines[it]) }
+    val matches = declarationLines(configuration, notations)
     matches.asReversed().forEach { lines.removeAt(it) }
     end -= matches.size
     return matches.isNotEmpty()
+  }
+
+  private fun declarationLines(configuration: String, notations: List<String>): List<Int> {
+    if (start < 0) return emptyList()
+    val pattern =
+      Regex("""^\s*${Regex.escape(configuration)}\(\s*(${notations.joinToString("|")})\s*\)\s*$""")
+    return (start + 1 until end).filter { pattern.matches(lines[it]) }
   }
 
   /** Adds [declaration] in order among the declarations of the same configuration. */

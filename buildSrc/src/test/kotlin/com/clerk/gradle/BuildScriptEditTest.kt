@@ -3,6 +3,7 @@ package com.clerk.gradle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class BuildScriptEditTest {
   private val script =
@@ -82,6 +83,33 @@ class BuildScriptEditTest {
       ) + "\n",
       edit.text(),
     )
+  }
+
+  @Test
+  fun `leaves a block with no closing line alone`() {
+    val unclosed = script.replace("\n}", "\n} // dependencies")
+    val edit = BuildScriptEdit(unclosed.lines())
+
+    assertFalse(edit.remove("implementation", listOf(Regex.escape("libs.okhttp"))))
+    edit.add("implementation(libs.retrofit)")
+
+    assertEquals(unclosed + "\n", edit.text())
+  }
+
+  @Test
+  fun `matches a project dependency by its whole accessor`() {
+    val projects =
+      script.replace(
+        "  implementation(libs.okhttp)",
+        "  implementation(libs.okhttp)\n  implementation(projects.legacy.source.api)",
+      )
+    val patterns = Notations(emptyMap(), "Clerk").patterns(Coordinate("project", ":source:api"))
+
+    assertFalse(BuildScriptEdit(projects.lines()).declares("implementation", patterns))
+    listOf("", ".clerk").forEach { root ->
+      val declared = projects.replace(".legacy", root)
+      assertTrue(BuildScriptEdit(declared.lines()).declares("implementation", patterns), root)
+    }
   }
 
   @Test

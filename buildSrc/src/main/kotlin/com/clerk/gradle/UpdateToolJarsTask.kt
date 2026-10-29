@@ -135,6 +135,3 @@ abstract class UpdateToolJarsTask : DefaultTask() {
     val PUBLISHED_DIGESTS = listOf("sha512" to "SHA-512", "sha256" to "SHA-256", "sha1" to "SHA-1")
   }
 }
-
-/** A fat jar on Maven Central that a `config/bin` wrapper runs. */
-data class ToolJar(val module: String, val classifier: String, val versionKey: String)

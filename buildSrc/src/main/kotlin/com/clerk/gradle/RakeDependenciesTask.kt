@@ -44,6 +44,8 @@ abstract class RakeDependenciesTask : DefaultTask() {
 
   @get:Input abstract val projectPath: Property<String>
 
+  @get:Input abstract val rootProjectName: Property<String>
+
   @get:Internal abstract val buildFile: RegularFileProperty
 
   @get:Input
@@ -56,26 +58,29 @@ abstract class RakeDependenciesTask : DefaultTask() {
 
   @TaskAction
   fun rake() {
-    val notations = Notations(catalogAccessors.get())
-    val plan =
+    val notations = Notations(catalogAccessors.get(), rootProjectName.get())
+    val rake =
       DependencyRake(
-          advice = readAdvice(advice.get().asFile),
-          graphs = dependencyGraphs.files.map { readGraph(it, projectPath.get()) },
-          classpathConfigurations = classpathConfigurations.get(),
-          declarations = declarations.get(),
-          notations = notations,
-        )
-        .plan()
+        advice = readAdvice(advice.get().asFile),
+        graphs = dependencyGraphs.files.map { readGraph(it, projectPath.get()) },
+        classpathConfigurations = classpathConfigurations.get(),
+        declarations = declarations.get(),
+        notations = notations,
+      )
 
     val file = buildFile.get().asFile
-    val edit = BuildScriptEdit(file.readLines())
-    val kept = plan.kept.toMutableMap()
-    val removed =
-      plan.removals.filter { removal ->
-        edit.remove(removal.from!!, notations.patterns(removal.coordinate)).also { found ->
-          if (!found) kept[removal] = "no single-line declaration of it was found"
-        }
+    val lines = file.readLines()
+    val draft = BuildScriptEdit(lines)
+    val unfound =
+      rake.plan().removals.filterNot {
+        draft.declares(it.from!!, notations.patterns(it.coordinate))
       }
+    val plan = rake.plan(unfound.associateWith { "no single-line declaration of it was found" })
+
+    val edit = BuildScriptEdit(lines)
+    val removed = plan.removals
+    removed.forEach { edit.remove(it.from!!, notations.patterns(it.coordinate)) }
+    val kept = plan.kept
     val added =
       plan.additions.mapNotNull { addition ->
         val notation = notations.declare(addition.coordinate)

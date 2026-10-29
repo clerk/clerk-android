@@ -33,38 +33,45 @@ internal class Graph(val classpath: String, val root: String, val edges: Map<Str
 }
 
 /** How a dependency is written in this repo's build scripts. */
-internal class Notations(private val catalogAccessors: Map<String, List<String>>) {
+internal class Notations(
+  private val catalogAccessors: Map<String, List<String>>,
+  rootProjectName: String = "",
+) {
+  private val rootAccessor = accessorSegment(rootProjectName).replaceFirstChar(Char::lowercaseChar)
+
   /** The notation to declare [coordinate] with, or null when it has no version catalog entry. */
   fun declare(coordinate: Coordinate): String? =
     when (coordinate.type) {
-      "project" -> projectAccessor(coordinate.identifier)
+      "project" -> "projects." + projectAccessor(coordinate.identifier)
       else -> catalogAccessors[coordinate.identifier]?.first()
     }
 
-  /** Regex alternatives matching every way [coordinate] may already be declared. */
+  /**
+   * Regex alternatives matching every way [coordinate] may already be declared, including project
+   * accessors that start with the root project's name, such as `projects.clerk.source.api`.
+   */
   fun patterns(coordinate: Coordinate): List<String> =
     when (coordinate.type) {
-      "project" ->
+      "project" -> {
+        val root = if (rootAccessor.isEmpty()) "" else """(\.${Regex.escape(rootAccessor)})?"""
         listOf(
-          """projects(\.\w+)*\.""" +
-            Regex.escape(projectAccessor(coordinate.identifier).removePrefix("projects.")),
+          """projects$root\.${Regex.escape(projectAccessor(coordinate.identifier))}""",
           """project\(\s*"${Regex.escape(coordinate.identifier)}"\s*\)""",
         )
+      }
       else ->
         catalogAccessors[coordinate.identifier].orEmpty().map(Regex::escape) +
           """"${Regex.escape(coordinate.identifier)}(:[^"]*)?""""
     }
 
   private fun projectAccessor(path: String): String =
-    "projects." +
-      path.split(':').filter(String::isNotEmpty).joinToString(".") { segment ->
-        segment
-          .split('-', '_')
-          .mapIndexed { i, part ->
-            if (i == 0) part else part.replaceFirstChar(Char::uppercaseChar)
-          }
-          .joinToString("")
-      }
+    path.split(':').filter(String::isNotEmpty).joinToString(".", transform = ::accessorSegment)
+
+  private fun accessorSegment(name: String): String =
+    name
+      .split('-', '_')
+      .mapIndexed { i, part -> if (i == 0) part else part.replaceFirstChar(Char::uppercaseChar) }
+      .joinToString("")
 }
 
 internal class RakePlan(
@@ -84,9 +91,10 @@ internal class DependencyRake(
   private val declarations: Map<String, Set<String>>,
   private val notations: Notations,
 ) {
-  fun plan(): RakePlan {
+  /** Plans the rake, leaving out the [unremovable] removals, each kept for the reason given. */
+  fun plan(unremovable: Map<Advice, String> = emptyMap()): RakePlan {
     val removals = advice.filter(Advice::isRemoval)
-    val kept = mutableMapOf<Advice, String>()
+    val kept = unremovable.toMutableMap()
     // The plugin treats main's compileOnly dependencies as visible to tests, but neither AGP nor
     // the Gradle Java plugin puts compileOnly on a test compile classpath.
     removals
