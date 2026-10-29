@@ -1,0 +1,28 @@
+# A change to these paths needs an approval from someone with maintain or admin access, unless one of them wrote it.
+# The `Code owner approval` check enforces this. Patterns follow CODEOWNERS syntax, without owners.
+
+/.github/workflows/
+/.github/protected-paths
+/.github/scripts/
+/.coderabbit.yaml
+/AGENTS.md
+/REVIEW.md
+
+/gradle.properties
+/source/api/build.gradle.kts
+/source/ui/build.gradle.kts
+/source/telemetry/build.gradle.kts
+/source/api/consumer-rules.pro
+/source/ui/consumer-rules.pro
+/source/telemetry/consumer-rules.pro
+/config/bin/tool-checksums.sha256
+
+/source/api/src/main/kotlin/com/clerk/api/storage/
+/source/api/src/main/kotlin/com/clerk/api/session/
+/source/api/src/main/kotlin/com/clerk/api/sharedsession/
+/source/api/src/main/kotlin/com/clerk/api/state/ClientStateStore.kt
+/source/api/src/main/kotlin/com/clerk/api/configuration/CachedClerkState.kt
+/source/api/src/main/kotlin/com/clerk/api/hostedauth/
+/source/api/src/main/kotlin/com/clerk/api/sso/
+/source/api/src/main/kotlin/com/clerk/api/passkeys/
+/source/api/src/main/kotlin/com/clerk/api/network/middleware/

@@ -11,7 +11,7 @@
 -
 
 ### Risk
-<!-- What could break, and for whom? Say if the diff touches a path in .github/CODEOWNERS (workflows, release config, token and session storage, auth flows), or changes public API in an .api dump. -->
+<!-- What could break, and for whom? Say if the diff touches a path in .github/protected-paths (workflows, release config, token and session storage, auth flows), or changes public API in an .api dump. -->
 -
 
 ### How to revert
