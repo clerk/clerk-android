@@ -6,6 +6,11 @@
   "automerge": true,
   "packageRules": [
     {
+      "description": "Updates merge with nobody looking at them, so a release waits three days for a compromised or pulled version to come to light. Renovate opens no branch until then, and vulnerability fixes skip the wait.",
+      "matchPackageNames": ["*"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
       "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",
       "matchFileNames": ["e2e-tests/**"],
       "enabled": false
