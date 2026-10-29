@@ -87,15 +87,12 @@ jobs:
           git commit --quiet --all --message "$PR_TITLE"
 
           pr="$(gh pr list --head "$BRANCH_NAME" --state open --json url --jq '.[0].url // ""')"
-          if git fetch --quiet origin "$BRANCH_NAME" 2>/dev/null &&
+          if [ -n "$pr" ] && git fetch --quiet origin "$BRANCH_NAME" 2>/dev/null &&
             [ "$(git rev-parse 'HEAD^{tree}')" = "$(git rev-parse 'FETCH_HEAD^{tree}')" ]; then
-            if [ -n "$pr" ]; then
-              echo "$pr already has these changes."
-              exit 0
-            fi
-          else
-            git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
+            echo "$pr already has these changes."
+            exit 0
           fi
+          git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
 
           body="$RUNNER_TEMP/body.md"
           {
