@@ -303,4 +303,10 @@
     <string name="app_uses_biometrics_to_sign_you_in" tools:ignore="MissingTranslation">%1$s uses biometrics to sign you in.</string>
     <string name="use_biometrics_to_sign_in" tools:ignore="MissingTranslation">Use biometrics to sign in.</string>
     <string name="enroll_this_device" tools:ignore="MissingTranslation">Enroll this device</string>
+    <string name="update_required">Update required</string>
+    <string name="this_version_of_app_is_no_longer_supported">This version of %1$s is no longer supported. Please update to continue.</string>
+    <string name="go_to_google_play">Go to Google Play</string>
+    <string name="update_app">Update app</string>
+    <string name="cant_update">Can\'t update?</string>
+    <string name="your_version">Your version</string>
 </resources>

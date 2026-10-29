@@ -4,7 +4,8 @@ A signed-in user opens their profile from UserButton, sees their own account, an
 
 ## Sub-features
 
-- `sections-and-back` opens UserProfileView for the signed-in user from the home UserButton, opens Manage account and Security from it, and returns to the profile with back from each.
+- `user-button` opens UserProfileView for the signed-in user from the home UserButton.
+- `sections-and-back` opens Manage account and Security from the profile, and returns to the profile with back from each.
 - `add-account` opens AuthView from the profile's `Add account` row.
 - `sign-out` ends the session from the home `Sign out` button.
 - `sign-out-profile` ends the session from the profile's `Sign out` row.

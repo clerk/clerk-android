@@ -2,6 +2,8 @@ package com.clerk.api.network.middleware.outgoing
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.appversion.AppBuild
+import com.clerk.api.appversion.AppVersionSupport
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.storage.StorageHelper
@@ -41,6 +43,7 @@ class VersioningUserAgentMiddlewareTest {
 
   @After
   fun tearDown() {
+    AppVersionSupport.reset()
     unmockkAll()
     StorageHelper.reset(context)
     resetClerkState()
@@ -71,6 +74,26 @@ class VersioningUserAgentMiddlewareTest {
     assertNull(capturedRequest.header("x-clerk-client-id"))
     assertNull(capturedRequest.header(INTERNAL_HEADER_SKIP_CLIENT_ID))
     assertEquals("device_token_123", capturedRequest.header("Authorization"))
+  }
+
+  @Test
+  fun `intercept identifies the app by package name and versionCode`() {
+    AppVersionSupport.configure(AppBuild(packageName = "com.example.app", versionCode = 41))
+
+    val capturedRequest = captureRequest(request = Request.Builder().url(TEST_URL).get().build())
+
+    assertEquals("com.example.app", capturedRequest.header("X-Package-Name"))
+    assertEquals("41", capturedRequest.header("X-App-Version"))
+  }
+
+  @Test
+  fun `intercept omits the app identity when the versionCode is unknown`() {
+    AppVersionSupport.reset()
+
+    val capturedRequest = captureRequest(request = Request.Builder().url(TEST_URL).get().build())
+
+    assertNull(capturedRequest.header("X-Package-Name"))
+    assertNull(capturedRequest.header("X-App-Version"))
   }
 
   @Test
