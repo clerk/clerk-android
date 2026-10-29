@@ -117,7 +117,9 @@ To find dependencies a module declares but doesn't use, run `./gradlew buildHeal
 [Dependency Analysis plugin](https://github.com/autonomousapps/dependency-analysis-gradle-plugin)).
 `./gradlew rakeDependencies` removes the unused ones, and declares any used dependency that only a
 removed one provided; add `--preview` to see the changes first. Build and run the tests afterwards:
-the analysis only sees what compiles against what, not what a test needs at runtime.
+the analysis only sees what compiles against what, not what a test needs at runtime. The
+`rake-dependencies.yml` workflow runs the rake on `main` every night and opens a pull request from
+`automation/rake-dependencies` when it finds something.
 
 ## License
 
