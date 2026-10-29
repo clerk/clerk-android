@@ -5,6 +5,7 @@ import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.environment.supportEmailOrNull
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -82,6 +83,8 @@ internal class ClientStateStore(
   private val _session = MutableStateFlow<Session?>(null)
   private val _user = MutableStateFlow<User?>(null)
   private val _organizationLogoUrl = MutableStateFlow<String?>(null)
+  private val _applicationName = MutableStateFlow<String?>(null)
+  private val _supportEmail = MutableStateFlow<String?>(null)
   private val _multiSessionModeIsEnabled = MutableStateFlow(false)
 
   val clientFlow: StateFlow<Client?> = _client.asStateFlow()
@@ -93,6 +96,10 @@ internal class ClientStateStore(
   val userFlow: StateFlow<User?> = _user.asStateFlow()
 
   val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrl.asStateFlow()
+
+  val applicationNameFlow: StateFlow<String?> = _applicationName.asStateFlow()
+
+  val supportEmailFlow: StateFlow<String?> = _supportEmail.asStateFlow()
 
   val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
 
@@ -261,6 +268,9 @@ internal class ClientStateStore(
       _sessions.value = emptyList()
       _session.value = null
       _user.value = null
+      _organizationLogoUrl.value = null
+      _applicationName.value = null
+      _supportEmail.value = null
       notifySessionStateLocked(previousSession, null)
     }
     clearPersistedState()
@@ -402,6 +412,8 @@ internal class ClientStateStore(
     val previous = state.environment
     state = state.copy(environment = environment)
     _organizationLogoUrl.value = environment.displayConfig.logoImageUrl
+    _applicationName.value = environment.displayConfig.applicationName
+    _supportEmail.value = environment.displayConfig.supportEmailOrNull
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     return previous
   }

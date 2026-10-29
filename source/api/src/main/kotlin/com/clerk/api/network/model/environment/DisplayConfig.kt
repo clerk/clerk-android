@@ -23,6 +23,9 @@ internal data class DisplayConfig(
   @SerialName("google_one_tap_client_id") val googleOneTapClientId: String?,
 )
 
+internal val DisplayConfig.supportEmailOrNull: String?
+  get() = supportEmail?.takeIf { it.isNotBlank() }
+
 @OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 @Serializable(with = PreferredSignInStrategy.Serializer::class)

@@ -383,6 +383,29 @@ class ClientStateStoreTest {
     assertTrue(store.applyClientResponse(Client(id = "client_after"), serverDateMillis = 1))
   }
 
+  @Test
+  fun `reset clears the branding from the previous instance`() {
+    val store = store()
+    val environment = testEnvironment()
+    store.applyEnvironment(
+      environment.copy(
+        displayConfig =
+          environment.displayConfig.copy(
+            applicationName = "Acme",
+            supportEmail = "support@example.com",
+            logoImageUrl = "https://img.clerk.com/logo.png",
+          )
+      )
+    )
+    assertEquals("Acme", store.applicationNameFlow.value)
+
+    store.reset()
+
+    assertNull(store.applicationNameFlow.value)
+    assertNull(store.supportEmailFlow.value)
+    assertNull(store.organizationLogoUrlFlow.value)
+  }
+
   // endregion
 
   @Test

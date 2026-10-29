@@ -279,4 +279,10 @@
     <string name="switch_organization">Αλλαγή οργανισμού</string>
     <string name="current_organization">Τρέχων οργανισμός</string>
     <string name="open_organization_switcher">Άνοιγμα εναλλαγής οργανισμών</string>
+    <string name="update_required">Απαιτείται ενημέρωση</string>
+    <string name="this_version_of_app_is_no_longer_supported">Αυτή η έκδοση του %1$s δεν υποστηρίζεται πλέον. Ενημερώστε την εφαρμογή για να συνεχίσετε.</string>
+    <string name="go_to_google_play">Μετάβαση στο Google Play</string>
+    <string name="update_app">Ενημέρωση εφαρμογής</string>
+    <string name="cant_update">Δεν μπορείτε να κάνετε ενημέρωση;</string>
+    <string name="your_version">Η έκδοσή σας</string>
 </resources>

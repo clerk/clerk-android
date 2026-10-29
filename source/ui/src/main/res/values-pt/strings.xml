@@ -279,4 +279,10 @@
     <string name="switch_organization">Trocar organização</string>
     <string name="current_organization">Organização atual</string>
     <string name="open_organization_switcher">Abrir alternador de organização</string>
+    <string name="update_required">Atualização necessária</string>
+    <string name="this_version_of_app_is_no_longer_supported">Esta versão de %1$s não é mais compatível. Atualize o app para continuar.</string>
+    <string name="go_to_google_play">Ir para o Google Play</string>
+    <string name="update_app">Atualizar app</string>
+    <string name="cant_update">Não consegue atualizar?</string>
+    <string name="your_version">Sua versão</string>
 </resources>
