@@ -158,7 +158,9 @@ fun registerToolJarsTask(name: String, description: String, latest: Boolean) {
     repositoryUrl.set("https://repo1.maven.org/maven2/")
     catalogFile.set(layout.projectDirectory.file("gradle/libs.versions.toml"))
     checksumsFile.set(layout.projectDirectory.file("config/bin/tool-checksums.sha256"))
-    cacheDirectory.fileProvider(provider { File(toolJarCacheDirectory(System::getenv)) })
+    cacheDirectory.fileProvider(
+      provider { File(toolJarCacheDirectory(System::getenv, System.getProperty("user.home"))) }
+    )
   }
 }
 

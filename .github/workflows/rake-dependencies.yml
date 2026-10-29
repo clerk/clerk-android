@@ -71,9 +71,15 @@ jobs:
         run: |
           set -euo pipefail
           pr="$(gh pr list --head "$BRANCH_NAME" --state open --json url --jq '.[0].url // ""')"
-          if [ -n "$pr" ]; then
-            gh pr close "$pr" --delete-branch --comment "The rake on main finds nothing to remove now."
+          if [ -z "$pr" ]; then
+            exit 0
           fi
+          others="$(gh pr view "$pr" --json commits --jq '[.commits[].authors[].email | select(. != env.BOT_EMAIL)] | length')"
+          if [ "$others" != "0" ]; then
+            echo "::notice::The rake on main finds nothing to remove, but $pr has commits from someone else, so this run leaves it open."
+            exit 0
+          fi
+          gh pr close "$pr" --delete-branch --comment "The rake on main finds nothing to remove now."
 
       - name: Open or update the pull request
         if: steps.changes.outputs.changed == 'true'

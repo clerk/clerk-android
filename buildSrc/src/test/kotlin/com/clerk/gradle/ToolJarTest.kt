@@ -19,15 +19,29 @@ class ToolJarTest {
   fun `finds the cache directory the way tool-jar sh does`() {
     val home = mapOf("HOME" to "/home/me")
 
-    assertEquals("/home/me/.cache/clerk-android/tools", toolJarCacheDirectory(home::get))
+    assertEquals("/home/me/.cache/clerk-android/tools", toolJarCacheDirectory(home::get, USER_HOME))
     assertEquals(
       "/xdg/clerk-android/tools",
-      toolJarCacheDirectory((home + ("XDG_CACHE_HOME" to "/xdg"))::get),
+      toolJarCacheDirectory((home + ("XDG_CACHE_HOME" to "/xdg"))::get, USER_HOME),
     )
-    assertEquals("/tools", toolJarCacheDirectory((home + ("CLERK_TOOLS_CACHE" to "/tools"))::get))
+    assertEquals(
+      "/tools",
+      toolJarCacheDirectory((home + ("CLERK_TOOLS_CACHE" to "/tools"))::get, USER_HOME),
+    )
     assertEquals(
       "/home/me/.cache/clerk-android/tools",
-      toolJarCacheDirectory((home + ("CLERK_TOOLS_CACHE" to "") + ("XDG_CACHE_HOME" to ""))::get),
+      toolJarCacheDirectory(
+        (home + ("CLERK_TOOLS_CACHE" to "") + ("XDG_CACHE_HOME" to ""))::get,
+        USER_HOME,
+      ),
     )
+    assertEquals(
+      "$USER_HOME/.cache/clerk-android/tools",
+      toolJarCacheDirectory({ null }, USER_HOME),
+    )
+  }
+
+  private companion object {
+    const val USER_HOME = "C:/Users/me"
   }
 }
