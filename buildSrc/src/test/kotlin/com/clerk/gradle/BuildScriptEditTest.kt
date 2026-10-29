@@ -65,6 +65,26 @@ class BuildScriptEditTest {
   }
 
   @Test
+  fun `adds after the group's last one-line declaration, not inside a multi-line one`() {
+    val multiLine =
+      script.replace(
+        "  testImplementation(libs.mockk)\n",
+        "  testImplementation(libs.mockk)\n  testImplementation(libs.robolectric) {\n    exclude(group = \"x\")\n  }\n",
+      )
+    val edit = BuildScriptEdit(multiLine.lines())
+
+    edit.add("testImplementation(libs.turbine)")
+
+    assertEquals(
+      multiLine.replace(
+        "  testImplementation(libs.mockk)\n",
+        "  testImplementation(libs.mockk)\n  testImplementation(libs.turbine)\n",
+      ) + "\n",
+      edit.text(),
+    )
+  }
+
+  @Test
   fun `reports a declaration it cannot find`() {
     assertFalse(BuildScriptEdit(script.lines()).remove("api", listOf(Regex.escape("libs.okhttp"))))
   }

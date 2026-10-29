@@ -74,7 +74,13 @@ abstract class UpdateToolJarsTask : DefaultTask() {
     val (algorithm, published) =
       PUBLISHED_DIGESTS.firstNotNullOfOrNull { (extension, algorithm) ->
         try {
-          algorithm to URI("$url.$extension").toURL().readText().trim().substringBefore(' ')
+          val connection =
+            URI("$url.$extension").toURL().openConnection().apply {
+              connectTimeout = 15_000
+              readTimeout = 30_000
+            }
+          val body = connection.getInputStream().bufferedReader().use { it.readText() }
+          algorithm to body.trim().substringBefore(' ')
         } catch (_: FileNotFoundException) {
           null
         }

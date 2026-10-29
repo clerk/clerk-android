@@ -24,7 +24,9 @@ internal class BuildScriptEdit(lines: List<String>) {
     val configuration = declaration.substringBefore('(')
     val group =
       (start + 1 until end).filter {
-        lines[it].startsWith("  $configuration(") && !lines[it].contains("platform(")
+        lines[it].startsWith("  $configuration(") &&
+          !lines[it].contains("platform(") &&
+          lines[it].trimEnd().endsWith(")")
       }
     val index =
       group.firstOrNull { lines[it] > line }
