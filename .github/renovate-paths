@@ -1,0 +1,8 @@
+# Renovate may change these protected paths without an approval from Team Mobile, but only in a commit that Renovate pushed itself.
+# A Renovate change to any other protected path still needs one. The `Code owner approval` check enforces this.
+# Patterns follow CODEOWNERS syntax, without owners.
+
+/.github/workflows/
+/source/api/build.gradle.kts
+/source/ui/build.gradle.kts
+/source/telemetry/build.gradle.kts

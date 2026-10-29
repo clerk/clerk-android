@@ -13,7 +13,12 @@ const PROTECTED_PATHS = `# High-risk paths
 *.pem
 `;
 
-function fakeGitHub({ list = PROTECTED_PATHS, files, changed = files.length, reviews = [], roles = {}, pull = {}, activity = [] }) {
+const RENOVATE_PATHS = `# Renovate's own updates
+/.github/workflows/
+/Package.swift
+`;
+
+function fakeGitHub({ list = PROTECTED_PATHS, renovateList = RENOVATE_PATHS, files, changed = files.length, reviews = [], roles = {}, pull = {}, activity = [] }) {
   const reply = body => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
   const notFound = { ok: false, status: 404, json: async () => ({}), text: async () => 'Not Found' };
   return async (url, { headers }) => {
@@ -23,6 +28,10 @@ function fakeGitHub({ list = PROTECTED_PATHS, files, changed = files.length, rev
     if (path === '/contents/.github/protected-paths') {
       assert.equal(searchParams.get('ref'), 'main');
       return list === null ? notFound : reply({ content: Buffer.from(list).toString('base64') });
+    }
+    if (path === '/contents/.github/renovate-paths') {
+      assert.equal(searchParams.get('ref'), 'main');
+      return renovateList === null ? notFound : reply({ content: Buffer.from(renovateList).toString('base64') });
     }
     if (path === '/pulls/7') {
       return reply({ changed_files: changed, head: { sha: HEAD }, ...pull });
@@ -150,10 +159,37 @@ describe('code owner approval', () => {
     assert.equal(pass, true);
   });
 
-  it('passes when Renovate pushed the head commit', async () => {
+  it('passes Renovate on a protected file that renovate-paths lists', async () => {
     const { pass, output } = await run({ files: workflow, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
     assert.equal(pass, true);
-    assert.match(output, new RegExp(`Renovate pushed ${HEAD}`));
+    assert.match(output, new RegExp(`Renovate pushed ${HEAD}, and .github/renovate-paths lists every protected file it changes`));
+  });
+
+  it('passes Renovate on ordinary files without a CodeRabbit approval', async () => {
+    const { pass } = await run({ files: ordinary, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    assert.equal(pass, true);
+  });
+
+  it('fails Renovate on a protected file that renovate-paths does not list', async () => {
+    const { pass, output } = await run(
+      { files: [...workflow, { filename: 'Sources/ClerkKit/Identity/Store.swift' }], pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
+      'renovate[bot]',
+    );
+    assert.equal(pass, false);
+    assert.match(output, /changes 1 protected file\(s\) that \.github\/renovate-paths doesn't list \(Sources\/ClerkKit\/Identity\/Store\.swift\)/);
+  });
+
+  it('fails Renovate on every protected file when the base branch has no renovate-paths list', async () => {
+    const { pass } = await run({ renovateList: null, files: workflow, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    assert.equal(pass, false);
+  });
+
+  it('passes Renovate on a protected file once Team Mobile approves', async () => {
+    const { pass } = await run(
+      { files: [{ filename: 'Sources/ClerkKit/Identity/Store.swift' }], reviews: [review('seanperez29', 'APPROVED')], roles: { seanperez29: 'admin' }, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
+      'renovate[bot]',
+    );
+    assert.equal(pass, true);
   });
 
   it('fails when someone else pushed the head commit of a Renovate pull request', async () => {

@@ -6,6 +6,7 @@ import { builtByRenovate } from './renovate-approval.mjs';
 
 const TRUSTED_ROLES = new Set(['admin', 'maintain']);
 const PROTECTED_PATHS = '.github/protected-paths';
+const RENOVATE_PATHS = '.github/renovate-paths';
 const CODERABBIT = 'coderabbitai[bot]';
 
 const GLOB = { '**/': '(?:.*/)?', '/**': '(?:/.*)?', '**': '.*', '*': '[^/]*', '?': '[^/]' };
@@ -52,6 +53,11 @@ async function trusted(get, login) {
   return TRUSTED_ROLES.has(role);
 }
 
+async function pathList(get, file, baseRef) {
+  const list = await get(`/contents/${file}?ref=${encodeURIComponent(baseRef)}`, { missing: null });
+  return list === null ? [] : parseProtectedPaths(Buffer.from(list.content, 'base64').toString('utf8'));
+}
+
 // reason says why the check failed: 'author', 'files', 'protected' or 'coderabbit'.
 async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef }) {
   const get = client({ fetch, api, token, repo });
@@ -63,20 +69,30 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
       return { pass: true, message: `${login} approved, and has maintain or admin access.` };
     }
   }
-  if (await builtByRenovate(get, pull, repo)) {
-    return { pass: true, message: `Renovate pushed ${pull.head.sha}, so it needs no Team Mobile approval.` };
-  }
-  if (!(await trusted(get, author))) {
+  const renovate = await builtByRenovate(get, pull, repo);
+  if (!renovate && !(await trusted(get, author))) {
     return { pass: false, reason: 'author', message: `${author} doesn't have maintain or admin access, so this needs an approval from Team Mobile.` };
   }
-  const list = await get(`/contents/${PROTECTED_PATHS}?ref=${encodeURIComponent(baseRef)}`, { missing: null });
-  const patterns = list === null ? [] : parseProtectedPaths(Buffer.from(list.content, 'base64').toString('utf8'));
+  const patterns = await pathList(get, PROTECTED_PATHS, baseRef);
   const files = await paged(get, `/pulls/${number}/files`);
   const changed = pull.changed_files;
   if (files.length < changed) {
     return { pass: false, reason: 'files', message: `GitHub listed ${files.length} of the ${changed} changed files, so this check can't tell which are protected. Split the pull request.` };
   }
   const owned = protectedFiles(patterns, [...new Set(files.flatMap(file => [file.filename, file.previous_filename].filter(Boolean)))]);
+  if (renovate) {
+    const renovatePatterns = await pathList(get, RENOVATE_PATHS, baseRef);
+    const outside = owned.filter(path => !renovatePatterns.some(pattern => pattern.test(path)));
+    if (outside.length > 0) {
+      const shown = outside.slice(0, 10).join(', ');
+      return {
+        pass: false,
+        reason: 'protected',
+        message: `Renovate pushed ${pull.head.sha}, but it changes ${outside.length} protected file(s) that ${RENOVATE_PATHS} doesn't list (${shown}${outside.length > 10 ? ', ...' : ''}), so it needs an approval from Team Mobile.`,
+      };
+    }
+    return { pass: true, message: `Renovate pushed ${pull.head.sha}, and ${RENOVATE_PATHS} lists every protected file it changes, so it needs no Team Mobile approval.` };
+  }
   if (owned.length > 0) {
     const shown = owned.slice(0, 10).join(', ');
     return {
