@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { client, paged } from './github.mjs';
+import { builtByRenovate } from './renovate-approval.mjs';
+
 const TRUSTED_ROLES = new Set(['admin', 'maintain']);
 
 const GLOB = { '**/': '(?:.*/)?', '/**': '(?:/.*)?', '**': '.*', '*': '[^/]*', '?': '[^/]' };
@@ -46,32 +49,6 @@ function approvers(reviews, author) {
   return [...latest].filter(([login, state]) => state === 'APPROVED' && login !== author).map(([login]) => login);
 }
 
-function client({ fetch, api, token, repo }) {
-  return async (path, { missing } = {}) => {
-    const response = await fetch(`${api}/repos/${repo}${path}`, {
-      headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}`, 'x-github-api-version': '2022-11-28' },
-    });
-    if (missing !== undefined && response.status === 404) {
-      return missing;
-    }
-    if (!response.ok) {
-      throw new Error(`GET ${path} answered ${response.status}: ${(await response.text()).slice(0, 300)}`);
-    }
-    return response.json();
-  };
-}
-
-async function paged(get, path) {
-  const items = [];
-  for (let page = 1; ; page += 1) {
-    const batch = await get(`${path}${path.includes('?') ? '&' : '?'}per_page=100&page=${page}`);
-    items.push(...batch);
-    if (batch.length < 100) {
-      return items;
-    }
-  }
-}
-
 async function trusted(get, login) {
   const { role_name: role } = await get(`/collaborators/${encodeURIComponent(login)}/permission`, { missing: { role_name: 'none' } });
   return TRUSTED_ROLES.has(role);
@@ -82,13 +59,16 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
   const codeowners = await get(`/contents/.github/CODEOWNERS?ref=${encodeURIComponent(baseRef)}`, { missing: null });
   const rules = codeowners === null ? [] : parseCodeowners(Buffer.from(codeowners.content, 'base64').toString('utf8'));
   const files = await paged(get, `/pulls/${number}/files`);
-  const { changed_files: changed } = await get(`/pulls/${number}`);
-  if (files.length < changed) {
-    return { pass: false, message: `GitHub listed ${files.length} of the ${changed} changed files, so this check can't tell which are under CODEOWNERS. Split the pull request.` };
+  const pull = await get(`/pulls/${number}`);
+  if (files.length < pull.changed_files) {
+    return { pass: false, message: `GitHub listed ${files.length} of the ${pull.changed_files} changed files, so this check can't tell which are under CODEOWNERS. Split the pull request.` };
   }
   const owned = ownedFiles(rules, [...new Set(files.flatMap(file => [file.filename, file.previous_filename].filter(Boolean)))]);
   if (owned.length === 0) {
     return { pass: true, message: 'No file under CODEOWNERS changed.' };
+  }
+  if (await builtByRenovate(get, pull, repo)) {
+    return { pass: true, message: `Renovate pushed ${pull.head.sha}, so its change to CODEOWNERS files needs no owner.` };
   }
   if (await trusted(get, author)) {
     return { pass: true, message: `${author} has maintain or admin access, so their change to CODEOWNERS files needs no other owner.` };

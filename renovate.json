@@ -3,6 +3,7 @@
   "extends": [
     "config:recommended"
   ],
+  "automerge": true,
   "packageRules": [
     {
       "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",

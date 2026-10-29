@@ -14,7 +14,7 @@ const CODEOWNERS = `# High-risk paths
 *.pem @clerk/team-mobile
 `;
 
-function fakeGitHub({ codeowners = CODEOWNERS, files, changed = files.length, reviews = [], roles = {} }) {
+function fakeGitHub({ codeowners = CODEOWNERS, files, changed = files.length, reviews = [], roles = {}, pull = {}, activity = [] }) {
   const reply = body => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
   const notFound = { ok: false, status: 404, json: async () => ({}), text: async () => 'Not Found' };
   return async (url, { headers }) => {
@@ -26,7 +26,11 @@ function fakeGitHub({ codeowners = CODEOWNERS, files, changed = files.length, re
       return codeowners === null ? notFound : reply({ content: Buffer.from(codeowners).toString('base64') });
     }
     if (path === '/pulls/7') {
-      return reply({ changed_files: changed });
+      return reply({ changed_files: changed, ...pull });
+    }
+    if (path === '/activity') {
+      assert.equal(searchParams.get('ref'), 'refs/heads/renovate/node-26.x');
+      return reply(activity);
     }
     const page = Number(searchParams.get('page'));
     const slice = items => items.slice((page - 1) * 100, page * 100);
@@ -54,6 +58,9 @@ async function run(github, author = 'outside-dev') {
 }
 
 const review = (login, state) => ({ user: { login }, state });
+
+const renovatePull = { user: { login: 'renovate[bot]' }, head: { ref: 'renovate/node-26.x', sha: 'abc123', repo: { full_name: REPO } } };
+const push = (login, after) => ({ actor: { login }, after });
 
 describe('ownedFiles', () => {
   const rules = parseCodeowners(CODEOWNERS);
@@ -123,6 +130,28 @@ describe('code owner approval', () => {
       roles: { seanperez29: 'admin' },
     });
     assert.equal(pass, true);
+  });
+
+  it('passes when Renovate pushed the head commit', async () => {
+    const { pass, output } = await run(
+      { files: [{ filename: '.github/workflows/pr-ci.yml' }], pull: renovatePull, activity: [push('renovate[bot]', 'abc123')] },
+      'renovate[bot]',
+    );
+    assert.equal(pass, true);
+    assert.match(output, /Renovate pushed abc123/);
+  });
+
+  it('fails when someone else pushed the head commit of a Renovate pull request', async () => {
+    const { pass } = await run(
+      {
+        files: [{ filename: '.github/workflows/pr-ci.yml' }],
+        pull: renovatePull,
+        activity: [push('writer', 'abc123'), push('renovate[bot]', 'old456')],
+        roles: { writer: 'write' },
+      },
+      'renovate[bot]',
+    );
+    assert.equal(pass, false);
   });
 
   it('counts the old path of a renamed file', async () => {
