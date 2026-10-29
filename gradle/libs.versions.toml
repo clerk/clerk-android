@@ -6,10 +6,11 @@ asm = "9.11.1"
 automap = "0.1.3"
 binaryCompatibilityValidator = "0.18.2"
 composeBom = "2026.06.01"
+dependencyAnalysis = "3.19.2"
 androidxTest = "1.7.0"
 # detekt 1.23.x embeds the Kotlin 2.0 compiler, which cannot read Kotlin 2.4 metadata, so type
-# resolution (InjectDispatcher and friends) only works on the 2.x line. Keep the pre-commit
-# checksum in config/bin/tool-checksums.sha256 in sync when bumping.
+# resolution (InjectDispatcher and friends) only works on the 2.x line. After bumping detekt, ktfmt
+# or sortDependencies, run ./gradlew downloadToolJars to pin the pre-commit hook's jars.
 detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 dokka = "2.2.0"
@@ -22,7 +23,7 @@ material3 = "1.4.0"
 materialKolor = "4.1.1"
 mavenPublish = "0.37.0"
 navigation3 = "1.1.7"
-navigationCompose = "2.10.2"
+navigationCompose = "2.9.7"
 okhttp = "5.4.0"
 retrofit = "3.0.0"
 robolectric = "4.17"
@@ -118,6 +119,7 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
+dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }

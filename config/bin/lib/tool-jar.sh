@@ -2,8 +2,9 @@
 # Shared helpers for the config/bin tool wrappers.
 #
 # The pre-commit hook must run exactly the same tool versions as Gradle
-# (Spotless ktfmt, detekt). Versions are read from gradle/libs.versions.toml,
-# which build.gradle.kts also uses, so there is a single source of truth.
+# (Spotless ktfmt, detekt, sort-dependencies). Versions are read from
+# gradle/libs.versions.toml, which build.gradle.kts also uses, so there is a
+# single source of truth.
 # Jars are downloaded once from Maven Central, verified against the SHA-256
 # pinned in config/bin/tool-checksums.sha256, and cached per version.
 

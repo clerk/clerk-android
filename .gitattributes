@@ -1,2 +1,0 @@
-config/bin/sort-dependencies filter=lfs diff=lfs merge=lfs -text
-source/ui/src/test/snapshots/images/com.clerk.ui.core.button_ClerkButtonScreenshotTest_defaultButton.png filter=lfs diff=lfs merge=lfs -text
