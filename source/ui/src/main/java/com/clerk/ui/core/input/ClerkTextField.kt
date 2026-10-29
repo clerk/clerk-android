@@ -101,6 +101,7 @@ public fun ClerkTextField(
       onValueChange = { onValueChange(it) },
       keyboardOptions = keyboardOptions,
       keyboardActions = keyboardActions,
+      singleLine = maxLines == 1,
       maxLines = maxLines,
       enabled = enabled,
       shape = ClerkMaterialTheme.shape,

@@ -3,6 +3,11 @@ name: Verify end-to-end tests
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      runner:
+        description: The runner label for the job. The release passes a Blacksmith label; every other run uses GitHub's runner.
+        required: false
+        type: string
     secrets:
       MOBILE_VERIFICATION_PLATFORM_API_KEY:
         required: true
@@ -21,7 +26,7 @@ concurrency:
 jobs:
   e2e-tests:
     if: github.event_name != 'schedule' || github.repository == 'clerk/clerk-android'
-    runs-on: ${{ vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || vars.VERIFY_CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 60
     permissions:
       contents: read
@@ -56,7 +61,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Enable KVM
         run: |

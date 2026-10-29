@@ -146,7 +146,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken uses template in API call when provided`() = runTest {
     val template = "custom_template"
-    val cacheKey = "session_123-template-custom_template"
+    val cacheKey = "session_123-organization--template-custom_template"
     val options = GetTokenOptions(template = template)
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
@@ -579,6 +579,22 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `getToken after reset does not return a token cached by the previous runtime`() = runTest {
+    val cacheKey = "session_123-organization-"
+    val freshToken = mockk<TokenResource>(relaxed = true)
+    every { mockTokenResource.jwt } returns "previous.runtime.jwt"
+    every { mockJWT.expiresAt } returns Date(System.currentTimeMillis() + 120000)
+    SessionTokensCache.setToken(cacheKey, mockTokenResource)
+    coEvery { mockClerkApiService.tokens("session_123") } returns ClerkResult.success(freshToken)
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) } returns
+      SessionTokensCache.StoreResult(freshToken, true)
+
+    sessionTokenFetcher.reset()
+
+    assertEquals(freshToken, sessionTokenFetcher.getToken(mockSession))
+  }
+
+  @Test
   fun `getToken handles API exception gracefully`() = runTest {
     coEvery { SessionTokensCache.getToken(any()) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } throws RuntimeException("Network error")
@@ -606,7 +622,7 @@ class SessionTokenFetcherTest {
 
     val cacheKey = mockSession.tokenCacheKey(template)
 
-    assertEquals("session_456-template-admin_template", cacheKey)
+    assertEquals("session_456-organization--template-admin_template", cacheKey)
   }
 
   @Test

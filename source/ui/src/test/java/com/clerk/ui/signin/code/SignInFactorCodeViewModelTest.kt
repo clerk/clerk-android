@@ -10,12 +10,15 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.VerificationUiState
+import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -305,16 +308,31 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun attemptShouldSetNotStartedWhenNoSignInIsInProgress() = runTest {
+  fun attemptWithoutSignInInProgressShouldLeaveVerificationIdleAndMakeNoAttempt() = runTest {
     every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = Strategy.EmailCode.value)
-    val code = "123456"
 
-    viewModel.attempt(factor, isSecondFactor = false, code)
+    viewModel.attempt(factor, isSecondFactor = false, code = "123456")
     testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
+    assertEquals(VerificationUiState.Idle, viewModel.verificationUiState.value)
+    assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
+    verify { mockAttemptHandler wasNot Called }
   }
+
+  @Test
+  fun secondFactorAttemptWithoutSignInInProgressShouldLeaveVerificationIdleAndMakeNoAttempt() =
+    runTest {
+      every { mockAuth.currentSignIn } returns null
+      val factor = Factor(strategy = Strategy.Totp.value)
+
+      viewModel.attempt(factor, isSecondFactor = true, code = "123456")
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(VerificationUiState.Idle, viewModel.verificationUiState.value)
+      assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
+      verify { mockAttemptHandler wasNot Called }
+    }
 
   @Test
   fun prepareShouldSendEmailCodeWhenEmailLinkIsSupported() = runTest {

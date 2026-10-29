@@ -42,7 +42,6 @@ import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.ReverificationConfig
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
-import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.sharedsession.SharedSessionSyncProvider
 import com.clerk.api.signin.SignIn
@@ -919,7 +918,6 @@ public object Clerk {
     stateStore.reset()
     resetAuthFlowState()
     SessionTokenFetcher.shared.reset()
-    SessionTokensCache.clear()
     LocaleProvider.cleanup()
     ClerkApi.reset()
     configuredPublishableKey = null

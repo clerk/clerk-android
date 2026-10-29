@@ -3,8 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-  push:
-    branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -15,7 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [":source:api", ":source:ui"]
+        module:
+          - ":source:api"
+          - ":source:ui"
+          - ":source:telemetry"
+          - ":workbench"
+          - ":samples:quickstart"
+          - ":samples:custom-flows"
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK 21

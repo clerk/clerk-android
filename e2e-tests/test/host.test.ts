@@ -1,19 +1,19 @@
-import '../testing/git-env.ts';
+import '@clerk/internal-mobile-e2e/testing/git-env';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { selectBackend } from '../src/core/devices.ts';
-import { resolveSpecs } from '../src/core/e2e.ts';
-import { STANDARD, declaredIn, planGroups, readSpecText, settingsOf } from '../src/core/instances/settings.ts';
-import type { BuildKey, InstanceSettings, ScratchPath, VerifyFailure } from '../src/core/types.ts';
+import { selectBackend } from '@clerk/internal-mobile-e2e/core/devices';
+import { resolveSpecs } from '@clerk/internal-mobile-e2e/core/e2e';
+import { STANDARD, declaredIn, planGroups, readSpecText, settingsOf } from '@clerk/internal-mobile-e2e/core/instances/settings';
+import type { BuildKey, InstanceSettings, ScratchPath, VerifyFailure } from '@clerk/internal-mobile-e2e/core/types';
 import { host } from '../src/host.ts';
 import { LANE_FAILED, LANE_READY, LOG_FILTER, RECORD_SIZE } from '../src/platform/android/emulator.ts';
 import { localAndroidBackend } from '../src/platform/android/local.ts';
 import { systemImage, type Machine } from '../src/platform/android/sdk.ts';
-import { answer } from '../src/core/remote/recipe.ts';
+import { answer } from '@clerk/internal-mobile-e2e/core/remote/recipe';
 import sessionDevice from '../src/platform/android/session-device.ts';
 
 const PACKAGE_DIR = join(import.meta.dirname, '..');

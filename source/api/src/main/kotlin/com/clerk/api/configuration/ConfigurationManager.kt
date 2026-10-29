@@ -27,7 +27,6 @@ import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
-import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -914,5 +913,4 @@ private fun resetClientStateForDeviceTokenChange() {
   Clerk.updateClient(Client())
   Clerk.clearSessionAndUserState()
   SessionTokenFetcher.shared.reset()
-  SessionTokensCache.clear()
 }

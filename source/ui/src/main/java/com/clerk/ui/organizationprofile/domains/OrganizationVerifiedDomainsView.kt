@@ -58,7 +58,6 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -395,7 +394,7 @@ private fun AddDomainRow(showTopDivider: Boolean, onClick: () -> Unit) {
         Text(
           text = stringResource(R.string.add_domain),
           style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
-          color = DefaultColors.clerk.primary ?: ClerkMaterialTheme.colors.primary,
+          color = ClerkMaterialTheme.colors.primary,
         )
         Text(
           text = stringResource(R.string.add_domain_short_description),

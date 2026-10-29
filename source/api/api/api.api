@@ -2620,6 +2620,23 @@ public final class com/clerk/api/network/ClerkPaginatedResponse$Companion {
 	public final fun serializer (Lkotlinx/serialization/KSerializer;)Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/clerk/api/network/ForbiddenCertificatesHostnameVerifier : javax/net/ssl/HostnameVerifier {
+	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/network/ForbiddenCertificatesHostnameVerifier$Companion;
+	public fun <init> (Ljavax/net/ssl/HostnameVerifier;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljavax/net/ssl/HostnameVerifier;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun verify (Ljava/lang/String;Ljavax/net/ssl/SSLSession;)Z
+}
+
+public final class com/clerk/api/network/ForbiddenCertificatesHostnameVerifier$Companion {
+	public final fun getCVE_2026_111943 ()Ljava/util/Set;
+}
+
+public final class com/clerk/api/network/ForbiddenCertificatesHostnameVerifierKt {
+	public static final fun forbiddingCertificates (Lokhttp3/OkHttpClient;Ljava/util/Set;)Lokhttp3/OkHttpClient;
+	public static synthetic fun forbiddingCertificates$default (Lokhttp3/OkHttpClient;Ljava/util/Set;ILjava/lang/Object;)Lokhttp3/OkHttpClient;
+}
+
 public abstract interface class com/clerk/api/network/api/OrganizationApi {
 	public abstract fun acceptMembershipRequest (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun acceptMembershipRequest$default (Lcom/clerk/api/network/api/OrganizationApi;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -4669,7 +4686,6 @@ public final class com/clerk/api/session/Session {
 	public final fun getCurrentTask ()Lcom/clerk/api/session/SessionTask;
 	public final fun getExpireAt ()J
 	public final fun getFactorVerificationAge ()Ljava/util/List;
-	public final fun getHasMaximumLifetime ()Z
 	public final fun getId ()Ljava/lang/String;
 	public final fun getLastActiveAt ()J
 	public final fun getLastActiveOrganizationId ()Ljava/lang/String;

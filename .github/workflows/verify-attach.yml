@@ -49,7 +49,7 @@ jobs:
         if: env.HAS_EVIDENCE_TOKEN == 'true'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Fetch and validate the evidence
         id: evidence
@@ -62,7 +62,7 @@ jobs:
           RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
         run: node .github/scripts/verify-attach.mjs fetch
 
-      - name: Install a gh whose pr edit has --attach
+      - name: Install a gh whose issue edit has --attach
         if: steps.evidence.outputs.found == 'true'
         env:
           GH_VERSION: "2.102.0"

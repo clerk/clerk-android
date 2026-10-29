@@ -1,6 +1,6 @@
 import { expect, type Locator, type Screen } from 'e2e';
-import { ASSERTION_TIMEOUT_MS } from './support/config.ts';
-import type { HostFixture, SeededUser } from './support/types.ts';
+import { ASSERTION_TIMEOUT_MS } from '@clerk/internal-mobile-e2e/specs/support/config';
+import type { HostFixture, SeededUser } from '@clerk/internal-mobile-e2e/specs/support/types';
 
 export function middleOf(target: Locator): Locator {
   const tap = async (): Promise<void> => {

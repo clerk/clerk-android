@@ -7,11 +7,11 @@ e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runn
 e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--max-failures <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
-e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label>... | --video [--both] [--before <run-id>]
+e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label>... | --video [--before <run-id>]
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
 ```
 
-`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both and no `--both`. `SKILL.md` has the choice under Evidence.
+`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both. `SKILL.md` has the choice under Evidence.
 
 Every verb takes `--json`. [Output](#output) has what each verb prints, and the exit codes and error codes are below it.
 
@@ -41,7 +41,7 @@ If a worktree is removed without `down`, the next `up` or `run` in any worktree 
 
 A verb prints progress lines to stderr while it works and its result to stdout when it ends. An error goes to stderr as two lines: `error`, the error code, and the message, then `fix:` and what to do.
 
-With `--json` a verb prints no progress lines, and prints one JSON object to stdout. On success the object is `{ "ok": true, "verb": "<verb>", ... }`. The remaining keys depend on the verb. `src/core/types.ts` defines them as `DoctorReport`, `UpResult`, `RunResult`, `ScreenResult`, `AttachResult`, and `DownResult`. On an error the object is `{ "ok": false, "error": { "code", "message", "fix", "retryable" } }`.
+With `--json` a verb prints no progress lines, and prints one JSON object to stdout. On success the object is `{ "ok": true, "verb": "<verb>", ... }`. The remaining keys depend on the verb. `src/core/types.ts` of `@clerk/internal-mobile-e2e` defines them as `DoctorReport`, `UpResult`, `RunResult`, `ScreenResult`, `AttachResult`, and `DownResult`. On an error the object is `{ "ok": false, "error": { "code", "message", "fix", "retryable" } }`.
 
 `doctor --json` prints its report even when a check fails, with `ok: false` and no `error`. Each check has `id`, `ok`, `detail`, and a `fix` when there is one. A warning has `ok: true` and `state: "warning"`. A check that did not run has `ok: true` and `state: "not-run"`.
 

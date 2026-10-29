@@ -161,4 +161,5 @@ internal object ClerkApi {
         }
       }
       .build()
+      .forbiddingCertificates()
 }
