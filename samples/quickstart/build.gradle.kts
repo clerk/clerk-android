@@ -43,14 +43,12 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation(projects.clerk.source.api)
   implementation(libs.activity.compose)
-  implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
-  implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.material3)
-  implementation(projects.clerk.source.api)
 }
 
 tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }

@@ -120,7 +120,6 @@ dependencies {
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.lifecycle.process)
-  implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.playServicesAuth)
   implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)
@@ -135,9 +134,8 @@ dependencies {
 
   testImplementation(platform(libs.compose.bom))
   testImplementation(libs.androidx.appcompat)
-  testImplementation(libs.androidx.arch.test)
   testImplementation(libs.androidx.compose.foundation)
-  testImplementation(libs.androidx.test.core.ktx)
+  testImplementation(libs.androidx.core)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
