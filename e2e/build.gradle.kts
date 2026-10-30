@@ -36,15 +36,13 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
-  implementation(libs.activity.compose)
-  implementation(libs.androidx.lifecycle.runtime)
-  implementation(libs.androidx.ui)
-  implementation(libs.androidx.ui.graphics)
-  implementation(libs.androidx.ui.tooling.preview)
-  implementation(libs.kotlinx.coroutines)
-  implementation(libs.material3)
   implementation(projects.source.api)
   implementation(projects.source.ui)
+  implementation(libs.activity.compose)
+  implementation(libs.androidx.ui)
+  implementation(libs.androidx.ui.graphics)
+  implementation(libs.kotlinx.coroutines)
+  implementation(libs.material3)
 
   debugImplementation(libs.androidx.ui.tooling)
 
