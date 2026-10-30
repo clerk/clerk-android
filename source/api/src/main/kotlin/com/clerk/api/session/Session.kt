@@ -146,6 +146,15 @@ public data class Session(
 
     @Serializable
     @AutoMap
+    data class ResetPassword(
+      val code: String,
+      val password: String,
+      @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean,
+      override val strategy: String,
+    ) : AttemptFirstFactorParams
+
+    @Serializable
+    @AutoMap
     data class BiometricCredential(
       @SerialName("trusted_device_id") val biometricCredentialId: String,
       @SerialName("client_data") val clientData: String,
