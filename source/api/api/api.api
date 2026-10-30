@@ -4916,6 +4916,8 @@ public final class com/clerk/api/session/SessionVerificationConvenienceExtension
 	public static final fun sendEmailCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun sendMfaPhoneCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun sendPhoneCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun sendResetPasswordEmailCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun sendResetPasswordPhoneCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun startEnterpriseSso (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun startEnterpriseSso$default (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun verifyWithBackupCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -4927,6 +4929,10 @@ public final class com/clerk/api/session/SessionVerificationConvenienceExtension
 	public static synthetic fun verifyWithPasskey$default (Lcom/clerk/api/session/Session;Ljava/util/List;Lcom/clerk/api/session/SessionVerification$Level;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun verifyWithPassword (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun verifyWithPhoneCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun verifyWithResetPasswordEmailCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyWithResetPasswordEmailCode$default (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun verifyWithResetPasswordPhoneCode (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyWithResetPasswordPhoneCode$default (Lcom/clerk/api/session/Session;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun verifyWithTOTP (Lcom/clerk/api/session/Session;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

@@ -51,6 +51,96 @@ public suspend fun Session.verifyWithPassword(
   return attemptFirstFactorVerification(Session.AttemptFirstFactorParams.Password(password))
 }
 
+/**
+ * Sends a reset password code to the email address for first-factor reverification.
+ *
+ * Use it when the user can't verify with their password, for example after [verifyWithPassword]
+ * fails with `form_password_pwned`. Complete it with [verifyWithResetPasswordEmailCode].
+ *
+ * @param emailAddressId The ID of one of the user's verified email addresses.
+ */
+public suspend fun Session.sendResetPasswordEmailCode(
+  emailAddressId: String
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return prepareFirstFactorVerification(
+    strategy = Strategy.ResetPasswordEmailCode.value,
+    emailAddressId = emailAddressId,
+  )
+}
+
+/**
+ * Sends a reset password code to the phone number for first-factor reverification.
+ *
+ * Use it when the user can't verify with their password, for example after [verifyWithPassword]
+ * fails with `form_password_pwned`. Complete it with [verifyWithResetPasswordPhoneCode].
+ *
+ * @param phoneNumberId The ID of one of the user's verified phone numbers.
+ */
+public suspend fun Session.sendResetPasswordPhoneCode(
+  phoneNumberId: String
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return prepareFirstFactorVerification(
+    strategy = Strategy.ResetPasswordPhoneCode.value,
+    phoneNumberId = phoneNumberId,
+  )
+}
+
+/**
+ * Verifies the current session with a reset password code sent by [sendResetPasswordEmailCode], in
+ * place of the user's password.
+ *
+ * Completing the verification sets the user's password to [newPassword]. When the result's status
+ * is [SessionVerification.Status.NEEDS_SECOND_FACTOR], the server holds the new password and sets
+ * it only after the second factor passes.
+ *
+ * @param code The code the user received by email.
+ * @param newPassword The password to set for the user.
+ * @param signOutOfOtherSessions Whether to sign out of the user's other sessions once the password
+ *   is set.
+ */
+public suspend fun Session.verifyWithResetPasswordEmailCode(
+  code: String,
+  newPassword: String,
+  signOutOfOtherSessions: Boolean = false,
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return attemptFirstFactorVerification(
+    Session.AttemptFirstFactorParams.ResetPassword(
+      code = code,
+      password = newPassword,
+      signOutOfOtherSessions = signOutOfOtherSessions,
+      strategy = Strategy.ResetPasswordEmailCode.value,
+    )
+  )
+}
+
+/**
+ * Verifies the current session with a reset password code sent by [sendResetPasswordPhoneCode], in
+ * place of the user's password.
+ *
+ * Completing the verification sets the user's password to [newPassword]. When the result's status
+ * is [SessionVerification.Status.NEEDS_SECOND_FACTOR], the server holds the new password and sets
+ * it only after the second factor passes.
+ *
+ * @param code The code the user received by SMS.
+ * @param newPassword The password to set for the user.
+ * @param signOutOfOtherSessions Whether to sign out of the user's other sessions once the password
+ *   is set.
+ */
+public suspend fun Session.verifyWithResetPasswordPhoneCode(
+  code: String,
+  newPassword: String,
+  signOutOfOtherSessions: Boolean = false,
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return attemptFirstFactorVerification(
+    Session.AttemptFirstFactorParams.ResetPassword(
+      code = code,
+      password = newPassword,
+      signOutOfOtherSessions = signOutOfOtherSessions,
+      strategy = Strategy.ResetPasswordPhoneCode.value,
+    )
+  )
+}
+
 /** Starts Enterprise SSO for first-factor reverification. */
 public suspend fun Session.startEnterpriseSso(
   emailAddressId: String? = null,
