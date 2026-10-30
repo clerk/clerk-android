@@ -11,8 +11,8 @@
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "A major update can break more than the checks cover, so a person still merges it.",
-      "matchUpdateTypes": ["major"],
+      "description": "The pre-commit hook needs a pinned checksum for each tool jar, and CI doesn't run the hook, so a person runs ./gradlew downloadToolJars on these updates before merging.",
+      "matchPackageNames": ["dev.detekt:**", "com.squareup.sort-dependencies:**"],
       "automerge": false
     },
     {
