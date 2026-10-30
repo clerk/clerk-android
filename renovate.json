@@ -19,6 +19,11 @@
       "description": "androidx.lifecycle 2.11 needs compileSdk 37 and Android Gradle plugin 9.1, and our AARs would pass both floors on to every app. React Native and Expo apps build with Android Gradle plugin 8, so lifecycle stays on 2.10 until they move.",
       "matchPackageNames": ["androidx.lifecycle:**"],
       "allowedVersions": "<2.11.0"
+    },
+    {
+      "description": "androidx.navigation 2.10 needs compileSdk 37, which lifecycle 2.10 keeps us below (see the rule above).",
+      "matchPackageNames": ["androidx.navigation:**"],
+      "allowedVersions": "<2.10.0"
     }
   ],
   "vulnerabilityAlerts": {

@@ -108,6 +108,19 @@ CI runs these on every pull request, and the release workflow runs them before p
 ./gradlew verifyPublishedArtifacts
 ```
 
+The hook runs ktfmt, detekt and sort-dependencies from jars it downloads at the versions in
+`gradle/libs.versions.toml` and checks against `config/bin/tool-checksums.sha256`. After changing one
+of those versions, run `./gradlew downloadToolJars` to pin the new jars, or `./gradlew updateToolJars`
+to move all three to their latest releases.
+
+To find dependencies a module declares but doesn't use, run `./gradlew buildHealth` (the
+[Dependency Analysis plugin](https://github.com/autonomousapps/dependency-analysis-gradle-plugin)).
+`./gradlew rakeDependencies` removes the unused ones, and declares any used dependency that only a
+removed one provided; add `--preview` to see the changes first. Build and run the tests afterwards:
+the analysis only sees what compiles against what, not what a test needs at runtime. The
+`rake-dependencies.yml` workflow runs the rake on `main` every night and opens a pull request from
+`automation/rake-dependencies` when it finds something.
+
 ## License
 
 This project is licensed under the **MIT license**.
