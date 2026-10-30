@@ -37,6 +37,8 @@
     }
   ],
   "vulnerabilityAlerts": {
-    "enabled": true
+    "description": "A vulnerability fix opens without the three-day wait, so a person merges it.",
+    "enabled": true,
+    "automerge": false
   }
 }
