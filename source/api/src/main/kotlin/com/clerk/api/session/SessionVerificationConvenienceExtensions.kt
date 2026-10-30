@@ -57,7 +57,8 @@ public suspend fun Session.verifyWithPassword(
  * Use it when the user can't verify with their password, for example after [verifyWithPassword]
  * fails with `form_password_pwned`. Complete it with [verifyWithResetPasswordEmailCode].
  *
- * @param emailAddressId The ID of one of the user's verified email addresses.
+ * @param emailAddressId The ID of the email address, from a `reset_password_email_code` factor in
+ *   [SessionVerification.supportedFirstFactors].
  */
 public suspend fun Session.sendResetPasswordEmailCode(
   emailAddressId: String
@@ -74,7 +75,8 @@ public suspend fun Session.sendResetPasswordEmailCode(
  * Use it when the user can't verify with their password, for example after [verifyWithPassword]
  * fails with `form_password_pwned`. Complete it with [verifyWithResetPasswordPhoneCode].
  *
- * @param phoneNumberId The ID of one of the user's verified phone numbers.
+ * @param phoneNumberId The ID of the phone number, from a `reset_password_phone_code` factor in
+ *   [SessionVerification.supportedFirstFactors].
  */
 public suspend fun Session.sendResetPasswordPhoneCode(
   phoneNumberId: String
