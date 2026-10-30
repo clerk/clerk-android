@@ -37,7 +37,7 @@ Preconditions:
 | `No members sections are available.` on Members | `OrganizationMembersView.kt`: the viewer has no tab | Unreachable by design. The viewer has no tab when they can neither read nor manage memberships, and the same check hides the `Members` row in `root/OrganizationProfileRows.kt`, so the profile never opens this screen in that state. Only a role revoked while the screen is open shows it, for a moment. |
 | `No members found.` on the `Members` tab | `OrganizationMembersView.kt`: the list is empty and the search field is empty | Nothing a role gives: the viewer is always in the list. It shows only after the members request fails. A search that matches no one shows `No members found` without the period. |
 
-Seeding also reaches these states, and no spec drives them yet: the `Members` row with no `Requests` tab, and no `Update profile` or `Delete organization`, for the `org:e2e_domains_reader` member; another member's row, with changing their role and removing them, for an admin with a second member.
+Seeding also reaches these states, and no spec drives them yet: the Members screen with no tab row (it shows only when the member can see two or more of `Members`, `Invitations`, and `Requests`) and no `Invite`, and no `Update profile` or `Delete organization`, for the `org:e2e_domains_reader` member; another member's row, with changing their role and removing them, for an admin with a second member.
 
 A change to a state no spec reaches is shown on a build with a local change that is not part of the pull request, and the pull request says so. Name the change and the screens it affects, and keep the spec in `specs/explored/`.
 
