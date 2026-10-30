@@ -3,7 +3,23 @@
   "extends": [
     "config:recommended"
   ],
+  "automerge": true,
   "packageRules": [
+    {
+      "description": "Updates merge with nobody looking at them, so a release waits three days for a compromised or pulled version to come to light. Renovate opens no branch until then, and vulnerability fixes skip the wait.",
+      "matchPackageNames": ["*"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "The pre-commit hook needs a pinned checksum for each tool jar, and CI doesn't run the hook, so a person runs ./gradlew downloadToolJars on these updates before merging.",
+      "matchPackageNames": ["dev.detekt:**", "com.squareup.sort-dependencies:**"],
+      "automerge": false
+    },
+    {
+      "description": "A major update can change behavior that our checks don't cover, so a person merges it. Renovate still opens it, and the Renovate approval still runs.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
     {
       "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",
       "matchFileNames": ["e2e-tests/**"],
@@ -21,6 +37,8 @@
     }
   ],
   "vulnerabilityAlerts": {
-    "enabled": true
+    "description": "A vulnerability fix opens without the three-day wait, so a person merges it.",
+    "enabled": true,
+    "automerge": false
   }
 }

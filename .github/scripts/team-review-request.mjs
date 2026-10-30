@@ -62,7 +62,7 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
     } else if (notice.body !== body) {
       await get(`/issues/comments/${notice.id}`, { method: 'PATCH', body: { body } });
     }
-    if (!ratedHighRisk(comments, pull.head.sha)) {
+    if (team.includes(author) && !ratedHighRisk(comments, pull.head.sha)) {
       return `Requested nobody. ${check.message}`;
     }
   }
@@ -75,7 +75,7 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
     return 'Every Team Mobile member is already requested or has reviewed.';
   }
   await get(`/pulls/${number}/requested_reviewers`, { method: 'POST', body: { reviewers } });
-  const why = check.reason === 'coderabbit' || check.reason === 'protected' ? 'CodeRabbit rated this commit high or critical risk.' : check.message;
+  const why = check.reason === 'coderabbit' || (check.reason === 'protected' && team.includes(author)) ? 'CodeRabbit rated this commit high or critical risk.' : check.message;
   return `Requested ${reviewers.join(', ')}. ${why}`;
 }
 
