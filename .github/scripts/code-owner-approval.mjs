@@ -88,6 +88,7 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
       return {
         pass: false,
         reason: 'protected',
+        files: outside,
         message: `Renovate pushed ${pull.head.sha}, but it changes ${outside.length} protected file(s) that ${RENOVATE_PATHS} doesn't list (${shown}${outside.length > 10 ? ', ...' : ''}), so it needs an approval from Team Mobile.`,
       };
     }

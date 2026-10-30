@@ -34,10 +34,16 @@ function fakeGitHub({ author = 'outside-dev', draft = false, state = 'open', fil
       return reply({});
     }
     if (path === '/pulls/7') {
-      return reply({ state, draft, user: { login: author }, head: { sha: HEAD }, base: { ref: 'main' }, changed_files: files.length, requested_reviewers: pending.map(login => ({ login })) });
+      return reply({ state, draft, user: { login: author }, head: { sha: HEAD, ref: 'renovate/node-26.x', repo: { full_name: REPO } }, base: { ref: 'main' }, changed_files: files.length, requested_reviewers: pending.map(login => ({ login })) });
     }
     if (path === '/contents/.github/protected-paths') {
       return reply({ content: Buffer.from('/.github/workflows/\n').toString('base64') });
+    }
+    if (path === '/contents/.github/renovate-paths') {
+      return notFound;
+    }
+    if (path === '/activity') {
+      return reply([{ actor: { login: 'renovate[bot]' }, after: HEAD }]);
     }
     const lists = { '/pulls/7/files': files, '/pulls/7/reviews': reviews, '/issues/7/comments': comments };
     if (path in lists) {
@@ -104,6 +110,12 @@ describe('team review request', () => {
     assert.match(posted[0], /changes files listed in `\.github\/protected-paths`/);
     assert.match(posted[0], /^- `\.github\/workflows\/pr-ci\.yml`$/m);
     assert.doesNotMatch(posted[0], /Clerk\.swift/);
+  });
+
+  it('requests the team and lists the files when Renovate changes a protected file that renovate-paths does not list', async () => {
+    const { requested, posted } = await run({ author: 'renovate[bot]', files: [{ filename: '.github/workflows/pr-ci.yml' }] });
+    assert.deepEqual(requested, ['mikepitre', 'seanperez29', 'swolfand', 'wobsoriano']);
+    assert.match(posted[0], /^- `\.github\/workflows\/pr-ci\.yml`$/m);
   });
 
   it('comments only when it requests someone new', async () => {

@@ -14,7 +14,6 @@ const PROTECTED_PATHS = `# High-risk paths
 `;
 
 const RENOVATE_PATHS = `# Renovate's own updates
-/.github/workflows/
 /Package.swift
 `;
 
@@ -90,6 +89,7 @@ describe('code owner approval', () => {
   const coderabbit = review('coderabbitai[bot]', 'APPROVED');
   const ordinary = [{ filename: 'Sources/ClerkKit/Clerk.swift' }];
   const workflow = [{ filename: '.github/workflows/pr-ci.yml' }];
+  const manifest = [{ filename: 'Package.swift' }];
 
   it('passes a Team Mobile author on ordinary files once CodeRabbit approves', async () => {
     const { pass, output } = await run({ files: ordinary, reviews: [coderabbit], roles: { mikepitre: 'admin' } }, 'mikepitre');
@@ -160,7 +160,7 @@ describe('code owner approval', () => {
   });
 
   it('passes Renovate on a protected file that renovate-paths lists', async () => {
-    const { pass, output } = await run({ files: workflow, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    const { pass, output } = await run({ files: manifest, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
     assert.equal(pass, true);
     assert.match(output, new RegExp(`Renovate pushed ${HEAD}, and .github/renovate-paths lists every protected file it changes`));
   });
@@ -172,15 +172,15 @@ describe('code owner approval', () => {
 
   it('fails Renovate on a protected file that renovate-paths does not list', async () => {
     const { pass, output } = await run(
-      { files: [...workflow, { filename: 'Sources/ClerkKit/Identity/Store.swift' }], pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
+      { files: [...manifest, ...workflow], pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
       'renovate[bot]',
     );
     assert.equal(pass, false);
-    assert.match(output, /changes 1 protected file\(s\) that \.github\/renovate-paths doesn't list \(Sources\/ClerkKit\/Identity\/Store\.swift\)/);
+    assert.match(output, /changes 1 protected file\(s\) that \.github\/renovate-paths doesn't list \(\.github\/workflows\/pr-ci\.yml\)/);
   });
 
   it('fails Renovate on every protected file when the base branch has no renovate-paths list', async () => {
-    const { pass } = await run({ renovateList: null, files: workflow, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    const { pass } = await run({ renovateList: null, files: manifest, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
     assert.equal(pass, false);
   });
 

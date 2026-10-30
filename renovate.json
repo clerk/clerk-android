@@ -11,6 +11,11 @@
       "minimumReleaseAge": "3 days"
     },
     {
+      "description": "A major update can change behavior that our checks don't cover, so a person merges it. Renovate still opens it, and the Renovate approval still runs.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
       "description": "The end-to-end test package pins the versions its doctor checks, the same ones as in clerk-ios and clerk/javascript. Vulnerability fixes still open, through vulnerabilityAlerts below.",
       "matchFileNames": ["e2e-tests/**"],
       "enabled": false
