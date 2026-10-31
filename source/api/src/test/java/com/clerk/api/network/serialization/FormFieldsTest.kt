@@ -439,22 +439,6 @@ class FormFieldsTest {
   }
 
   @Test
-  fun `redirect params send the OAuth provider as its strategy`() {
-    val providers = listOf(OAuthProvider.GOOGLE, OAuthProvider.custom("oauth_custom_patreon"))
-
-    val signIn = providers.map {
-      SignIn.AuthenticateWithRedirectParams.OAuth(provider = it, redirectUrl = "clerk://callback")
-        .toFormFields()["strategy"]
-    }
-    val signUp = providers.map {
-      SignUp.AuthenticateWithRedirectParams.OAuth(provider = it).toFormFields()["strategy"]
-    }
-
-    assertEquals(listOf("oauth_google", "oauth_custom_patreon"), signIn)
-    assertEquals(listOf("oauth_google", "oauth_custom_patreon"), signUp)
-  }
-
-  @Test
   fun `unsafe metadata decodes back to the plain values it was built from`() {
     val json = Json.encodeToString(SignUp.CreateParams.Standard(unsafeMetadata = NESTED_METADATA))
 

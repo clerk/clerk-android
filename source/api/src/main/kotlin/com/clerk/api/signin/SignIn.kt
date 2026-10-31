@@ -20,7 +20,6 @@ import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.OAuthProviderStrategySerializer
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -427,8 +426,6 @@ private constructor(
      */
     @Serializable
     public data class OAuth(
-      @SerialName("strategy")
-      @Serializable(with = OAuthProviderStrategySerializer::class)
       val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,

@@ -21,7 +21,6 @@ import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.OAuthProviderStrategySerializer
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -306,9 +305,7 @@ public data class SignUp(
      */
     @Serializable
     public data class OAuth(
-      @SerialName("strategy")
-      @Serializable(with = OAuthProviderStrategySerializer::class)
-      val provider: OAuthProvider,
+      @SerialName("strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       override val identifier: String? = null,
