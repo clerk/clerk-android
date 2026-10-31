@@ -6,6 +6,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.user.User
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -295,7 +296,7 @@ class FormFieldsTest {
   }
 
   @Test
-  fun `email address verification preparation keeps its existing keys`() {
+  fun `email address verification preparation sends snake case keys`() {
     val fields =
       listOf<EmailAddress.PrepareVerificationParams>(
           EmailAddress.PrepareVerificationParams.EmailCode(),
@@ -313,7 +314,7 @@ class FormFieldsTest {
         mapOf("strategy" to "enterprise_sso"),
         mapOf(
           "strategy" to "enterprise_sso",
-          "redirectUrl" to "clerk://callback",
+          "redirect_url" to "clerk://callback",
           "action_complete_redirect_url" to "clerk://done",
         ),
       ),
@@ -417,6 +418,58 @@ class FormFieldsTest {
         biometric,
       ),
       secondFactor,
+    )
+  }
+
+  @Test
+  fun `create params encode every subtype, including the ones sent by hand`() {
+    listOf<SignIn.CreateParams.Strategy>(
+        SignIn.CreateParams.Strategy.Transfer(),
+        SignIn.CreateParams.Strategy.Passkey(),
+        SignIn.CreateParams.Strategy.BiometricCredential(id = "cred"),
+      )
+      .forEach { it.toFormFields() }
+    listOf(
+        SignUp.CreateParams.None,
+        SignUp.CreateParams.Transfer,
+        SignUp.CreateParams.Ticket(ticket = "tkt"),
+        SignUp.CreateParams.GoogleOneTap(token = "token"),
+      )
+      .forEach { sendSignUpCreate(it) }
+  }
+
+  @Test
+  fun `redirect params send the OAuth provider as its strategy`() {
+    val providers = listOf(OAuthProvider.GOOGLE, OAuthProvider.custom("oauth_custom_patreon"))
+
+    val signIn = providers.map {
+      SignIn.AuthenticateWithRedirectParams.OAuth(provider = it, redirectUrl = "clerk://callback")
+        .toFormFields()["strategy"]
+    }
+    val signUp = providers.map {
+      SignUp.AuthenticateWithRedirectParams.OAuth(provider = it).toFormFields()["strategy"]
+    }
+
+    assertEquals(listOf("oauth_google", "oauth_custom_patreon"), signIn)
+    assertEquals(listOf("oauth_google", "oauth_custom_patreon"), signUp)
+  }
+
+  @Test
+  fun `unsafe metadata decodes back to the plain values it was built from`() {
+    val json = Json.encodeToString(SignUp.CreateParams.Standard(unsafeMetadata = NESTED_METADATA))
+
+    val decoded = Json.decodeFromString<SignUp.CreateParams.Standard>(json).unsafeMetadata
+
+    assertEquals(
+      mapOf(
+        "plan" to "pro",
+        "seats" to 3L,
+        "ratio" to 1.5,
+        "beta" to true,
+        "tags" to listOf("a", "b"),
+        "nested" to mapOf("k" to "v", "gone" to null),
+      ),
+      decoded,
     )
   }
 

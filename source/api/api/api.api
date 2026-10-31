@@ -5448,6 +5448,7 @@ public abstract interface class com/clerk/api/signin/SignIn$CreateParams$Strateg
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5466,6 +5467,22 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCr
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Companion {
@@ -5540,6 +5557,7 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Identifier$
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5550,6 +5568,22 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey : c
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Password : com/clerk/api/signin/SignIn$CreateParams$Strategy {
@@ -5716,6 +5750,7 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Ticket$Comp
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5726,6 +5761,22 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer : 
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CredentialType : java/lang/Enum {
@@ -6431,6 +6482,7 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Companion {
 
 public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$Companion;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;
@@ -6441,9 +6493,26 @@ public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap : com/c
 	public fun toString ()Ljava/lang/String;
 }
 
+public final synthetic class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/clerk/api/signup/SignUp$CreateParams$None : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$None;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$CreateParams$Standard : com/clerk/api/signup/SignUp$CreateParams {
@@ -6493,6 +6562,7 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Standard$Companion {
 
 public final class com/clerk/api/signup/SignUp$CreateParams$Ticket : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signup/SignUp$CreateParams$Ticket$Companion;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;
@@ -6503,9 +6573,26 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Ticket : com/clerk/a
 	public fun toString ()Ljava/lang/String;
 }
 
+public final synthetic class com/clerk/api/signup/SignUp$CreateParams$Ticket$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$Ticket$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signup/SignUp$CreateParams$Ticket$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/clerk/api/signup/SignUp$CreateParams$Transfer : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$Transfer;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$PrepareVerificationParams {

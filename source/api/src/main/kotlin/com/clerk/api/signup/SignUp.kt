@@ -21,6 +21,7 @@ import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthProviderStrategySerializer
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -305,7 +306,9 @@ public data class SignUp(
      */
     @Serializable
     public data class OAuth(
-      @SerialName("strategy") val provider: OAuthProvider,
+      @SerialName("strategy")
+      @Serializable(with = OAuthProviderStrategySerializer::class)
+      val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       override val identifier: String? = null,
@@ -428,7 +431,7 @@ public data class SignUp(
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      * You can examine the required and optional fields before providing user data.
      */
-    public object None : CreateParams
+    @Serializable public object None : CreateParams
 
     /**
      * The `SignUp` will be created by transferring an existing session.
@@ -436,14 +439,14 @@ public data class SignUp(
      * This is used when a user is going through the Sign In flow and we detect they need to sign up
      * instead. This shouldn't be used for any other purpose.
      */
-    public object Transfer : CreateParams
+    @Serializable public object Transfer : CreateParams
 
     /**
      * The `SignUp` will be created with a ticket.
      *
      * @param ticket The ticket string for sign-up.
      */
-    public data class Ticket(val ticket: String) : CreateParams
+    @Serializable public data class Ticket(val ticket: String) : CreateParams
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
@@ -453,7 +456,7 @@ public data class SignUp(
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    public data class GoogleOneTap(val token: String) : CreateParams
+    @Serializable public data class GoogleOneTap(val token: String) : CreateParams
   }
 
   @Serializable

@@ -20,6 +20,7 @@ import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthProviderStrategySerializer
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -426,6 +427,8 @@ private constructor(
      */
     @Serializable
     public data class OAuth(
+      @SerialName("strategy")
+      @Serializable(with = OAuthProviderStrategySerializer::class)
       val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -675,6 +678,7 @@ private constructor(
        *
        * This strategy is used when transferring an existing session or account state.
        */
+      @Serializable
       public data class Transfer(override val strategy: String = AuthStrategy.Transfer.value) :
         Strategy
 
@@ -692,6 +696,7 @@ private constructor(
       ) : Strategy
 
       /** Passkey strategy for authentication using a passkey. */
+      @Serializable
       public data class Passkey(override val strategy: String = AuthStrategy.Passkey.value) :
         Strategy
 
@@ -706,6 +711,7 @@ private constructor(
        * @property promptTitle The title shown in the system authentication prompt.
        * @property promptSubtitle The subtitle shown in the system authentication prompt.
        */
+      @Serializable
       public data class BiometricCredential(
         val id: String? = null,
         val identifierHint: String? = null,

@@ -53,7 +53,7 @@ public data class EmailAddress(
     @Serializable
     public data class EnterpriseSSO(
       override val strategy: String = Strategy.EnterpriseSso.value,
-      val redirectUrl: String? = null,
+      @SerialName("redirect_url") val redirectUrl: String? = null,
       @SerialName("action_complete_redirect_url") val actionCompleteRedirectUrl: String? = null,
     ) : PrepareVerificationParams
   }

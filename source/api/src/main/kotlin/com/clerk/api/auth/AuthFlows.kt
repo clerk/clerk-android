@@ -33,7 +33,13 @@ internal suspend fun Auth.createSignIn(
       )
     is SignIn.CreateParams.Strategy.Transfer ->
       postSignIn(mapOf(AuthStrategy.Transfer.value to "true"))
-    else -> postSignIn(params.toFormFields())
+    is SignIn.CreateParams.Strategy.EmailCode,
+    is SignIn.CreateParams.Strategy.PhoneCode,
+    is SignIn.CreateParams.Strategy.Password,
+    is SignIn.CreateParams.Strategy.ResetPasswordEmailCode,
+    is SignIn.CreateParams.Strategy.ResetPasswordPhoneCode,
+    is SignIn.CreateParams.Strategy.Ticket,
+    is SignIn.CreateParams.Strategy.Identifier -> postSignIn(params.toFormFields())
   }
 }
 
@@ -74,7 +80,7 @@ internal suspend fun Auth.createSignUp(
         mapOf("strategy" to AuthStrategy.Ticket.value, "ticket" to params.ticket)
       is SignUp.CreateParams.GoogleOneTap ->
         mapOf("strategy" to AuthStrategy.GoogleOneTap.value, "token" to params.token)
-      else -> params.toFormFields()
+      is SignUp.CreateParams.Standard -> params.toFormFields()
     }
   return postSignUp(fields)
 }
