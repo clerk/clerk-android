@@ -4,6 +4,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.serializer
@@ -17,9 +18,9 @@ private val formJson = Json {
 
 internal inline fun <reified T> T.toFormFields(): Map<String, String> = toFormFields(serializer())
 
-// Form endpoints reject bracket-encoded nested params (unsafe_metadata[key]=value), so nested
-// values are sent as JSON strings.
 internal fun <T> T.toFormFields(serializer: SerializationStrategy<T>): Map<String, String> =
   formJson.encodeToJsonElement(serializer, this).jsonObject.mapValues { (_, value) ->
-    if (value is JsonPrimitive) value.content else value.toString()
+    value.toFormValue()
   }
+
+private fun JsonElement.toFormValue(): String = if (this is JsonPrimitive) content else toString()
