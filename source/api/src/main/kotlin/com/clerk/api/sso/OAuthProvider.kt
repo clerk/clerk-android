@@ -327,6 +327,18 @@ internal object OAuthProviderSerializer : KSerializer<OAuthProvider> {
   }
 }
 
+internal object OAuthProviderStrategySerializer : KSerializer<OAuthProvider> {
+  override val descriptor: SerialDescriptor =
+    PrimitiveSerialDescriptor("OAuthProviderStrategy", PrimitiveKind.STRING)
+
+  override fun serialize(encoder: Encoder, value: OAuthProvider) {
+    encoder.encodeString(value.strategy)
+  }
+
+  override fun deserialize(decoder: Decoder): OAuthProvider =
+    OAuthProvider.fromStrategy(decoder.decodeString())
+}
+
 /**
  * Data class containing OAuth provider configuration information.
  *

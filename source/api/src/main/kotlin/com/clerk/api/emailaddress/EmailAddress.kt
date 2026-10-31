@@ -6,7 +6,7 @@ import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.automap.annotations.AutoMap
+import com.clerk.api.network.serialization.toFormFields
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -42,15 +42,14 @@ public data class EmailAddress(
 
   @Serializable public data class LinkedEntity(val id: String, val type: String)
 
+  @Serializable
   public sealed interface PrepareVerificationParams {
     public val strategy: String
 
-    @AutoMap
     @Serializable
     public data class EmailCode(override val strategy: String = Strategy.EmailCode.value) :
       PrepareVerificationParams
 
-    @AutoMap
     @Serializable
     public data class EnterpriseSSO(
       override val strategy: String = Strategy.EnterpriseSso.value,
@@ -102,7 +101,7 @@ public suspend fun EmailAddress.prepareVerification(
 ): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.prepareEmailAddressVerification(
     emailAddressId = this.id,
-    params = params.toMap(),
+    params = params.toFormFields(),
   )
 }
 

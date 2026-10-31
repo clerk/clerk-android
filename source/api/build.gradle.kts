@@ -3,7 +3,6 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.plugin.serialization)
-  alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
 }
 
@@ -52,30 +51,6 @@ dokka {
   dokkaPublications.configureEach { suppressInheritedMembers.set(true) }
 }
 
-tasks
-  .matching { it.name.startsWith("dokkaGenerate") }
-  .configureEach {
-    dependsOn(tasks.named("kspDebugKotlin"))
-    dependsOn(tasks.named("kspReleaseKotlin"))
-  }
-
-// AutoMap emits public declarations without a modifier, which explicit API mode rejects. Its
-// non-public output always carries a modifier, so a bare top-level `fun` is a public one.
-// Remove once clerk/AutoMap emits `public` itself.
-tasks
-  .matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }
-  .configureEach {
-    doLast {
-      outputs.files.asFileTree
-        .matching { include("**/*.kt") }
-        .forEach { file ->
-          val text = file.readText()
-          val explicit = text.replace(Regex("^fun ", RegexOption.MULTILINE), "public fun ")
-          if (explicit != text) file.writeText(explicit)
-        }
-    }
-  }
-
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
   publishToMavenCentral()
@@ -121,7 +96,6 @@ dependencies {
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.playServicesAuth)
-  implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
@@ -146,6 +120,4 @@ dependencies {
   testImplementation(libs.robolectric)
 
   dokkaPlugin(libs.versioning.plugin)
-
-  ksp(libs.clerk.automap.processor)
 }

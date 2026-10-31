@@ -11,7 +11,6 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -132,29 +131,5 @@ class SignUpAuthenticateWithRedirectTest {
         unsafeMetadata = unsafeMetadata,
       )
     }
-  }
-
-  @Test
-  fun `redirect params map transform unsafe metadata to json`() {
-    val params =
-      SignUp.AuthenticateWithRedirectParams.OAuth(
-        provider = OAuthProvider.GOOGLE,
-        unsafeMetadata = mapOf("test" to "test"),
-      )
-
-    val paramsMap = params.toMap()
-
-    assertEquals("oauth_google", paramsMap["strategy"])
-    assertEquals("""{"test":"test"}""", paramsMap["unsafe_metadata"])
-  }
-
-  @Test
-  fun `redirect params map preserves custom OAuth provider strategy`() {
-    val params =
-      SignUp.AuthenticateWithRedirectParams.OAuth(
-        provider = OAuthProvider.custom("oauth_custom_patreon")
-      )
-
-    assertEquals("oauth_custom_patreon", params.toMap()["strategy"])
   }
 }

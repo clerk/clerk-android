@@ -16,13 +16,12 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.automap.annotations.AutoMap
-import com.clerk.automap.annotations.MapProperty
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -276,6 +275,7 @@ private constructor(
    * The [strategy] value depends on the object's identifier value. Each authentication identifier
    * supports different verification strategies.
    */
+  @Serializable
   public sealed interface AttemptFirstFactorParams {
 
     /**
@@ -289,7 +289,6 @@ private constructor(
      *
      * @property code The verification code received via email.
      */
-    @AutoMap
     @Serializable
     public data class EmailCode(
       val code: String,
@@ -301,7 +300,6 @@ private constructor(
      *
      * @property code The verification code received via SMS.
      */
-    @AutoMap
     @Serializable
     public data class PhoneCode(
       val code: String,
@@ -313,7 +311,6 @@ private constructor(
      *
      * @property password The user's password.
      */
-    @AutoMap
     @Serializable
     public data class Password(
       @SerialName("password") val password: String,
@@ -326,7 +323,6 @@ private constructor(
      * @property publicKeyCredential The passkey credential for authentication.
      * @see PasskeyService for generating the credential.
      */
-    @AutoMap
     @Serializable
     public data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
@@ -338,7 +334,6 @@ private constructor(
      *
      * @property code The verification code received via email for password reset.
      */
-    @AutoMap
     @Serializable
     public data class ResetPasswordEmailCode(
       val code: String,
@@ -350,7 +345,6 @@ private constructor(
      *
      * @property code The verification code received via SMS for password reset.
      */
-    @AutoMap
     @Serializable
     public data class ResetPasswordPhoneCode(
       val code: String,
@@ -364,38 +358,34 @@ private constructor(
    * Each implementation represents a different second factor verification method that can be used
    * to complete multi-factor authentication (MFA) during the sign-in process.
    */
+  @Serializable
   public sealed interface AttemptSecondFactorParams {
     public val strategy: String
 
-    @AutoMap
     @Serializable
     public data class PhoneCode(
       val code: String,
       override val strategy: String = AuthStrategy.PhoneCode.value,
     ) : AttemptSecondFactorParams
 
-    @AutoMap
     @Serializable
     public data class TOTP(
       val code: String,
       override val strategy: String = AuthStrategy.Totp.value,
     ) : AttemptSecondFactorParams
 
-    @AutoMap
     @Serializable
     public data class BackupCode(
       val code: String,
       override val strategy: String = AuthStrategy.BackupCode.value,
     ) : AttemptSecondFactorParams
 
-    @AutoMap
     @Serializable
     public data class EmailCode(
       val code: String,
       override val strategy: String = AuthStrategy.EmailCode.value,
     ) : AttemptSecondFactorParams
 
-    @AutoMap
     @Serializable
     public data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
@@ -435,9 +425,8 @@ private constructor(
      *   phone number.
      */
     @Serializable
-    @AutoMap
     public data class OAuth(
-      @MapProperty("strategy") val provider: OAuthProvider,
+      val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       @SerialName("email_address") override val emailAddress: String? = null,
@@ -455,7 +444,6 @@ private constructor(
      * @property identifier The user's identifier for authentication.
      */
     @Serializable
-    @AutoMap
     public data class EnterpriseSSO(
       val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url") override val redirectUrl: String,
@@ -473,6 +461,7 @@ private constructor(
    *
    * @property strategy The verification strategy to use for the first factor authentication.
    */
+  @Serializable
   public sealed interface PrepareFirstFactorParams {
     /**
      * Enumeration of available first factor verification strategies.
@@ -482,21 +471,18 @@ private constructor(
      */
     public val strategy: String
 
-    @AutoMap
     @Serializable
     public data class EmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = AuthStrategy.EmailCode.value,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class PhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = AuthStrategy.PhoneCode.value,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class EmailLink(
       @SerialName("email_address_id") val emailAddressId: String,
@@ -506,28 +492,24 @@ private constructor(
       override val strategy: String = AuthStrategy.EmailLink.value,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class ResetPasswordEmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = AuthStrategy.ResetPasswordEmailCode.value,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class ResetPasswordPhoneCode(
       @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = AuthStrategy.ResetPasswordPhoneCode.value,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class OAuth(
       override val strategy: String,
       @SerialName("redirect_url") val redirectUrl: String,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class EnterpriseSSO(
       override val strategy: String = AuthStrategy.EnterpriseSso.value,
@@ -535,7 +517,6 @@ private constructor(
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
-    @AutoMap
     @Serializable
     public data class Passkey(override val strategy: String = AuthStrategy.Passkey.value) :
       PrepareFirstFactorParams
@@ -557,7 +538,6 @@ private constructor(
    * @see SignIn.prepareSecondFactor
    */
   @Serializable
-  @AutoMap
   public data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
     val strategy: String = AuthStrategy.PhoneCode.value,
@@ -639,6 +619,7 @@ private constructor(
      *
      * Each implementation represents a different method of initiating the sign-in process.
      */
+    @Serializable
     public sealed interface Strategy {
       /** The authentication strategy identifier. */
       public val strategy: String?
@@ -648,7 +629,6 @@ private constructor(
        *
        * @property identifier The email address to send the verification code to.
        */
-      @AutoMap
       @Serializable
       public data class EmailCode(
         val identifier: String,
@@ -660,7 +640,6 @@ private constructor(
        *
        * @property identifier The phone number to send the verification code to.
        */
-      @AutoMap
       @Serializable
       public data class PhoneCode(
         val identifier: String,
@@ -672,7 +651,6 @@ private constructor(
        *
        * @property identifier The email address or username for password authentication.
        */
-      @AutoMap
       @Serializable
       public data class Password(
         val identifier: String,
@@ -680,14 +658,12 @@ private constructor(
         override val strategy: String = AuthStrategy.Password.value,
       ) : Strategy
 
-      @AutoMap
       @Serializable
       public data class ResetPasswordEmailCode(
         val identifier: String,
         override val strategy: String = AuthStrategy.ResetPasswordEmailCode.value,
       ) : Strategy
 
-      @AutoMap
       @Serializable
       public data class ResetPasswordPhoneCode(
         val identifier: String,
@@ -709,7 +685,6 @@ private constructor(
        * @param identifier The identifier for the ticket authentication.
        * @param ticket The ticket used for authentication. **
        */
-      @AutoMap
       @Serializable
       public data class Ticket(
         val ticket: String,
@@ -739,7 +714,6 @@ private constructor(
         override val strategy: String = AuthStrategy.TrustedDevice.value,
       ) : Strategy
 
-      @AutoMap
       @Serializable
       public data class Identifier(
         override val strategy: String? = null,
@@ -1007,9 +981,9 @@ internal suspend fun SignIn.prepareFirstFactorImpl(
 
     validationError
       ?: if (isRedirectStrategy) {
-        prepareRedirectFirstFactor(params.toMap())
+        prepareRedirectFirstFactor(params.toFormFields())
       } else {
-        ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+        ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toFormFields())
       }
   }
 
@@ -1191,7 +1165,7 @@ public suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
+    ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toFormFields())
   }
 }
 
@@ -1214,7 +1188,7 @@ internal suspend fun SignIn.attemptSecondFactorImpl(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
-    ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
+    ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toFormFields())
   }
 }
 

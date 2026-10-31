@@ -4,6 +4,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.sso.OAuthProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -25,7 +26,7 @@ class UserOAuthProviderTest {
     val params =
       User.CreateExternalAccountParams(provider = OAuthProvider.custom("oauth_custom_patreon"))
 
-    assertEquals("oauth_custom_patreon", params.toMap()["strategy"])
+    assertEquals("oauth_custom_patreon", params.toFormFields()["strategy"])
   }
 
   @Test

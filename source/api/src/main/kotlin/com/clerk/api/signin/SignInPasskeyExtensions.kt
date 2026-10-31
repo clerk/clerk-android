@@ -5,6 +5,7 @@ import com.clerk.api.auth.reportingFailures
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.passkeys.PasskeyService
 
 /** Prepares an explicit second-factor strategy, including passkeys. */
@@ -14,7 +15,7 @@ public suspend fun SignIn.prepareSecondFactor(
   Clerk.auth.reportingFailures {
     if (!canPrepareSecondFactor) return@reportingFailures invalidSecondFactorState()
 
-    ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toMap())
+    ClerkApi.signIn.prepareSecondFactor(id = id, params = strategy.toParams().toFormFields())
   }
 
 internal val SignIn.canPrepareSecondFactor: Boolean

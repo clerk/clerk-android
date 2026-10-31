@@ -12,11 +12,11 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.redirect.RedirectState
 import com.clerk.api.user.User
-import com.clerk.api.user.toMap
 
 internal object ExternalAccountService {
   suspend fun connectExternalAccount(
@@ -25,7 +25,7 @@ internal object ExternalAccountService {
     RedirectCoordinator.supersedePending()
     val state = RedirectState.generate()
     val fields =
-      params.toMap() + (REDIRECT_URL to RedirectState.withState(params.redirectUrl, state))
+      params.toFormFields() + (REDIRECT_URL to RedirectState.withState(params.redirectUrl, state))
     val initialResult = ClerkApi.user.createExternalAccount(fields)
     return when (initialResult) {
       is ClerkResult.Failure -> {

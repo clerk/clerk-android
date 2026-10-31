@@ -9,7 +9,6 @@ import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.user.User
-import com.clerk.automap.annotations.AutoMap
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
@@ -110,10 +109,9 @@ public data class Session(
     )
   }
 
-  @Serializable @AutoMap internal data class StartVerificationParams(val level: String)
+  @Serializable internal data class StartVerificationParams(val level: String)
 
   @Serializable
-  @AutoMap
   internal data class PrepareFirstFactorParams(
     val strategy: String,
     @SerialName("email_address_id") val emailAddressId: String? = null,
@@ -123,29 +121,26 @@ public data class Session(
     @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
+  @Serializable
   internal sealed interface AttemptFirstFactorParams {
     val strategy: String
 
     @Serializable
-    @AutoMap
     data class Password(
       val password: String,
       override val strategy: String = Strategy.Password.value,
     ) : AttemptFirstFactorParams
 
     @Serializable
-    @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
       override val strategy: String = Strategy.Passkey.value,
     ) : AttemptFirstFactorParams
 
     @Serializable
-    @AutoMap
     data class Code(val code: String, override val strategy: String) : AttemptFirstFactorParams
 
     @Serializable
-    @AutoMap
     data class BiometricCredential(
       @SerialName("trusted_device_id") val biometricCredentialId: String,
       @SerialName("client_data") val clientData: String,
@@ -156,29 +151,26 @@ public data class Session(
   }
 
   @Serializable
-  @AutoMap
   internal data class PrepareSecondFactorParams(
     val strategy: String,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
     @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
+  @Serializable
   internal sealed interface AttemptSecondFactorParams {
     val strategy: String
 
     @Serializable
-    @AutoMap
     data class Code(override val strategy: String, val code: String) : AttemptSecondFactorParams
 
     @Serializable
-    @AutoMap
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
       override val strategy: String = Strategy.Passkey.value,
     ) : AttemptSecondFactorParams
 
     @Serializable
-    @AutoMap
     data class BiometricCredential(
       @SerialName("trusted_device_id") val biometricCredentialId: String,
       @SerialName("client_data") val clientData: String,

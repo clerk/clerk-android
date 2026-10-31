@@ -17,6 +17,7 @@ import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.computeMergePatch
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
@@ -29,14 +30,13 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthProviderStrategySerializer
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
 import com.clerk.api.user.User.CreateExternalAccountParams
 import com.clerk.api.user.User.UpdateMetadataParams
 import com.clerk.api.user.User.UpdateParams
 import com.clerk.api.user.User.UpdatePasswordParams
-import com.clerk.automap.annotations.AutoMap
-import com.clerk.automap.annotations.MapProperty
 import java.io.File
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -185,7 +185,6 @@ public data class User(
    * All fields are optional - only provide the fields you want to update. Null values will be
    * ignored and the existing values will be preserved.
    */
-  @AutoMap
   @Serializable
   public data class UpdateParams(
     /** The user's first name. */
@@ -243,7 +242,6 @@ public data class User(
    * overwrite existing keys, and any key whose value is `null` is removed at any nesting level.
    * Omit the field entirely (leave it `null`) to make no change.
    */
-  @AutoMap
   @Serializable
   public data class UpdateMetadataParams(
     /**
@@ -261,7 +259,6 @@ public data class User(
    * @property signOutOfOtherSessions Whether to sign out of all other sessions after password
    *   change
    */
-  @AutoMap
   @Serializable
   public data class UpdatePasswordParams(
     /** The user's current password for verification. */
@@ -283,11 +280,12 @@ public data class User(
    * @property oidcPrompt Optional OpenID Connect prompt parameter
    * @property oidcLoginHint Optional OpenID Connect login hint parameter
    */
-  @AutoMap
   @Serializable
   public data class CreateExternalAccountParams(
     /** The strategy corresponding to the OAuth provider. For example: `oauth_google` */
-    @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
+    @SerialName("strategy")
+    @Serializable(with = OAuthProviderStrategySerializer::class)
+    val provider: OAuthProvider,
     /**
      * The full URL or path that the OAuth provider should redirect to, on successful authorization
      * on their part.
@@ -495,7 +493,7 @@ private suspend fun User.reloadFromMe(): ClerkResult<User, ClerkErrorResponse> =
 public suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> =
   params.unsafeMetadata?.let { rawMetadata ->
     updateWithDeprecatedUnsafeMetadata(params, rawMetadata)
-  } ?: ClerkApi.user.updateUser(fields = params.toMap())
+  } ?: ClerkApi.user.updateUser(fields = params.toFormFields())
 
 private suspend fun updateWithDeprecatedUnsafeMetadata(
   params: UpdateParams,
@@ -544,7 +542,7 @@ private suspend fun updateProfileFieldsBeforeMetadata(
   params: UpdateParams
 ): ClerkResult<User, ClerkErrorResponse> =
   if (params.hasNonMetadataFields()) {
-    ClerkApi.user.updateUser(fields = params.copy(unsafeMetadata = null).toMap())
+    ClerkApi.user.updateUser(fields = params.copy(unsafeMetadata = null).toFormFields())
   } else {
     // No rest fields to send. Fetch the current user explicitly so the merge-patch diff
     // baseline below is fresh — the receiver's `unsafeMetadata`. A stale baseline
@@ -583,7 +581,7 @@ private suspend fun updateMetadataAfterProfileUpdate(
 public suspend fun User.updateMetadata(
   params: UpdateMetadataParams
 ): ClerkResult<User, ClerkErrorResponse> {
-  return ClerkApi.user.updateUserMetadata(fields = params.toMap())
+  return ClerkApi.user.updateUserMetadata(fields = params.toFormFields())
 }
 
 /**
@@ -643,7 +641,7 @@ public suspend fun User.deleteProfileImage(): ClerkResult<DeletedObject, ClerkEr
 public suspend fun User.updatePassword(
   params: UpdatePasswordParams
 ): ClerkResult<User, ClerkErrorResponse> {
-  return ClerkApi.user.updatePassword(params.toMap())
+  return ClerkApi.user.updatePassword(params.toFormFields())
 }
 
 /**
