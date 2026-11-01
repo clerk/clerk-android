@@ -29,14 +29,15 @@ import retrofit2.http.GET
 class ClerkApiResultCallAdapterFactoryTest {
 
   @Test
-  fun `undecodable error body becomes an unknown failure`() {
+  fun `undecodable error body becomes an http failure with the status code`() {
     val retrofit = retrofit(Json.asConverterFactory(JSON))
 
     val result = enqueueErrorResponse(retrofit, "not json")
 
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(400, failure.code)
     assertTrue(failure.throwable is SerializationException)
   }
 
@@ -51,7 +52,7 @@ class ClerkApiResultCallAdapterFactoryTest {
   }
 
   @Test
-  fun `non-fatal error thrown while decoding error body becomes an unknown failure`() {
+  fun `non-fatal error thrown while decoding error body becomes an http failure`() {
     val error = AssertionError("decode")
     val retrofit = retrofit(ThrowingConverterFactory(error))
 
@@ -59,7 +60,8 @@ class ClerkApiResultCallAdapterFactoryTest {
 
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(400, failure.code)
     assertEquals(error, failure.throwable)
   }
 
@@ -84,7 +86,8 @@ class ClerkApiResultCallAdapterFactoryTest {
 
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(400, failure.code)
     assertEquals(error, failure.throwable)
   }
 

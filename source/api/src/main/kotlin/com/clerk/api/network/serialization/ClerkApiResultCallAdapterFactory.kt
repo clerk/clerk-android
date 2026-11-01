@@ -129,7 +129,8 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                             ClerkResult.Failure(
                               error = null,
                               throwable = e,
-                              errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
+                              code = response.code(),
+                              errorType = ClerkResult.Failure.ErrorType.HTTP,
                               tags = mapOf(okhttp3.Response::class to response.raw()),
                             )
                           ),
