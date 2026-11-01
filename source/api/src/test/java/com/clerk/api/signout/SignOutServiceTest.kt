@@ -16,7 +16,9 @@ import com.clerk.api.restorecredentials.RestoreCredentialManagerImpl
 import com.clerk.api.restorecredentials.RestoreCredentialStore
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.restorecredentials.RestorePasskey
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -201,6 +203,30 @@ class SignOutServiceTest {
       assertEquals(createdPasskey, state.createdPasskey)
       RestoreCredentialStore.reset()
     }
+
+  @Test
+  fun `signOut clears cached session tokens`() = runTest {
+    setupActiveSession()
+    SessionTokensCache.setToken("test_session_id-organization-", TokenResource(jwt = "jwt"))
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    assertEquals(0, SessionTokensCache.size)
+  }
+
+  @Test
+  fun `signOut clears cached session tokens even when server sign-out fails`() = runTest {
+    setupActiveSession()
+    SessionTokensCache.setToken("test_session_id-organization-", TokenResource(jwt = "jwt"))
+    coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    assertEquals(0, SessionTokensCache.size)
+  }
 
   @Test
   fun `signOut clears session and user state on successful sign-out`() = runTest {

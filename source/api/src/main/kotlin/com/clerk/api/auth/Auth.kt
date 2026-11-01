@@ -33,6 +33,7 @@ import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
@@ -42,9 +43,11 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 
 /**
  * Main Auth class providing all authentication entry points.
@@ -755,8 +758,11 @@ public class Auth internal constructor() {
       if (sessionId != null) {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
           is ClerkResult.Success -> {
-            removeSessionLocally(sessionId)
-            RestoreCredentials.clearSilently()
+            withContext(NonCancellable) {
+              removeSessionLocally(sessionId)
+              SessionTokenFetcher.shared.invalidateSession(sessionId)
+              RestoreCredentials.clearSilently()
+            }
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
