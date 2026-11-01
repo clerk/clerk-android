@@ -589,8 +589,8 @@ public object Clerk {
    * required tasks. Returns `null` when no session exists or if the SDK is not initialized.
    *
    * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens.
-   * Attempting to call [Session.fetchToken] on a pending session will log a warning and return
-   * null.
+   * Calling [Session.fetchToken] on a pending session logs a warning and returns a
+   * [ClerkResult.Failure] whose error code is `session_pending`.
    *
    * @see activeSession for a session only when status is ACTIVE.
    */
@@ -640,7 +640,9 @@ public object Clerk {
   /**
    * Indicates whether a user is currently signed in.
    *
-   * @return `true` if there is an active session with a user, `false` otherwise.
+   * @return `true` if there is a current session of any status, including a
+   *   [Session.SessionStatus.PENDING] session that cannot issue tokens until its tasks are
+   *   complete, `false` otherwise. Use [activeSession] for a session that can issue tokens.
    */
   public val isSignedIn: Boolean
     get() = sessionFlow.value != null
@@ -843,9 +845,7 @@ public object Clerk {
    *
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
-   *   details. Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
+   *   Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
    * @param options Optional configuration for enabling extra functionality. See
    *   [ClerkConfigurationOptions] for details.
    * @param theme Optional theme to customize the appearance of Clerk UI components. See
