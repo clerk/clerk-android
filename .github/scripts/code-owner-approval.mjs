@@ -38,14 +38,14 @@ function protectedFiles(patterns, paths) {
   return paths.filter(path => patterns.some(pattern => pattern.test(path)));
 }
 
-function approvers(reviews, author) {
+function approvers(reviews, author, headSha) {
   const latest = new Map();
   for (const review of reviews) {
     if (review.user && review.state !== 'COMMENTED' && review.state !== 'PENDING') {
-      latest.set(review.user.login, review.state);
+      latest.set(review.user.login, review);
     }
   }
-  return [...latest].filter(([login, state]) => state === 'APPROVED' && login !== author).map(([login]) => login);
+  return [...latest].filter(([login, review]) => review.state === 'APPROVED' && review.commit_id === headSha && login !== author).map(([login]) => login);
 }
 
 async function trusted(get, login) {
@@ -63,7 +63,7 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
   const get = client({ fetch, api, token, repo });
   const pull = await get(`/pulls/${number}`);
   const reviews = await paged(get, `/pulls/${number}/reviews`);
-  const approved = approvers(reviews, author);
+  const approved = approvers(reviews, author, pull.head.sha);
   for (const login of approved) {
     if (await trusted(get, login)) {
       return { pass: true, message: `${login} approved, and has maintain or admin access.` };

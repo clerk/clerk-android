@@ -150,6 +150,13 @@ describe('code owner approval', () => {
     assert.equal(pass, false);
   });
 
+  it('fails when Team Mobile approved an earlier commit', async () => {
+    const stale = review('seanperez29', 'APPROVED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { pass, output } = await run({ files: workflow, reviews: [stale], roles: { swolfand: 'maintain', seanperez29: 'admin' } }, 'swolfand');
+    assert.equal(pass, false);
+    assert.match(output, /so it needs an approval from another Team Mobile member/);
+  });
+
   it('keeps an approval when a later review only comments', async () => {
     const { pass } = await run({
       files: ordinary,
