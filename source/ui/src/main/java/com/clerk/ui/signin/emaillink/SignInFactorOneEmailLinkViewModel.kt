@@ -23,6 +23,7 @@ internal class SignInFactorOneEmailLinkViewModel(
   private val _state: MutableStateFlow<AuthenticationViewState> =
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
+  private var linkSent = false
 
   init {
     syncCurrentSignInState()
@@ -47,7 +48,13 @@ internal class SignInFactorOneEmailLinkViewModel(
     syncCurrentSignInState()
   }
 
+  fun sendInitialLink(emailAddressId: String?) {
+    if (linkSent) return
+    sendLink(emailAddressId)
+  }
+
   fun sendLink(emailAddressId: String?) {
+    linkSent = true
     _state.value = AuthenticationViewState.Loading
 
     guardSignIn(_state) { inProgressSignIn ->

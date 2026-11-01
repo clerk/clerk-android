@@ -3,11 +3,16 @@ package com.clerk.ui.signup.emaillink
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
+import com.clerk.api.signup.sendEmailLink
 import com.clerk.ui.auth.AuthenticationViewState
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +63,42 @@ class SignUpEmailLinkViewModelTest {
     advanceUntilIdle()
 
     assertEquals(AuthenticationViewState.Success.SignUp(pendingSignUp), viewModel.state.value)
+  }
+
+  @Test
+  fun `sendInitialLink sends one link however often the screen is rebuilt`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } returns
+      ClerkResult.success(pendingSignUp)
+
+    val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+
+    coVerify(exactly = 1) { pendingSignUp.sendEmailLink(redirectUrl = null) }
+  }
+
+  @Test
+  fun `sendLink resends after the initial link`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } returns
+      ClerkResult.success(pendingSignUp)
+
+    val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+    viewModel.sendLink()
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { pendingSignUp.sendEmailLink(redirectUrl = null) }
   }
 
   @Test

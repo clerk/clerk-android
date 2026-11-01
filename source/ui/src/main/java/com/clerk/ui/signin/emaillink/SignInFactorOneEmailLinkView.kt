@@ -69,7 +69,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
   val snackbarHostState = remember { SnackbarHostState() }
   val state by viewModel.state.collectAsStateWithLifecycle()
 
-  LaunchedEffect(Unit) { viewModel.sendLink(factor.emailAddressId) }
+  LaunchedEffect(Unit) { viewModel.sendInitialLink(factor.emailAddressId) }
   ObserveHostResume(onHostResumed = viewModel::onHostResumed)
 
   AuthStateEffects(
