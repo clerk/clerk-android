@@ -1,5 +1,6 @@
 package com.clerk.api.signin
 
+import com.clerk.api.network.serialization.toFormFields
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -11,7 +12,7 @@ class SignInPrepareFirstFactorParamsMapTest {
     val params =
       SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = "email_123")
 
-    val result = params.toMap()
+    val result = params.toFormFields()
 
     assertEquals("email_123", result["email_address_id"])
     assertEquals("reset_password_email_code", result["strategy"])
@@ -22,7 +23,7 @@ class SignInPrepareFirstFactorParamsMapTest {
   fun `reset password phone code maps phone number id using snake case`() {
     val params = SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = "phone_123")
 
-    val result = params.toMap()
+    val result = params.toFormFields()
 
     assertEquals("phone_123", result["phone_number_id"])
     assertEquals("reset_password_phone_code", result["strategy"])

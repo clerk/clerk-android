@@ -42,18 +42,15 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation(projects.source.api)
   implementation(libs.activity.compose)
-  implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview)
-  implementation(libs.coil)
   implementation(libs.coil.okhttp)
-  implementation(libs.kotlinx.serialization)
   implementation(libs.material3)
   implementation(libs.navigation.compose)
-  implementation(projects.source.api)
 
   lintChecks(libs.compose.lints)
 }

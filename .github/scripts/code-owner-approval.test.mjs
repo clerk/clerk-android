@@ -13,7 +13,11 @@ const PROTECTED_PATHS = `# High-risk paths
 *.pem
 `;
 
-function fakeGitHub({ list = PROTECTED_PATHS, files, changed = files.length, reviews = [], roles = {} }) {
+const RENOVATE_PATHS = `# Renovate's own updates
+/Package.swift
+`;
+
+function fakeGitHub({ list = PROTECTED_PATHS, renovateList = RENOVATE_PATHS, files, changed = files.length, reviews = [], roles = {}, pull = {}, activity = [] }) {
   const reply = body => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
   const notFound = { ok: false, status: 404, json: async () => ({}), text: async () => 'Not Found' };
   return async (url, { headers }) => {
@@ -24,8 +28,16 @@ function fakeGitHub({ list = PROTECTED_PATHS, files, changed = files.length, rev
       assert.equal(searchParams.get('ref'), 'main');
       return list === null ? notFound : reply({ content: Buffer.from(list).toString('base64') });
     }
+    if (path === '/contents/.github/renovate-paths') {
+      assert.equal(searchParams.get('ref'), 'main');
+      return renovateList === null ? notFound : reply({ content: Buffer.from(renovateList).toString('base64') });
+    }
     if (path === '/pulls/7') {
-      return reply({ changed_files: changed, head: { sha: HEAD } });
+      return reply({ changed_files: changed, head: { sha: HEAD }, ...pull });
+    }
+    if (path === '/activity') {
+      assert.equal(searchParams.get('ref'), 'refs/heads/renovate/node-26.x');
+      return reply(activity);
     }
     const page = Number(searchParams.get('page'));
     const slice = items => items.slice((page - 1) * 100, page * 100);
@@ -55,6 +67,9 @@ async function run(github, author = 'outside-dev') {
 const HEAD = 'c14cacc2763d2dfc271d9c286b09376a90c5b9ff';
 const review = (login, state, commit = HEAD) => ({ user: { login }, state, commit_id: commit });
 
+const renovatePull = { user: { login: 'renovate[bot]' }, head: { ref: 'renovate/node-26.x', sha: HEAD, repo: { full_name: REPO } } };
+const push = (login, after) => ({ actor: { login }, after });
+
 describe('protectedFiles', () => {
   const patterns = parseProtectedPaths(PROTECTED_PATHS);
 
@@ -74,6 +89,7 @@ describe('code owner approval', () => {
   const coderabbit = review('coderabbitai[bot]', 'APPROVED');
   const ordinary = [{ filename: 'Sources/ClerkKit/Clerk.swift' }];
   const workflow = [{ filename: '.github/workflows/pr-ci.yml' }];
+  const manifest = [{ filename: 'Package.swift' }];
 
   it('passes a Team Mobile author on ordinary files once CodeRabbit approves', async () => {
     const { pass, output } = await run({ files: ordinary, reviews: [coderabbit], roles: { mikepitre: 'admin' } }, 'mikepitre');
@@ -141,6 +157,52 @@ describe('code owner approval', () => {
       roles: { seanperez29: 'admin' },
     });
     assert.equal(pass, true);
+  });
+
+  it('passes Renovate on a protected file that renovate-paths lists', async () => {
+    const { pass, output } = await run({ files: manifest, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    assert.equal(pass, true);
+    assert.match(output, new RegExp(`Renovate pushed ${HEAD}, and .github/renovate-paths lists every protected file it changes`));
+  });
+
+  it('passes Renovate on ordinary files without a CodeRabbit approval', async () => {
+    const { pass } = await run({ files: ordinary, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    assert.equal(pass, true);
+  });
+
+  it('fails Renovate on a protected file that renovate-paths does not list', async () => {
+    const { pass, output } = await run(
+      { files: [...manifest, ...workflow], pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
+      'renovate[bot]',
+    );
+    assert.equal(pass, false);
+    assert.match(output, /changes 1 protected file\(s\) that \.github\/renovate-paths doesn't list \(\.github\/workflows\/pr-ci\.yml\)/);
+  });
+
+  it('fails Renovate on every protected file when the base branch has no renovate-paths list', async () => {
+    const { pass } = await run({ renovateList: null, files: manifest, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] }, 'renovate[bot]');
+    assert.equal(pass, false);
+  });
+
+  it('passes Renovate on a protected file once Team Mobile approves', async () => {
+    const { pass } = await run(
+      { files: [{ filename: 'Sources/ClerkKit/Identity/Store.swift' }], reviews: [review('seanperez29', 'APPROVED')], roles: { seanperez29: 'admin' }, pull: renovatePull, activity: [push('renovate[bot]', HEAD)] },
+      'renovate[bot]',
+    );
+    assert.equal(pass, true);
+  });
+
+  it('fails when someone else pushed the head commit of a Renovate pull request', async () => {
+    const { pass } = await run(
+      {
+        files: workflow,
+        pull: renovatePull,
+        activity: [push('writer', HEAD), push('renovate[bot]', 'e225ce56d448093f7910a36cf47bcc9a664e04d0')],
+        roles: { writer: 'write' },
+      },
+      'renovate[bot]',
+    );
+    assert.equal(pass, false);
   });
 
   it('counts the old path of a renamed file', async () => {

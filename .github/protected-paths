@@ -3,6 +3,7 @@
 
 /.github/workflows/
 /.github/protected-paths
+/.github/renovate-paths
 /.github/scripts/
 /.coderabbit.yaml
 /AGENTS.md

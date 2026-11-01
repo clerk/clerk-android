@@ -125,7 +125,6 @@ dependencies {
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
   testImplementation(libs.turbine)
-  testImplementation(projects.clerk.source.api)
 
   testRuntimeOnly(libs.paparazzi)
 

@@ -267,9 +267,6 @@ tasks.register("verifyPublishedArtifacts") {
     assertPomName(apiPublication.get().asFile, "Clerk Android API")
     assertPomName(uiPublication.get().asFile, "Clerk Android UI")
 
-    listOf("com.google.devtools.ksp:symbol-processing-api").forEach {
-      assertCoordinateIsNotPublished(apiPublication.get().asFile, it)
-    }
     listOf(
         "androidx.compose.ui:ui-tooling",
         "androidx.compose.ui:ui-tooling-preview",

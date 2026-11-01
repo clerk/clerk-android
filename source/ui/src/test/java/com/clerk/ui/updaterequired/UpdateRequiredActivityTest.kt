@@ -1,12 +1,15 @@
 package com.clerk.ui.updaterequired
 
+import androidx.annotation.AttrRes
 import com.clerk.api.Clerk
 import com.clerk.api.appversion.AppVersionSupportStatus
+import com.clerk.ui.R
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -37,6 +40,22 @@ class UpdateRequiredActivityTest {
   @After
   fun tearDown() {
     unmockkAll()
+  }
+
+  @Test
+  fun `the screen fades over the app like the Expo update screen`() {
+    val activity = Robolectric.buildActivity(UpdateRequiredActivity::class.java).setup().get()
+    val animationStyle = activity.themeResource(android.R.attr.windowAnimationStyle)
+
+    fun animation(@AttrRes attr: Int): Int {
+      val attrs = activity.obtainStyledAttributes(animationStyle, intArrayOf(attr))
+      return attrs.getResourceId(0, 0).also { attrs.recycle() }
+    }
+
+    assertEquals(R.anim.clerk_fade_in, animation(android.R.attr.activityOpenEnterAnimation))
+    assertEquals(R.anim.clerk_hold, animation(android.R.attr.activityOpenExitAnimation))
+    assertEquals(R.anim.clerk_hold, animation(android.R.attr.activityCloseEnterAnimation))
+    assertEquals(R.anim.clerk_fade_out, animation(android.R.attr.activityCloseExitAnimation))
   }
 
   @Test
@@ -85,4 +104,9 @@ class UpdateRequiredActivityTest {
 
     assertTrue(activity.isFinishing)
   }
+}
+
+private fun android.app.Activity.themeResource(@AttrRes attr: Int): Int {
+  val attrs = theme.obtainStyledAttributes(intArrayOf(attr))
+  return attrs.getResourceId(0, 0).also { attrs.recycle() }
 }

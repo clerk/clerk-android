@@ -6,10 +6,9 @@ import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.toMap
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.toMap
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
 
@@ -34,7 +33,13 @@ internal suspend fun Auth.createSignIn(
       )
     is SignIn.CreateParams.Strategy.Transfer ->
       postSignIn(mapOf(AuthStrategy.Transfer.value to "true"))
-    else -> postSignIn(params.toMap())
+    is SignIn.CreateParams.Strategy.EmailCode,
+    is SignIn.CreateParams.Strategy.PhoneCode,
+    is SignIn.CreateParams.Strategy.Password,
+    is SignIn.CreateParams.Strategy.ResetPasswordEmailCode,
+    is SignIn.CreateParams.Strategy.ResetPasswordPhoneCode,
+    is SignIn.CreateParams.Strategy.Ticket,
+    is SignIn.CreateParams.Strategy.Identifier -> postSignIn(params.toFormFields())
   }
 }
 
@@ -75,7 +80,7 @@ internal suspend fun Auth.createSignUp(
         mapOf("strategy" to AuthStrategy.Ticket.value, "ticket" to params.ticket)
       is SignUp.CreateParams.GoogleOneTap ->
         mapOf("strategy" to AuthStrategy.GoogleOneTap.value, "token" to params.token)
-      else -> params.toMap()
+      is SignUp.CreateParams.Standard -> params.toFormFields()
     }
   return postSignUp(fields)
 }
