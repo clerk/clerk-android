@@ -33,10 +33,12 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class SessionTokenFetcherTest {
@@ -254,6 +256,32 @@ class SessionTokenFetcherTest {
 
     assertNull(result)
     verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+  }
+
+  @Test
+  fun `getToken keeps the session id out of the log when the session is pending`() = runTest {
+    every { mockSession.status } returns Session.SessionStatus.PENDING
+    every { Clerk.debugMode } returns false
+    ShadowLog.clear()
+
+    sessionTokenFetcher.getToken(mockSession)
+
+    assertTrue(ShadowLog.getLogs().none { it.msg.contains("session_123") })
+  }
+
+  @Test
+  fun `getToken keeps the session id out of the log when the session is revoked`() = runTest {
+    val error = Error(code = "session_revoked", message = "Session revoked")
+    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_revoked")
+    every { Clerk.debugMode } returns false
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.httpFailure(code = 401, error = errorResponse)
+    ShadowLog.clear()
+
+    sessionTokenFetcher.getToken(mockSession)
+
+    assertTrue(ShadowLog.getLogs().none { it.msg.contains("session_123") })
   }
 
   @Test

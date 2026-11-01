@@ -12,7 +12,6 @@ import com.clerk.api.user.get
 import com.clerk.api.user.setProfileImage
 import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
-import com.clerk.ui.core.log.ClerkLog
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,7 +65,6 @@ internal class UpdateProfileViewModel : ViewModel() {
   }
 
   fun save(firstName: String?, lastName: String?, username: String?) {
-    ClerkLog.e("saving with values: $firstName, $lastName, $username")
     _state.value = State.Loading
     guardUser({ _state.value = State.Error("User not authenticated") }) { user ->
       viewModelScope.launch {

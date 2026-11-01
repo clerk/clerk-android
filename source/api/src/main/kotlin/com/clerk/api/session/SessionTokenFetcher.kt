@@ -174,8 +174,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return when {
       context.session.status == Session.SessionStatus.PENDING -> {
         ClerkLogger.w(
-          "Cannot fetch token for session ${context.session.id}: session is in pending state. " +
-            "The user has tasks to complete before the session can be activated."
+          "Cannot fetch token: the session is pending. The user has tasks to complete before " +
+            "the session can be activated."
         )
         pendingSessionFailure(context.session.id)
       }
@@ -346,7 +346,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
             }
           if (invalidSession && Clerk.session?.id == context.session.id) {
             ClerkLogger.w(
-              "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
+              "The session can no longer issue tokens. Clearing local session and user state."
             )
             Clerk.clearSessionAndUserState()
           }
