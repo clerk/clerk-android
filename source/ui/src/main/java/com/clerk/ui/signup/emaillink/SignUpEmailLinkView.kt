@@ -65,7 +65,7 @@ private fun SignUpEmailLinkViewImpl(
   val snackbarHostState = remember { SnackbarHostState() }
   val state by viewModel.state.collectAsStateWithLifecycle()
 
-  LaunchedEffect(Unit) { viewModel.sendLink() }
+  LaunchedEffect(Unit) { viewModel.sendInitialLink() }
   ObserveSignUpEmailLinkHostResume(onHostResumed = viewModel::onHostResumed)
 
   AuthStateEffects(

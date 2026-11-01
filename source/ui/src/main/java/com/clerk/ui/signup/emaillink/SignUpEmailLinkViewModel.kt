@@ -22,6 +22,7 @@ internal class SignUpEmailLinkViewModel(
 ) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
+  private var linkSent = false
 
   init {
     syncCurrentSignUpState()
@@ -49,7 +50,13 @@ internal class SignUpEmailLinkViewModel(
     syncCurrentSignUpState()
   }
 
+  fun sendInitialLink() {
+    if (linkSent) return
+    sendLink()
+  }
+
   fun sendLink() {
+    linkSent = true
     _state.value = AuthenticationViewState.Loading
 
     val signUp = Clerk.auth.currentSignUp
