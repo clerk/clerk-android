@@ -1,5 +1,6 @@
 package com.clerk.api.signup
 
+import com.clerk.api.network.serialization.toFormFields
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -16,7 +17,7 @@ class SignUpCreateParamsTest {
         unsafeMetadata = unsafeMetadata,
       )
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertEquals("user@example.com", paramsMap["email_address"])
     assertEquals(unsafeMetadataJson, paramsMap["unsafe_metadata"])
@@ -26,7 +27,7 @@ class SignUpCreateParamsTest {
   fun `standard create params exclude unsafe metadata when omitted`() {
     val params = SignUp.CreateParams.Standard(emailAddress = "user@example.com")
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertFalse(paramsMap.containsKey("unsafe_metadata"))
   }

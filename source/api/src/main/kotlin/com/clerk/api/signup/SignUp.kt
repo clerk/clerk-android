@@ -18,13 +18,11 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.automap.annotations.AutoMap
-import com.clerk.automap.annotations.MapProperty
-import com.clerk.automap.annotations.MapTransform
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
@@ -305,10 +303,9 @@ public data class SignUp(
      * @param emailAddress Optional email address for pre-filling forms.
      * @param legalAccepted Whether legal terms have been accepted.
      */
-    @AutoMap
     @Serializable
     public data class OAuth(
-      @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
+      @SerialName("strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       override val identifier: String? = null,
@@ -316,7 +313,6 @@ public data class SignUp(
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
       @Transient
       @SerialName("unsafe_metadata")
-      @MapTransform("toUnsafeMetadataJsonString")
       override val unsafeMetadata: Map<String, Any>? = null,
     ) : AuthenticateWithRedirectParams
 
@@ -330,7 +326,6 @@ public data class SignUp(
      * @property identifier The user's identifier for authentication.
      */
     @Serializable
-    @AutoMap
     public data class EnterpriseSSO(
       val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url")
@@ -340,7 +335,6 @@ public data class SignUp(
       override val identifier: String? = null,
       @Transient
       @SerialName("unsafe_metadata")
-      @MapTransform("toUnsafeMetadataJsonString")
       override val unsafeMetadata: Map<String, Any>? = null,
     ) : AuthenticateWithRedirectParams
   }
@@ -398,6 +392,7 @@ public data class SignUp(
    *
    * If looking for OAuth or Enterprise SSO use `authenticateWithRedirect`
    */
+  @Serializable
   public sealed interface CreateParams {
     /**
      * Standard sign-up strategy, allowing the user to provide common details such as email,
@@ -413,7 +408,6 @@ public data class SignUp(
      * @param unsafeMetadata Custom metadata that will be attached to the created user. This
      *   metadata is not validated by Clerk and should not contain sensitive information.
      */
-    @AutoMap
     @Serializable
     public data class Standard(
       @SerialName("email_address") val emailAddress: String? = null,
@@ -423,9 +417,8 @@ public data class SignUp(
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
       @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
-      @Transient
       @SerialName("unsafe_metadata")
-      @MapTransform("toUnsafeMetadataJsonString")
+      @Serializable(with = UnsafeMetadataSerializer::class)
       val unsafeMetadata: Map<String, Any>? = null,
     ) : CreateParams
 
@@ -435,7 +428,7 @@ public data class SignUp(
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      * You can examine the required and optional fields before providing user data.
      */
-    public object None : CreateParams
+    @Serializable public object None : CreateParams
 
     /**
      * The `SignUp` will be created by transferring an existing session.
@@ -443,14 +436,14 @@ public data class SignUp(
      * This is used when a user is going through the Sign In flow and we detect they need to sign up
      * instead. This shouldn't be used for any other purpose.
      */
-    public object Transfer : CreateParams
+    @Serializable public object Transfer : CreateParams
 
     /**
      * The `SignUp` will be created with a ticket.
      *
      * @param ticket The ticket string for sign-up.
      */
-    public data class Ticket(val ticket: String) : CreateParams
+    @Serializable public data class Ticket(val ticket: String) : CreateParams
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
@@ -460,9 +453,10 @@ public data class SignUp(
      *
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    public data class GoogleOneTap(val token: String) : CreateParams
+    @Serializable public data class GoogleOneTap(val token: String) : CreateParams
   }
 
+  @Serializable
   public sealed interface SignUpUpdateParams {
     /**
      * Standard sign-up update strategy, allowing the user to provide common details such as email,
@@ -477,7 +471,6 @@ public data class SignUp(
      * @param phoneNumber The user's phone number in E.164 format (optional).
      * @param legalAccepted Whether the user has accepted the legal terms and conditions (optional).
      */
-    @AutoMap
     @Serializable
     public data class Standard(
       @SerialName("email_address") val emailAddress: String? = null,
@@ -603,7 +596,7 @@ internal suspend fun SignUp.updateImpl(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return Clerk.auth.reportingFailures {
-    ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+    ClerkApi.signUp.updateSignUp(this.id, updateParams.toFormFields())
   }
 }
 

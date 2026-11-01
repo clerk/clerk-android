@@ -2,6 +2,7 @@ package com.clerk.api.user
 
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.phonenumber.PhoneNumber
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -21,7 +22,7 @@ class UserTest {
     val params =
       User.UpdateParams(firstName = "John", lastName = "Doe", unsafeMetadata = unsafeMetadataJson)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals("Should include firstName", "John", paramsMap["first_name"])
@@ -33,7 +34,7 @@ class UserTest {
   fun `UpdateParams should exclude unsafeMetadata when null`() {
     val params = User.UpdateParams(firstName = "Jane", lastName = "Smith", unsafeMetadata = null)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals("Should include firstName", "Jane", paramsMap["first_name"])
@@ -58,7 +59,7 @@ class UserTest {
         unsafeMetadata = unsafeMetadataJson,
       )
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals("Should include firstName", "Alice", paramsMap["first_name"])
@@ -77,7 +78,7 @@ class UserTest {
 
     val params = User.UpdateParams(unsafeMetadata = unsafeMetadataJson)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals("Map should contain only one entry", 1, paramsMap.size)
@@ -103,7 +104,7 @@ class UserTest {
     val emptyMetadata = "{}"
     val params = User.UpdateParams(unsafeMetadata = emptyMetadata)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals(
@@ -119,7 +120,7 @@ class UserTest {
       """{"user":{"preferences":{"theme":"dark","language":"en"},"settings":{"notifications":true}}}"""
     val params = User.UpdateParams(firstName = "Bob", unsafeMetadata = complexMetadata)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertNotNull("Map should not be null", paramsMap)
     assertEquals(
@@ -134,7 +135,7 @@ class UserTest {
     val payload = """{"preferences":{"theme":"dark"}}"""
     val params = User.UpdateMetadataParams(unsafeMetadata = payload)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertEquals("Map should contain exactly one entry", 1, paramsMap.size)
     assertEquals("Should include unsafe_metadata", payload, paramsMap["unsafe_metadata"])
@@ -144,7 +145,7 @@ class UserTest {
   fun `UpdateMetadataParams should exclude unsafe_metadata when null`() {
     val params = User.UpdateMetadataParams(unsafeMetadata = null)
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertTrue("Map should be empty when no fields are provided", paramsMap.isEmpty())
   }
@@ -166,7 +167,7 @@ class UserTest {
   fun `UpdateMetadataParams should preserve empty-object payload`() {
     val params = User.UpdateMetadataParams(unsafeMetadata = "{}")
 
-    val paramsMap = params.toMap()
+    val paramsMap = params.toFormFields()
 
     assertEquals(
       "Should include unsafe_metadata with empty object",

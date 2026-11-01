@@ -2301,10 +2301,6 @@ public final class com/clerk/api/credentials/CredentialFlowExceptionKt {
 	public static final fun getShouldSuppressCredentialFlowError (Lcom/clerk/api/network/serialization/ClerkResult$Failure;)Z
 }
 
-public final class com/clerk/api/emailaddress/Com_clerk_api_emailaddress_EmailAddress_PrepareVerificationParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams;)Ljava/util/Map;
-}
-
 public final class com/clerk/api/emailaddress/EmailAddress {
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/emailaddress/EmailAddress$Companion;
@@ -2376,7 +2372,12 @@ public final class com/clerk/api/emailaddress/EmailAddress$LinkedEntity$Companio
 }
 
 public abstract interface class com/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams {
+	public static final field Companion Lcom/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams$Companion;
 	public abstract fun getStrategy ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams$EmailCode : com/clerk/api/emailaddress/EmailAddress$PrepareVerificationParams {
@@ -4934,30 +4935,6 @@ public final class com/clerk/api/session/SessionVerificationExtensionsKt {
 	public static final fun startVerification (Lcom/clerk/api/session/Session;Lcom/clerk/api/session/SessionVerification$Level;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class com/clerk/api/signin/Com_clerk_api_signin_SignIn_AttemptFirstFactorParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$AttemptFirstFactorParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signin/Com_clerk_api_signin_SignIn_AttemptSecondFactorParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$AttemptSecondFactorParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signin/Com_clerk_api_signin_SignIn_AuthenticateWithRedirectParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signin/Com_clerk_api_signin_SignIn_CreateParams_StrategySealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$CreateParams$Strategy;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signin/Com_clerk_api_signin_SignIn_PrepareFirstFactorParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signin/PrepareSecondFactorParamsMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signin/SignIn$PrepareSecondFactorParams;)Ljava/util/Map;
-}
-
 public final class com/clerk/api/signin/SignIn {
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/signin/SignIn$Companion;
@@ -4994,7 +4971,12 @@ public final class com/clerk/api/signin/SignIn {
 }
 
 public abstract interface class com/clerk/api/signin/SignIn$AttemptFirstFactorParams {
+	public static final field Companion Lcom/clerk/api/signin/SignIn$AttemptFirstFactorParams$Companion;
 	public abstract fun getStrategy ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/signin/SignIn$AttemptFirstFactorParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$AttemptFirstFactorParams$EmailCode : com/clerk/api/signin/SignIn$AttemptFirstFactorParams {
@@ -5190,6 +5172,7 @@ public final class com/clerk/api/signin/SignIn$AttemptFirstFactorParams$ResetPas
 }
 
 public abstract interface class com/clerk/api/signin/SignIn$AttemptSecondFactorParams {
+	public static final field Companion Lcom/clerk/api/signin/SignIn$AttemptSecondFactorParams$Companion;
 	public abstract fun getStrategy ()Ljava/lang/String;
 }
 
@@ -5222,6 +5205,10 @@ public final synthetic class com/clerk/api/signin/SignIn$AttemptSecondFactorPara
 }
 
 public final class com/clerk/api/signin/SignIn$AttemptSecondFactorParams$BackupCode$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$AttemptSecondFactorParams$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -5455,11 +5442,13 @@ public final class com/clerk/api/signin/SignIn$CreateParams {
 }
 
 public abstract interface class com/clerk/api/signin/SignIn$CreateParams$Strategy {
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Companion;
 	public abstract fun getStrategy ()Ljava/lang/String;
 }
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5478,6 +5467,26 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCr
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$BiometricCredential$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$EmailCode : com/clerk/api/signin/SignIn$CreateParams$Strategy {
@@ -5548,6 +5557,7 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Identifier$
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5558,6 +5568,22 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey : c
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Passkey$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Password : com/clerk/api/signin/SignIn$CreateParams$Strategy {
@@ -5724,6 +5750,7 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Ticket$Comp
 
 public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer : com/clerk/api/signin/SignIn$CreateParams$Strategy {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$Companion;
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5734,6 +5761,22 @@ public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer : 
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signin/SignIn$CreateParams$Strategy$Transfer$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$CredentialType : java/lang/Enum {
@@ -5752,7 +5795,12 @@ public final class com/clerk/api/signin/SignIn$CredentialType$Companion {
 }
 
 public abstract interface class com/clerk/api/signin/SignIn$PrepareFirstFactorParams {
+	public static final field Companion Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$Companion;
 	public abstract fun getStrategy ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/signin/SignIn$PrepareFirstFactorParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signin/SignIn$PrepareFirstFactorParams$EmailCode : com/clerk/api/signin/SignIn$PrepareFirstFactorParams {
@@ -6233,18 +6281,6 @@ public final class com/clerk/api/signin/SignInPasskeyExtensionsKt {
 	public static final fun prepareSecondFactor (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/signin/SignIn$PrepareSecondFactorStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class com/clerk/api/signup/Com_clerk_api_signup_SignUp_AuthenticateWithRedirectParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signup/Com_clerk_api_signup_SignUp_CreateParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signup/SignUp$CreateParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/signup/Com_clerk_api_signup_SignUp_SignUpUpdateParamsSealedMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/signup/SignUp$SignUpUpdateParams;)Ljava/util/Map;
-}
-
 public final class com/clerk/api/signup/SignUp {
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/signup/SignUp$Companion;
@@ -6437,10 +6473,16 @@ public final class com/clerk/api/signup/SignUp$Companion {
 }
 
 public abstract interface class com/clerk/api/signup/SignUp$CreateParams {
+	public static final field Companion Lcom/clerk/api/signup/SignUp$CreateParams$Companion;
+}
+
+public final class com/clerk/api/signup/SignUp$CreateParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$Companion;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;
@@ -6451,9 +6493,26 @@ public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap : com/c
 	public fun toString ()Ljava/lang/String;
 }
 
+public final synthetic class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signup/SignUp$CreateParams$GoogleOneTap;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signup/SignUp$CreateParams$GoogleOneTap$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/clerk/api/signup/SignUp$CreateParams$None : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$None;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$CreateParams$Standard : com/clerk/api/signup/SignUp$CreateParams {
@@ -6503,6 +6562,7 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Standard$Companion {
 
 public final class com/clerk/api/signup/SignUp$CreateParams$Ticket : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
+	public static final field Companion Lcom/clerk/api/signup/SignUp$CreateParams$Ticket$Companion;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun copy (Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;
@@ -6513,9 +6573,26 @@ public final class com/clerk/api/signup/SignUp$CreateParams$Ticket : com/clerk/a
 	public fun toString ()Ljava/lang/String;
 }
 
+public final synthetic class com/clerk/api/signup/SignUp$CreateParams$Ticket$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$Ticket$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/clerk/api/signup/SignUp$CreateParams$Ticket;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/clerk/api/signup/SignUp$CreateParams$Ticket$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/clerk/api/signup/SignUp$CreateParams$Transfer : com/clerk/api/signup/SignUp$CreateParams {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/clerk/api/signup/SignUp$CreateParams$Transfer;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$PrepareVerificationParams {
@@ -6578,6 +6655,11 @@ public final class com/clerk/api/signup/SignUp$PrepareVerificationParams$Strateg
 }
 
 public abstract interface class com/clerk/api/signup/SignUp$SignUpUpdateParams {
+	public static final field Companion Lcom/clerk/api/signup/SignUp$SignUpUpdateParams$Companion;
+}
+
+public final class com/clerk/api/signup/SignUp$SignUpUpdateParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/clerk/api/signup/SignUp$SignUpUpdateParams$Standard : com/clerk/api/signup/SignUp$SignUpUpdateParams {
@@ -6992,22 +7074,6 @@ public final class com/clerk/api/ui/ClerkTypographyDefaults {
 	public final fun getTitleSmall ()Landroidx/compose/ui/text/TextStyle;
 	public final fun typography (Lkotlin/jvm/functions/Function1;)Lcom/clerk/api/ui/ClerkTypography;
 	public static synthetic fun typography$default (Lcom/clerk/api/ui/ClerkTypographyDefaults;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/clerk/api/ui/ClerkTypography;
-}
-
-public final class com/clerk/api/user/CreateExternalAccountParamsMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/user/User$CreateExternalAccountParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/user/UpdateMetadataParamsMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/user/User$UpdateMetadataParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/user/UpdateParamsMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/user/User$UpdateParams;)Ljava/util/Map;
-}
-
-public final class com/clerk/api/user/UpdatePasswordParamsMapExtensionKt {
-	public static final fun toMap (Lcom/clerk/api/user/User$UpdatePasswordParams;)Ljava/util/Map;
 }
 
 public final class com/clerk/api/user/User {

@@ -3,6 +3,7 @@ package com.clerk.api.session
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.toFormFields
 
 /** Starts an in-session reverification flow. */
 public suspend fun Session.startVerification(
@@ -10,7 +11,7 @@ public suspend fun Session.startVerification(
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.startVerification(
     sessionId = id,
-    params = Session.StartVerificationParams(level = level.value).toMap(),
+    params = Session.StartVerificationParams(level = level.value).toFormFields(),
   )
 }
 
@@ -35,13 +36,19 @@ internal suspend fun Session.prepareFirstFactorVerification(
 internal suspend fun Session.prepareFirstFactorVerification(
   params: Session.PrepareFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.prepareFirstFactorVerification(sessionId = id, params = params.toMap())
+  return ClerkApi.session.prepareFirstFactorVerification(
+    sessionId = id,
+    params = params.toFormFields(),
+  )
 }
 
 internal suspend fun Session.attemptFirstFactorVerification(
   params: Session.AttemptFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptFirstFactorVerification(sessionId = id, params = params.toMap())
+  return ClerkApi.session.attemptFirstFactorVerification(
+    sessionId = id,
+    params = params.toFormFields(),
+  )
 }
 
 internal suspend fun Session.attemptFirstFactorVerification(
@@ -76,7 +83,7 @@ internal suspend fun Session.prepareSecondFactorVerification(
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.prepareSecondFactorVerification(
     sessionId = id,
-    params = params.toMap(),
+    params = params.toFormFields(),
   )
 }
 
@@ -99,5 +106,8 @@ internal suspend fun Session.attemptSecondFactorVerification(
 internal suspend fun Session.attemptSecondFactorVerification(
   params: Session.AttemptSecondFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptSecondFactorVerification(sessionId = id, params = params.toMap())
+  return ClerkApi.session.attemptSecondFactorVerification(
+    sessionId = id,
+    params = params.toFormFields(),
+  )
 }
