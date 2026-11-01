@@ -8,6 +8,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.restorecredentials.RestoreCredentials
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import kotlinx.coroutines.CancellationException
@@ -39,6 +40,7 @@ internal object SignOutService {
       serverError = e
     } finally {
       withContext(NonCancellable) {
+        SessionTokenFetcher.shared.reset()
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
         Clerk.updateClient(Client())
