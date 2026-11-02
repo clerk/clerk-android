@@ -830,7 +830,7 @@ public object Clerk {
    *
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk.
+   *   Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   public fun initialize(context: Context, publishableKey: String) {
