@@ -1,5 +1,6 @@
 package com.clerk.ui.signup.emaillink
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -16,12 +17,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-internal class SignUpEmailLinkViewModel(
-  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+// SavedStateViewModelFactory only finds a constructor that takes SavedStateHandle alone.
+internal class SignUpEmailLinkViewModel
+@JvmOverloads
+constructor(
+  private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
+  private var linkSent: Boolean
+    get() = savedStateHandle[LINK_SENT_KEY] ?: false
+    set(value) {
+      savedStateHandle[LINK_SENT_KEY] = value
+    }
+
+  private var sendsInFlight = 0
 
   init {
     syncCurrentSignUpState()
@@ -49,6 +62,11 @@ internal class SignUpEmailLinkViewModel(
     syncCurrentSignUpState()
   }
 
+  fun sendInitialLink() {
+    if (linkSent || sendsInFlight > 0) return
+    sendLink()
+  }
+
   fun sendLink() {
     _state.value = AuthenticationViewState.Loading
 
@@ -58,11 +76,20 @@ internal class SignUpEmailLinkViewModel(
       return
     }
 
-    viewModelScope.launch(ioDispatcher) {
-      signUp
-        .sendEmailLink()
-        .onSuccess { _state.value = AuthenticationViewState.Idle }
-        .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
+    sendsInFlight++
+    viewModelScope.launch {
+      try {
+        withContext(ioDispatcher) { signUp.sendEmailLink() }
+          .onSuccess {
+            linkSent = true
+            _state.value = AuthenticationViewState.Idle
+          }
+          .onFailure { failure ->
+            _state.value = AuthenticationViewState.Error(failure.errorMessage)
+          }
+      } finally {
+        sendsInFlight--
+      }
     }
   }
 
@@ -84,5 +111,9 @@ internal class SignUpEmailLinkViewModel(
       }
       else -> Unit
     }
+  }
+
+  private companion object {
+    const val LINK_SENT_KEY = "link_sent"
   }
 }
