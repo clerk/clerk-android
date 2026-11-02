@@ -235,8 +235,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return when {
       context.session.status == Session.SessionStatus.PENDING -> {
         ClerkLogger.w(
-          "Cannot fetch token for session ${context.session.id}: session is in pending state. " +
-            "The user has tasks to complete before the session can be activated."
+          "Cannot fetch token: the session is pending. The user has tasks to complete before " +
+            "the session can be activated."
         )
         pendingSessionFailure(context.session.id)
       }
@@ -390,17 +390,20 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     context: FetchContext,
     tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
   ): ClerkResult<TokenResource, ClerkErrorResponse> {
-    synchronized(runtimeLock) {
-      if (!isCurrentRuntime(context)) return supersededFailure()
-      if (tokensRequest is ClerkResult.Success) {
-        SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
-        // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
-        // monotonic when responses complete out of order.
-        return tokensRequest
+    val reconciled =
+      synchronized(runtimeLock) {
+        when {
+          !isCurrentRuntime(context) -> supersededFailure()
+          tokensRequest is ClerkResult.Success -> {
+            SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
+            // Match Clerk JS: each forced refresh returns its own mint while the shared cache
+            // stays monotonic when responses complete out of order.
+            tokensRequest
+          }
+          else -> null
+        }
       }
-    }
-    clearSessionStateOutsideRuntimeLock(context, tokensRequest)
-    return tokensRequest
+    return reconciled ?: tokensRequest.also { clearSessionStateOutsideRuntimeLock(context, it) }
   }
 
   private fun clearSessionStateOutsideRuntimeLock(
@@ -413,7 +416,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       }
     if (invalidSession && Clerk.session?.id == context.session.id) {
       ClerkLogger.w(
-        "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
+        "The session can no longer issue tokens. Clearing local session and user state."
       )
       Clerk.clearSessionAndUserState()
     }

@@ -1,5 +1,6 @@
 package com.clerk.ui.signin.emaillink
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -16,13 +17,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-internal class SignInFactorOneEmailLinkViewModel(
-  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+// SavedStateViewModelFactory only finds a constructor that takes SavedStateHandle alone.
+internal class SignInFactorOneEmailLinkViewModel
+@JvmOverloads
+constructor(
+  private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
   private val _state: MutableStateFlow<AuthenticationViewState> =
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
+  private var linkSent: Boolean
+    get() = savedStateHandle[LINK_SENT_KEY] ?: false
+    set(value) {
+      savedStateHandle[LINK_SENT_KEY] = value
+    }
+
+  private var sendsInFlight = 0
 
   init {
     syncCurrentSignInState()
@@ -47,6 +60,11 @@ internal class SignInFactorOneEmailLinkViewModel(
     syncCurrentSignInState()
   }
 
+  fun sendInitialLink(emailAddressId: String?) {
+    if (linkSent || sendsInFlight > 0) return
+    sendLink(emailAddressId)
+  }
+
   fun sendLink(emailAddressId: String?) {
     _state.value = AuthenticationViewState.Loading
 
@@ -57,13 +75,20 @@ internal class SignInFactorOneEmailLinkViewModel(
         return@guardSignIn
       }
 
-      viewModelScope.launch(ioDispatcher) {
-        Clerk.auth
-          .startEmailLinkSignIn(identifier, emailAddressId)
-          .onSuccess { _state.value = AuthenticationViewState.Idle }
-          .onFailure { failure ->
-            _state.value = AuthenticationViewState.Error(failure.error?.message)
-          }
+      sendsInFlight++
+      viewModelScope.launch {
+        try {
+          withContext(ioDispatcher) { Clerk.auth.startEmailLinkSignIn(identifier, emailAddressId) }
+            .onSuccess {
+              linkSent = true
+              _state.value = AuthenticationViewState.Idle
+            }
+            .onFailure { failure ->
+              _state.value = AuthenticationViewState.Error(failure.error?.message)
+            }
+        } finally {
+          sendsInFlight--
+        }
       }
     }
   }
@@ -85,5 +110,9 @@ internal class SignInFactorOneEmailLinkViewModel(
       }
       else -> Unit
     }
+  }
+
+  private companion object {
+    const val LINK_SENT_KEY = "link_sent"
   }
 }
