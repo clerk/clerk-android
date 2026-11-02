@@ -64,6 +64,19 @@ class ClientStateStoreTest {
   }
 
   @Test
+  fun `applying a local client hands the replaced client to the callback even before any client`() {
+    val store = store()
+    val replaced = mutableListOf<Client?>()
+
+    store.applyClient(clientWithSession("sess_first")) { replaced += it }
+    store.applyClient(Client(id = "client_second")) { replaced += it }
+
+    assertEquals(2, replaced.size)
+    assertNull(replaced[0])
+    assertEquals(listOf("sess_first"), replaced[1]?.sessions?.map { it.id })
+  }
+
+  @Test
   fun `response fetched before applied state is dropped`() {
     val store = store()
     val newer = Client(id = "client_newer")

@@ -153,8 +153,12 @@ internal class ClientStateStore(
   fun applyClientResponse(client: Client, serverDateMillis: Long?): Boolean =
     applyClientResponse(client, observeResponse(serverDateMillis))
 
-  fun applyClient(client: Client) {
-    val commit = synchronized(lock) { commitLocalLocked(client) }
+  fun applyClient(client: Client, onReplaceUnderWriteLock: (Client?) -> Unit = {}) {
+    val commit =
+      synchronized(lock) {
+        onReplaceUnderWriteLock(state.clientOrEmptyAfterReset)
+        commitLocalLocked(client)
+      }
     dispatch(commit)
   }
 
