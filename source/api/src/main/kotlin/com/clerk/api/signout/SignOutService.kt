@@ -25,12 +25,15 @@ internal object SignOutService {
    *   [ClerkResult.Companion.unknownFailure] with error details on failure.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
-    val signedOutSessionIds = Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
+    val signedOutSessionIds = currentSessionIds().toMutableSet()
     var serverError: Exception? = null
 
     try {
       when (val result = ClerkApi.session.deleteSessions()) {
-        is ClerkResult.Success -> Clerk.updateClient(result.value)
+        is ClerkResult.Success -> {
+          signedOutSessionIds += currentSessionIds()
+          Clerk.updateClient(result.value)
+        }
         is ClerkResult.Failure ->
           serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
       }
@@ -41,6 +44,7 @@ internal object SignOutService {
       serverError = e
     } finally {
       withContext(NonCancellable) {
+        signedOutSessionIds += currentSessionIds()
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
         Clerk.updateClient(Client())
@@ -68,4 +72,7 @@ internal object SignOutService {
       ClerkResult.success(Unit)
     }
   }
+
+  private fun currentSessionIds(): List<String> =
+    Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
 }

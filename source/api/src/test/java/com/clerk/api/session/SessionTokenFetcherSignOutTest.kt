@@ -116,18 +116,21 @@ class SessionTokenFetcherSignOutTest {
   }
 
   @Test
-  fun `reset lifts the sign-out fence`() = runTest {
+  fun `reset keeps the sign-out fence`() = runTest {
     coEvery { SessionTokensCache.getToken(any()) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) } returns
-      SessionTokensCache.StoreResult(mockTokenResource, true)
     sessionTokenFetcher.removeSession("session_123")
     sessionTokenFetcher.reset()
 
-    val result = sessionTokenFetcher.getToken(mockSession)
+    val result = sessionTokenFetcher.getTokenResult(mockSession)
 
-    assertSame(mockTokenResource, result)
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
   }
 
   @Test

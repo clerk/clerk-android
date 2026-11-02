@@ -72,6 +72,7 @@ class AuthTest {
     Clerk.updateClient(Client())
     setForceOrganizationSelection(false)
     SessionTokenFetcher.shared.reset()
+    SessionTokenFetcher.shared.clearSignedOutSessions()
   }
 
   @Test

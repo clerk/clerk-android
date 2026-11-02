@@ -1,5 +1,6 @@
 package com.clerk.api.session
 
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.log.ClerkLogger
@@ -82,10 +83,16 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
 
   /**
    * Clears cached tokens, releases deduplicated waiters with a superseded failure, and removes
-   * requests registered by the previous Clerk runtime.
+   * requests registered by the previous Clerk runtime. Sessions signed out earlier stay refused
+   * until the client lists them again.
    */
   internal fun reset() {
-    releaseRuntime { signedOutSessions.clear() }
+    releaseRuntime {}
+  }
+
+  @VisibleForTesting
+  internal fun clearSignedOutSessions() {
+    synchronized(runtimeLock) { signedOutSessions.clear() }
   }
 
   /**
