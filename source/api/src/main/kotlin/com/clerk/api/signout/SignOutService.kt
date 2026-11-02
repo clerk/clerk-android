@@ -25,7 +25,7 @@ internal object SignOutService {
    *   [ClerkResult.Companion.unknownFailure] with error details on failure.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
-    val signedOutSessionIds = Clerk.client.sessions.map { it.id }
+    val signedOutSessionIds = Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
     var serverError: Exception? = null
 
     try {
