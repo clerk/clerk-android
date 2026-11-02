@@ -22,6 +22,7 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -33,6 +34,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class PasskeyCreationServiceTest {
@@ -116,6 +118,41 @@ class PasskeyCreationServiceTest {
     coVerify(exactly = 0) {
       mockUserApi.attemptPasskeyVerification(any(), any(), any(), any())
     }
+  }
+
+  @Test
+  fun `createPasskey logs the error code but not the trace id or meta`() = runTest {
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = "passkey_error",
+              message = "Passkey not allowed",
+              meta = JsonObject(mapOf("session_id" to JsonPrimitive("sess_in_error_meta"))),
+            )
+          ),
+        meta = JsonObject(mapOf("client_id" to JsonPrimitive("client_in_meta"))),
+        clerkTraceId = "trace_secret",
+      )
+    coEvery { mockUserApi.createPasskey(any()) } returns ClerkResult.apiFailure(errorResponse)
+    ShadowLog.clear()
+
+    PasskeyCreationService.createPasskey()
+
+    val logs = ShadowLog.getLogs()
+    assertTrue(
+      logs.any {
+        it.msg.contains("Passkey creation failed: API passkey_error: Passkey not allowed")
+      }
+    )
+    assertTrue(
+      logs.none {
+        it.msg.contains("trace_secret") ||
+          it.msg.contains("sess_in_error_meta") ||
+          it.msg.contains("client_in_meta")
+      }
+    )
   }
 
   @Test

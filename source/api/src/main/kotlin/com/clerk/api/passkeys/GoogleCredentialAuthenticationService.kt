@@ -25,6 +25,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.catchingClerkResult
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.logSummary
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.session.attemptFirstFactorVerification
@@ -144,7 +145,7 @@ internal object GoogleCredentialAuthenticationService {
             }
           }
           is ClerkResult.Failure -> {
-            ClerkLogger.e("Failed to create SignIn: ${createResult.error}")
+            ClerkLogger.e("Failed to create SignIn: ${createResult.logSummary()}")
             createResult
           }
         }
@@ -220,7 +221,9 @@ internal object GoogleCredentialAuthenticationService {
           signIn.prepareSecondFactor(strategy = SignIn.PrepareSecondFactorStrategy.Passkey)
         when (prepareResult) {
           is ClerkResult.Failure -> {
-            ClerkLogger.e("Failed to prepare passkey second-factor sign-in: ${prepareResult.error}")
+            ClerkLogger.e(
+              "Failed to prepare passkey second-factor sign-in: ${prepareResult.logSummary()}"
+            )
             prepareResult
           }
           is ClerkResult.Success -> {
@@ -346,7 +349,9 @@ internal object GoogleCredentialAuthenticationService {
       }
     return when (prepareResult) {
       is ClerkResult.Failure -> {
-        ClerkLogger.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
+        ClerkLogger.e(
+          "Failed to prepare passkey session reverification: ${prepareResult.logSummary()}"
+        )
         prepareResult
       }
       is ClerkResult.Success -> {
@@ -431,7 +436,7 @@ internal object GoogleCredentialAuthenticationService {
           }
 
         if (result is ClerkResult.Failure) {
-          ClerkLogger.e("Passkey session reverification failed: ${result.error}")
+          ClerkLogger.e("Passkey session reverification failed: ${result.logSummary()}")
         }
 
         result
@@ -651,7 +656,7 @@ internal object GoogleCredentialAuthenticationService {
     val result = signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.Passkey(responseJson))
 
     if (result is ClerkResult.Failure) {
-      ClerkLogger.e("Passkey authentication failed: ${result.error}")
+      ClerkLogger.e("Passkey authentication failed: ${result.logSummary()}")
     }
 
     return result
@@ -667,7 +672,7 @@ internal object GoogleCredentialAuthenticationService {
     return when (val result = googleSignInService.handleSignInResult(credential)) {
       is ClerkResult.Success -> result.value.toSignInResult()
       is ClerkResult.Failure -> {
-        ClerkLogger.e("Google sign-in failed: ${result.error}")
+        ClerkLogger.e("Google sign-in failed: ${result.logSummary()}")
         result
       }
     }
@@ -693,7 +698,7 @@ internal object GoogleCredentialAuthenticationService {
       )
 
     if (result is ClerkResult.Failure) {
-      ClerkLogger.e("Password authentication failed: ${result.error}")
+      ClerkLogger.e("Password authentication failed: ${result.logSummary()}")
     }
 
     return result

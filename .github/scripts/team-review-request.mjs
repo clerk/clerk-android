@@ -28,6 +28,18 @@ function ratedHighRisk(comments, head) {
   });
 }
 
+function latestReviews(reviews) {
+  const latest = new Map();
+  for (const review of reviews) {
+    if (review.user && review.state !== 'COMMENTED' && review.state !== 'PENDING') {
+      latest.set(review.user.login, review);
+    } else if (review.user && !latest.has(review.user.login)) {
+      latest.set(review.user.login, review);
+    }
+  }
+  return latest;
+}
+
 const PROTECTED_NOTICE =
   "This pull request changes files listed in `.github/protected-paths`, so it needs an approval from another Team Mobile member before it can merge. CodeRabbit's approval isn't enough for these files.";
 
@@ -53,6 +65,15 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
   if (check.reason === 'coderabbit' && !ratedHighRisk(await paged(get, `/issues/${number}/comments`), pull.head.sha)) {
     return 'Waiting on CodeRabbit, which hasn\'t rated this commit high or critical risk.';
   }
+  const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
+  const staleApprovers = new Set();
+  for (const [login, review] of latestReviews(await paged(get, `/pulls/${number}/reviews`))) {
+    if ((review.state === 'APPROVED' || review.state === 'DISMISSED') && review.commit_id !== pull.head.sha) {
+      staleApprovers.add(login);
+    } else {
+      asked.add(login);
+    }
+  }
   if (check.reason === 'protected') {
     const comments = await paged(get, `/issues/${number}/comments`);
     const body = protectedComment(check.files);
@@ -63,12 +84,13 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
       await get(`/issues/comments/${notice.id}`, { method: 'PATCH', body: { body } });
     }
     if (team.includes(author) && !ratedHighRisk(comments, pull.head.sha)) {
-      return `Requested nobody. ${check.message}`;
+      const reviewers = team.filter(login => staleApprovers.has(login) && !asked.has(login));
+      if (reviewers.length === 0) {
+        return `Requested nobody. ${check.message}`;
+      }
+      await get(`/pulls/${number}/requested_reviewers`, { method: 'POST', body: { reviewers } });
+      return `Requested ${reviewers.join(', ')} again. Their approval is for an older commit.`;
     }
-  }
-  const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
-  for (const review of await paged(get, `/pulls/${number}/reviews`)) {
-    asked.add(review.user?.login);
   }
   const reviewers = team.filter(login => !asked.has(login));
   if (reviewers.length === 0) {

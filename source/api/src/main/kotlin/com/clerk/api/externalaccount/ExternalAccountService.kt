@@ -12,6 +12,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.logSummary
 import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.RedirectCoordinator
@@ -29,7 +30,7 @@ internal object ExternalAccountService {
     val initialResult = ClerkApi.user.createExternalAccount(fields)
     return when (initialResult) {
       is ClerkResult.Failure -> {
-        ClerkLogger.e("Failed to create external account: ${initialResult.error}")
+        ClerkLogger.e("Failed to create external account: ${initialResult.logSummary()}")
         initialResult
       }
       is ClerkResult.Success -> {
