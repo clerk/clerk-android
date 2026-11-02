@@ -1,5 +1,6 @@
 package com.clerk.ui.signup.emaillink
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -10,21 +11,30 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailLink
 import com.clerk.ui.auth.AuthenticationViewState
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-internal class SignUpEmailLinkViewModel(
-  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+// SavedStateViewModelFactory only finds a constructor that takes SavedStateHandle alone.
+internal class SignUpEmailLinkViewModel
+@JvmOverloads
+constructor(
+  private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
-  @Volatile private var linkSent = false
-  private val sendsInFlight = AtomicInteger(0)
+  private var linkSent: Boolean
+    get() = savedStateHandle[LINK_SENT_KEY] ?: false
+    set(value) {
+      savedStateHandle[LINK_SENT_KEY] = value
+    }
+
+  private var sendsInFlight = 0
 
   init {
     syncCurrentSignUpState()
@@ -53,7 +63,7 @@ internal class SignUpEmailLinkViewModel(
   }
 
   fun sendInitialLink() {
-    if (linkSent || sendsInFlight.get() > 0) return
+    if (linkSent || sendsInFlight > 0) return
     sendLink()
   }
 
@@ -66,16 +76,20 @@ internal class SignUpEmailLinkViewModel(
       return
     }
 
-    sendsInFlight.incrementAndGet()
-    viewModelScope.launch(ioDispatcher) {
-      signUp
-        .sendEmailLink()
-        .onSuccess {
-          linkSent = true
-          _state.value = AuthenticationViewState.Idle
-        }
-        .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
-      sendsInFlight.decrementAndGet()
+    sendsInFlight++
+    viewModelScope.launch {
+      try {
+        withContext(ioDispatcher) { signUp.sendEmailLink() }
+          .onSuccess {
+            linkSent = true
+            _state.value = AuthenticationViewState.Idle
+          }
+          .onFailure { failure ->
+            _state.value = AuthenticationViewState.Error(failure.errorMessage)
+          }
+      } finally {
+        sendsInFlight--
+      }
     }
   }
 
@@ -97,5 +111,9 @@ internal class SignUpEmailLinkViewModel(
       }
       else -> Unit
     }
+  }
+
+  private companion object {
+    const val LINK_SENT_KEY = "link_sent"
   }
 }

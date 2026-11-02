@@ -1,5 +1,6 @@
 package com.clerk.ui.signup.emaillink
 
+import androidx.lifecycle.SavedStateHandle
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
@@ -149,6 +150,24 @@ class SignUpEmailLinkViewModelTest {
   }
 
   @Test
+  fun `sendInitialLink does not send again after the process is restored`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } returns
+      ClerkResult.success(pendingSignUp)
+    val savedState = SavedStateHandle()
+
+    SignUpEmailLinkViewModel(savedState, testDispatcher).sendInitialLink()
+    advanceUntilIdle()
+    val restored = SignUpEmailLinkViewModel(savedState.restored(), testDispatcher)
+    restored.sendInitialLink()
+    advanceUntilIdle()
+
+    coVerify(exactly = 1) { pendingSignUp.sendEmailLink(redirectUrl = null) }
+  }
+
+  @Test
   fun `sendLink resends after the initial link`() = runTest {
     val pendingSignUp = signUp()
     every { auth.currentSignUp } returns pendingSignUp
@@ -196,4 +215,7 @@ class SignUpEmailLinkViewModelTest {
       username = "swolfand",
       passwordEnabled = false,
     )
+
+  private fun SavedStateHandle.restored() =
+    SavedStateHandle(keys().associateWith { key -> get<Any?>(key) })
 }

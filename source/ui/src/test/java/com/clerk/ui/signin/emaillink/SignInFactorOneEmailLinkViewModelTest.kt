@@ -1,5 +1,6 @@
 package com.clerk.ui.signin.emaillink
 
+import androidx.lifecycle.SavedStateHandle
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
@@ -165,6 +166,22 @@ class SignInFactorOneEmailLinkViewModelTest {
   }
 
   @Test
+  fun `sendInitialLink does not send again after the process is restored`() = runTest {
+    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns
+      ClerkResult.success(SignIn(id = "sia_123"))
+    val savedState = SavedStateHandle()
+
+    SignInFactorOneEmailLinkViewModel(savedState, testDispatcher).sendInitialLink("idn_123")
+    advanceUntilIdle()
+    val restored = SignInFactorOneEmailLinkViewModel(savedState.restored(), testDispatcher)
+    restored.sendInitialLink("idn_123")
+    advanceUntilIdle()
+
+    coVerify(exactly = 1) { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") }
+  }
+
+  @Test
   fun `sendLink resends after the initial link`() = runTest {
     every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
     coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns
@@ -233,4 +250,7 @@ class SignInFactorOneEmailLinkViewModelTest {
 
     assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
   }
+
+  private fun SavedStateHandle.restored() =
+    SavedStateHandle(keys().associateWith { key -> get<Any?>(key) })
 }
