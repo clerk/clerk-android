@@ -46,6 +46,7 @@ The tests in these files call `host.useSettings` to change the instance's settin
 - `specs/features/session-tasks/choose-organization.e2e.ts`
 - `specs/features/session-tasks/complete-setup-mfa.e2e.ts`
 - `specs/features/session-tasks/setup-mfa.e2e.ts`
+- `specs/features/session-tasks/setup-mfa-sms-only.e2e.ts`
 - `specs/features/session-tasks/sign-up-setup-mfa.e2e.ts`
 
 `host.useSettings` needs the CLI, which holds the Platform API key that changes the settings and puts them back when the test ends. Under e2e alone it fails the test. Run these files through the CLI, for example `e2e-tests/bin/control-clerk-android run session-tasks` from the repo root.
