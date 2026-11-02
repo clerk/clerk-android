@@ -59,11 +59,12 @@ async function pathList(get, file, baseRef) {
 }
 
 // reason says why the check failed: 'author', 'files', 'protected' or 'coderabbit'.
-async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef }) {
+async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef, headSha }) {
   const get = client({ fetch, api, token, repo });
   const pull = await get(`/pulls/${number}`);
+  const head = headSha ?? pull.head.sha;
   const reviews = await paged(get, `/pulls/${number}/reviews`);
-  const approved = approvers(reviews, author, pull.head.sha);
+  const approved = approvers(reviews, author, head);
   for (const login of approved) {
     if (await trusted(get, login)) {
       return { pass: true, message: `${login} approved, and has maintain or admin access.` };
@@ -104,14 +105,14 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
     };
   }
   const coderabbit = reviews.findLast(review => review.user?.login === CODERABBIT && review.state !== 'COMMENTED' && review.state !== 'PENDING');
-  if (coderabbit?.state !== 'APPROVED' || coderabbit.commit_id !== pull.head.sha) {
+  if (coderabbit?.state !== 'APPROVED' || coderabbit.commit_id !== head) {
     return { pass: false, reason: 'coderabbit', message: "CodeRabbit hasn't approved this commit. If it rates the merge risk high or critical, it won't, and this needs an approval from another Team Mobile member." };
   }
   return { pass: true, message: `${author} has maintain or admin access, and CodeRabbit approved.` };
 }
 
 async function main(env, { fetch = globalThis.fetch, out = process.stdout } = {}) {
-  const missing = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN', 'PR_NUMBER', 'PR_AUTHOR', 'BASE_REF'].filter(name => !env[name]);
+  const missing = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN', 'PR_NUMBER', 'PR_AUTHOR', 'BASE_REF', 'HEAD_SHA'].filter(name => !env[name]);
   if (missing.length > 0) {
     throw new Error(`missing ${missing.join(', ')}`);
   }
@@ -123,6 +124,7 @@ async function main(env, { fetch = globalThis.fetch, out = process.stdout } = {}
     number: env.PR_NUMBER,
     author: env.PR_AUTHOR,
     baseRef: env.BASE_REF,
+    headSha: env.HEAD_SHA,
   });
   out.write(pass ? `${message}\n` : `::error title=Code owner approval::${message}\n`);
   return pass;

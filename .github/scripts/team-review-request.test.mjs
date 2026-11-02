@@ -164,6 +164,12 @@ describe('team review request', () => {
     assert.deepEqual(requested, ['seanperez29', 'wobsoriano']);
   });
 
+  it('asks a member again whose approval a later push made stale', async () => {
+    const stale = review('wobsoriano', 'APPROVED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { requested } = await run({ files: [{ filename: '.github/workflows/pr-ci.yml' }], reviews: [stale, review('swolfand', 'COMMENTED')] });
+    assert.deepEqual(requested, ['mikepitre', 'seanperez29', 'wobsoriano']);
+  });
+
   it('requests nobody once Team Mobile approved', async () => {
     const { requested } = await run({ reviews: [review('wobsoriano', 'APPROVED')] });
     assert.deepEqual(requested, []);

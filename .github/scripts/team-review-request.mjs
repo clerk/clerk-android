@@ -28,6 +28,18 @@ function ratedHighRisk(comments, head) {
   });
 }
 
+function latestReviews(reviews) {
+  const latest = new Map();
+  for (const review of reviews) {
+    if (review.user && review.state !== 'COMMENTED' && review.state !== 'PENDING') {
+      latest.set(review.user.login, review);
+    } else if (review.user && !latest.has(review.user.login)) {
+      latest.set(review.user.login, review);
+    }
+  }
+  return latest;
+}
+
 const PROTECTED_NOTICE =
   "This pull request changes files listed in `.github/protected-paths`, so it needs an approval from another Team Mobile member before it can merge. CodeRabbit's approval isn't enough for these files.";
 
@@ -67,8 +79,10 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
     }
   }
   const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
-  for (const review of await paged(get, `/pulls/${number}/reviews`)) {
-    asked.add(review.user?.login);
+  for (const [login, review] of latestReviews(await paged(get, `/pulls/${number}/reviews`))) {
+    if (!(review.state === 'APPROVED' && review.commit_id !== pull.head.sha)) {
+      asked.add(login);
+    }
   }
   const reviewers = team.filter(login => !asked.has(login));
   if (reviewers.length === 0) {
