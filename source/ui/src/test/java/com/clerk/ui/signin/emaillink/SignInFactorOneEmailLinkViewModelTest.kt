@@ -13,12 +13,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -115,6 +117,46 @@ class SignInFactorOneEmailLinkViewModelTest {
     val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
     advanceUntilIdle()
     viewModel.sendInitialLink("idn_123")
+    advanceUntilIdle()
+    viewModel.sendInitialLink("idn_123")
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") }
+  }
+
+  @Test
+  fun `sendInitialLink does not send again while the first send is pending`() = runTest {
+    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
+    val request = CompletableDeferred<Unit>()
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } coAnswers
+      {
+        request.await()
+        ClerkResult.success(SignIn(id = "sia_123"))
+      }
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    viewModel.sendInitialLink("idn_123")
+    runCurrent()
+    viewModel.sendInitialLink("idn_123")
+    runCurrent()
+
+    coVerify(exactly = 1) { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") }
+    request.complete(Unit)
+    advanceUntilIdle()
+  }
+
+  @Test
+  fun `a failed resend does not reopen the initial send`() = runTest {
+    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns
+      ClerkResult.success(SignIn(id = "sia_123")) andThen
+      ClerkResult.apiFailure(NativeMagicLinkError(reasonCode = "too_many_requests"))
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink("idn_123")
+    advanceUntilIdle()
+    viewModel.sendLink("idn_123")
     advanceUntilIdle()
     viewModel.sendInitialLink("idn_123")
     advanceUntilIdle()

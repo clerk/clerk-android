@@ -10,6 +10,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailLink
 import com.clerk.ui.auth.AuthenticationViewState
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ internal class SignUpEmailLinkViewModel(
 ) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
-  private var linkSent = false
+  @Volatile private var linkSent = false
+  private val sendsInFlight = AtomicInteger(0)
 
   init {
     syncCurrentSignUpState()
@@ -51,29 +53,29 @@ internal class SignUpEmailLinkViewModel(
   }
 
   fun sendInitialLink() {
-    if (linkSent) return
+    if (linkSent || sendsInFlight.get() > 0) return
     sendLink()
   }
 
   fun sendLink() {
-    linkSent = true
     _state.value = AuthenticationViewState.Loading
 
     val signUp = Clerk.auth.currentSignUp
     if (signUp == null || signUp.emailAddress.isNullOrBlank()) {
-      linkSent = false
       _state.value = AuthenticationViewState.Error(null)
       return
     }
 
+    sendsInFlight.incrementAndGet()
     viewModelScope.launch(ioDispatcher) {
-      signUp
-        .sendEmailLink()
-        .onSuccess { _state.value = AuthenticationViewState.Idle }
-        .onFailure { failure ->
-          linkSent = false
-          _state.value = AuthenticationViewState.Error(failure.errorMessage)
+      val result = signUp.sendEmailLink()
+      sendsInFlight.decrementAndGet()
+      result
+        .onSuccess {
+          linkSent = true
+          _state.value = AuthenticationViewState.Idle
         }
+        .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
     }
   }
 

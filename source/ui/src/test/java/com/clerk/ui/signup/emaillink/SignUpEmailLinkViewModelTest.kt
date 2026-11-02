@@ -15,12 +15,14 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -95,6 +97,50 @@ class SignUpEmailLinkViewModelTest {
     val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
     advanceUntilIdle()
     viewModel.sendInitialLink()
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { pendingSignUp.sendEmailLink(redirectUrl = null) }
+  }
+
+  @Test
+  fun `sendInitialLink does not send again while the first send is pending`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    val request = CompletableDeferred<Unit>()
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } coAnswers
+      {
+        request.await()
+        ClerkResult.success(pendingSignUp)
+      }
+
+    val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
+    viewModel.sendInitialLink()
+    runCurrent()
+    viewModel.sendInitialLink()
+    runCurrent()
+
+    coVerify(exactly = 1) { pendingSignUp.sendEmailLink(redirectUrl = null) }
+    request.complete(Unit)
+    advanceUntilIdle()
+  }
+
+  @Test
+  fun `a failed resend does not reopen the initial send`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } returns
+      ClerkResult.success(pendingSignUp) andThen
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+
+    val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+    viewModel.sendLink()
     advanceUntilIdle()
     viewModel.sendInitialLink()
     advanceUntilIdle()

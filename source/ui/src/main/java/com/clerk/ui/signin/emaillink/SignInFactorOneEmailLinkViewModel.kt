@@ -10,6 +10,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn
 import com.clerk.ui.core.extensions.isEmailAddress
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,8 @@ internal class SignInFactorOneEmailLinkViewModel(
   private val _state: MutableStateFlow<AuthenticationViewState> =
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
-  private var linkSent = false
+  @Volatile private var linkSent = false
+  private val sendsInFlight = AtomicInteger(0)
 
   init {
     syncCurrentSignInState()
@@ -49,28 +51,30 @@ internal class SignInFactorOneEmailLinkViewModel(
   }
 
   fun sendInitialLink(emailAddressId: String?) {
-    if (linkSent) return
+    if (linkSent || sendsInFlight.get() > 0) return
     sendLink(emailAddressId)
   }
 
   fun sendLink(emailAddressId: String?) {
-    linkSent = true
     _state.value = AuthenticationViewState.Loading
 
     guardSignIn(_state) { inProgressSignIn ->
       val identifier = inProgressSignIn.identifier
       if (identifier.isNullOrBlank() || !identifier.isEmailAddress) {
-        linkSent = false
         _state.value = AuthenticationViewState.Error(null)
         return@guardSignIn
       }
 
+      sendsInFlight.incrementAndGet()
       viewModelScope.launch(ioDispatcher) {
-        Clerk.auth
-          .startEmailLinkSignIn(identifier, emailAddressId)
-          .onSuccess { _state.value = AuthenticationViewState.Idle }
+        val result = Clerk.auth.startEmailLinkSignIn(identifier, emailAddressId)
+        sendsInFlight.decrementAndGet()
+        result
+          .onSuccess {
+            linkSent = true
+            _state.value = AuthenticationViewState.Idle
+          }
           .onFailure { failure ->
-            linkSent = false
             _state.value = AuthenticationViewState.Error(failure.error?.message)
           }
       }
