@@ -31,7 +31,7 @@ internal object ExternalAccountService {
     return when (initialResult) {
       is ClerkResult.Failure -> {
         ClerkLogger.e("Failed to create external account: ${initialResult.logSummary()}")
-        mapErrorToSpecificType(initialResult)
+        initialResult
       }
       is ClerkResult.Success -> {
         ClerkLogger.d("External account creation initiated: $initialResult")
@@ -110,18 +110,6 @@ internal object ExternalAccountService {
 
   private fun failure(message: String): ClerkResult<ExternalAccount, ClerkErrorResponse> =
     ClerkResult.unknownFailure(Exception(message))
-
-  private fun mapErrorToSpecificType(
-    initialResult: ClerkResult.Failure<ClerkErrorResponse>
-  ): ClerkResult.Failure<ClerkErrorResponse> =
-    when (initialResult.errorType) {
-      ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
-      ClerkResult.Failure.ErrorType.HTTP ->
-        initialResult.code?.let { code ->
-          ClerkResult.Companion.httpFailure(code = code, error = initialResult.error)
-        } ?: initialResult
-      ClerkResult.Failure.ErrorType.UNKNOWN -> initialResult
-    }
 
   private const val REDIRECT_URL = "redirect_url"
 }

@@ -11,6 +11,7 @@ import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.restorecredentials.RestoreCredentialManager
@@ -34,6 +35,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
+import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,6 +53,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -173,6 +176,35 @@ class SignOutServiceTest {
     assertNull("Session should be cleared on failure", Clerk.session)
     assertNull("User should be cleared on failure", Clerk.user)
     assertFalse("isSignedIn should be false on failure", Clerk.isSignedIn)
+  }
+
+  @Test
+  fun `signOut returns the server failure as it was`() = runTest {
+    setupActiveSession()
+    val serverFailure =
+      ClerkResult.httpFailure(
+        code = 401,
+        error =
+          ClerkErrorResponse(errors = listOf(Error(message = "Signed out", code = "unauthorized"))),
+      )
+    coEvery { mockSessionApi.deleteSessions(any()) } returns serverFailure
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    val result = SignOutService.signOut()
+
+    assertSame(serverFailure, result)
+  }
+
+  @Test
+  fun `signOut keeps the exception that interrupted the server sign-out`() = runTest {
+    setupActiveSession()
+    val exception = IOException("Network error")
+    coEvery { mockSessionApi.deleteSessions(any()) } throws exception
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    val result = SignOutService.signOut()
+
+    assertSame(exception, (result as ClerkResult.Failure).throwable)
   }
 
   @Test

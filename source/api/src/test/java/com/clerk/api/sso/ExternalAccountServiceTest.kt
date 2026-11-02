@@ -485,6 +485,27 @@ class ExternalAccountServiceTest {
   }
 
   @Test
+  fun `connectExternalAccount keeps the throwable and status of an undecodable HTTP failure`() =
+    runTest {
+      val cause = IOException("Unexpected JSON token")
+      val initial =
+        ClerkResult.Failure<ClerkErrorResponse>(
+          error = null,
+          throwable = cause,
+          code = 502,
+          errorType = ClerkResult.Failure.ErrorType.HTTP,
+        )
+      coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns initial
+
+      val result =
+        ExternalAccountService.connectExternalAccount(
+          User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+        )
+
+      assertSame(initial, result)
+    }
+
+  @Test
   fun `connectExternalAccount keeps the original throwable of an unknown failure`() = runTest {
     val cause = IOException("socket closed")
     val initial = ClerkResult.unknownFailure(cause)

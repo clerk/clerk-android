@@ -23,13 +23,13 @@ internal object SignOutService {
    * Signs out all accounts by deleting every session on the current client.
    *
    * @return A [ClerkResult] indicating the success or failure of the sign-out operation. Returns
-   *   [ClerkResult.Companion.success] with [Unit] on successful sign-out, or
-   *   [ClerkResult.Companion.unknownFailure] with error details on failure.
+   *   [ClerkResult.Companion.success] with [Unit] on successful sign-out, or the server's
+   *   [ClerkResult.Failure] on failure.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     val signedOutSessionIds = currentSessionIds().toMutableSet()
     val manualClientSyncRequest = ManualClientSyncRequest()
-    var serverError: Exception? = null
+    var serverFailure: ClerkResult.Failure<ClerkErrorResponse>? = null
 
     try {
       when (val result = ClerkApi.session.deleteSessions(manualClientSyncRequest)) {
@@ -39,14 +39,13 @@ internal object SignOutService {
               fenceReplacedSessions(replaced, signedOutSessionIds)
             }
           }
-        is ClerkResult.Failure ->
-          serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
+        is ClerkResult.Failure -> serverFailure = result
       }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       ClerkLogger.w("Server sign-out failed: ${e.message}")
-      serverError = e
+      serverFailure = ClerkResult.unknownFailure(e)
     } finally {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
@@ -72,11 +71,7 @@ internal object SignOutService {
         ClerkLogger.w("Client refresh after sign-out failed: ${it.message}")
       }
 
-    return if (serverError != null) {
-      ClerkResult.unknownFailure(Exception(serverError.message ?: "Unknown error"))
-    } else {
-      ClerkResult.success(Unit)
-    }
+    return serverFailure ?: ClerkResult.success(Unit)
   }
 
   private fun fenceReplacedSessions(replaced: Client?, signedOutSessionIds: MutableSet<String>) {
