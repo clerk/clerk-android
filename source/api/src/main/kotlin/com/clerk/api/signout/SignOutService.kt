@@ -3,6 +3,7 @@ package com.clerk.api.signout
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -26,11 +27,15 @@ internal object SignOutService {
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     val signedOutSessionIds = currentSessionIds().toMutableSet()
+    val manualClientSyncRequest = ManualClientSyncRequest()
     var serverError: Exception? = null
 
     try {
-      when (val result = ClerkApi.session.deleteSessions()) {
-        is ClerkResult.Success -> replaceClient(result.value, signedOutSessionIds)
+      when (val result = ClerkApi.session.deleteSessions(manualClientSyncRequest)) {
+        is ClerkResult.Success ->
+          manualClientSyncRequest.runIfResponseCurrent {
+            replaceClient(result.value, signedOutSessionIds)
+          }
         is ClerkResult.Failure ->
           serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
       }
