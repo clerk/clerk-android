@@ -44,6 +44,39 @@ class ClientStateStoreTest {
   // region Ordering
 
   @Test
+  fun `applying a response hands the replaced client to the callback and skips stale ones`() {
+    val store = store()
+    val replaced = mutableListOf<Client?>()
+    store.applyClientResponse(clientWithSession("sess_old"), serverDateMillis = 2_000)
+
+    assertTrue(
+      store.applyClientResponse(Client(id = "client_newer"), store.observeResponse(3_000)) {
+        replaced += it
+      }
+    )
+    assertFalse(
+      store.applyClientResponse(Client(id = "client_older"), store.observeResponse(1_000)) {
+        replaced += it
+      }
+    )
+
+    assertEquals(listOf("sess_old"), replaced.single()?.sessions?.map { it.id })
+  }
+
+  @Test
+  fun `applying a local client hands the replaced client to the callback even before any client`() {
+    val store = store()
+    val replaced = mutableListOf<Client?>()
+
+    store.applyClient(clientWithSession("sess_first")) { replaced += it }
+    store.applyClient(Client(id = "client_second")) { replaced += it }
+
+    assertEquals(2, replaced.size)
+    assertNull(replaced[0])
+    assertEquals(listOf("sess_first"), replaced[1]?.sessions?.map { it.id })
+  }
+
+  @Test
   fun `response fetched before applied state is dropped`() {
     val store = store()
     val newer = Client(id = "client_newer")

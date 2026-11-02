@@ -15,9 +15,12 @@ import com.clerk.api.network.model.environment.OrganizationSettings
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.GoogleSignInService
@@ -34,16 +37,22 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -62,6 +71,8 @@ class AuthTest {
     unmockkAll()
     Clerk.updateClient(Client())
     setForceOrganizationSelection(false)
+    SessionTokenFetcher.shared.reset()
+    SessionTokenFetcher.shared.clearSignedOutSessions()
   }
 
   @Test
@@ -291,6 +302,104 @@ class AuthTest {
     coVerify(exactly = 1) { sessionApi.removeSession(firstSession.id) }
     coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
+
+  @Test
+  fun `signOut with session ID clears only that session's cached tokens`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val sessionApi = mockk<SessionApi>()
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    mockkObject(RestoreCredentials)
+    every { ClerkApi.session } returns sessionApi
+    every { ClerkApi.client } returns clientApi
+    coEvery { RestoreCredentials.clearSilently() } returns Unit
+    coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
+    coEvery { clientApi.get() } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+    SessionTokensCache.clear()
+    SessionTokensCache.setToken("sess_1-organization-", TokenResource(jwt = "first"))
+    SessionTokensCache.setToken("sess_2-organization-", TokenResource(jwt = "second"))
+
+    Auth().signOut(sessionId = firstSession.id)
+
+    assertNull(SessionTokensCache.getToken("sess_1-organization-"))
+    assertEquals(TokenResource(jwt = "second"), SessionTokensCache.getToken("sess_2-organization-"))
+    SessionTokensCache.clear()
+  }
+
+  @Test
+  fun `cancelling signOut with session ID still finishes the local cleanup`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val sessionApi = mockk<SessionApi>()
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    mockkObject(RestoreCredentials)
+    every { ClerkApi.session } returns sessionApi
+    every { ClerkApi.client } returns clientApi
+    var signOutJob: Job? = null
+    var restoreCredentialCleared = false
+    coEvery { RestoreCredentials.clearSilently() } coAnswers
+      {
+        signOutJob?.cancel()
+        yield()
+        restoreCredentialCleared = true
+      }
+    coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
+    coEvery { clientApi.get() } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+
+    val job = launch { Auth().signOut(sessionId = firstSession.id) }
+    signOutJob = job
+    job.join()
+
+    assertTrue(restoreCredentialCleared)
+    assertEquals(listOf(secondSession), Clerk.client.sessions)
+  }
+
+  @Test
+  fun `cancelling signOut with session ID while the request is in flight still cleans up locally`() =
+    runTest {
+      val firstSession = testSession("sess_1")
+      val secondSession = testSession("sess_2")
+      val sessionApi = mockk<SessionApi>()
+      val clientApi = mockk<ClientApi>()
+      mockkObject(ClerkApi)
+      mockkObject(RestoreCredentials)
+      every { ClerkApi.session } returns sessionApi
+      every { ClerkApi.client } returns clientApi
+      coEvery { RestoreCredentials.clearSilently() } returns Unit
+      coEvery { sessionApi.removeSession(firstSession.id) } coAnswers { awaitCancellation() }
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(firstSession, secondSession),
+          lastActiveSessionId = firstSession.id,
+        )
+      )
+
+      val job = launch { Auth().signOut(sessionId = firstSession.id) }
+      runCurrent()
+      job.cancelAndJoin()
+
+      assertEquals(listOf(secondSession), Clerk.client.sessions)
+      coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
+    }
 
   @Test
   fun `setActive updates the active session locally`() = runTest {

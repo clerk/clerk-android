@@ -38,7 +38,7 @@ class SessionDeleteTest {
 
     assertSame(result, session.delete())
     coVerify(exactly = 1) { sessionApi.removeSession("sess_target") }
-    coVerify(exactly = 0) { sessionApi.deleteSessions() }
+    coVerify(exactly = 0) { sessionApi.deleteSessions(any()) }
   }
 
   private fun session(id: String): Session =
