@@ -58,10 +58,13 @@ async function pathList(get, file, baseRef) {
   return list === null ? [] : parseProtectedPaths(Buffer.from(list.content, 'base64').toString('utf8'));
 }
 
-// reason says why the check failed: 'author', 'files', 'protected' or 'coderabbit'.
+// reason says why the check failed: 'author', 'files', 'protected', 'coderabbit' or 'head'.
 async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef, headSha }) {
   const get = client({ fetch, api, token, repo });
   const pull = await get(`/pulls/${number}`);
+  if (headSha !== undefined && headSha !== pull.head.sha) {
+    return { pass: false, reason: 'head', message: `This run was started for ${headSha}, but the pull request is now at ${pull.head.sha}. The run for that commit decides.` };
+  }
   const head = headSha ?? pull.head.sha;
   const reviews = await paged(get, `/pulls/${number}/reviews`);
   const approved = approvers(reviews, author, head);

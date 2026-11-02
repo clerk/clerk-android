@@ -157,9 +157,10 @@ describe('code owner approval', () => {
     assert.match(output, /so it needs an approval from another Team Mobile member/);
   });
 
-  it('judges the commit the run was started for, not the pull request\'s latest head', async () => {
-    const { pass } = await run({ files: workflow, reviews: [review('seanperez29', 'APPROVED')], roles: { swolfand: 'maintain', seanperez29: 'admin' } }, 'swolfand', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+  it('fails a run started for a commit the pull request has moved past, even if the head is approved', async () => {
+    const { pass, output } = await run({ files: workflow, reviews: [review('seanperez29', 'APPROVED')], roles: { swolfand: 'maintain', seanperez29: 'admin' } }, 'swolfand', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
     assert.equal(pass, false);
+    assert.match(output, /This run was started for e225ce56d448093f7910a36cf47bcc9a664e04d0, but the pull request is now at/);
   });
 
   it('keeps an approval when a later review only comments', async () => {
