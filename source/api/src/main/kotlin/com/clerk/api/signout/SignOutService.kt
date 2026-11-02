@@ -30,10 +30,7 @@ internal object SignOutService {
 
     try {
       when (val result = ClerkApi.session.deleteSessions()) {
-        is ClerkResult.Success -> {
-          signedOutSessionIds += currentSessionIds()
-          Clerk.updateClient(result.value)
-        }
+        is ClerkResult.Success -> replaceClient(result.value, signedOutSessionIds)
         is ClerkResult.Failure ->
           serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
       }
@@ -46,11 +43,7 @@ internal object SignOutService {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        val cleared = Clerk.mutateClient { client ->
-          signedOutSessionIds += client.sessions.map { it.id }
-          Client()
-        }
-        if (!cleared) Clerk.updateClient(Client())
+        replaceClient(Client(), signedOutSessionIds)
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
@@ -78,4 +71,12 @@ internal object SignOutService {
 
   private fun currentSessionIds(): List<String> =
     Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
+
+  private fun replaceClient(next: Client, signedOutSessionIds: MutableSet<String>) {
+    val replaced = Clerk.mutateClient { previous ->
+      signedOutSessionIds += previous.sessions.map { it.id }
+      next
+    }
+    if (!replaced) Clerk.updateClient(next)
+  }
 }
