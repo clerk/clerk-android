@@ -19,7 +19,7 @@ A signed-out user opens AuthView and sees the start screen, where they enter an 
 
 Preconditions:
 
-- The first and third tests need no user. The second seeds one with `host.seedUser({ phone: true, password: true })`. The spec declares no settings, so it launches on the standard instance, signed out.
+- The first and third tests need no user. The second seeds one with `host.seedUser({ phone: true, password: true })`. The spec runs on the standard settings, so it launches signed out.
 
 - **Full screen.** Run `e2e-tests/bin/control-clerk-android run auth-start`. The first test launches, taps `e2e.auth.signInFullScreen`, and expects `clerk.auth.start.identifier` and `clerk.auth.start.continue` with no `clerk.dismissButton`. Screenshot `auth-full-screen`, which shows AuthView as the whole content of the activity.
 - **Initial identifier.** The second test launches with `authMode: 'signIn'` and the user's phone as `initialIdentifier`, and taps `e2e.auth.signInFullScreen`, and the host shows `AuthView(initialIdentifier = <that phone>)`. AuthView then opens on the phone field and shows no `clerk.auth.start.identifier`. The test expects `clerk.auth.start.phoneNumber` to hold the number as Clerk formats it and `clerk.auth.start.identifier` to be absent, then taps `clerk.auth.start.continue` and expects `clerk.auth.signIn.password`. Screenshots `auth-initial-identifier` and `auth-initial-identifier-accepted`.

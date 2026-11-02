@@ -91,9 +91,10 @@ $ e2e-tests/bin/control-clerk-android run specs/explored/resend.e2e.ts   # a spe
 $ e2e-tests/bin/control-clerk-android run auth-start sign-up organizations  # several targets in one run, with one video
 $ e2e-tests/bin/control-clerk-android screen                             # the current UI tree with test tags
 $ e2e-tests/bin/control-clerk-android screen --png                       # plus a screenshot in .verify/scratch/
+$ e2e-tests/bin/control-clerk-android settings auth_multi_factor         # the live config under a prefix, read from Clerk
 ```
 
-`run --all` runs every committed spec. `run` also takes `--grep <regex>`, `--retries <n>`, `--max-failures <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a test again, up to `n` more times, when an assertion failed, the test threw an error, or the test ran out of time. A test that e2e reports as a machine failure, such as an `ENGINE_FAILURE` when an `open` or a screenshot times out in agent-device, gets one attempt whatever `n` is. A driver error e2e reports as a test error, such as a stale node or an action that timed out, is retried like any other. The default is 0, so a run of your own change shows exactly what happened. `--max-failures <n>` stops a settings group once `n` of its tests have failed. A test that the limit stopped before it started prints `FAIL` with `not run: failure-limit`, and `run` exits 1. Without the flag, a run has no limit. [references/cli.md](references/cli.md) has every flag, the `--json` output, the exit codes, and the error codes.
+`run --all` runs every committed spec. `run` also takes `--grep <regex>`, `--retries <n>`, `--max-failures <n>`, `--no-video`, and `--wait <seconds>`. `--retries <n>` runs a test again, up to `n` more times, when an assertion failed, the test threw an error, or the test ran out of time. A test that e2e reports as a machine failure, such as an `ENGINE_FAILURE` when an `open` or a screenshot times out in agent-device, gets one attempt whatever `n` is. A driver error e2e reports as a test error, such as a stale node or an action that timed out, is retried like any other. The default is 0, so a run of your own change shows exactly what happened. `--max-failures <n>` stops the run once `n` of its tests have failed. A test that the limit stopped before it started prints `FAIL` with `not run: failure-limit`, and `run` exits 1. Without the flag, a run has no limit. [references/cli.md](references/cli.md) has every flag, the `--json` output, the exit codes, and the error codes.
 
 With a remote session, `run` after an edit to the app sends the uncommitted changes, and the same session builds them. An edit to a spec needs no push, because specs run from this machine.
 
@@ -132,18 +133,18 @@ A change that touches sign-in or sign-up gets a spec that drives the real form, 
 
 Type only test identities: `+clerk_test` emails, phones 555-0100 to 555-0199, the code `424242`, and a throwaway password per run. [features/README.md](features/README.md) has the identities, the test tags of each sign-in step, and the order of the screens.
 
-### Settings a spec needs
+### Settings a test needs
 
-A spec names no instance. Most specs run on the standard settings and declare nothing. A spec file that needs something else declares it in a JSON file beside it. The file has the name of the spec, with `.settings.json` in place of `.e2e.ts`, so the settings of `specs/explored/mfa.e2e.ts` are in `specs/explored/mfa.settings.json`. `run` changes the application to match before the tests in that spec file start:
+A spec names no instance. Every test starts on the standard settings. A test that needs another setting calls `host.useSettings` with the config leaves to change, each by its full dotted name. When the test ends, pass or fail, the CLI puts back every leaf the test changed:
 
-```json
-{
-  "config": { "auth_multi_factor": { "required_for_sign_up": true } },
-  "environment": { "user_settings.sign_up.mfa.required": true }
-}
+```ts
+await host.useSettings({
+  config: { 'auth_multi_factor.required_for_sign_up': true },
+  environment: { 'user_settings.sign_up.mfa.required': true },
+});
 ```
 
-[references/instances.md](references/instances.md) has the rules for a declaration and what `run` prints when it applies one.
+To see what is on or off, run `e2e-tests/bin/control-clerk-android settings <prefix>`, such as `settings auth_multi_factor`. [references/instances.md](references/instances.md) has what a call waits for, how the CLI restores a change after a crash, and a table of the settings that tests often change.
 
 ### Committed and explored specs
 
@@ -155,11 +156,10 @@ Right after `up` the host has not been launched, and `screen` opens it without l
 
 With `--retries`, a test that fails and then passes prints `flaky` and the error of its failed attempt, and a `flaky` line under the results counts such tests. `run.json` records the test as `flaky` with its `attempts`, never as passed, and `run` exits 0. The failure page of the failed attempt and the files of every attempt stay in the run directory. A test that fails on every attempt prints `FAIL`, and `run` exits 1.
 
-When the change adds or changes what the SDK does, the PR commits the spec into `specs/features/<feature>/`, with its settings file if it has one, and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a committed spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A committed spec sits one folder deeper, so its import of the fixture changes with the move:
+When the change adds or changes what the SDK does, the PR commits the spec into `specs/features/<feature>/` and updates the feature's page and its line in `features/README.md`. A change to wording or appearance alone does not earn a committed spec, because a spec that pins a label fails on the next change of wording: leave that spec in `specs/explored/`. A committed spec sits one folder deeper, so its import of the fixture changes with the move:
 
 ```console
 $ mkdir -p e2e-tests/specs/features/<feature> && mv e2e-tests/specs/explored/probe.e2e.ts e2e-tests/specs/features/<feature>/
-$ mv e2e-tests/specs/explored/probe.settings.json e2e-tests/specs/features/<feature>/   # only when the spec has a settings file
 $ sed -i.bak "s|'../fixtures.ts'|'../../fixtures.ts'|" e2e-tests/specs/features/<feature>/probe.e2e.ts && rm e2e-tests/specs/features/<feature>/probe.e2e.ts.bak
 $ e2e-tests/bin/control-clerk-android run <feature>
 ```
@@ -176,15 +176,15 @@ Every `run` writes `.verify/runs/<run-id>/` and prints its path:
 
 | File | What it is |
 | --- | --- |
-| `run.json` | The record of the run: `results` per spec, `gitHead`, `dirty`, `build`, `device`, `identities`, `settings` (one entry per group of spec files that share a declaration), and `tainted` files |
+| `run.json` | The record of the run: `results` per spec, `gitHead`, `dirty`, `build`, `device`, `identities`, `settings` (one entry per `host.useSettings` call, with the leaves it changed and whether they were restored), and `tainted` files |
 | `video.mp4` | An `adb shell screenrecord` of the run, from the first `host.launch` to the end. Just before that launch, `run` closes the host and starts the recorder, so the video opens on the emulator's home screen, for a moment at most, and then shows the host being launched. A run in which no test calls `host.launch` has no video, and `run` prints a `video` line that says so |
 | `evidence-marks.jsonl` | When each `host.evidence` block started and ended, and when and where each `host.tap` and `host.fill` tapped, in a run that records evidence. `run.json` keeps them as `evidenceSpans` and `evidenceTaps`, in seconds of the video |
 | `video-cut.mp4` | What `attach --video` last posted for this run: the marked part of `video.mp4`. `video.mp4` stays as recorded |
 | `screenshots/<label>.png` | Every `host.screenshot(label)` |
 | `app.log` | `adb logcat` lines from the run for `ClerkVerify`, `ClerkLog`, `OkHttp`, and `AndroidRuntime` errors. The host writes one `ClerkVerify` line each time its screen, user, session, or launch error changes, with the `launchId` that a failed `host.launch` names. No spec reads these lines. They are for diagnosing a failure that the screen does not explain |
-| `e2e/`, `e2e.log` | e2e's `report.json` and `junit.xml`, failure pages, and console output. A run with several groups has `e2e/`, `e2e-2/`, `e2e-3/` in the order they ran |
+| `e2e/`, `e2e.log` | e2e's `report.json` and `junit.xml`, failure pages, and console output |
 | `driver/` | `summary.txt`, which says what agent-device state the run found and what it copied, and the part of agent-device's `daemon.log` that the run added. The copy leaves out typed text. They are for a failure that the driver caused, such as a daemon that did not start |
-| `specs/` | A copy of every spec the run used, and of its settings file |
+| `specs/` | A copy of every spec the run used |
 
 Proof standards: drive the real user path. The video and the screenshots show the action and its result as a user sees them. Check side effects where the app shows them, such as the user ID on the home or the organization name on the switcher, not only that the last screen appeared.
 
@@ -224,7 +224,7 @@ To make the before run, `run` the spec of your change on the build without the c
 
 For screenshots, show each screen the change touches, and each state of a screen that it touches, in a before and after of its own. That includes a state the change should leave as it was, because its pair shows that it did. Write one spec file with one test per state, each ending in its own `host.screenshot(label)`. Run it once without the change and once with it, and pass every label to one `attach`, one `--screenshot <label>` each. The table then has a row for each state.
 
-Some states are out of reach for a test user on the standard settings with the default roles. Try a settings file for the spec, or test data that the spec seeds, first. When neither reaches it, force the state with a small local patch to the build. Never commit or push the patch. Put the same patch on the before build and the after build, and run both on a local emulator, because `attach` refuses a run on a session build with uncommitted changes. In the pull request, say exactly what the patch changed and why no test user could reach the state without it.
+Some states are out of reach for a test user on the standard settings with the default roles. Try `host.useSettings` in the spec, or test data that the spec seeds, first. When neither reaches it, force the state with a small local patch to the build. Never commit or push the patch. Put the same patch on the before build and the after build, and run both on a local emulator, because `attach` refuses a run on a session build with uncommitted changes. In the pull request, say exactly what the patch changed and why no test user could reach the state without it.
 
 `attach` puts the files in the description of the pull request with `gh pr edit --attach`. It writes one block between the comments `<!-- verify-evidence:android -->` and `<!-- /verify-evidence:android -->`. The block is a line and then one or more tables. The line leads with the result and names the run, the device, the commit, and how many tests passed. With `--before` it also names the before run, its commit, and how many of its tests passed. With `--before`, one table has a `Before` and an `After` column, and a row for each screenshot or one row for the video. Without it, the screenshots are two across, each under its label in code font, and the video is alone in a table under its name. Each screenshot is 280 pixels wide.
 
@@ -248,7 +248,7 @@ Work in this order, with one `up` for both runs: make the branch, `git push` it 
 
 On a local emulator `attach` writes the description itself, and no run needs a push. A remote session builds only the commit it was started on and later commits of the branch, so its before run comes before the push of the change. Its evidence reaches the description about a minute after `down`.
 
-When the change is already committed or pushed, make the before run on its base commit in this worktree, so the run lands in this checkout's `.verify/runs/`. A spec in `specs/explored/` stays through the switch, because that directory is gitignored. A committed spec of the change is not on the base, so copy it, and its settings file if it has one, to `specs/explored/` first and change its import to `'../fixtures.ts'`.
+When the change is already committed or pushed, make the before run on its base commit in this worktree, so the run lands in this checkout's `.verify/runs/`. A spec in `specs/explored/` stays through the switch, because that directory is gitignored. A committed spec of the change is not on the base, so copy it to `specs/explored/` first and change its import to `'../fixtures.ts'`.
 
 ```console
 $ git switch -c <branch>-before "$(git merge-base origin/main HEAD)"

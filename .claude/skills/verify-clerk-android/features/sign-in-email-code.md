@@ -23,4 +23,4 @@ Preconditions:
 ## Gotchas
 
 - The spec checks the code field a second time after 3 seconds. A sign-in that shows the code screen for a moment and then leaves it would pass a single visibility check.
-- The standard instance has the email link off, because a test address gets no mail, so a run has no link to follow. With the link on, AuthView opens the email-link screen first. It has the same title as the code screen, "Check your email", and no code field, so `clerk.auth.signIn.code` tells them apart. A spec that needs the link declares `auth_email.sign_in_strategies` in a settings file.
+- The standard instance has the email link off, because a test address gets no mail, so a run has no link to follow. With the link on, AuthView opens the email-link screen first. It has the same title as the code screen, "Check your email", and no code field, so `clerk.auth.signIn.code` tells them apart. A spec that needs the link sets `auth_email.sign_in_strategies` and `auth_email.verification_strategies` with `host.useSettings`.
