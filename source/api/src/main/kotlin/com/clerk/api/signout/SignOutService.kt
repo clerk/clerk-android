@@ -44,9 +44,9 @@ internal object SignOutService {
       serverError = e
     } finally {
       withContext(NonCancellable) {
-        signedOutSessionIds += currentSessionIds()
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+        signedOutSessionIds += currentSessionIds()
         Clerk.updateClient(Client())
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
