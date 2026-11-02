@@ -15,7 +15,7 @@ const riskComment = (level, commit = HEAD) => ({
   user: { login: 'coderabbitai[bot]' },
   body: `<!-- final_review_risk_start -->\n<!-- final_review_risk_label\n**Merge Risk:** **🔴 ${level}** · up to \`${commit.slice(0, 5)}\`\n-->\n<!-- final_review_risk_coverage:{"sourceCommitId":"${commit}","coveredCommitId":"${commit}","kind":"reviewed"} -->\n<!-- final_review_risk_end -->`,
 });
-const review = (login, state) => ({ user: { login }, state });
+const review = (login, state, commit = HEAD) => ({ user: { login }, state, commit_id: commit });
 
 function fakeGitHub({ author = 'outside-dev', draft = false, state = 'open', files = [{ filename: 'Sources/ClerkKit/Clerk.swift' }], pending = [], reviews = [], comments = [] }) {
   const requested = [];
@@ -162,6 +162,26 @@ describe('team review request', () => {
   it('skips members who are already requested or have reviewed', async () => {
     const { requested } = await run({ pending: ['mikepitre'], reviews: [review('swolfand', 'COMMENTED')] });
     assert.deepEqual(requested, ['seanperez29', 'wobsoriano']);
+  });
+
+  it('asks only the stale approver again when a Team Mobile author changed a protected file', async () => {
+    const stale = review('seanperez29', 'APPROVED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { requested, output } = await run({ author: 'swolfand', files: [{ filename: '.github/workflows/pr-ci.yml' }], reviews: [stale] });
+    assert.deepEqual(requested, ['seanperez29']);
+    assert.match(output, /Requested seanperez29 again/);
+  });
+
+  it('asks a member again whose approval a later push made stale', async () => {
+    const stale = review('wobsoriano', 'APPROVED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { requested } = await run({ files: [{ filename: '.github/workflows/pr-ci.yml' }], reviews: [stale, review('swolfand', 'COMMENTED')] });
+    assert.deepEqual(requested, ['mikepitre', 'seanperez29', 'wobsoriano']);
+  });
+
+  it('asks a member again whose approval a push dismissed', async () => {
+    const dismissed = review('seanperez29', 'DISMISSED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { requested, output } = await run({ author: 'swolfand', files: [{ filename: '.github/workflows/pr-ci.yml' }], reviews: [dismissed] });
+    assert.deepEqual(requested, ['seanperez29']);
+    assert.match(output, /Requested seanperez29 again/);
   });
 
   it('requests nobody once Team Mobile approved', async () => {

@@ -38,14 +38,14 @@ function protectedFiles(patterns, paths) {
   return paths.filter(path => patterns.some(pattern => pattern.test(path)));
 }
 
-function approvers(reviews, author) {
+function approvers(reviews, author, headSha) {
   const latest = new Map();
   for (const review of reviews) {
     if (review.user && review.state !== 'COMMENTED' && review.state !== 'PENDING') {
-      latest.set(review.user.login, review.state);
+      latest.set(review.user.login, review);
     }
   }
-  return [...latest].filter(([login, state]) => state === 'APPROVED' && login !== author).map(([login]) => login);
+  return [...latest].filter(([login, review]) => review.state === 'APPROVED' && review.commit_id === headSha && login !== author).map(([login]) => login);
 }
 
 async function trusted(get, login) {
@@ -58,12 +58,16 @@ async function pathList(get, file, baseRef) {
   return list === null ? [] : parseProtectedPaths(Buffer.from(list.content, 'base64').toString('utf8'));
 }
 
-// reason says why the check failed: 'author', 'files', 'protected' or 'coderabbit'.
-async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef }) {
+// reason says why the check failed: 'author', 'files', 'protected', 'coderabbit' or 'head'.
+async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef, headSha }) {
   const get = client({ fetch, api, token, repo });
   const pull = await get(`/pulls/${number}`);
+  if (headSha !== undefined && headSha !== pull.head.sha) {
+    return { pass: false, reason: 'head', message: `This run was started for ${headSha}, but the pull request is now at ${pull.head.sha}. The run for that commit decides.` };
+  }
+  const head = headSha ?? pull.head.sha;
   const reviews = await paged(get, `/pulls/${number}/reviews`);
-  const approved = approvers(reviews, author);
+  const approved = approvers(reviews, author, head);
   for (const login of approved) {
     if (await trusted(get, login)) {
       return { pass: true, message: `${login} approved, and has maintain or admin access.` };
@@ -104,14 +108,14 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
     };
   }
   const coderabbit = reviews.findLast(review => review.user?.login === CODERABBIT && review.state !== 'COMMENTED' && review.state !== 'PENDING');
-  if (coderabbit?.state !== 'APPROVED' || coderabbit.commit_id !== pull.head.sha) {
+  if (coderabbit?.state !== 'APPROVED' || coderabbit.commit_id !== head) {
     return { pass: false, reason: 'coderabbit', message: "CodeRabbit hasn't approved this commit. If it rates the merge risk high or critical, it won't, and this needs an approval from another Team Mobile member." };
   }
   return { pass: true, message: `${author} has maintain or admin access, and CodeRabbit approved.` };
 }
 
 async function main(env, { fetch = globalThis.fetch, out = process.stdout } = {}) {
-  const missing = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN', 'PR_NUMBER', 'PR_AUTHOR', 'BASE_REF'].filter(name => !env[name]);
+  const missing = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN', 'PR_NUMBER', 'PR_AUTHOR', 'BASE_REF', 'HEAD_SHA'].filter(name => !env[name]);
   if (missing.length > 0) {
     throw new Error(`missing ${missing.join(', ')}`);
   }
@@ -123,6 +127,7 @@ async function main(env, { fetch = globalThis.fetch, out = process.stdout } = {}
     number: env.PR_NUMBER,
     author: env.PR_AUTHOR,
     baseRef: env.BASE_REF,
+    headSha: env.HEAD_SHA,
   });
   out.write(pass ? `${message}\n` : `::error title=Code owner approval::${message}\n`);
   return pass;

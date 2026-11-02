@@ -55,10 +55,10 @@ function fakeGitHub({ list = PROTECTED_PATHS, renovateList = RENOVATE_PATHS, fil
   };
 }
 
-async function run(github, author = 'outside-dev') {
+async function run(github, author = 'outside-dev', headSha = HEAD) {
   const lines = [];
   const pass = await main(
-    { GITHUB_API_URL: API, GITHUB_REPOSITORY: REPO, GITHUB_TOKEN: 'test-token', PR_NUMBER: '7', PR_AUTHOR: author, BASE_REF: 'main' },
+    { GITHUB_API_URL: API, GITHUB_REPOSITORY: REPO, GITHUB_TOKEN: 'test-token', PR_NUMBER: '7', PR_AUTHOR: author, BASE_REF: 'main', HEAD_SHA: headSha },
     { fetch: fakeGitHub(github), out: { write: line => lines.push(line) } },
   );
   return { pass, output: lines.join('') };
@@ -148,6 +148,19 @@ describe('code owner approval', () => {
       roles: { swolfand: 'maintain', seanperez29: 'admin' },
     });
     assert.equal(pass, false);
+  });
+
+  it('fails when Team Mobile approved an earlier commit', async () => {
+    const stale = review('seanperez29', 'APPROVED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { pass, output } = await run({ files: workflow, reviews: [stale], roles: { swolfand: 'maintain', seanperez29: 'admin' } }, 'swolfand');
+    assert.equal(pass, false);
+    assert.match(output, /so it needs an approval from another Team Mobile member/);
+  });
+
+  it('fails a run started for a commit the pull request has moved past, even if the head is approved', async () => {
+    const { pass, output } = await run({ files: workflow, reviews: [review('seanperez29', 'APPROVED')], roles: { swolfand: 'maintain', seanperez29: 'admin' } }, 'swolfand', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    assert.equal(pass, false);
+    assert.match(output, /This run was started for e225ce56d448093f7910a36cf47bcc9a664e04d0, but the pull request is now at/);
   });
 
   it('keeps an approval when a later review only comments', async () => {
