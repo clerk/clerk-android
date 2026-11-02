@@ -588,9 +588,9 @@ public object Clerk {
    * sessions. This allows users with pending sessions to see their profile while completing
    * required tasks. Returns `null` when no session exists or if the SDK is not initialized.
    *
-   * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens.
-   * Calling [Session.fetchToken] on a pending session logs a warning and returns a
-   * [ClerkResult.Failure] whose error code is `session_pending`.
+   * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens. Calling
+   * [Session.fetchToken] on a pending session logs a warning and returns a [ClerkResult.Failure]
+   * whose error code is `session_pending`.
    *
    * @see activeSession for a session only when status is ACTIVE.
    */
