@@ -327,6 +327,34 @@ class SignOutServiceTest {
     }
 
   @Test
+  fun `signOut refuses tokens once the server result has removed the session`() = runTest {
+    setupActiveSession()
+    every { mockEnvironment.authConfig } returns mockk(relaxed = true)
+    coEvery { mockSessionApi.deleteSessions(any()) } coAnswers
+      {
+        arg<ManualClientSyncRequest?>(0)?.recordResponse(null, null)
+        ClerkResult.success(Client())
+      }
+    coEvery { mockSessionApi.tokens(any()) } returns ClerkResult.success(TokenResource(jwt = "jwt"))
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    mockkObject(RestoreCredentials)
+    var resultDuringCleanup: ClerkResult<TokenResource, ClerkErrorResponse>? = null
+    coEvery { RestoreCredentials.clearSilently() } coAnswers
+      {
+        resultDuringCleanup = mockSession.fetchToken()
+      }
+
+    SignOutService.signOut()
+
+    val failure = resultDuringCleanup as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockSessionApi.tokens(any()) }
+  }
+
+  @Test
   fun `signOut clears cached session tokens even when server sign-out fails`() = runTest {
     setupActiveSession()
     SessionTokensCache.setToken("test_session_id-organization-", TokenResource(jwt = "jwt"))

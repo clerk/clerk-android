@@ -104,6 +104,14 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     releaseRuntime { signedOutSessions += sessionIds }
   }
 
+  /**
+   * Refuses tokens for [sessionIds] once the client stops listing them, without clearing anything,
+   * so a client update can record the fence before it publishes a client without those sessions.
+   */
+  internal fun fenceSignedOutSessions(sessionIds: Collection<String>) {
+    synchronized(runtimeLock) { signedOutSessions += sessionIds }
+  }
+
   private inline fun releaseRuntime(updateSignedOutSessions: () -> Unit) {
     val tasksToRelease =
       synchronized(runtimeLock) {

@@ -36,7 +36,7 @@ internal object SignOutService {
         is ClerkResult.Success ->
           manualClientSyncRequest.runIfResponseCurrent {
             Clerk.stateStore.applyClientResponse(result.value, result.responseOrder()) { replaced ->
-              signedOutSessionIds += replaced?.sessions.orEmpty().map { it.id }
+              fenceReplacedSessions(replaced, signedOutSessionIds)
             }
           }
         is ClerkResult.Failure ->
@@ -51,9 +51,8 @@ internal object SignOutService {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        SessionTokenFetcher.shared.signOut(signedOutSessionIds)
         Clerk.stateStore.applyClient(Client()) { replaced ->
-          signedOutSessionIds += replaced?.sessions.orEmpty().map { it.id }
+          fenceReplacedSessions(replaced, signedOutSessionIds)
         }
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
@@ -78,6 +77,11 @@ internal object SignOutService {
     } else {
       ClerkResult.success(Unit)
     }
+  }
+
+  private fun fenceReplacedSessions(replaced: Client?, signedOutSessionIds: MutableSet<String>) {
+    signedOutSessionIds += replaced?.sessions.orEmpty().map { it.id }
+    SessionTokenFetcher.shared.fenceSignedOutSessions(signedOutSessionIds)
   }
 
   private fun currentSessionIds(): List<String> =
