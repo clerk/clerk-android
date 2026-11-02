@@ -157,3 +157,12 @@ public val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
       } else {
         "Error occurred with unknown message."
       }
+
+internal fun ClerkResult.Failure<*>.logSummary(): String {
+  val errors = (error as? ClerkErrorResponse)?.errors.orEmpty()
+  val details =
+    errors
+      .joinToString("; ") { "${it.code}: ${it.message}" }
+      .ifEmpty { throwable?.javaClass?.simpleName }
+  return listOfNotNull(errorType.name, code?.toString(), details).joinToString(" ")
+}
