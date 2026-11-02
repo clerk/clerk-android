@@ -9,11 +9,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-/**
- * The per-API tests mock these interfaces, so they never see Retrofit's annotation parsing. Eager
- * validation parses every method of every service [ClerkApi] creates, failing here instead of on a
- * user's first call.
- */
 class ServiceInterfaceValidationTest {
 
   private val retrofit =

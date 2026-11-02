@@ -51,16 +51,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 
-/**
- * A composable view for the first factor password step in the sign-in flow.
- *
- * This view displays a password input field, the user's email, and options for "Forgot Password"
- * and "Use another method".
- *
- * @param factor The [Factor] associated with this password step.
- * @param modifier The [Modifier] to be applied to the view.
- * @param onAuthComplete A callback invoked when the authentication process is complete.
- */
 @Composable
 internal fun SignInFactorOnePasswordView(
   factor: Factor,

@@ -30,7 +30,6 @@ private val FastOutExtraSlowInEasing =
     }
   )
 
-/** Matches React Navigation's default Android native-stack forward transition. */
 internal fun clerkNavigationForwardTransition(): ContentTransform {
   val slideSpec = clerkNavigationSlideSpec<IntOffset>()
   val enter =
@@ -40,7 +39,6 @@ internal fun clerkNavigationForwardTransition(): ContentTransform {
   return enter togetherWith exit
 }
 
-/** Matches React Navigation's default Android native-stack pop transition. */
 internal fun clerkNavigationPopTransition(): ContentTransform {
   val slideSpec = clerkNavigationSlideSpec<IntOffset>()
   val enter = slideInHorizontally(animationSpec = slideSpec, initialOffsetX = { -(it / 10) })

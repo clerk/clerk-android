@@ -25,10 +25,9 @@ const startedAt = run => run.run_started_at ?? run.created_at;
 
 const ranFullSuiteOnMain = run => run.event === 'schedule' || run.event === 'release' || (run.event === 'workflow_dispatch' && run.head_branch === 'main');
 
-// A release run passes whether or not it ran these checks, so a `file=job` source counts a run only when that job passed.
 function source(arg) {
   const at = arg.indexOf('=');
-  return at === -1 ? { file: arg, job: null } : { file: arg.slice(0, at), job: arg.slice(at + 1) };
+  return at === -1 ? { file: arg, requiredJob: null } : { file: arg.slice(0, at), requiredJob: arg.slice(at + 1) };
 }
 
 async function passedJob(get, run, name) {
@@ -38,9 +37,9 @@ async function passedJob(get, run, name) {
 
 async function lastPassingRun(get, { sha, runId, sources }) {
   const listed = await Promise.all(
-    sources.map(async ({ file, job }) => {
+    sources.map(async ({ file, requiredJob }) => {
       const page = await get(`/actions/workflows/${encodeURIComponent(file)}/runs?status=success&exclude_pull_requests=true&per_page=${RUNS_PER_WORKFLOW}`);
-      return page.workflow_runs.map(run => ({ run, job }));
+      return page.workflow_runs.map(run => ({ run, requiredJob }));
     }),
   );
   const runs = listed
@@ -48,12 +47,12 @@ async function lastPassingRun(get, { sha, runId, sources }) {
     .filter(({ run }) => ranFullSuiteOnMain(run) && String(run.id) !== String(runId))
     .sort((a, b) => startedAt(b.run).localeCompare(startedAt(a.run)));
   const ancestor = new Map();
-  for (const { run, job } of runs) {
+  for (const { run, requiredJob } of runs) {
     if (!ancestor.has(run.head_sha)) {
       const compared = await get(`/compare/${run.head_sha}...${sha}?per_page=1`, { missing: { status: 'unrelated' } });
       ancestor.set(run.head_sha, compared.status === 'ahead' || compared.status === 'identical');
     }
-    if (ancestor.get(run.head_sha) && (job === null || (await passedJob(get, run, job)))) {
+    if (ancestor.get(run.head_sha) && (requiredJob === null || (await passedJob(get, run, requiredJob)))) {
       return run;
     }
   }

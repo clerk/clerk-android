@@ -511,7 +511,6 @@ class ClerkDeviceTokenUpdateTest {
       updatedAt = 1_000,
     )
 
-  /** Stubs a refresh that returns [client] once the returned signal is completed. */
   private fun stubGatedRefresh(client: Client): CompletableDeferred<Unit> {
     val release = CompletableDeferred<Unit>()
     coEvery { Client.getSkippingClientId() } coAnswers
@@ -540,7 +539,6 @@ class ClerkDeviceTokenUpdateTest {
     coVerify(exactly = 0) { Environment.get() }
   }
 
-  /** Active jobs launched by the configuration manager; a queued refresh shows up here. */
   private fun configurationScopeChildren(): Set<Job> {
     val manager = configurationManager()
     val scope = configurationManagerField(manager, "scope") as CoroutineScope
@@ -560,7 +558,6 @@ class ClerkDeviceTokenUpdateTest {
     return field.get(manager)
   }
 
-  /** Joins every job the configuration manager launched, including ones launched while joining. */
   private fun awaitConfigurationScopeIdle() = runBlocking {
     withTimeout(ASYNC_TIMEOUT_MS) {
       var active = configurationScopeChildren()

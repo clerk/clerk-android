@@ -71,11 +71,8 @@ import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.delay
 
-/** Default timer length in seconds for code resend functionality. */
-private const val DEFAULT_TIMER_LENGTH = 60
-
-/** Default delay in milliseconds for timer countdown. */
-private const val DEFAULT_DELAY = 1000L
+private const val DEFAULT_RESEND_TIMER_SECONDS = 60
+private const val COUNTDOWN_TICK_MILLIS = 1000L
 private const val CARET_HEIGHT_FRACTION = 0.45f
 private const val DEFAULT_OTP_LENGTH = 6
 
@@ -90,7 +87,7 @@ private const val DEFAULT_OTP_LENGTH = 6
  * @param onClickResend Callback invoked when the user clicks the resend code link.
  * @param modifier Optional [Modifier] to be applied to the component.
  * @param timerDuration The duration of the countdown timer in seconds for resending the code.
- *   Defaults to [DEFAULT_TIMER_LENGTH].
+ *   Defaults to [DEFAULT_RESEND_TIMER_SECONDS].
  * @param verificationState The current state of the verification process (e.g., Default, Verifying,
  *   Success, Error). Defaults to [VerificationState.Default].
  * @param showResend Whether to show the resend code link and timer. Defaults to `true`.
@@ -100,7 +97,7 @@ public fun ClerkCodeInputField(
   onTextChange: (String) -> Unit,
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
-  timerDuration: Int = DEFAULT_TIMER_LENGTH,
+  timerDuration: Int = DEFAULT_RESEND_TIMER_SECONDS,
   verificationState: VerificationState = VerificationState.Default,
   showResend: Boolean = true,
   clerkTheme: ClerkTheme? = null,
@@ -158,7 +155,7 @@ internal class ResendTimerState(private val durationSeconds: Int) {
 
   suspend fun countDown() {
     while (secondsRemaining > 0) {
-      delay(DEFAULT_DELAY)
+      delay(COUNTDOWN_TICK_MILLIS)
       secondsRemaining--
     }
   }

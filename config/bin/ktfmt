@@ -1,7 +1,4 @@
 #!/bin/sh
-# Runs the same ktfmt version that Spotless uses (the `ktfmt` entry in
-# gradle/libs.versions.toml). Arguments are passed through, e.g.
-#   ./config/bin/ktfmt --google-style path/to/File.kt
 
 REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 . "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"

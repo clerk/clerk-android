@@ -160,7 +160,6 @@ class BiometricCredentialApiTest {
   }
 
   private companion object {
-    /** Mutation responses arrive wrapped in the client piggyback envelope. */
     fun wrapped(response: String): String = """{"response": $response, "client": null}"""
 
     const val TRUSTED_DEVICE_RESPONSE =

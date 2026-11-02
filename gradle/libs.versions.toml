@@ -8,8 +8,7 @@ composeBom = "2026.06.01"
 dependencyAnalysis = "3.20.0"
 androidxTest = "1.7.0"
 # detekt 1.23.x embeds the Kotlin 2.0 compiler, which cannot read Kotlin 2.4 metadata, so type
-# resolution (InjectDispatcher and friends) only works on the 2.x line. After bumping detekt, ktfmt
-# or sortDependencies, run ./gradlew downloadToolJars to pin the pre-commit hook's jars.
+# resolution (InjectDispatcher and friends) only works on the 2.x line.
 detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 dokka = "2.2.0"
@@ -31,7 +30,6 @@ turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.12.1"
 paparazzi = "2.0.0-alpha05.1"
 
-# Build Versions -- Do not delete
 # JDK the build and unit tests run on (Robolectric and Paparazzi need 21). Bytecode targets jvmTarget.
 jdk = "21"
 jvmTarget = "17"

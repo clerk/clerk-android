@@ -35,9 +35,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # `detekt` covers every module and source set without type resolution. The SDK modules'
-      # production sources also run with type resolution so rules such as InjectDispatcher fire.
-      - name: Run detekt
+      - name: Run detekt, with type resolution on SDK production sources
         run: >-
           ./gradlew detekt
           :source:api:detektDebug

@@ -94,7 +94,7 @@ import kotlinx.coroutines.launch
  * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
  *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
-@SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
+@SuppressLint("ComposeModifierMissing")
 @Composable
 public fun UserButton(
   clerkTheme: ClerkTheme? = null,
@@ -304,10 +304,9 @@ private fun handleUserButtonClick(
   }
 }
 
-@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 private fun UserAvatarButtonContent(imageUrl: String?, onClick: () -> Unit) {
-  val context = LocalContext.current
+  val openUserProfile = stringResource(R.string.open_user_profile)
   val profilePainter = painterResource(id = R.drawable.ic_profile)
   IconButton(
     onClick = onClick,
@@ -317,7 +316,7 @@ private fun UserAvatarButtonContent(imageUrl: String?, onClick: () -> Unit) {
     Box(
       modifier =
         Modifier.size(dp36).clip(CircleShape).semantics {
-          contentDescription = context.getString(R.string.open_user_profile)
+          contentDescription = openUserProfile
         },
       contentAlignment = Alignment.Center,
     ) {

@@ -39,10 +39,6 @@ internal object AppLifecycleListener {
       }
     }
 
-  /**
-   * True between the process lifecycle's ON_STOP and the next ON_START; false until the process has
-   * been stopped at least once.
-   */
   val isInBackground: Boolean
     get() = listener.wasBackgrounded
 

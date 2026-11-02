@@ -1,13 +1,10 @@
 #!/bin/bash
 
-######## FORMAT HOOK START ########
-
 if [[ "$COMMIT_HOOK_OPT_OUT" == "true" ]]; then
     echo 'Warning: Skipping pre-commit hook because COMMIT_HOOK_OPT_OUT is true'
     exit
 fi
 
-# Previous opt-out and git config checks remain the same...
 enabled="$(git config --bool hooks.pre-commit.enabled)"
 
 if [[ "$enabled" == "false" ]]; then
@@ -15,12 +12,10 @@ if [[ "$enabled" == "false" ]]; then
     exit
 fi
 
-# Colors and directory setup
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+RESET_COLOR='\033[0m'
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-# Previous partially_staged_chksum function and original state storage remain the same...
 function partially_staged_chksum() {
     staged_files=$(git diff --cached --name-only --diff-filter=ACMR "-G.*" | grep -Ei "(\.kt(s)?)|(.*java)$" | sort)
     unstaged_files=$(git diff --name-only --diff-filter=ACM | grep -Ei "(\.kt(s)?)|(.*java)$" | sort)
@@ -30,35 +25,29 @@ function partially_staged_chksum() {
 original_partially_staged_chksum=$(partially_staged_chksum)
 original_partially_staged_filenames=$(echo "$original_partially_staged_chksum" | grep -oE '[^ ]+$')
 
-# Sort Dependencies section remains the same...
 kts_files_list="$(git diff --cached --name-only --diff-filter=ACMR "-G.*" | grep -Ei "build\.gradle\.kts$")"
 if [[ ! -z ${kts_files_list} ]]; then
     kts_files_list="$(echo ${kts_files_list} | paste -sd " " -)"
     "${REPO_ROOT_DIR}/config/bin/sort-dependencies" ${kts_files_list} &> /dev/null
     if [[ $? != 0 ]]; then
         echo -e "${RED}sort-dependencies failed, re-running verbosely. Alternatively, you can run the command locally" >&2
-        echo -e "Running format command: './config/bin/sort-dependencies --verbose ${kts_files_list}'${NC}" >&2
+        echo -e "Running format command: './config/bin/sort-dependencies --verbose ${kts_files_list}'${RESET_COLOR}" >&2
         "${REPO_ROOT_DIR}/config/bin/sort-dependencies --verbose" ${kts_files_list} >&2
         exit $?
     fi
 fi
 
-# ktfmt and detekt. config/bin/ktfmt and config/bin/detekt-cli run the versions pinned in
-# gradle/libs.versions.toml (the same ones build.gradle.kts gives Spotless and detekt), and the
-# flags below mirror build.gradle.kts, so the hook agrees with `./gradlew spotlessCheck detekt`.
 kotlin_files_list="$(git diff --cached --name-only --diff-filter=ACMR "-G.*"  | grep -Ei "\.kt(s)?$")"
 if [[ ! -z ${kotlin_files_list} ]]; then
-    # Run ktfmt only if there are Kotlin files
     kotlin_files_args="$(echo ${kotlin_files_list} | paste -sd " " -)"
     "${REPO_ROOT_DIR}/config/bin/ktfmt" --google-style ${kotlin_files_args} &> /dev/null
     if [[ $? != 0 ]]; then
         echo -e "${RED}Formatting failed, re-running verbosely. Alternatively, you can run the format command locally" >&2
-        echo -e "Running format command: './config/bin/ktfmt --google-style ${kotlin_files_args}'${NC}" >&2
+        echo -e "Running format command: './config/bin/ktfmt --google-style ${kotlin_files_args}'${RESET_COLOR}" >&2
         "${REPO_ROOT_DIR}/config/bin/ktfmt" --google-style ${kotlin_files_args} >&2
         exit $?
     fi
 
-    # Run detekt only if there are Kotlin files
     kotlin_files_detekt_args="$(echo $kotlin_files_list | tr " " ":")"
     if [[ ! -z ${kotlin_files_detekt_args} ]]; then
         "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
@@ -69,7 +58,7 @@ if [[ ! -z ${kotlin_files_list} ]]; then
 
         if [[ $? != 0 ]]; then
             echo -e "${RED}Detekt failed, re-running verbosely. Alternatively, you can run the format command locally" >&2
-            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${NC}" >&2
+            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${RESET_COLOR}" >&2
             "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
                 --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
                 --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
@@ -80,14 +69,13 @@ if [[ ! -z ${kotlin_files_list} ]]; then
     fi
 fi
 
-# Run Slack Compose lint checks for staged Kotlin files
 if [[ ! -z ${kotlin_files_list} && -x "${REPO_ROOT_DIR}/gradlew" ]]; then
     lint_report_path="${REPO_ROOT_DIR}/source/ui/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt"
     "${REPO_ROOT_DIR}/gradlew" :source:ui:lintDebug &> /dev/null
     lint_exit_code=$?
 
     if [[ ! -f "${lint_report_path}" ]]; then
-        echo -e "${RED}Compose lint checks failed: lint report was not generated.${NC}" >&2
+        echo -e "${RED}Compose lint checks failed: lint report was not generated.${RESET_COLOR}" >&2
         echo -e "Running lint command: './gradlew :source:ui:lintDebug'" >&2
         "${REPO_ROOT_DIR}/gradlew" :source:ui:lintDebug >&2
         exit 1
@@ -104,7 +92,7 @@ if [[ ! -z ${kotlin_files_list} && -x "${REPO_ROOT_DIR}/gradlew" ]]; then
     done <<< "${kotlin_files_list}"
 
     if [[ -n "${slack_findings}" ]]; then
-        echo -e "${RED}Slack Compose lint checks failed for staged files:${NC}" >&2
+        echo -e "${RED}Slack Compose lint checks failed for staged files:${RESET_COLOR}" >&2
         echo "${slack_findings}" >&2
         exit 1
     fi
@@ -114,7 +102,6 @@ if [[ ! -z ${kotlin_files_list} && -x "${REPO_ROOT_DIR}/gradlew" ]]; then
     fi
 fi
 
-# Re-stage modified files section
 all_files="${kotlin_files_list}"
 for file in ${all_files}; do
     if [[ -f ${file} && ! "${original_partially_staged_filenames}" == *"${file}"* ]]; then
@@ -122,7 +109,6 @@ for file in ${all_files}; do
     fi
 done
 
-# Check for partially staged files section
 modified_partially_staged_filenames=$(comm -13 \
   <(partially_staged_chksum) \
   <(echo "$original_partially_staged_chksum") |
@@ -133,10 +119,8 @@ modified_partially_staged_filenames=$(comm -12 \
   <(echo "$modified_partially_staged_filenames"))
 
 if [ -n "$modified_partially_staged_filenames" ]; then
-  printf "%bCould not automatically add all fixed files to commit: some files had unstaged changes:%b\n" "$RED" "$NC"
+  printf "%bCould not automatically add all fixed files to commit: some files had unstaged changes:%b\n" "$RED" "$RESET_COLOR"
   echo "$modified_partially_staged_filenames"
   echo "Manually stage the fixes that were just made and try again."
   exit 2
 fi
-
-######## FORMAT HOOK END ########

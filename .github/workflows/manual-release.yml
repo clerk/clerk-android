@@ -93,7 +93,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Fetch all history for tags
+          fetch-depth: 0
 
       - name: Get versions from gradle.properties
         id: get_version
@@ -116,8 +116,6 @@ jobs:
             exit 1
           fi
 
-          # SDK releases use the API version. Telemetry-only releases use the telemetry version so
-          # they can be published independently without colliding with SDK release tags.
           if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" = "true" ]; then
             TAG_NAME="telemetry-v$CLERK_TELEMETRY_VERSION"
             RELEASE_VERSION="$CLERK_TELEMETRY_VERSION"

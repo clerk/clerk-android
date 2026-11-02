@@ -2,7 +2,6 @@ package com.clerk.api.session
 
 import com.auth0.android.jwt.JWT
 
-/** Abstracts the creation of a JWT object. Used for testing purposes. */
 internal interface JWTManager {
   fun createFromString(jwt: String): JWT
 }

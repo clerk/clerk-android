@@ -20,7 +20,7 @@ class SignInGetHelpViewSnapshotTest : BaseSnapshotTest() {
   fun signInGetHelpSnapShotTest() {
     paparazzi.snapshot {
       Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-      Box(Modifier.size(740.dp)) { // finite constraints
+      Box(Modifier.size(740.dp)) {
         PreviewAuthStateProvider {
           ClerkMaterialTheme { SignInGetHelpView(Modifier.fillMaxSize()) }
         }

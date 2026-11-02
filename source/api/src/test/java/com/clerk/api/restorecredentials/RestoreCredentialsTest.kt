@@ -627,7 +627,6 @@ class RestoreCredentialsTest {
   }
 
   // kotlinx.coroutines stack-trace recovery may rethrow a copy whose cause is the original
-  // exception, so suppressed exceptions can sit one level down.
   private fun Throwable.suppressedIncludingRecoveredCause(): List<Throwable> =
     generateSequence(this) { it.cause }.flatMap { it.suppressed.asSequence() }.toList()
 

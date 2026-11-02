@@ -218,10 +218,7 @@ private fun SettingsBottomSheetContent(onSave: (String, String) -> Unit, onClear
   var proxyUrl by remember { mutableStateOf(savedProxyUrl) }
 
   Column(
-    modifier =
-      Modifier.fillMaxWidth()
-        .padding(Spacing.medium)
-        .padding(bottom = Spacing.large) // Extra padding for bottom sheet
+    modifier = Modifier.fillMaxWidth().padding(Spacing.medium).padding(bottom = Spacing.large)
   ) {
     Text(
       text = WorkbenchConstants.SETTINGS_TITLE,
@@ -271,7 +268,6 @@ private fun SettingsBottomSheetContent(onSave: (String, String) -> Unit, onClear
   }
 }
 
-// Constants
 private object WorkbenchConstants {
   const val APP_TITLE = "Clerk Workbench"
   const val INSTRUCTIONS_TITLE = "Instructions:"
@@ -292,7 +288,6 @@ private object WorkbenchConstants {
     )
 }
 
-// Dimensions
 private object Spacing {
   val extraSmall = 6.dp
   val small = 12.dp

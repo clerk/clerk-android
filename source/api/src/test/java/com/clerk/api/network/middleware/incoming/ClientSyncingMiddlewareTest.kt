@@ -515,11 +515,6 @@ class ClientSyncingMiddlewareTest {
     assertEquals("client_original", applied)
   }
 
-  /**
-   * Sends [request] with the stored device token and returns the in-memory client id after the
-   * middleware runs. When [tokenAfterRead] is set, the stored token is replaced while the response
-   * body is read, after the middleware's up-front staleness check has passed.
-   */
   private fun interceptWhileDeviceTokenChanges(
     request: Request,
     body: String,
@@ -571,7 +566,6 @@ class ClientSyncingMiddlewareTest {
     """
       .trimIndent()
 
-  /** A JSON body that runs [onRead] the first time it is read. */
   private class SideEffectOnReadBody(private val json: String, private val onRead: () -> Unit) :
     ResponseBody() {
     private var read = false

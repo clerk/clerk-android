@@ -49,7 +49,6 @@ jobs:
         with:
           cache-disabled: true
 
-      # A cache restores to the path it was saved from, so these are the paths of verify-remote.yml.
       - name: Name the directory that verify-remote sessions use
         run: |
           mkdir -p "$RUNNER_TEMP/verify-remote"

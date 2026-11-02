@@ -30,11 +30,6 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/**
- * A composable view for handling second-factor authentication using a backup code.
- *
- * @param modifier The [Modifier] to be applied to the view.
- */
 @Composable
 internal fun SignInFactorTwoBackupCodeView(
   factor: Factor,

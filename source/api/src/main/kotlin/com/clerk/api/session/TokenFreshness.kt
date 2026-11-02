@@ -3,7 +3,6 @@ package com.clerk.api.session
 import com.auth0.android.jwt.JWT
 import com.clerk.api.network.model.token.TokenResource
 
-/** Chooses the canonical token when session minter responses arrive out of order. */
 internal object TokenFreshness {
   private data class DecodedToken(val resource: TokenResource, val jwt: JWT)
 
@@ -45,7 +44,6 @@ internal object TokenFreshness {
     }
   }
 
-  /** Applies the shared snapshot eligibility rule for token fetching and authorization reads. */
   internal fun eligibleSnapshot(
     session: Session,
     cached: TokenResource?,
@@ -55,10 +53,6 @@ internal object TokenFreshness {
       ?.takeIf { matches(it, session.id, session.lastActiveOrganizationId) }
       ?.takeIf { !requiresNewerOrigin || hasNewerOrigin(cached, it) }
 
-  /**
-   * Requires a later origin mint, even if an older token was renewed at the edge or is unexpired.
-   * Falls back to issuance time only when neither token has an origin timestamp.
-   */
   internal fun hasNewerOrigin(existing: TokenResource?, incoming: TokenResource): Boolean {
     val existingJwt = existing?.let { decode(it.jwt) }
     val incomingJwt = decode(incoming.jwt)

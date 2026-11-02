@@ -7,11 +7,6 @@ import com.clerk.api.log.SafeUriLog
 import com.clerk.api.redirect.ReceiverDelivery
 import com.clerk.api.redirect.RedirectCoordinator
 
-/**
- * Exported entry point for redirect callbacks. Any app can start it, so while a flow is pending
- * only a callback that passes that flow's state check reaches [SSOManagerActivity]; see
- * [RedirectCoordinator.receiverDelivery].
- */
 internal class SSOReceiverActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     ClerkLogger.d("OAuthReceiverActivity started with uri: ${SafeUriLog.describe(intent?.data)}")

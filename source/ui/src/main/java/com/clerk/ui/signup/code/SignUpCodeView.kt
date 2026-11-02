@@ -27,15 +27,6 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.serialization.Serializable
 
-/**
- * Composable function for the Sign Up Code View.
- *
- * This function displays a view where the user can enter a verification code received via email or
- * phone to complete the sign-up process.
- *
- * @param field The [SignUpCodeField] indicating whether the code was sent to a phone or email.
- * @param modifier The [Modifier] to be applied to the view.
- */
 @Composable
 internal fun SignUpCodeView(
   field: SignUpCodeField,

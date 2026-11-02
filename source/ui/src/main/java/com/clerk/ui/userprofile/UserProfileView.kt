@@ -36,7 +36,7 @@ import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.navigation.ClerkViewModelStoreScope
-import com.clerk.ui.navigation.LocalClerkHostBackAction
+import com.clerk.ui.navigation.WithoutHostBackAction
 import com.clerk.ui.navigation.clerkNavigationForwardAlphaSpec
 import com.clerk.ui.navigation.clerkNavigationForwardEnterTransform
 import com.clerk.ui.navigation.clerkNavigationForwardExitTransform
@@ -147,10 +147,7 @@ public fun UserProfileView(
         }
 
         if (showAuth) {
-          // The add-account flow replaces the profile entirely, so it dismisses itself rather
-          // than showing the host's back button, which would pop the host's own navigation.
-          // Hosts that want to own this flow can pass onAddAccount instead.
-          CompositionLocalProvider(LocalClerkHostBackAction provides null) {
+          WithoutHostBackAction {
             AuthView(
               modifier = Modifier.fillMaxSize(),
               preferGoogleOneTap = false,

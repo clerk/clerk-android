@@ -70,7 +70,6 @@ internal class PhoneInputUtils(
     private const val LOG_TAG = "PhoneInputUtils"
     private const val E164_MAX_DIGITS = 15
 
-    // Backward compatibility - default instance
     private val defaultInstance = PhoneInputUtils()
 
     fun detectCountry(context: Context): CountryInfo? = defaultInstance.detectCountry(context)
@@ -123,7 +122,7 @@ internal class PhoneInputUtils(
 
   internal fun getAllCountries(): List<CountryInfo> {
     return phoneUtil.supportedRegions
-      .filter { it.length == 2 } // Filter out non-standard region codes
+      .filter { it.length == 2 }
       .map { region ->
         CountryInfo(
           flag = regionToFlagEmoji(region),
@@ -190,17 +189,6 @@ internal object CountryCodeUtils {
   private const val REGIONAL_INDICATOR_SYMBOL_A = 0x1F1E6
   private const val FLAG_EMOJI_CODEPOINT_COUNT = 2
 
-  /**
-   * Converts a two-letter ISO 3166-1 alpha-2 region code into its corresponding flag emoji.
-   *
-   * Each letter of the region code is converted to a Unicode Regional Indicator Symbol. For
-   * example, "US" becomes the sequence of Regional Indicator Symbol Letter U and Regional Indicator
-   * Symbol Letter S, which renders as the US flag emoji (🇺🇸).
-   *
-   * @param regionCode The two-letter uppercase region code (e.g., "US", "GB").
-   * @return The flag emoji as a String, or an empty string if the `regionCode` is not a valid
-   *   two-letter alphabetic code.
-   */
   internal fun regionToFlagEmoji(regionCode: String): String {
     val first = if (regionCode.length == 2) regionCode[0].uppercaseChar() else ' '
     val second = if (regionCode.length == 2) regionCode[1].uppercaseChar() else ' '

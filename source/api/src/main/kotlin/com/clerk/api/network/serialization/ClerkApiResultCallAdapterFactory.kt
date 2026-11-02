@@ -99,8 +99,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 } else {
                   var errorBody: Any? = null
                   response.errorBody()?.let { responseBody ->
-                    // Don't try to decode empty bodies
-                    // Unknown length bodies (i.e. -1L) are fine
                     if (responseBody.contentLength() == 0L) return@let
                     if (!ClerkResult.hasHttpErrorBody(response.code())) return@let
                     val errorType = apiResultType.actualTypeArguments[1]
@@ -122,7 +120,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                       } catch (e: LinkageError) {
                         throw e
                       } catch (e: Throwable) {
-                        @Suppress("UNCHECKED_CAST")
                         callback.onResponse(
                           call,
                           Response.success(
@@ -137,7 +134,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                         return
                       }
                   }
-                  @Suppress("UNCHECKED_CAST")
                   callback.onResponse(
                     call,
                     Response.success(

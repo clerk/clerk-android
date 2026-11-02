@@ -132,7 +132,6 @@ class ClerkApiResultConverterFactoryTest {
     val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>()
     every { mockDelegateConverter.convert(any()) } returns null
 
-    // Using reflection to create the converter since it's private
     val converterClass =
       ClerkApiResultConverterFactory::class.java.declaredClasses.find {
         it.simpleName == "ClerkApiResultConverter"

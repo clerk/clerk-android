@@ -27,7 +27,7 @@ class OAuthActivity : ComponentActivity() {
           OAuthViewModel.UiState.Authenticated -> Text("Authenticated")
           OAuthViewModel.UiState.Loading -> CircularProgressIndicator()
           OAuthViewModel.UiState.SignedOut -> {
-            val provider = OAuthProvider.GOOGLE // Or .GITHUB, .SLACK etc.
+            val provider = OAuthProvider.GOOGLE
             Button(onClick = { viewModel.signInWithOAuth(provider) }) {
               Text("Sign in with ${provider.name}")
             }

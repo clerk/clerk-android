@@ -98,14 +98,6 @@ public fun ClerkButton(
   )
 }
 
-/**
- * An internal variant of [ClerkButton] that allows for direct control over the pressed state.
- *
- * This is primarily used for previews and testing to visualize the button in a pressed state
- * without requiring user interaction.
- *
- * @param isPressed Explicitly sets the pressed state of the button.
- */
 @Composable
 internal fun ClerkButtonWithPressedState(
   text: String,

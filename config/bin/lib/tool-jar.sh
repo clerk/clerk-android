@@ -1,19 +1,10 @@
 #!/bin/sh
-# Shared helpers for the config/bin tool wrappers.
-#
-# The pre-commit hook must run exactly the same tool versions as Gradle
-# (Spotless ktfmt, detekt, sort-dependencies). Versions are read from
-# gradle/libs.versions.toml, which build.gradle.kts also uses, so there is a
-# single source of truth.
-# Jars are downloaded once from Maven Central, verified against the SHA-256
-# pinned in config/bin/tool-checksums.sha256, and cached per version.
 
 die() {
   printf '%s\n' "$*" >&2
   exit 1
 }
 
-# catalog_version <key> -> prints the [versions] entry for <key>.
 catalog_version() {
   catalog="$REPO_ROOT_DIR/gradle/libs.versions.toml"
   version="$(sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$catalog" | head -n 1)"
@@ -31,7 +22,6 @@ sha256_of() {
   fi
 }
 
-# pinned_sha256 <file name> -> prints the checksum pinned for <file name>.
 pinned_sha256() {
   checksums="$REPO_ROOT_DIR/config/bin/tool-checksums.sha256"
   sum="$(awk -v name="$1" '$1 !~ /^#/ && $2 == name { print $1; exit }' "$checksums")"
@@ -39,8 +29,6 @@ pinned_sha256() {
   printf '%s\n' "$sum"
 }
 
-# tool_jar <maven directory> <file name> -> prints the local path of the cached
-# jar, downloading and checksum-verifying it on first use.
 tool_jar() {
   cache_root="${CLERK_TOOLS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/clerk-android/tools}"
   jar="$cache_root/$2"

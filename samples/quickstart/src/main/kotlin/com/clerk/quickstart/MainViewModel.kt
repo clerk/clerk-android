@@ -19,7 +19,6 @@ class MainViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   init {
-    // Combine initialization state with user state to determine UI state
     combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
         when {
           !isInitialized -> MainUiState.Loading

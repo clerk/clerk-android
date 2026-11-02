@@ -4,17 +4,6 @@ import android.content.Context
 import java.io.File
 import java.security.MessageDigest
 
-/**
- * Local metadata that links a Clerk biometric credential to its on-device private key.
- *
- * @property id The server-side biometric credential ID.
- * @property localKeyId The Android Keystore alias suffix of the private key.
- * @property userId The ID of the user the credential belongs to.
- * @property appIdentifier The application ID the credential is bound to.
- * @property policy The local authentication policy protecting the private key.
- * @property createdAt The time the credential was created, in milliseconds since epoch.
- * @property updatedAt The time the credential was last updated, in milliseconds since epoch.
- */
 internal data class BiometricCredentialLocalRecord(
   val id: String,
   val localKeyId: String,

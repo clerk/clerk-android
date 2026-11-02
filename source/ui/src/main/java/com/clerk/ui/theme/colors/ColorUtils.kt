@@ -7,11 +7,6 @@ import kotlin.math.min
 
 private const val DARK_LUMINANCE_THRESHOLD = 0.5f
 
-/**
- * Determines if this color is considered "dark" based on its luminance. A color is considered dark
- * if its luminance is below 0.5. This matches the iOS implementation for calculating pressed button
- * colors.
- */
 internal val Color.isDark: Boolean
   get() = luminance() < DARK_LUMINANCE_THRESHOLD
 

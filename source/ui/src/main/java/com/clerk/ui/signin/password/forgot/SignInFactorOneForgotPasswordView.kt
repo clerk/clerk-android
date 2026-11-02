@@ -46,13 +46,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * A view that allows the user to initiate the forgot password flow. It also presents alternative
- * sign-in methods like social providers or other factors.
- *
- * @param modifier The [Modifier] to be applied to the view.
- * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
- */
 @Composable
 internal fun SignInFactorOneForgotPasswordView(
   onClickFactor: (Factor) -> Unit,

@@ -17,19 +17,6 @@ internal object PasskeyHelper {
   }
 }
 
-/**
- * Request object for WebAuthn get assertion operations.
- *
- * This data class represents the structure needed for passkey authentication requests according to
- * the WebAuthn specification.
- *
- * @property challenge The cryptographic challenge string for the authentication request
- * @property allowCredentials List of allowed credentials, each containing type and ID
- * @property timeout Timeout in milliseconds for the authentication operation
- * @property userVerification Level of user verification required ("required", "preferred",
- *   "discouraged")
- * @property rpId Relying Party identifier (typically the domain)
- */
 @Serializable
 internal data class GetPasskeyRequest(
   val challenge: String,
@@ -39,18 +26,6 @@ internal data class GetPasskeyRequest(
   val rpId: String,
 )
 
-/**
- * Object that represents a WebAuthn public key credential data
- *
- * This data class contains the essential information from a WebAuthn credential formatted for use
- * with the Clerk API.
- *
- * @property id The credential ID as a base64url-encoded string
- * @property rawId The raw credential ID as a base64url-encoded string
- * @property type The credential type (typically "public-key")
- * @property response Map containing the credential response data (attestationObject,
- *   clientDataJSON)
- */
 @Serializable
 internal data class PublicKeyCredentialData(
   val id: String,
@@ -59,17 +34,6 @@ internal data class PublicKeyCredentialData(
   val response: Map<String, String>,
 )
 
-/**
- * Complete passkey response structure from the Android Credential Manager.
- *
- * This represents the full response structure returned by the credential manager during passkey
- * creation, before it's converted to [PublicKeyCredentialData].
- *
- * @property id The credential ID as a base64url-encoded string
- * @property rawId The raw credential ID as a base64url-encoded string
- * @property type The credential type (typically "public-key")
- * @property response JSON object containing the full credential response
- */
 @Serializable
 internal data class FullPasskeyResponse(
   val id: String,

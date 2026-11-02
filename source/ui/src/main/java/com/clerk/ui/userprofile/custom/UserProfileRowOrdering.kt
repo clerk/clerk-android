@@ -24,18 +24,6 @@ internal fun effectiveCustomRows(
   hasDestination: Boolean,
 ): List<UserProfileCustomRow> = if (hasDestination) customRows else emptyList()
 
-/**
- * Merges [customRows] into [builtInRows] for the given [section], respecting each custom row's
- * [UserProfileCustomRowPlacement].
- *
- * The algorithm processes rows in this order:
- * 1. [UserProfileCustomRowPlacement.SectionStart] rows
- * 2. For each built-in row: [UserProfileCustomRowPlacement.Before] rows, the built-in row itself,
- *    then [UserProfileCustomRowPlacement.After] rows
- * 3. [UserProfileCustomRowPlacement.SectionEnd] rows
- *
- * Ordering within each placement group preserves the original list order from [customRows].
- */
 internal fun buildRenderedRows(
   builtInRows: List<UserProfileRow>,
   section: UserProfileSection,

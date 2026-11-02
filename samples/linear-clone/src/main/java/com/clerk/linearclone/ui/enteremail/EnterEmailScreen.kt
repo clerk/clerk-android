@@ -53,9 +53,7 @@ fun EnterEmailScreen(
   val state by viewModel.uiState.collectAsState()
 
   when (state) {
-    EnterEmailViewModel.UiState.Error -> {
-      // Show error
-    }
+    EnterEmailViewModel.UiState.Error -> {}
     is EnterEmailViewModel.UiState.NeedsEmailCode ->
       onNavigateToEmailVerification((state as EnterEmailViewModel.UiState.NeedsEmailCode).email)
     EnterEmailViewModel.UiState.SignedOut ->

@@ -83,7 +83,6 @@ class UserProfileSecurityViewTest {
 
   @After
   fun tearDown() {
-    // Dispose the composition and cancel ViewModel work before removing the singleton mocks.
     composeTestRule.activityRule.scenario.close()
     unmockkAll()
   }

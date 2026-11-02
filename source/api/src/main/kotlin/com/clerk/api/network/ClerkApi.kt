@@ -1,6 +1,5 @@
 package com.clerk.api.network
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.network.api.BillingApi
@@ -94,10 +93,9 @@ internal object ClerkApi {
   internal var configuredCustomHeaders: Map<String, String> = emptyMap()
     private set
 
-  @Suppress("UnusedParameter", "DEPRECATION")
+  @Suppress("DEPRECATION")
   fun configure(
     baseUrl: String,
-    context: Context,
     customHeaders: Map<String, String> = emptyMap(),
   ) {
     val effectiveCustomHeaders = customHeaders.toMap()

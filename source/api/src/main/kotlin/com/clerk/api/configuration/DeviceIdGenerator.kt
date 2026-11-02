@@ -34,15 +34,6 @@ internal object DeviceIdGenerator {
     }
   }
 
-  /**
-   * Retrieves the current device ID.
-   *
-   * This method assumes that [initialize] has been called previously. If the device ID is not
-   * available, it will attempt to initialize it automatically.
-   *
-   * @return The device ID string
-   * @throws IllegalStateException if device ID initialization fails
-   */
   fun getDeviceId(): String {
     return cachedDeviceId
       ?: run {

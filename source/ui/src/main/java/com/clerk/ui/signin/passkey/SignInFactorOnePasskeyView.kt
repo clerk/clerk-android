@@ -32,12 +32,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 
-/**
- * A composable that displays the passkey sign-in flow.
- *
- * @param factor The passkey factor to use for authentication.
- * @param modifier The modifier to be applied to the component.
- */
 @Composable
 internal fun SignInFactorOnePasskeyView(
   factor: Factor,

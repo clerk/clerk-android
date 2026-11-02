@@ -59,7 +59,6 @@ import org.robolectric.Shadows
 @RunWith(RobolectricTestRunner::class)
 class SSOManagerActivityTest {
 
-  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
   private val auth: Auth = Clerk.auth
 
   private val app: Application
@@ -67,7 +66,6 @@ class SSOManagerActivityTest {
 
   @Before
   fun setup() {
-    // Ensure AppCompat theme for AppCompatActivity
     app.setTheme(androidx.appcompat.R.style.Theme_AppCompat)
   }
 
@@ -118,7 +116,6 @@ class SSOManagerActivityTest {
   @Test
   fun ignoredCallback_failsThePendingFlowItsBrowserSessionCleared() {
     val pending = startPendingSso()
-    // A callback for no flow (e.g. delivered through Auth.handle) still cleared the Custom Tab.
     val activity = resumeWithCallback(Uri.parse("clerk://callback?clerk_redirect_state=forged"))
 
     pumpMainLooperUntil { activity.isFinishing }
@@ -223,7 +220,6 @@ class SSOManagerActivityTest {
     runCurrent()
     assertTrue((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
 
-    // The user dismisses the browser: the manager resumes without a callback URI.
     val intent =
       SSOManagerActivity.createBaseIntent(app).apply {
         putExtra(KEY_AUTHORIZATION_STARTED, true)
@@ -378,7 +374,6 @@ class SSOManagerActivityTest {
     assertFalse(pendingResult.isCompleted)
 
     gate.complete(Unit)
-    // The completion runs on Dispatchers.IO, so wait in real time, not runTest's virtual time.
     val result =
       withContext(Dispatchers.Default) { withTimeout(5_000L) { pendingResult.await() } }
         as ClerkResult.Success

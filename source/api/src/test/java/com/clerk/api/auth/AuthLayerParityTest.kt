@@ -1,4 +1,3 @@
-// These tests pin the deprecated entry points until they are removed in the next major.
 @file:Suppress("DEPRECATION")
 
 package com.clerk.api.auth
@@ -39,10 +38,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Each `Clerk.auth` method and the older `SignIn` / `SignUp` entry point for the same operation
- * must send Clerk the same request. These tests pin that, so the layers cannot drift apart again.
- */
 class AuthLayerParityTest {
 
   private val signInApi = mockk<SignInApi>()
@@ -283,11 +278,6 @@ class AuthLayerParityTest {
     }
   }
 
-  /**
-   * Asserts that the facade and then the older entry point each sent every [expected] request, in
-   * order. Both layers share one implementation, so comparing them with each other alone would not
-   * catch a change to the request itself.
-   */
   private fun assertEachLayerSent(
     requests: List<Map<String, String>>,
     vararg expected: Map<String, String>,

@@ -77,7 +77,6 @@ public object Clerk {
       store.listener = StateStoreListener
     }
 
-  /** Coordinates persisted Clerk state between same-signed sibling apps when enabled. */
   internal var sharedSessionSyncCoordinator: SharedSessionSyncCoordinator? = null
     private set
 
@@ -159,7 +158,6 @@ public object Clerk {
     get() = stateStore.environment
     set(value) = stateStore.overwriteEnvironmentWithoutSideEffects(value)
 
-  /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
   internal val lastClientServerFetchAtMillis: Long?
     get() = stateStore.serverFetchAtMillis
 
@@ -1244,13 +1242,6 @@ public object Clerk {
     return currentDeviceToken == (responseDeviceToken ?: requestDeviceToken)
   }
 
-  /**
-   * Internal method to update session and user state flows.
-   *
-   * Should be called whenever the client state changes that might affect the current session or
-   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
-   * allowing users with pending sessions to maintain a "signed in" experience.
-   */
   internal fun updateSessionAndUserState() {
     stateStore.recomputeSessionState()
   }

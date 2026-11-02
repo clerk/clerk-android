@@ -33,7 +33,6 @@ plugins {
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-// Shared with config/bin/ktfmt and config/bin/detekt-cli (pre-commit hook) via the version catalog.
 val ktfmtVersion = projectLibs.findVersion("ktfmt").get().requiredVersion
 val detektVersion = projectLibs.findVersion("detekt").get().requiredVersion
 
@@ -279,8 +278,6 @@ tasks.register("verifyPublishedArtifacts") {
 
 tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
 
-// `jdk` in the version catalog is the JDK the build and tests run on (Robolectric and Paparazzi
-// need 21). `jvmTarget` is the bytecode level we publish, so consumers on Java 17 are unaffected.
 val buildJdk = libs.versions.jdk.map(JavaLanguageVersion::of)
 val bytecodeTarget = JavaVersion.toVersion(libs.versions.jvmTarget.get())
 

@@ -42,7 +42,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
-/** Public wrapper that pulls field enablement from Clerk and owns its own state. */
 @Composable
 internal fun SignUpCompleteProfileView(
   modifier: Modifier = Modifier,
@@ -75,8 +74,6 @@ private fun SignUpCompleteProfileImpl(
   val firstEnabled = firstNameEnabled || signUp?.supportsField(FIRST_NAME_FIELD) == true
   val lastEnabled = lastNameEnabled || signUp?.supportsField(LAST_NAME_FIELD) == true
 
-  // Check if legal_accepted is required and missing. Mobile signup intentionally skips optional
-  // fields.
   val legalConsentRequired =
     legalConsentMissing ||
       (signUp?.requiredFields?.contains(LEGAL_ACCEPTED_FIELD) == true &&
@@ -199,7 +196,6 @@ private fun InputRow(
   BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
     val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)
     val spacing = dp12
-    // Minimum width per field to comfortably show label/placeholder without truncation
     val minFieldWidth = 160.dp
     val shouldStack = enabledCount > 1 && maxWidth < (minFieldWidth * 2 + spacing)
 

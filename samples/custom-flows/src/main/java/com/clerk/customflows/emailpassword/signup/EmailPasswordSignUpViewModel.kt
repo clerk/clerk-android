@@ -1,9 +1,11 @@
 package com.clerk.customflows.emailpassword.signup
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.auth.types.VerificationType
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -41,10 +43,7 @@ class EmailPasswordSignUpViewModel : ViewModel() {
         }
         .flatMap { it.sendCode { this.email = email } }
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verifying }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("EmailPasswordSignUpViewModel", it.errorMessage, it.throwable) }
     }
   }
 
@@ -54,10 +53,7 @@ class EmailPasswordSignUpViewModel : ViewModel() {
       inProgressSignUp
         .verifyCode(code, VerificationType.EMAIL)
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verified }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("EmailPasswordSignUpViewModel", it.errorMessage, it.throwable) }
     }
   }
 

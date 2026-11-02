@@ -51,12 +51,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
   private var restoreCredentialSignIn: Deferred<Boolean>? = null
 
-  /**
-   * Resets the current state back to [AuthState.Idle].
-   *
-   * This should be called by the UI after handling a terminal state (success or error) to avoid
-   * re-triggering navigation/effects on recomposition or when navigating back.
-   */
   internal fun resetState() {
     _state.value = AuthState.Idle
   }
@@ -150,11 +144,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     cancelAutomaticPasskeySignIn()
   }
 
-  /**
-   * Signs in with the locally enrolled biometric credential.
-   *
-   * User-canceled biometric prompts reset the state silently instead of surfacing an error.
-   */
   internal fun signInWithBiometrics(
     promptTitle: String? = null,
     promptSubtitle: String? = null,

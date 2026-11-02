@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,10 +39,7 @@ class EmailPasswordSignInViewModel : ViewModel() {
           this.password = password
         }
         .onSuccess { _uiState.value = EmailPasswordSignInUiState.SignedIn }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("EmailPasswordSignInViewModel", it.errorMessage, it.throwable) }
     }
   }
 

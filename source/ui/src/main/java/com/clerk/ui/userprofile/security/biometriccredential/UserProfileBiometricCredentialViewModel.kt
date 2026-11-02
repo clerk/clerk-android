@@ -42,13 +42,6 @@ internal class UserProfileBiometricCredentialViewModel(
     }
   }
 
-  /**
-   * Enables or disables biometric sign-in for the current user on this device.
-   *
-   * Enabling enrolls this device as a biometric credential (showing the system biometric prompt);
-   * disabling revokes the local biometric credential. User-canceled biometric prompts revert the
-   * toggle silently.
-   */
   fun setBiometricSignInEnabled(
     enabled: Boolean,
     promptTitle: String,
@@ -104,5 +97,8 @@ internal class UserProfileBiometricCredentialViewModel(
     val canEnroll: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
-  )
+  ) {
+    val isToggleVisible: Boolean
+      get() = isEnabled || canEnroll || isLoading
+  }
 }

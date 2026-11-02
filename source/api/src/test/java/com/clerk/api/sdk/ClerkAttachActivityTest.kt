@@ -14,12 +14,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * Verifies the activity-tracking guarantees that callers rely on for Credential Manager flows
- * (Google sign-in, passkeys). Without these, `Clerk.credentialActivity()` returns null on cold
- * start in any host that calls [Clerk.initialize] after the host Activity has already passed
- * onResume — e.g. React Native bridges, late-init flows behind a permission gate.
- */
 @RunWith(RobolectricTestRunner::class)
 class ClerkAttachActivityTest {
 
@@ -43,19 +37,14 @@ class ClerkAttachActivityTest {
 
   @Test
   fun `attachActivity holds Activity weakly`() {
-    var activity: Activity? = mockk<Activity>(relaxed = true)
-    Clerk.attachActivity(activity!!)
+    val activity = mockk<Activity>(relaxed = true)
+    Clerk.attachActivity(activity)
 
     val ref =
       Clerk::class.java.getDeclaredField("currentActivity").apply { isAccessible = true }.get(Clerk)
         as java.lang.ref.WeakReference<*>?
 
     assertSame(activity, ref?.get())
-
-    // Drop the strong reference; we don't assert collection happens (the GC
-    // is non-deterministic in unit tests), only that the field type lets it.
-    activity = null
-    @Suppress("UNUSED_EXPRESSION") activity
   }
 
   @Test
@@ -80,11 +69,6 @@ class ClerkAttachActivityTest {
     return method.invoke(Clerk) as Activity?
   }
 
-  /**
-   * Smoke test for the [Context]-walk inside [Clerk.initialize]. We exercise the helper directly
-   * rather than going through `initialize()` (which would spin up the configuration manager); the
-   * helper's contract is the load-bearing piece for the seeding guarantee.
-   */
   @Test
   fun `Context findActivityOrNull walks ContextWrapper chain`() {
     val activity = mockk<Activity>(relaxed = true)

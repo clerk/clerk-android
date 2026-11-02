@@ -1,5 +1,3 @@
-// TooManyFunctions: the deprecated old-layer wrappers sit next to their implementations until the
-// next major removes them.
 @file:Suppress("TooManyFunctions")
 
 package com.clerk.api.signin
@@ -947,7 +945,6 @@ public suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> = prepareFirstFactorImpl(params)
 
-/** Canonical implementation behind [prepareFirstFactor] and the first-factor `send*` methods. */
 internal suspend fun SignIn.prepareFirstFactorImpl(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> =
@@ -1080,7 +1077,6 @@ public suspend fun SignIn.prepareSecondFactor(
     val emailFactor = secondFactors.find { it.strategyType == AuthStrategy.EmailCode }
     val strategy =
       when {
-        // An explicit id names the channel; only fall back to the supported factors without one.
         phoneNumberId != null -> SignIn.PrepareSecondFactorStrategy.PhoneCode(phoneNumberId)
         emailAddressId != null -> SignIn.PrepareSecondFactorStrategy.EmailCode(emailAddressId)
         phoneFactor != null ->
@@ -1186,7 +1182,6 @@ public suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> = attemptSecondFactorImpl(params)
 
-/** Canonical implementation behind [attemptSecondFactor] and [verifyMfaCode]. */
 internal suspend fun SignIn.attemptSecondFactorImpl(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {

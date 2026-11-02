@@ -10,8 +10,7 @@ const HEAD = 'c14cacc2763d2dfc271d9c286b09376a90c5b9ff';
 const TEAM = '# Team Mobile\nmikepitre\nseanperez29\nswolfand\nwobsoriano\n';
 const ROLES = { mikepitre: 'admin', seanperez29: 'admin', swolfand: 'maintain', wobsoriano: 'maintain', 'outside-dev': 'write' };
 
-// The shape CodeRabbit writes into its summary comment.
-const riskComment = (level, commit = HEAD) => ({
+const codeRabbitSummaryComment = (level, commit = HEAD) => ({
   user: { login: 'coderabbitai[bot]' },
   body: `<!-- final_review_risk_start -->\n<!-- final_review_risk_label\n**Merge Risk:** **🔴 ${level}** · up to \`${commit.slice(0, 5)}\`\n-->\n<!-- final_review_risk_coverage:{"sourceCommitId":"${commit}","coveredCommitId":"${commit}","kind":"reviewed"} -->\n<!-- final_review_risk_end -->`,
 });
@@ -77,14 +76,14 @@ async function run(github) {
 
 describe('ratedHighRisk', () => {
   it('reads a high or critical rating for the head commit', () => {
-    assert.equal(ratedHighRisk([riskComment('High')], HEAD), true);
-    assert.equal(ratedHighRisk([riskComment('Critical')], HEAD), true);
+    assert.equal(ratedHighRisk([codeRabbitSummaryComment('High')], HEAD), true);
+    assert.equal(ratedHighRisk([codeRabbitSummaryComment('Critical')], HEAD), true);
   });
 
   it('ignores a lower rating, a rating of an older commit, and the same text from someone else', () => {
-    assert.equal(ratedHighRisk([riskComment('Moderate')], HEAD), false);
-    assert.equal(ratedHighRisk([riskComment('High', 'e225ce56d448093f7910a36cf47bcc9a664e04d0')], HEAD), false);
-    assert.equal(ratedHighRisk([{ ...riskComment('High'), user: { login: 'outside-dev' } }], HEAD), false);
+    assert.equal(ratedHighRisk([codeRabbitSummaryComment('Moderate')], HEAD), false);
+    assert.equal(ratedHighRisk([codeRabbitSummaryComment('High', 'e225ce56d448093f7910a36cf47bcc9a664e04d0')], HEAD), false);
+    assert.equal(ratedHighRisk([{ ...codeRabbitSummaryComment('High'), user: { login: 'outside-dev' } }], HEAD), false);
   });
 });
 
@@ -102,7 +101,7 @@ describe('team review request', () => {
   });
 
   it('requests the other members when CodeRabbit rates a Team Mobile author\'s commit high risk', async () => {
-    const { requested, posted, output } = await run({ author: 'swolfand', comments: [riskComment('High')] });
+    const { requested, posted, output } = await run({ author: 'swolfand', comments: [codeRabbitSummaryComment('High')] });
     assert.deepEqual(requested, ['mikepitre', 'seanperez29', 'wobsoriano']);
     assert.deepEqual(posted, []);
     assert.match(output, /CodeRabbit rated this commit high or critical risk/);
@@ -145,7 +144,7 @@ describe('team review request', () => {
   });
 
   it('requests the other members when CodeRabbit rates a protected change high risk', async () => {
-    const { requested, posted, output } = await run({ author: 'mikepitre', files: [{ filename: '.github/workflows/pr-ci.yml' }], comments: [riskComment('High')] });
+    const { requested, posted, output } = await run({ author: 'mikepitre', files: [{ filename: '.github/workflows/pr-ci.yml' }], comments: [codeRabbitSummaryComment('High')] });
     assert.deepEqual(requested, ['seanperez29', 'swolfand', 'wobsoriano']);
     assert.equal(posted.length, 1);
     assert.match(output, /CodeRabbit rated this commit high or critical risk/);

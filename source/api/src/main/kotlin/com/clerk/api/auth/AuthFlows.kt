@@ -12,13 +12,6 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
 
-/*
- * Canonical implementations of the operations that have an entry point on both `Clerk.auth` and
- * `SignIn` / `SignUp`. Each `Clerk.auth` method builds the same typed params the older entry
- * point accepts and calls one of these, so the two layers cannot drift apart again.
- */
-
-/** Creates a sign-in. Backs `Clerk.auth.signIn*` and `SignIn.create(CreateParams.Strategy)`. */
 internal suspend fun Auth.createSignIn(
   params: SignIn.CreateParams.Strategy
 ): ClerkResult<SignIn, ClerkErrorResponse> = reportingFailures {
@@ -46,10 +39,6 @@ internal suspend fun Auth.createSignIn(
 private suspend fun postSignIn(params: Map<String, String>) =
   ClerkApi.signIn.createSignIn(params + ("locale" to Clerk.locale.value.orEmpty()))
 
-/**
- * Starts an OAuth or Enterprise SSO sign-in redirect. Backs `Clerk.auth.signInWithOAuth`,
- * `Clerk.auth.signInWithEnterpriseSso` and `SignIn.authenticateWithRedirect`.
- */
 internal suspend fun Auth.authenticateSignInWithRedirect(
   params: SignIn.AuthenticateWithRedirectParams,
   transferable: Boolean,
@@ -68,7 +57,6 @@ internal suspend fun Auth.authenticateSignInWithRedirect(
   )
 }
 
-/** Creates a sign-up. Backs `Clerk.auth.signUp*` and `SignUp.create(CreateParams)`. */
 internal suspend fun Auth.createSignUp(
   params: SignUp.CreateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
@@ -85,20 +73,12 @@ internal suspend fun Auth.createSignUp(
   return postSignUp(fields)
 }
 
-/**
- * Creates a sign-up from raw fields, adding the current locale. Unlike the public
- * `SignUp.create(Map)`, which sends the map as given, this always sends `locale`.
- */
 internal suspend fun Auth.postSignUp(
   fields: Map<String, String>
 ): ClerkResult<SignUp, ClerkErrorResponse> = reportingFailures {
   ClerkApi.signUp.createSignUp(fields + ("locale" to Clerk.locale.value.orEmpty()))
 }
 
-/**
- * Starts an OAuth or Enterprise SSO sign-up redirect. Backs `Clerk.auth.signUpWithOAuth`,
- * `Clerk.auth.signUpWithEnterpriseSso` and `SignUp.authenticateWithRedirect`.
- */
 internal suspend fun Auth.authenticateSignUpWithRedirect(
   params: SignUp.AuthenticateWithRedirectParams
 ): ClerkResult<OAuthResult, ClerkErrorResponse> = reportingFailures {

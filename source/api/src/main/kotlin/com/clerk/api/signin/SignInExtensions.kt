@@ -320,14 +320,6 @@ public suspend fun SignIn.sendCode(
   }
 }
 
-/**
- * Finds the first factor of one of [strategies] that belongs to [value].
- *
- * Clerk masks identifiers the user has not typed in this sign-in, so the caller cannot know the
- * masked form. When no identifier matches exactly, this falls back to the masked factors whose
- * visible characters agree with [value], as long as they all belong to one email address or phone
- * number. Factors without any identifier are used when they all belong to one destination.
- */
 private fun SignIn.firstFactorFor(
   strategies: List<Strategy>,
   value: String,
@@ -365,7 +357,6 @@ private fun sameIdentifier(a: String, b: String, normalize: (String) -> String):
   return normalized.isNotEmpty() && normalized == normalize(b)
 }
 
-/** Whether [value] fits [masked], where each run of [MASK_CHARACTER] stands for any characters. */
 private fun maskAllows(masked: String, value: String, normalize: (String) -> String): Boolean {
   val pattern =
     normalize(masked).split(MASK_CHARACTER).joinToString(".*") { Regex.escape(it) }.toRegex()

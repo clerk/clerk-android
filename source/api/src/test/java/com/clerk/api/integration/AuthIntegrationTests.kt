@@ -14,19 +14,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * Integration tests for SignIn and SignUp flows.
- *
- * These tests make real API calls to a Clerk instance and verify that the SDK correctly integrates
- * with the Clerk API. Unlike unit tests which use mocked responses, these tests verify end-to-end
- * functionality including proper JSON serialization.
- *
- * Requirements:
- * - Network access
- * - Valid Clerk test instance (configured via `.keys.json`)
- * - Test emails use the `+clerk_test` subaddress so Clerk accepts code "424242"
- * - Test phones use fictional 555-01xx numbers so Clerk accepts code "424242"
- */
 @RunWith(RobolectricTestRunner::class)
 class AuthIntegrationTests {
   @Test
@@ -88,12 +75,6 @@ class AuthIntegrationTests {
     return (result as ClerkResult.Success).value
   }
 
-  /**
-   * Best-effort cleanup: delete the test user if one was created.
-   *
-   * If we have a current user session, delete directly. Otherwise fall back to signing in with
-   * password first (handles the case where sign-up succeeded but subsequent steps failed).
-   */
   private suspend fun deleteTestAccountIfExists(email: String, allowPasswordCleanup: Boolean) {
     try {
       if (Clerk.user != null) {
@@ -111,8 +92,6 @@ class AuthIntegrationTests {
       if (signIn is ClerkResult.Success) {
         Clerk.user?.delete()
       }
-    } catch (_: Exception) {
-      // Best-effort — don't mask the original test failure
-    }
+    } catch (_: Exception) {}
   }
 }

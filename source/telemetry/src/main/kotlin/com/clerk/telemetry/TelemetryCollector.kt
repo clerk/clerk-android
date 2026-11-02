@@ -83,8 +83,6 @@ private constructor(
 
   @Serializable private data class TelemetryEnvelope(val events: List<TelemetryEvent>)
 
-  private data class RecordResult(val shouldRecord: Boolean, val reason: String)
-
   private data class Config(
     val samplingRate: Double,
     val maxBufferSize: Int,
@@ -115,13 +113,7 @@ private constructor(
 
   public suspend fun record(raw: TelemetryEventRaw) {
     val prepared = preparePayload(raw.event, raw.payload)
-    val recordResult = shouldRecord(prepared, raw.eventSamplingRate)
-
-    // TODO hook into your logger if you want parity with ClerkLogger.debug
-    if (!recordResult.shouldRecord) {
-      // e.g. log "[telemetry][skipped - ${recordResult.reason}] ${prepared.event}"
-      return
-    }
+    if (!shouldRecord(prepared, raw.eventSamplingRate)) return
 
     mutex.withLock { buffer += prepared }
 
@@ -147,12 +139,11 @@ private constructor(
   private suspend fun shouldRecord(
     prepared: TelemetryEvent,
     eventSamplingRate: Double?,
-  ): RecordResult {
+  ): Boolean {
     return when {
-      !environment.isTelemetryEnabled() -> RecordResult(false, "telemetry disabled")
-      prepared.instanceType != DEVELOPMENT_INSTANCE_TYPE ->
-        RecordResult(false, "non-development instance")
-      environment.isDebugModeEnabled() -> RecordResult(false, "debug mode")
+      !environment.isTelemetryEnabled() -> false
+      prepared.instanceType != DEVELOPMENT_INSTANCE_TYPE -> false
+      environment.isDebugModeEnabled() -> false
       else -> shouldBeSampled(prepared, eventSamplingRate)
     }
   }
@@ -160,26 +151,14 @@ private constructor(
   private suspend fun shouldBeSampled(
     prepared: TelemetryEvent,
     eventSamplingRate: Double?,
-  ): RecordResult {
-    if (config.disableThrottling) {
-      return RecordResult(true, "throttling disabled")
-    }
+  ): Boolean {
+    if (config.disableThrottling) return true
 
     val seed = Random.nextDouble(0.0, 1.0)
     val globalOk = seed <= config.samplingRate
     val eventOk = eventSamplingRate?.let { seed <= it } ?: true
 
-    val globalSamplingPercent = (config.samplingRate * PERCENTAGE_MULTIPLIER).toInt()
-    val eventSamplingPercent = eventSamplingRate?.let { (it * PERCENTAGE_MULTIPLIER).toInt() }
-
-    return when {
-      !globalOk -> RecordResult(false, "global sampling ($globalSamplingPercent%)")
-      !eventOk && eventSamplingRate != null ->
-        RecordResult(false, "event sampling ($eventSamplingPercent%)")
-
-      throttler.isEventThrottled(prepared) -> RecordResult(false, "throttled")
-      else -> RecordResult(true, "accepted")
-    }
+    return globalOk && eventOk && !throttler.isEventThrottled(prepared)
   }
 
   private fun startPeriodicFlushing() {
@@ -222,7 +201,6 @@ private constructor(
   }
 
   private companion object {
-    const val PERCENTAGE_MULTIPLIER = 100
     const val DEVELOPMENT_INSTANCE_TYPE = "development"
 
     fun defaultJson() = Json {
@@ -254,10 +232,6 @@ private class OkHttpTelemetryTransport(
   }
 }
 
-/**
- * Backs the deprecated Ktor constructor. Ktor is a compileOnly dependency, so this class is loaded
- * only when a caller that ships Ktor itself uses that constructor.
- */
 private class KtorTelemetryTransport(private val client: HttpClient) : TelemetryTransport {
   override suspend fun post(url: String, jsonBody: String) {
     client.post(url) { setBody(TextContent(jsonBody, ContentType.Application.Json)) }

@@ -8,13 +8,6 @@ import com.clerk.api.signin.SignIn
 
 internal object PasskeyService {
 
-  /**
-   * Initiates a sign-in process using passkeys.
-   *
-   * @param allowedCredentialIds Optional list of credential IDs to filter available passkeys. If
-   *   empty, all available passkeys will be considered.
-   * @return A [ClerkResult] containing either a successful [SignIn] or an error response.
-   */
   suspend fun signInWithPasskey(
     allowedCredentialIds: List<String> = emptyList(),
     preferImmediatelyAvailableCredentials: Boolean = false,

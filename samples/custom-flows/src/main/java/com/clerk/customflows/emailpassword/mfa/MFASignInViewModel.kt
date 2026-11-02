@@ -1,9 +1,11 @@
 package com.clerk.customflows.emailpassword.mfa
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.auth.types.MfaType
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -25,17 +27,10 @@ class MFASignInViewModel : ViewModel() {
         }
         .onSuccess {
           if (it.status == SignIn.Status.NEEDS_SECOND_FACTOR) {
-            // Display TOTP Form
             _uiState.value = UiState.NeedsSecondFactor
-          } else {
-            // If the status is not needsSecondFactor, check why. User may need to
-            // complete different steps.
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("MFASignInViewModel", it.errorMessage, it.throwable) }
     }
   }
 
@@ -46,15 +41,10 @@ class MFASignInViewModel : ViewModel() {
         .verifyMfaCode(code, MfaType.TOTP)
         .onSuccess {
           if (it.status == SignIn.Status.COMPLETE) {
-            // User is now signed in and verified.
-            // You can navigate to the next screen or perform other actions.
             _uiState.value = UiState.Verified
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("MFASignInViewModel", it.errorMessage, it.throwable) }
     }
   }
 

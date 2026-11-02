@@ -37,15 +37,11 @@ class AddEmailViewModel : ViewModel() {
   fun createEmailAddress(emailAddress: String) {
     val user = requireNotNull(Clerk.userFlow.value)
 
-    // Add an unverified email address to the user,
-    // then send the user an email with the verification code
     viewModelScope.launch {
       user
         .createEmailAddress(emailAddress)
         .flatMap { it.prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode()) }
         .onSuccess {
-          // Update the state to show that the email address has been created
-          // and that the user needs to verify the email address
           _uiState.value = UiState.Verifying(it)
         }
         .onFailure {
@@ -62,7 +58,6 @@ class AddEmailViewModel : ViewModel() {
       newEmailAddress
         .attemptVerification(code)
         .onSuccess {
-          // Update the state to show that the email addresshas been verified
           _uiState.value = UiState.Verified
         }
         .onFailure {

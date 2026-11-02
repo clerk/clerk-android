@@ -61,10 +61,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalComputedColors
 import com.clerk.ui.theme.colors.ComputedColors
 
-/**
- * Divisor used to calculate the maximum height of the country dropdown menu as a fraction of screen
- * height
- */
 private const val DROPDOWN_HEIGHT_DIVISOR = 3
 
 /**
@@ -177,21 +173,6 @@ private fun CountryAutoDetectionEffect(
   }
 }
 
-/**
- * Internal implementation of the Clerk phone number field.
- *
- * This composable handles the state management for country selection and phone number input,
- * including automatic country detection and formatting.
- *
- * @param onValueChange Callback when the complete phone number changes
- * @param value The complete phone number (including country prefix) - this is the source of truth
- * @param modifier [Modifier] to be applied to the component
- * @param errorText Optional error message to display below the input field
- * @param imeAction IME action to show on the keyboard
- * @param keyboardActions Keyboard action callbacks for IME events
- * @param enabled Whether the phone input and country selector accept user input
- * @param clerkTheme Optional Clerk theme override for this component
- */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
   onValueChange: (String) -> Unit,
@@ -267,24 +248,6 @@ internal fun ClerkPhoneNumberFieldImpl(
   }
 }
 
-/**
- * Phone number input text field with formatting and validation.
- *
- * This composable renders the actual text input field for phone numbers with:
- * - Country-specific formatting via visual transformation
- * - Error state styling
- * - Proper keyboard type and input filtering
- * - Accessibility semantics
- *
- * @param computedColors Theme colors for styling
- * @param value Current complete phone number value (including country prefix)
- * @param onValueChange Callback when phone number changes (receives complete phone number)
- * @param countryCode Selected country code for formatting
- * @param errorText Optional error message to display
- * @param imeAction IME action to show on the keyboard
- * @param keyboardActions Keyboard action callbacks for IME events
- * @param enabled Whether the phone text field accepts user input
- */
 @Composable
 private fun PhoneNumberInput(
   computedColors: ComputedColors,

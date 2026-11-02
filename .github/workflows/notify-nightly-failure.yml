@@ -36,7 +36,6 @@ jobs:
           sparse-checkout: .github/scripts/nightly-failure-message.mjs
           sparse-checkout-cone-mode: false
 
-      # The message goes out without the list when the checkout or the script fails.
       - name: Notify Slack
         if: always()
         timeout-minutes: 3

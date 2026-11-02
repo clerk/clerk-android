@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package com.clerk.ui.signin.code
 
 import app.cash.turbine.test

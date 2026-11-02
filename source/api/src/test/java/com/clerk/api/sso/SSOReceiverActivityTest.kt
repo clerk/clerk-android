@@ -51,7 +51,6 @@ class SSOReceiverActivityTest {
 
     val activity = createReceiver(magicLink)
 
-    // Starting the singleTask manager would clear the pending flow's Custom Tab.
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
     verify(exactly = 1) { RedirectCoordinator.dispatchInBackground(magicLink) }

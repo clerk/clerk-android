@@ -29,12 +29,6 @@ import java.util.UUID
 private const val COMPONENT_STORES_KEY = "com.clerk.ui.navigation.ClerkComponentViewModelStores"
 
 /**
- * Gives a prebuilt Clerk component its own [ViewModelStore].
- *
- * The Activity's store is only cleared when the Activity finishes. The store provided here survives
- * configuration changes (it is held by a ViewModel in the parent store) and is cleared when the
- * component leaves composition.
- *
  * Host navigation disposes a destination that is no longer shown, saves its state through a
  * `SaveableStateHolder`, and restores it when the destination comes back. `SaveableStateHolder`
  * offers no callback when it discards saved state, so a scope saved as it is disposed keeps its

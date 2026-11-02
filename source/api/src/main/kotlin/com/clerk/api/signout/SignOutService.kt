@@ -16,13 +16,6 @@ import kotlinx.coroutines.withContext
 
 internal object SignOutService {
 
-  /**
-   * Signs out all accounts by deleting every session on the current client.
-   *
-   * @return A [ClerkResult] indicating the success or failure of the sign-out operation. Returns
-   *   [ClerkResult.Companion.success] with [Unit] on successful sign-out, or
-   *   [ClerkResult.Companion.unknownFailure] with error details on failure.
-   */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     var serverError: Exception? = null
 
@@ -45,9 +38,6 @@ internal object SignOutService {
       }
     }
 
-    // Best-effort refresh of the in-memory client while skipping current client id.
-    // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
-    // sign-out when the host remounts AuthView within the same process/activity lifecycle.
     runCatching {
       val clientResult = Clerk.fetchAndApplyClient { Client.getSkippingClientId() }
       if (clientResult is ClerkResult.Failure) {

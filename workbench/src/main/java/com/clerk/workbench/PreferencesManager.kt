@@ -3,36 +3,29 @@ package com.clerk.workbench
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.clerk.workbench.StorageHelper.secureStorage
+import com.clerk.workbench.StorageHelper.preferences
 
-/**
- * Helper class to manage secure storage of data. SharedPreferences are used to store data, all keys
- * are held in the [StorageKey] object.
- */
 internal object StorageHelper {
 
-  private lateinit var secureStorage: SharedPreferences
+  private lateinit var preferences: SharedPreferences
 
   fun initialize(context: Context) {
-    secureStorage = context.getSharedPreferences("WORKBENCH_STORAGE", Context.MODE_PRIVATE)
+    preferences = context.getSharedPreferences("WORKBENCH_STORAGE", Context.MODE_PRIVATE)
   }
 
-  /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
     if (value.isNotEmpty()) {
-      secureStorage.edit(commit = true) { putString(key.name, value) }
+      preferences.edit(commit = true) { putString(key.name, value) }
       return
     }
   }
 
-  /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
-    return secureStorage.getString(key.name, null)
+    return preferences.getString(key.name, null)
   }
 
-  /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
-    secureStorage.edit { remove(key.name) }
+    preferences.edit { remove(key.name) }
   }
 }
 

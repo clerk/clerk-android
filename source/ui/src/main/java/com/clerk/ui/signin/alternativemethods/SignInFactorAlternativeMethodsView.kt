@@ -35,19 +35,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * A view that displays alternative sign-in methods.
- *
- * This component can be used for both first-factor and second-factor authentication steps, showing
- * a list of available methods like social providers (for first factor), or other verification
- * strategies (e.g., password, phone code).
- *
- * @param currentFactor The factor that the user is currently trying to authenticate with. This is
- *   used to determine which alternative factors to show.
- * @param modifier The [Modifier] to be applied to the view.
- * @param isSecondFactor A flag indicating whether the view is being used for a second-factor
- *   authentication step. This affects which alternative factors are fetched.
- */
 @Composable
 internal fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,

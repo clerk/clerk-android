@@ -19,11 +19,6 @@ internal class BiometricCredentialEnrollmentViewModel : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state: StateFlow<State> = _state.asStateFlow()
 
-  /**
-   * Enrolls the current device with a biometric credential.
-   *
-   * User-canceled biometric prompts reset the state silently instead of surfacing an error.
-   */
   fun enroll(promptTitle: String, promptSubtitle: String?) {
     if (_state.value is State.Loading) return
     _state.value = State.Loading

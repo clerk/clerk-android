@@ -243,12 +243,6 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   }
 }
 
-/**
- * Re-checks that the response's device token is still current immediately before applying its
- * client, since the device token may change while the body is read and decoded. This narrows but
- * does not close the window: the check and apply are not atomic because applying the client
- * notifies shared-session sync, which takes its own lock and then storage's device-token lock.
- */
 private fun Request.syncClient(response: Response, sync: () -> Unit) {
   val guardedSync: () -> Unit = {
     if (

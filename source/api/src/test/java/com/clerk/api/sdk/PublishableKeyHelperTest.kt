@@ -71,8 +71,6 @@ class PublishableKeyHelperTest {
 
     val result = publishableKeyHelper.extractApiUrl(testKey)
 
-    // Then
-    // After dropping the last character, we'd have an empty host
     assertEquals("https://", result)
   }
 }

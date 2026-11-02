@@ -2,10 +2,6 @@ package com.clerk.api.storage
 
 import android.content.SharedPreferences
 
-/**
- * Reads from [delegate] but drops every edit: [SharedPreferences.Editor.commit] returns false and
- * nothing reaches [delegate], as when a synchronous write fails to reach disk.
- */
 internal class FailingCommitSharedPreferences(private val delegate: SharedPreferences) :
   SharedPreferences by delegate {
   override fun edit(): SharedPreferences.Editor = FailingCommitEditor()
@@ -33,10 +29,6 @@ internal class FailingCommitSharedPreferences(private val delegate: SharedPrefer
   }
 }
 
-/**
- * Makes every [StorageHelper] write fail to commit until the returned restore function is invoked.
- * [StorageHelper] must already be initialized.
- */
 internal fun StorageHelper.failCommitsForTesting(): () -> Unit {
   val field = StorageHelper::class.java.getDeclaredField("secureStorage")
   field.isAccessible = true

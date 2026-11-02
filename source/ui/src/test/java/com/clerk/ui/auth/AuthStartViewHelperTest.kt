@@ -133,7 +133,6 @@ class AuthStartViewHelperTest {
   }
 
   // ContentType has no structural equality, so compare the autofill hints it carries.
-  @Suppress("UNCHECKED_CAST")
   private fun ContentType.autofillHints(): Set<String> =
     javaClass.getDeclaredField("androidAutofillHints").apply { isAccessible = true }.get(this)
       as Set<String>

@@ -1,7 +1,6 @@
 name: Team review request
 
 # pull_request_target and issue_comment run this file and its script from main, so they can request reviewers on fork pull requests too.
-# The job never checks out or runs the pull request's code.
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]

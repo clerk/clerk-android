@@ -20,7 +20,6 @@ class AuthStateEffectsTest {
     var resetCalls = 0
     val authState = mockk<AuthState>(relaxed = true)
     val snackbarHostState = SnackbarHostState()
-    // Don't let the clock run the snackbar's display timeout out before we inspect it.
     composeTestRule.mainClock.autoAdvance = false
 
     composeTestRule.setContent {

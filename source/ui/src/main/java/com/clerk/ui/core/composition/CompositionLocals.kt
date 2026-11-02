@@ -26,18 +26,9 @@ internal val LocalAuthState = staticCompositionLocalOf<AuthState> { error("No Au
 internal val LocalTelemetryCollector =
   staticCompositionLocalOf<TelemetryCollector> { error("No telemetry provided") }
 
-/**
- * Custom logo content that replaces the SDK-managed logo in authentication screens. When non-null,
- * it takes precedence over the dashboard-configured logo and the SDK applies no sizing or spacing
- * to it.
- */
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalClerkLogoContent = staticCompositionLocalOf<(@Composable () -> Unit)?> { null }
 
-/**
- * Provides [logo] as the custom logo content for descendant Clerk UI. A null [logo] preserves any
- * logo content provided by an ancestor.
- */
 @Composable
 internal fun ClerkLogoProvider(logo: (@Composable () -> Unit)?, content: @Composable () -> Unit) {
   val effectiveLogo = logo ?: LocalClerkLogoContent.current
@@ -50,7 +41,6 @@ internal fun TelemetryProvider(content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalTelemetryCollector provides collector, content = content)
 }
 
-/** Process-wide because a collector's HTTP client and flush scope are never closed. */
 private object SharedTelemetryCollector {
   @Volatile private var instance: TelemetryCollector? = null
 

@@ -21,6 +21,8 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -89,7 +91,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken returns cached token if valid and cache not skipped`() = runTest {
     val cacheKey = "session_123-organization-"
-    val futureTime = Date(System.currentTimeMillis() + 120000) // 2 minutes from now
+    val futureTime = Date(System.currentTimeMillis() + 2.minutes.inWholeMilliseconds)
 
     every { mockTokenResource.jwt } returns "valid.jwt.token"
     every { mockJWT.expiresAt } returns futureTime
@@ -125,7 +127,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken fetches from network if cached token is expired`() = runTest {
     val cacheKey = "session_123-organization-"
-    val pastTime = Date(System.currentTimeMillis() - 60000) // 1 minute ago
+    val pastTime = Date(System.currentTimeMillis() - 1.minutes.inWholeMilliseconds)
     val freshToken = mockk<TokenResource>(relaxed = true)
 
     every { mockTokenResource.jwt } returns "expired.jwt.token"
@@ -306,12 +308,10 @@ class SessionTokenFetcherTest {
 
   @Test
   fun `getToken uses custom expiration buffer`() = runTest {
-    // Given
-    val customBuffer = 120L // 2 minutes
+    val customBuffer = 2.minutes.inWholeSeconds
     val options = GetTokenOptions(expirationBuffer = customBuffer)
     val cacheKey = "session_123-organization-"
-    // Token expires in 90 seconds (less than 2-minute buffer)
-    val soonExpiredTime = Date(System.currentTimeMillis() + 90000)
+    val soonExpiredTime = Date(System.currentTimeMillis() + 90.seconds.inWholeMilliseconds)
 
     every { mockTokenResource.jwt } returns "soon.expired.token"
     every { mockJWT.expiresAt } returns soonExpiredTime
@@ -324,7 +324,6 @@ class SessionTokenFetcherTest {
     val result = sessionTokenFetcher.getToken(mockSession, options)
 
     assertEquals(mockTokenResource, result)
-    // Should fetch from network because token expires within buffer
     coVerify { mockClerkApiService.tokens("session_123") }
   }
 
@@ -343,7 +342,6 @@ class SessionTokenFetcherTest {
     val result = sessionTokenFetcher.getToken(mockSession)
 
     assertEquals(mockTokenResource, result)
-    // Should fetch from network because JWT parsing failed
     coVerify { mockClerkApiService.tokens("session_123") }
   }
 
@@ -354,7 +352,7 @@ class SessionTokenFetcherTest {
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } coAnswers
       {
-        delay(100) // Simulate network delay
+        delay(100)
         ClerkResult.success(mockTokenResource)
       }
     coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
@@ -439,8 +437,6 @@ class SessionTokenFetcherTest {
       releaseFirstCall.complete(Unit)
       val firstResult = first.await()
 
-      // Then - each forced request returns its own mint for JS parity, even when the cache rejects
-      // the first request's late response as stale.
       assertEquals(mockTokenResource, firstResult)
       assertEquals(secondToken, secondResult)
       coVerify(exactly = 2) { mockClerkApiService.tokens("session_123") }
@@ -670,7 +666,6 @@ class SessionTokenFetcherTest {
 
   @Test
   fun `getToken uses pending status from current client snapshot`() = runTest {
-    // Given - the caller holds a stale active session while the current snapshot is pending
     val pendingSession = mockk<Session>(relaxed = true)
     every { pendingSession.id } returns "session_123"
     every { pendingSession.status } returns Session.SessionStatus.PENDING
@@ -684,7 +679,6 @@ class SessionTokenFetcherTest {
 
   @Test
   fun `getToken uses active status from current client snapshot`() = runTest {
-    // Given - the caller holds a stale pending session while the current snapshot is active
     val activeSession = mockk<Session>(relaxed = true)
     every { mockSession.status } returns Session.SessionStatus.PENDING
     every { activeSession.id } returns "session_123"

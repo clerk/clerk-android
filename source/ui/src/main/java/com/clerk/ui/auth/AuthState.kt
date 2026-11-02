@@ -126,10 +126,6 @@ internal class AuthState(
     clearSignInCredentialsIfAtRoot()
   }
 
-  /**
-   * Safely resets the back stack to the root entry (AuthStart). This prevents NavDisplay crashes
-   * during rapid auth state transitions.
-   */
   private fun resetToRoot() {
     if (backStack.size > 1) {
       backStack.pop(backStack.size - 1)
@@ -323,8 +319,6 @@ internal class AuthState(
     persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
   }
 
-  // SharedPreferences.apply() updates the in-memory map immediately and the framework flushes the
-  // queued disk write when the activity stops; commit() would block the main thread on disk I/O.
   private fun persistStoredValue(key: String, value: String) {
     if (!persistIdentifiers) return
     sharedPreferences.edit().putString(key, value).apply()

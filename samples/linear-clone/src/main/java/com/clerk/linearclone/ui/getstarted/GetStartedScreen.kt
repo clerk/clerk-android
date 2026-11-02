@@ -64,7 +64,6 @@ fun GetStartedScreen(modifier: Modifier = Modifier, onGetStartedClick: () -> Uni
       }
     }
 
-    // Bottom button
     Button(
       onClick = onGetStartedClick,
       modifier =

@@ -357,8 +357,6 @@ class HostedAuthServiceTest {
 
     val firstComplete = async(Dispatchers.Default) { completeCallback(callbackUri) }
     waitUntil { redeemCalls.get() == 1 }
-    // UNDISPATCHED runs the duplicate delivery up to its first suspension point while the
-    // original completion still holds the redemption gate, guaranteeing true concurrency.
     val secondComplete =
       async(start = CoroutineStart.UNDISPATCHED) { completeCallback(callbackUri) }
     redeemGate.complete(Unit)

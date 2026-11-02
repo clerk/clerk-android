@@ -2,7 +2,6 @@ package com.clerk.api.externalaccount
 
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
-import com.clerk.api.externalaccount.ExternalAccountService.connectExternalAccount
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -62,16 +61,6 @@ internal object ExternalAccountService {
     }
   }
 
-  /**
-   * Completes the external account connection started by [connectExternalAccount], once its
-   * redirect callback has passed [RedirectCoordinator]'s state check.
-   *
-   * The method performs the following steps:
-   * 1. Retrieves the current client state
-   * 2. Locates the external account by its ID in the active session
-   * 3. Verifies that the account's verification status is confirmed
-   * 4. Completes the pending connection with the result
-   */
   internal suspend fun completeConnection(
     pendingConnection: PendingRedirect.ExternalAccountConnection
   ) {

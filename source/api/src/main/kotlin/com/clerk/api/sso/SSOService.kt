@@ -30,28 +30,6 @@ import com.clerk.api.user.User.CreateExternalAccountParams
 
 @Suppress("TooManyFunctions")
 internal object SSOService {
-  /**
-   * Initiates an OAuth authentication flow with redirect to an external provider.
-   *
-   * This method handles redirect-based authentication flows by:
-   * 1. Starting the authentication request with the specified strategy and redirect URL
-   * 2. Launching the external provider's authentication page via [SSOReceiverActivity]
-   * 3. Suspending until the user completes authentication and returns to the app
-   * 4. Processing the authentication result and returning the appropriate [ClerkResult]
-   *
-   * Any pending redirect flow (SSO, external account or hosted auth) is cancelled first.
-   *
-   * @param strategy The OAuth strategy to use for authentication (e.g., "oauth_google",
-   *   "oauth_facebook")
-   * @param redirectUrl The URL to redirect to after authentication completes
-   * @param identifier Optional identifier for the authentication request
-   * @param emailAddress Optional email address for the authentication request
-   * @param legalAccepted Optional flag indicating if legal terms have been accepted
-   * @param transferable Whether this authentication flow allows transferring to a sign-up if the
-   *   user doesn't have an account. Defaults to `true`.
-   * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
-   *   failure
-   */
   suspend fun authenticateWithRedirect(
     strategy: String? = null,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
@@ -176,13 +154,6 @@ internal object SSOService {
     }
   }
 
-  /**
-   * Continues an already prepared redirect flow.
-   *
-   * Some flows, like Enterprise SSO after `prepareFirstFactor`, already have an external provider
-   * URL from the current sign-in attempt. In those cases we should launch that URL and wait for the
-   * callback without creating a new sign-in redirect attempt.
-   */
   suspend fun authenticateWithPreparedRedirect(
     externalVerificationRedirectUrl: String,
     transferable: Boolean = true,
@@ -238,19 +209,6 @@ internal object SSOService {
     )
   }
 
-  /**
-   * Completes [pendingAuth] from its redirect callback [uri]. [RedirectCoordinator] has already
-   * checked the callback's state and runs this once per flow, in its process-wide scope, without
-   * auth error reporting: the outcome is reported by the `authenticateWithRedirect` call awaiting
-   * it.
-   *
-   * The method handles these authentication scenarios:
-   * 1. **Sign In / Sign Up**: When the URI contains a `rotating_token_nonce` parameter
-   * 2. **Transfer**: When the callback contains Clerk's explicit transfer marker
-   * 3. **Bare callback**: When the callback carries no nonce, transfer marker, or provider error,
-   *    the current sign-in or sign-up is reloaded and transferred if its external account
-   *    verification is transferable. If the reload fails, that failure is returned.
-   */
   internal suspend fun completeRedirect(pendingAuth: PendingRedirect.Sso, uri: Uri) {
     ClerkLogger.d("Completing authentication with redirect")
     val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
@@ -292,10 +250,6 @@ internal object SSOService {
       else -> completeBareSignUpCallback(uri, signUp)
     }
 
-  /**
-   * FAPI can return a bare callback (no nonce, no `__clerk_status`) when the external account has
-   * no Clerk user yet. The sign-in's own state is then the source of truth, as in clerk-js.
-   */
   private suspend fun completeBareSignInCallback(
     uri: Uri,
     transferable: Boolean,

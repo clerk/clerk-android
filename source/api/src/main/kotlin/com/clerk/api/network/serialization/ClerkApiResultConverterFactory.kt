@@ -32,7 +32,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         if (it is WildcardType) it.upperBounds.single() else it
       }
 
-    // For List<Session>, don't wrap in ClientPiggybackedResponse - it comes as plain JSON array
     val isSessionList =
       successType is ParameterizedType &&
         getRawType(successType) == List::class.java &&
@@ -69,11 +68,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     return rawType.name !in getExcludedTypeNames()
   }
 
-  /**
-   * clerk-js reads these billing GETs from the raw JSON body (`getPlans`, `getPlan`,
-   * `getPaymentAttempts`, `getPaymentAttempt`). The other billing GETs stay in
-   * [ClientPiggybackedResponse].
-   */
   private fun isRawBillingEnvelope(successType: Type): Boolean {
     val rawType = getRawType(successType)
     val paginatedItemType =
@@ -110,7 +104,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
             result
           }
 
-        @Suppress("UNCHECKED_CAST") ClerkResult.success(unwrappedResult as Any)
+        ClerkResult.success(unwrappedResult as Any)
       }
         ?: run {
           ClerkLogger.e("Delegate converter returned null!")

@@ -71,7 +71,6 @@ class SessionAuthorizationTest {
           plans = "u:plus",
         )
         .copy(status = Session.SessionStatus.PENDING)
-    // The pending session's own claims would pass; Clerk.has must still treat it as signed out.
     assertTrue(pendingSession.checkAuthorization(plan = "plus"))
     try {
       Clerk.updateClient(clientWith(pendingSession))

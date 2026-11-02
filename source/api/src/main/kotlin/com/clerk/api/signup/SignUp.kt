@@ -1,5 +1,3 @@
-// TooManyFunctions: the deprecated old-layer wrappers sit next to their implementations until the
-// next major removes them.
 @file:Suppress("unused", "TooManyFunctions")
 
 package com.clerk.api.signup
@@ -591,7 +589,6 @@ public suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> = updateImpl(updateParams)
 
-/** Canonical implementation behind both [update] overloads. */
 internal suspend fun SignUp.updateImpl(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
@@ -632,7 +629,6 @@ public suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> = prepareVerificationImpl(prepareVerification)
 
-/** Canonical implementation behind [prepareVerification] and the sign-up `send*` methods. */
 internal suspend fun SignUp.prepareVerificationImpl(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> =
@@ -707,7 +703,6 @@ public suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> = attemptVerificationImpl(params)
 
-/** Canonical implementation behind [attemptVerification] and [verifyCode]. */
 internal suspend fun SignUp.attemptVerificationImpl(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {

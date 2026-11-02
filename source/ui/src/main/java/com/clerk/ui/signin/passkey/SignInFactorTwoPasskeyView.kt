@@ -9,7 +9,6 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/** Displays passkey authentication for the second factor of an in-progress sign-in. */
 @Composable
 internal fun SignInFactorTwoPasskeyView(
   factor: Factor,

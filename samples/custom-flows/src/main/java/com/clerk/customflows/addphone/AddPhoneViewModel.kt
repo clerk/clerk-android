@@ -37,15 +37,11 @@ class AddPhoneViewModel : ViewModel() {
   fun createPhoneNumber(phoneNumber: String) {
     val user = requireNotNull(Clerk.userFlow.value)
 
-    // Add an unverified phone number to the user,
-    // then send the user an SMS with the verification code
     viewModelScope.launch {
       user
         .createPhoneNumber(phoneNumber)
         .flatMap { it.prepareVerification() }
         .onSuccess {
-          // Update the state to show that the phone number has been created
-          // and that the user needs to verify the phone number
           _uiState.value = UiState.Verifying(it)
         }
         .onFailure {
@@ -62,7 +58,6 @@ class AddPhoneViewModel : ViewModel() {
       newPhoneNumber
         .attemptVerification(code)
         .onSuccess {
-          // Update the state to show that the phone number has been verified
           _uiState.value = UiState.Verified
         }
         .onFailure {

@@ -34,3 +34,8 @@ public fun ClerkHostBackActionProvider(onHostBack: () -> Unit, content: @Composa
 
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalClerkHostBackAction = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+@Composable
+internal fun WithoutHostBackAction(content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalClerkHostBackAction provides null, content = content)
+}

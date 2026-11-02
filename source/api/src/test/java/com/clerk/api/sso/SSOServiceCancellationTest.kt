@@ -51,7 +51,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SSOServiceCancellationTest {
 
-  // Captured once so verifications count calls on Auth, not reads of the mocked Clerk.auth.
   private val auth: Auth = Clerk.auth
 
   @Before

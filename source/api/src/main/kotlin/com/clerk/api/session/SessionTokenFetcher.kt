@@ -73,10 +73,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private var runtimeGeneration = 0L
   private val sessionGenerations = mutableMapOf<String, Long>()
 
-  /**
-   * Clears cached tokens, releases deduplicated waiters with a superseded failure, and removes
-   * requests registered by the previous Clerk runtime.
-   */
   internal fun reset() {
     val tasksToRelease =
       synchronized(runtimeLock) {
@@ -88,9 +84,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
-  /**
-   * Invalidates pre-reverification tokens and fences requests already in flight for this session.
-   */
   internal fun invalidateSession(sessionId: String) {
     val tasksToRelease =
       synchronized(runtimeLock) {
@@ -103,7 +96,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
-  /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */
   internal fun authorizationTokenSelection(
     session: Session,
     nowMillis: Long = System.currentTimeMillis(),
@@ -133,23 +125,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         }
       AuthorizationTokenSelection(
         token = token,
-        // After invalidation, only an eligible token can supply verification ages.
         fallbackFactorVerificationAge =
           session.factorVerificationAge.takeUnless { requiresNewerOrigin },
       )
     }
 
-  /**
-   * Retrieves a token for the specified session with the given options.
-   *
-   * This method implements request deduplication to ensure that multiple concurrent requests for
-   * the same token are handled efficiently. It first checks if a task for the same token is already
-   * in progress and waits for that result instead of starting a new request.
-   *
-   * @param session The session to get the token for
-   * @param options Options for token retrieval including template and caching behavior
-   * @return The token resource, or null if the token could not be retrieved or session is pending
-   */
   suspend fun getToken(
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
@@ -254,7 +234,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return if (!isCurrentRuntime(context)) {
       supersededFailure()
     } else {
-      // After reverification, snapshots must be newer than a token fetched in this generation.
       if (options.template == null) {
         synchronized(runtimeLock) {
           if (isCurrentRuntime(context)) {
@@ -335,8 +314,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       when (tokensRequest) {
         is ClerkResult.Success -> {
           SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
-          // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
-          // monotonic when responses complete out of order.
           tokensRequest
         }
         is ClerkResult.Failure -> {
@@ -391,7 +368,7 @@ public data class GetTokenOptions(
   val skipCache: Boolean = false,
 
   /** Buffer time in seconds before token expiration to consider it invalid */
-  val expirationBuffer: Long = 10, // seconds
+  val expirationBuffer: Long = 10,
 )
 
 internal fun Session.tokenCacheKey(template: String?): String {

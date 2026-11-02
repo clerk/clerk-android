@@ -231,7 +231,7 @@ private fun ProfileSectionRows(
               )
             UserProfileRow.SwitchAccount,
             UserProfileRow.AddAccount,
-            UserProfileRow.SignOut -> {} // Handled in account section
+            UserProfileRow.SignOut -> {}
           }
         is UserProfileListRow.Custom ->
           CustomRowView(

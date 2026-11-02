@@ -1,5 +1,3 @@
-@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
-
 package com.clerk.ui.core.button.social
 
 import android.annotation.SuppressLint
@@ -32,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -97,16 +96,6 @@ public fun ClerkSocialButton(
   )
 }
 
-/**
- * Internal composable for [ClerkSocialButton] that allows for direct control of the pressed state.
- * This is primarily used for UI testing and previews.
- *
- * @param provider The [OAuthProvider] to display.
- * @param isPressed Manually controls the visual pressed state of the button.
- * @param modifier Optional [Modifier] for theming and styling.
- * @param isEnabled Controls the enabled state of the button.
- * @param onClick Lambda to be invoked when the button is clicked.
- */
 @Composable
 @VisibleForTesting
 internal fun ClerkSocialButton(
@@ -132,19 +121,6 @@ internal fun ClerkSocialButton(
   )
 }
 
-/**
- * Private implementation composable for the ClerkSocialButton. This function contains the core UI
- * logic and styling for the social button. This exists so that it's possible to preview the button
- * with a forced pressed state.
- *
- * @param provider The [OAuthProvider] to display.
- * @param isEnabled Controls the enabled state of the button.
- * @param isPressedCombined Reflects the combined pressed state (either actual interaction or forced
- *   via testing).
- * @param interactionSource [MutableInteractionSource] for tracking user interactions.
- * @param modifier Optional [Modifier] for theming and styling.
- * @param onClick Lambda to be invoked when the button is clicked.
- */
 @Composable
 internal fun ClerkSocialButtonImpl(
   provider: OAuthProvider,
@@ -283,27 +259,8 @@ private fun SocialButtonIcon(
   val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
   val fallbackImagePainter = if (isGoogleProvider) painterResource(R.drawable.ic_google) else null
 
-  val providerFallback: @Composable () -> Unit = {
-    if (isGoogleProvider) {
-      Image(
-        painter = requireNotNull(fallbackImagePainter),
-        contentDescription = contentDescription,
-        modifier = Modifier.size(dp24),
-        alpha = iconAlpha,
-      )
-    } else {
-      Text(
-        text = provider.providerName,
-        style = ClerkMaterialTheme.typography.labelSmall,
-        color = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = iconAlpha),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-    }
-  }
-
   if (model == null) {
-    providerFallback()
+    SocialProviderFallback(provider, fallbackImagePainter, contentDescription, iconAlpha)
     return
   }
 
@@ -322,8 +279,35 @@ private fun SocialButtonIcon(
         )
       }
     },
-    error = { providerFallback() },
+    error = {
+      SocialProviderFallback(provider, fallbackImagePainter, contentDescription, iconAlpha)
+    },
   )
+}
+
+@Composable
+private fun SocialProviderFallback(
+  provider: OAuthProvider,
+  googleLogo: Painter?,
+  contentDescription: String?,
+  alpha: Float,
+) {
+  if (googleLogo != null) {
+    Image(
+      painter = googleLogo,
+      contentDescription = contentDescription,
+      modifier = Modifier.size(dp24),
+      alpha = alpha,
+    )
+  } else {
+    Text(
+      text = provider.providerName,
+      style = ClerkMaterialTheme.typography.labelSmall,
+      color = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = alpha),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
 }
 
 @SuppressLint("VisibleForTests")
@@ -353,7 +337,6 @@ private fun PreviewSocialButton() {
   }
 }
 
-@SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun PreviewSocialRow() {

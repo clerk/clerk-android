@@ -80,7 +80,6 @@ internal val BiometricCredentialAvailability.canPromptForEnrollment: Boolean
       else -> false
     }
 
-/** A local-only user identifier hint used to select the credential during later sign-ins. */
 internal val User.biometricCredentialIdentifierHint: String?
   get() =
     primaryEmailAddress?.emailAddress?.takeIf { it.isNotBlank() }

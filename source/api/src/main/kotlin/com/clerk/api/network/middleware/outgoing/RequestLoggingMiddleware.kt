@@ -48,7 +48,6 @@ private val SENSITIVE_FORM_FIELDS =
     "signature",
   )
 
-// "code" is deliberately absent: in JSON responses it holds error codes, which debugging needs.
 private val SENSITIVE_JSON_KEYS =
   listOf("jwt", "secret", "token", "ticket", "code_verifier", "id_token", "approval_token")
 

@@ -5,15 +5,6 @@ import com.clerk.api.hostedauth.generateHostedAuthState
 import java.security.MessageDigest
 import kotlin.text.Charsets.UTF_8
 
-/**
- * Per-flow state for OAuth, enterprise SSO and external-account redirects.
- *
- * Clerk's OAuth state lives between FAPI and the provider and never reaches the app, so the SDK
- * adds its own: a random value appended to the `redirect_url` it sends. FAPI keeps the query of the
- * redirect URL when it redirects back (it appends `rotating_token_nonce` and friends with
- * `url.Values.Set`), and matches the redirect-URL allowlist without the query, so the value comes
- * back on the callback and nowhere else. A callback without it did not come from this flow.
- */
 internal object RedirectState {
   const val QUERY_PARAMETER = "clerk_redirect_state"
   private const val MAX_PREPARED = 4

@@ -1,8 +1,4 @@
 #!/bin/sh
-# Runs the same sort-dependencies version as the Gradle plugin (the
-# `sortDependencies` entry in gradle/libs.versions.toml). Arguments are passed
-# through, e.g.
-#   ./config/bin/sort-dependencies path/to/build.gradle.kts
 
 REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 . "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"

@@ -87,10 +87,6 @@ internal interface BiometricCredentialKeyManager {
 
   fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey
 
-  /**
-   * Signs [clientData] with the private key identified by [localKeyId], prompting the user for
-   * biometric authentication.
-   */
   suspend fun sign(
     clientData: String,
     localKeyId: String,
@@ -101,15 +97,9 @@ internal interface BiometricCredentialKeyManager {
 
   fun hasKey(localKeyId: String): Boolean
 
-  /** Deletes the private key identified by [localKeyId]. Missing keys are ignored. */
   fun deleteKey(localKeyId: String)
 }
 
-/**
- * Default [BiometricCredentialKeyManager] backed by the Android Keystore.
- *
- * Requires Android 9 (API 28) for [BiometricPrompt].
- */
 @Suppress("TooManyFunctions")
 internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyManager {
   private const val ANDROID_KEY_STORE = "AndroidKeyStore"

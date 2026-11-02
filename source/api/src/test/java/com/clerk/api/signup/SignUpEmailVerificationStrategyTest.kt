@@ -1,4 +1,3 @@
-// These tests pin the deprecated entry points until they are removed in the next major.
 @file:Suppress("DEPRECATION")
 
 package com.clerk.api.signup

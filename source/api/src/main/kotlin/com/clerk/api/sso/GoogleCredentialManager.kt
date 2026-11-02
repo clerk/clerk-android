@@ -10,11 +10,6 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.util.UUID
 
-/**
- * GoogleCredentialManager is responsible for managing Google credentials. This interface defines
- * the contract for retrieving Google credentials. This is mostly a wrapper around the Android
- * Credential Manager API so it can be mocked in tests.
- */
 internal interface GoogleCredentialManager {
   suspend fun getSignInWithGoogleCredential(): GetCredentialResponse
 

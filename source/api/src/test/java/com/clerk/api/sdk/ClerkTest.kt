@@ -105,8 +105,6 @@ class ClerkTest {
   private fun resetClerkState() {
     try {
       try {
-        // We can't unset a lateinit property, but we can set it to a mock that behaves as
-        // uninitialized
         val uninitializedClient = mockk<Client>()
         every { uninitializedClient.sessions } returns emptyList()
         every { uninitializedClient.lastActiveSessionId } returns null
@@ -115,12 +113,9 @@ class ClerkTest {
         every { uninitializedClient.id } returns null
         every { uninitializedClient.updatedAt } returns null
         Clerk.updateClient(uninitializedClient)
-      } catch (_: Exception) {
-        // Client not initialized, that's fine
-      }
+      } catch (_: Exception) {}
 
       try {
-        // We can't unset a lateinit property, so we set it to a mock that behaves as uninitialized
         val uninitializedEnvironment = mockk<Environment>()
         val uninitializedDisplayConfig = mockk<DisplayConfig>()
         val uninitializedUserSettings = mockk<UserSettings>()
@@ -144,18 +139,12 @@ class ClerkTest {
         every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
         every { uninitializedEnvironment.usernameIsImmutable } returns false
         Clerk.updateEnvironment(uninitializedEnvironment)
-      } catch (_: Exception) {
-        // Environment not initialized, that's fine
-      }
+      } catch (_: Exception) {}
 
       try {
         Clerk.updateSessionAndUserState()
-      } catch (_: Exception) {
-        // Ignore if method is not accessible or other issues
-      }
-    } catch (_: Exception) {
-      // Ignore reflection errors - they mean the fields weren't accessible
-    }
+      } catch (_: Exception) {}
+    } catch (_: Exception) {}
   }
 
   private fun initializeClerkWithClient(client: Client) {
@@ -270,8 +259,6 @@ class ClerkTest {
         Client(sessions = listOf(mockSession), lastActiveSessionId = activeSessionId)
       )
 
-      // When - in-progress add-account responses can omit lastActiveSessionId while retaining
-      // existing sessions.
       Clerk.updateClient(Client(sessions = listOf(mockSession), lastActiveSessionId = null))
 
       assertEquals(activeSessionId, Clerk.client.lastActiveSessionId)
@@ -290,8 +277,6 @@ class ClerkTest {
         Client(sessions = listOf(mockSession), lastActiveSessionId = activeSessionId)
       )
 
-      // When - set-active refreshes can briefly include an active id that is not hydrated in the
-      // sessions list.
       Clerk.updateClient(Client(sessions = listOf(mockSession), lastActiveSessionId = "session_2"))
 
       assertEquals(activeSessionId, Clerk.client.lastActiveSessionId)
@@ -307,7 +292,6 @@ class ClerkTest {
     every { mockSession.user } returns mockUser
     simulateUninitializedClient()
 
-    // When - initial Google auth can return one session before lastActiveSessionId is populated.
     Clerk.updateClient(Client(sessions = listOf(mockSession), lastActiveSessionId = null))
 
     assertEquals(activeSessionId, Clerk.client.lastActiveSessionId)

@@ -16,7 +16,6 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.UserOrganizationInvitation
@@ -50,14 +49,6 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<User, ClerkErrorResponse>
 
-  /**
-   * @param fields Map of metadata field names to JSON-encoded values. Only `unsafe_metadata` is
-   *   writable from the Frontend API.
-   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
-   * @return [ClerkResult] containing the updated [User] on success or [ClerkErrorResponse] on
-   *   failure
-   * @see [com.clerk.api.user.updateMetadata]
-   */
   @PATCH(ApiPaths.User.METADATA)
   @FormUrlEncoded
   suspend fun updateUserMetadata(
@@ -278,15 +269,6 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<BackupCodeResource, ClerkErrorResponse>
 
-  /**
-   * Accepts a user organization invitation.
-   *
-   * @param invitationId The unique identifier of the invitation to accept
-   * @param sessionId Optional session ID for the operation
-   * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
-   *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.accept
-   */
   @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
     @Path("invitation_id") invitationId: String,
@@ -313,16 +295,6 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
-  /**
-   * Retrieves organization invitations for the current user.
-   *
-   * @param status Optional status filter for invitations (e.g., "pending", "accepted")
-   * @param limit Maximum number of invitations to return
-   * @param offset Number of invitations to skip for pagination
-   * @param sessionId Optional session ID for the operation
-   * @return [ClerkResult] containing paginated [UserOrganizationInvitation] list on success or
-   *   [ClerkErrorResponse] on failure
-   */
   @GET(ApiPaths.User.ORGANIZATION_INVITATIONS)
   suspend fun getOrganizationInvitations(
     @Query("status") status: String? = null,
@@ -331,16 +303,6 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<UserOrganizationInvitation>, ClerkErrorResponse>
 
-  /**
-   * Retrieves organization suggestions for the current user.
-   *
-   * @param status Optional status filter for suggestions (e.g., "pending", "accepted")
-   * @param limit Maximum number of suggestions to return
-   * @param offset Number of suggestions to skip for pagination
-   * @param sessionId Optional session ID for the operation
-   * @return [ClerkResult] containing paginated [OrganizationSuggestion] list on success or
-   *   [ClerkErrorResponse] on failure
-   */
   @GET(ApiPaths.User.ORGANIZATION_SUGGESTIONS)
   suspend fun getOrganizationSuggestions(
     @Query("status") status: List<String>? = null,
@@ -362,15 +324,6 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
-  /**
-   * Sets a phone number as the default for second-factor authentication.
-   *
-   * @param phoneNumberId The ID of the phone number to set as the default second factor.
-   * @param defaultSecondFactor Must be `true` to set this phone number as the default.
-   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session].
-   * @return [ClerkResult] containing the updated [PhoneNumber] on success or [ClerkErrorResponse]
-   *   on failure.
-   */
   @FormUrlEncoded
   @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
   suspend fun makeDefaultSecondFactor(

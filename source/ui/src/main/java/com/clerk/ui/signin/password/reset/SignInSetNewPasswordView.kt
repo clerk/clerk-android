@@ -48,11 +48,6 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/**
- * A view that allows the user to set a new password during the sign-in reset password flow.
- *
- * @param modifier The [Modifier] to be applied to the view.
- */
 @Composable
 internal fun SignInSetNewPasswordView(
   modifier: Modifier = Modifier,

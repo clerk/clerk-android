@@ -21,22 +21,6 @@ import com.clerk.ui.signin.passkey.SignInFactorTwoPasskeyView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/**
- * A composable that displays the device trust verification view.
- *
- * This view is shown when the user is signing in from a new device or a device without an enrolled
- * biometric credential and needs to complete an additional verification step. It displays a warning
- * message explaining why verification is needed, followed by the code input for verification.
- *
- * Based on the `strategy` of the provided [factor], this composable will delegate rendering to
- * [SignInFactorCodeView] for phone code or email code verification, or [SignInGetHelpView] for
- * unsupported strategies.
- *
- * @param factor The factor to be verified for device trust.
- * @param modifier The [Modifier] to be applied to the view.
- * @param clerkTheme Optional theme override for customization.
- * @param onAuthComplete Callback invoked when authentication is complete.
- */
 @Composable
 internal fun SignInClientTrustView(
   factor: Factor,

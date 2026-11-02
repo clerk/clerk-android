@@ -8,6 +8,7 @@ const TRUSTED_ROLES = new Set(['admin', 'maintain']);
 const PROTECTED_PATHS = '.github/protected-paths';
 const RENOVATE_PATHS = '.github/renovate-paths';
 const CODERABBIT = 'coderabbitai[bot]';
+const REASON = Object.freeze({ AUTHOR: 'author', FILES: 'files', PROTECTED: 'protected', CODERABBIT: 'coderabbit' });
 
 const GLOB = { '**/': '(?:.*/)?', '/**': '(?:/.*)?', '**': '.*', '*': '[^/]*', '?': '[^/]' };
 
@@ -58,7 +59,6 @@ async function pathList(get, file, baseRef) {
   return list === null ? [] : parseProtectedPaths(Buffer.from(list.content, 'base64').toString('utf8'));
 }
 
-// reason says why the check failed: 'author', 'files', 'protected' or 'coderabbit'.
 async function codeOwnerApproval({ fetch, api, token, repo, number, author, baseRef }) {
   const get = client({ fetch, api, token, repo });
   const pull = await get(`/pulls/${number}`);
@@ -71,13 +71,13 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
   }
   const renovate = await builtByRenovate(get, pull, repo);
   if (!renovate && !(await trusted(get, author))) {
-    return { pass: false, reason: 'author', message: `${author} doesn't have maintain or admin access, so this needs an approval from Team Mobile.` };
+    return { pass: false, reason: REASON.AUTHOR, message: `${author} doesn't have maintain or admin access, so this needs an approval from Team Mobile.` };
   }
   const patterns = await pathList(get, PROTECTED_PATHS, baseRef);
   const files = await paged(get, `/pulls/${number}/files`);
   const changed = pull.changed_files;
   if (files.length < changed) {
-    return { pass: false, reason: 'files', message: `GitHub listed ${files.length} of the ${changed} changed files, so this check can't tell which are protected. Split the pull request.` };
+    return { pass: false, reason: REASON.FILES, message: `GitHub listed ${files.length} of the ${changed} changed files, so this check can't tell which are protected. Split the pull request.` };
   }
   const owned = protectedFiles(patterns, [...new Set(files.flatMap(file => [file.filename, file.previous_filename].filter(Boolean)))]);
   if (renovate) {
@@ -87,7 +87,7 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
       const shown = outside.slice(0, 10).join(', ');
       return {
         pass: false,
-        reason: 'protected',
+        reason: REASON.PROTECTED,
         files: outside,
         message: `Renovate pushed ${pull.head.sha}, but it changes ${outside.length} protected file(s) that ${RENOVATE_PATHS} doesn't list (${shown}${outside.length > 10 ? ', ...' : ''}), so it needs an approval from Team Mobile.`,
       };
@@ -98,14 +98,14 @@ async function codeOwnerApproval({ fetch, api, token, repo, number, author, base
     const shown = owned.slice(0, 10).join(', ');
     return {
       pass: false,
-      reason: 'protected',
+      reason: REASON.PROTECTED,
       files: owned,
       message: `This changes ${owned.length} protected file(s) (${shown}${owned.length > 10 ? ', ...' : ''}), so it needs an approval from another Team Mobile member.`,
     };
   }
   const coderabbit = reviews.findLast(review => review.user?.login === CODERABBIT && review.state !== 'COMMENTED' && review.state !== 'PENDING');
   if (coderabbit?.state !== 'APPROVED' || coderabbit.commit_id !== pull.head.sha) {
-    return { pass: false, reason: 'coderabbit', message: "CodeRabbit hasn't approved this commit. If it rates the merge risk high or critical, it won't, and this needs an approval from another Team Mobile member." };
+    return { pass: false, reason: REASON.CODERABBIT, message: "CodeRabbit hasn't approved this commit. If it rates the merge risk high or critical, it won't, and this needs an approval from another Team Mobile member." };
   }
   return { pass: true, message: `${author} has maintain or admin access, and CodeRabbit approved.` };
 }
@@ -128,7 +128,7 @@ async function main(env, { fetch = globalThis.fetch, out = process.stdout } = {}
   return pass;
 }
 
-export { codeOwnerApproval, main, parseProtectedPaths, protectedFiles };
+export { REASON, codeOwnerApproval, main, parseProtectedPaths, protectedFiles };
 
 if (process.argv[1] !== undefined && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {

@@ -80,17 +80,6 @@ internal interface SessionApi {
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SessionVerification, ClerkErrorResponse>
 
-  /**
-   * Revokes a specific session.
-   *
-   * This method revokes the specified session, making it invalid for future authentication. The
-   * revoked session will no longer be usable for API calls or authentication.
-   *
-   * @param sessionIdToRevoke The unique identifier of the session to revoke
-   * @param sessionId The session making the request; defaults to the active session
-   * @return A [ClerkResult] containing the revoked [Session] on success, or a [ClerkErrorResponse]
-   *   on failure
-   */
   @POST(ApiPaths.User.Sessions.REVOKE)
   suspend fun revokeSession(
     @Path("session_id") sessionIdToRevoke: String,

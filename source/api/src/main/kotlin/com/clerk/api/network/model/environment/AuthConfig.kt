@@ -6,8 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class AuthConfig(
   @SerialName("single_session_mode") val singleSessionMode: Boolean,
-
-  /** Whether session token minting at the edge is enabled. */
   @SerialName("session_minter") val sessionMinter: Boolean = false,
   @SerialName("native_settings") val nativeSettings: NativeSettings = NativeSettings(),
 ) {

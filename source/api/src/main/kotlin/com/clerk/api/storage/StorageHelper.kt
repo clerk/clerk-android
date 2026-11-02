@@ -21,10 +21,6 @@ internal object StorageHelper {
     ((key: StorageKey, previous: String?, value: String?) -> Unit)? =
     null
 
-  /**
-   * Synchronously initializes the secure storage. We do this synchronously because we need to
-   * ensure that the storage is initialized before we generate a device ID.
-   */
   @Synchronized
   fun initialize(context: Context) {
     if (storageCipher == null) {
@@ -54,7 +50,6 @@ internal object StorageHelper {
     }
   }
 
-  /** Guards device-token read-compare-write sequences; listeners are notified outside it. */
   private val deviceTokenLock = Any()
 
   internal fun saveValue(key: StorageKey, value: String) {
@@ -71,14 +66,6 @@ internal object StorageHelper {
     if (saved) notifyDeviceTokenChange(previousValue, value)
   }
 
-  /**
-   * Atomically replaces the device token with [value] (deleting it when null) only if the stored
-   * token equals [expected]. Returns true when the stored token equals [value] after this call.
-   *
-   * [onChangedLocked] runs inside the device-token lock, only when the stored token actually
-   * changed, so callers can publish side effects (such as a response fence) atomically with the
-   * swap. It must be cheap and must not take other locks.
-   */
   internal fun compareAndSetDeviceToken(
     expected: String?,
     value: String?,
@@ -279,7 +266,6 @@ internal object StorageHelper {
   }
 }
 
-/** Commits synchronously and reports whether the write reached disk. */
 private inline fun commitEdit(
   prefs: SharedPreferences,
   key: StorageKey,

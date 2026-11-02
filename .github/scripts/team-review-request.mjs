@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { codeOwnerApproval } from './code-owner-approval.mjs';
+import { REASON, codeOwnerApproval } from './code-owner-approval.mjs';
 import { client, paged } from './github.mjs';
 
 const TEAM_FILE = new URL('../team-mobile', import.meta.url);
@@ -15,7 +15,6 @@ function parseTeam(text) {
     .filter(line => line !== '');
 }
 
-// CodeRabbit's summary comment carries its merge risk for the commit it last reviewed, and rewrites it after each review.
 function ratedHighRisk(comments, head) {
   return comments.some(comment => {
     if (comment.user?.login !== CODERABBIT) {
@@ -50,10 +49,10 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
   if (check.pass) {
     return `No review request needed. ${check.message}`;
   }
-  if (check.reason === 'coderabbit' && !ratedHighRisk(await paged(get, `/issues/${number}/comments`), pull.head.sha)) {
+  if (check.reason === REASON.CODERABBIT && !ratedHighRisk(await paged(get, `/issues/${number}/comments`), pull.head.sha)) {
     return 'Waiting on CodeRabbit, which hasn\'t rated this commit high or critical risk.';
   }
-  if (check.reason === 'protected') {
+  if (check.reason === REASON.PROTECTED) {
     const comments = await paged(get, `/issues/${number}/comments`);
     const body = protectedComment(check.files);
     const notice = comments.find(comment => comment.body?.startsWith(PROTECTED_NOTICE));
@@ -75,7 +74,7 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
     return 'Every Team Mobile member is already requested or has reviewed.';
   }
   await get(`/pulls/${number}/requested_reviewers`, { method: 'POST', body: { reviewers } });
-  const why = check.reason === 'coderabbit' || (check.reason === 'protected' && team.includes(author)) ? 'CodeRabbit rated this commit high or critical risk.' : check.message;
+  const why = check.reason === REASON.CODERABBIT || (check.reason === REASON.PROTECTED && team.includes(author)) ? 'CodeRabbit rated this commit high or critical risk.' : check.message;
   return `Requested ${reviewers.join(', ')}. ${why}`;
 }
 

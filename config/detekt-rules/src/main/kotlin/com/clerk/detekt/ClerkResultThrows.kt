@@ -20,19 +20,6 @@ import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 import org.jetbrains.kotlin.psi.KtTryExpression
 import org.jetbrains.kotlin.psi.KtValueArgument
 
-/**
- * Flags code that can throw from a public function whose declared return type is `ClerkResult`.
- *
- * `ClerkResult` promises consumers a non-exceptional API: failures must be returned as
- * `ClerkResult.Failure`, not thrown. In such a function's body and default argument expressions
- * this rule reports `throw`, `error()`, `require()`, `requireNotNull()`, `check()`,
- * `checkNotNull()`, `TODO()` and `!!`, unless the code sits in a `try` block that catches
- * `Exception`/`Throwable` or in a lambda passed to a catching helper. Rethrowing a caught
- * `CancellationException` is allowed because cancellation must propagate.
- *
- * The rule is syntactic, so it works with or without type resolution. It relies on the declared
- * return type and does not follow calls into other functions.
- */
 class ClerkResultThrows(config: Config = Config.empty) :
   Rule(
     config,

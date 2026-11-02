@@ -631,9 +631,7 @@ public object BiometricCredentials {
         biometricCredentials
           ?: when (val listResult = ClerkApi.biometricCredential.list()) {
             is ClerkResult.Success -> listResult.value.also { biometricCredentials = it }
-            is ClerkResult.Failure ->
-              // Reconciliation is best-effort; keep the local credential when listing fails.
-              return LocalCredentialResult.Available(credential)
+            is ClerkResult.Failure -> return LocalCredentialResult.Available(credential)
           }
 
       val biometricCredential = activeUserBiometricCredentials.firstOrNull {

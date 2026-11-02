@@ -272,7 +272,7 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `getAllCountries returns filtered and sorted countries`() {
-    val supportedRegions = setOf("US", "CA", "GB", "001") // 001 should be filtered out
+    val supportedRegions = setOf("US", "CA", "GB", "001")
     every { mockPhoneNumberUtil.supportedRegions } returns supportedRegions
     every { mockPhoneNumberUtil.getCountryCodeForRegion("CA") } returns 1
     every { mockPhoneNumberUtil.getCountryCodeForRegion("GB") } returns 44
@@ -337,8 +337,6 @@ class PhoneInputUtilsTest {
 
   @Test
   fun `companion object methods delegate to default instance`() {
-    // Test that companion object methods work for backward compatibility
-    // These will use real implementations since they create a default instance
     val result = PhoneInputUtils.Companion.getDefaultCountry()
 
     assertEquals("US", result.countryShortName)

@@ -73,7 +73,6 @@ class UserProfileAccountViewModelTest {
     viewModel.signOut()
     advanceUntilIdle()
 
-    // Must not collapse to signOut(null) / signOut() — that would sign out every account.
     coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = any()) }
     coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = null) }
   }

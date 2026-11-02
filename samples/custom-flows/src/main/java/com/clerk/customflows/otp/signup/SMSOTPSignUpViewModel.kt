@@ -1,9 +1,11 @@
 package com.clerk.customflows.otp.signup
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.auth.types.VerificationType
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -39,10 +41,7 @@ class SMSOTPSignUpViewModel : ViewModel() {
         .signUp { phone = phoneNumber }
         .flatMap { it.sendCode { phone = phoneNumber } }
         .onSuccess { _uiState.value = UiState.Verifying }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("SMSOTPSignUpViewModel", it.errorMessage, it.throwable) }
     }
   }
 
@@ -54,14 +53,9 @@ class SMSOTPSignUpViewModel : ViewModel() {
         .onSuccess {
           if (it.status == SignUp.Status.COMPLETE) {
             _uiState.value = UiState.Verified
-          } else {
-            // The user may need to complete further steps
           }
         }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+        .onFailure { Log.e("SMSOTPSignUpViewModel", it.errorMessage, it.throwable) }
     }
   }
 

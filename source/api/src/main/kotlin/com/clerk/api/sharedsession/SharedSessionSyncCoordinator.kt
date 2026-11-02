@@ -195,9 +195,6 @@ internal constructor(
   private fun handleDeviceTokenChange(previous: String?, value: String?) {
     synchronized(stateLock) {
       if (isApplyingSharedStorage || previous == value) return
-      // Storage notifies outside its device-token lock, so a newer token (for example a sibling's,
-      // applied by reloadBlocking) may already have replaced [value]. Publishing it now would let
-      // peers overwrite the newer token with this stale one.
       if (StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != value) {
         ClerkLogger.d("Skipping shared publish of a device token that is no longer stored")
         return

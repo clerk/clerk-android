@@ -12,7 +12,6 @@ permissions:
 
 jobs:
   e2e-runner-tests:
-    # Pull requests can read only the caches main saves, so a push to main runs just the jobs that save the Gradle cache.
     if: github.event_name != 'push' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -113,7 +112,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-results-${{ matrix.label }}    # <— no slashes
+          name: test-results-${{ matrix.label }}
           path: |
             ${{ matrix.path }}/build/test-results/**
             ${{ matrix.path }}/build/reports/tests/**
@@ -140,7 +139,6 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   api-check:
-    # Pull requests can read only the caches main saves, so a push to main runs just the jobs that save the Gradle cache.
     if: github.event_name != 'push' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     permissions:

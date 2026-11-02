@@ -1,4 +1,3 @@
-// These tests pin the deprecated entry points until they are removed in the next major.
 @file:Suppress("DEPRECATION")
 
 package com.clerk.api.auth
@@ -37,7 +36,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** Both auth API layers report failures as [AuthEvent.Error], exactly once per failed call. */
 class AuthErrorEventsTest {
 
   private val signInApi = mockk<SignInApi>()
@@ -115,7 +113,6 @@ class AuthErrorEventsTest {
     runTest {
       val events = collect(Clerk.auth.events)
 
-      // SSOService creates the sign-in through SignIn.create, itself a reporting entry point.
       SignIn.authenticateWithRedirect(
         SignIn.AuthenticateWithRedirectParams.OAuth(provider = OAuthProvider.GOOGLE)
       )

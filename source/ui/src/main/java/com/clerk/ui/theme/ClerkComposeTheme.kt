@@ -116,14 +116,6 @@ internal object ClerkMaterialTheme {
     @Composable @ReadOnlyComposable get() = LocalComputedColors.current
 }
 
-/**
- * Non-nullable wrapper for ClerkColors within the theme context.
- *
- * This class provides safe, non-nullable access to all color properties by wrapping the underlying
- * ClerkColors instance. Since colors are guaranteed to be non-null within a ClerkMaterialTheme
- * context (they fall back to defaults), this wrapper eliminates the need for null checks and !!
- * operators in UI components.
- */
 internal class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
   val primary: Color
     get() = colors.primary!!
@@ -243,16 +235,6 @@ private fun computeColorScheme(colors: ClerkColors, isDarkMode: Boolean): ColorS
   }
 }
 
-/**
- * @deprecated Use [ClerkMaterialTheme] object instead for accessing theme values. This object is
- *   maintained for backwards compatibility but will be removed in a future version.
- *
- * Migration guide:
- * - `ClerkThemeAccess.colors` → `ClerkMaterialTheme.colors`
- * - `ClerkThemeAccess.typography` → `ClerkMaterialTheme.typography`
- * - `ClerkThemeAccess.design` → `ClerkMaterialTheme.design`
- * - `ClerkThemeAccess.computed` → `ClerkMaterialTheme.computed`
- */
 @Deprecated(
   message = "Use ClerkMaterialTheme object instead for accessing theme values",
   replaceWith = ReplaceWith("ClerkMaterialTheme", "com.clerk.ui.theme.ClerkMaterialTheme"),

@@ -54,8 +54,6 @@ dokka {
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
   publishToMavenCentral()
-  // Skip signing for local publishing: ./gradlew publishToMavenLocal
-  // -PRELEASE_SIGNING_ENABLED=false
   if (providers.gradleProperty("RELEASE_SIGNING_ENABLED").orNull != "false") {
     signAllPublications()
   }

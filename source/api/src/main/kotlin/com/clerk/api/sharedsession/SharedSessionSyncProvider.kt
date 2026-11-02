@@ -14,7 +14,6 @@ import android.os.Process
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 
-/** Read-only IPC boundary for same-signed sibling apps participating in shared-session sync. */
 internal class SharedSessionSyncProvider : ContentProvider() {
   override fun onCreate(): Boolean {
     val providerContext = context ?: return false

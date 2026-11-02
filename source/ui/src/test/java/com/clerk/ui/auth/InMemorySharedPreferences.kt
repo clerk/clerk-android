@@ -13,7 +13,6 @@ internal class InMemorySharedPreferences : SharedPreferences {
   override fun getString(key: String?, defValue: String?): String? =
     values[key] as? String ?: defValue
 
-  @Suppress("UNCHECKED_CAST")
   override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? =
     values[key] as? MutableSet<String> ?: defValues
 

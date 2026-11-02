@@ -1,6 +1,4 @@
 #!/bin/sh
-# Runs the same detekt version that Gradle uses (the `detekt` entry in
-# gradle/libs.versions.toml). Arguments are passed through to detekt-cli.
 
 REPO_ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 . "$REPO_ROOT_DIR/config/bin/lib/tool-jar.sh"

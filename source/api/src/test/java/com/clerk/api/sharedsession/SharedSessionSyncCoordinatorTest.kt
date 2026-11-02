@@ -187,7 +187,6 @@ class SharedSessionSyncCoordinatorTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "newer-token")
     val publishedVersion = transport.local?.deviceToken?.version
 
-    // A writer that stored "stale-token" before "newer-token" is notified only now.
     StorageHelper.valueChangeListener?.invoke(StorageKey.DEVICE_TOKEN, "older-token", "stale-token")
 
     assertEquals("newer-token", transport.local?.deviceToken?.value)

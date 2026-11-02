@@ -7,12 +7,6 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 
-/**
- * Abstraction for Android's CredentialManager to enable testing.
- *
- * This interface wraps the Android CredentialManager functionality to allow for mocking in unit
- * tests.
- */
 internal interface PasskeyCredentialManager {
   suspend fun createCredential(
     context: Context,

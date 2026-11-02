@@ -48,8 +48,6 @@ public data class Session(
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
   @SerialName("last_active_organization_id") val lastActiveOrganizationId: String? = null,
-
-  // More future-proof than String?
   val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,

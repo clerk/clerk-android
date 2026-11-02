@@ -91,18 +91,15 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
     }
 
     public enum class ErrorType {
-      API, // For ClerkAPI failures
-      HTTP, // For HTTP failures
-      UNKNOWN, // For unknown/network failures
+      API,
+      HTTP,
+      UNKNOWN,
     }
   }
 
   public companion object {
     private const val OK = 200
     private val HTTP_SUCCESS_RANGE = OK..299
-    // Any non-2xx status OkHttp can surface (it parses three-digit codes). The call adapter returns
-    // an HTTP failure for every one of them, and SSO/external-account flows re-wrap those failures
-    // with httpFailure(), so it must accept the same set or those flows throw.
     private val HTTP_STATUS_RANGE = 100..999
     private val HTTP_ERROR_BODY_RANGE = 400..599
 

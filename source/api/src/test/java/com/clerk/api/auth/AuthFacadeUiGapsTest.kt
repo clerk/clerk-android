@@ -37,7 +37,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** Covers the `Clerk.auth` additions the prebuilt UI needs to move off the older entry points. */
 class AuthFacadeUiGapsTest {
 
   private val signInApi = mockk<SignInApi>()

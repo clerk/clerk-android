@@ -29,28 +29,6 @@ import com.clerk.ui.signin.clienttrust.ClientTrustWarningMessage
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
-/**
- * A Composable that displays a verification code input screen for sign-in authentication factors.
- *
- * This component handles various authentication strategies including:
- * - Email verification codes
- * - SMS verification codes
- * - Password reset codes
- * - TOTP codes for two-factor authentication
- *
- * The view automatically prepares the factor for verification and provides a code input field with
- * resend functionality and timer countdown.
- *
- * @param factor The authentication factor containing strategy and identifier information
- * @param modifier Optional [Modifier] to customize the appearance and behavior
- * @sample
- *
- * ```kotlin
- * SignInFactorCodeView(
- *   factor = Factor(strategy = "email_code", emailAddressId = "user@example.com")
- * )
- * ```
- */
 @Composable
 internal fun SignInFactorCodeView(
   factor: Factor,

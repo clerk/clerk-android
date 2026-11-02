@@ -68,7 +68,6 @@ jobs:
     timeout-minutes: ${{ fromJSON(needs.plan.outputs.timeout) }}
     env:
       VERIFY_SESSION_REQUEST: ${{ needs.plan.outputs.request }}
-      # agent-device reaps its daemon and its device lease after five idle minutes by default.
       AGENT_DEVICE_DAEMON_IDLE_TIMEOUT_MS: "0"
       AGENT_DEVICE_LEASE_TTL_MS: "21600000"
       AGENT_DEVICE_LEASE_MAX_TTL_MS: "21600000"

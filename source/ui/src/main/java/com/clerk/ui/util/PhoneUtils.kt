@@ -20,9 +20,7 @@ internal val String.formattedAsPhoneNumberIfPossible: String
         val formatted = util.format(parsed, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
         return formatted.nbsp()
       }
-    } catch (_: NumberParseException) {
-      // fall through to partial
-    }
+    } catch (_: NumberParseException) {}
 
     val formatter: AsYouTypeFormatter = util.getAsYouTypeFormatter(region)
     var out = ""

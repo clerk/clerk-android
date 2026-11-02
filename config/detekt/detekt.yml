@@ -1,8 +1,3 @@
-# Overrides on top of detekt's default config. Gradle and config/bin/detekt-cli both run with
-# buildUponDefaultConfig (and without allRules, so opt-in rules stay off unless enabled here), so
-# only deviations from the defaults belong here. Run
-# `./gradlew detektGenerateConfig` to see every rule and its default value.
-
 complexity:
   LongParameterList:
     ignoreDefaultParameters: true

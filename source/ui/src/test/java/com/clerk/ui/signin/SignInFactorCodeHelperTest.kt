@@ -85,8 +85,4 @@ class SignInFactorCodeHelperTest {
     val factor = Factor(strategy = "totp")
     assertTrue(helper.showUseAnotherMethod(factor))
   }
-
-  // Note: Testing Composable functions like titleForStrategy() and resendString()
-  // requires a Compose test environment (e.g., using ComposeTestRule) and
-  // is not covered in this standard JUnit test class.
 }

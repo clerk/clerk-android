@@ -104,7 +104,6 @@ internal object HostedAuthService {
     callback: HostedAuthCallback,
     client: Client,
   ) {
-    // The redeemed client has already been applied locally; this only resolves the flow result.
     val createdSession = client.sessions.firstOrNull { it.id == callback.createdSessionId }
     if (createdSession == null) {
       finishPendingAuth(

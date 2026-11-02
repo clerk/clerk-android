@@ -51,7 +51,6 @@ public fun <E : Any> ClerkResult.Failure<E>.exceptionOrNull(): Throwable? {
 /** Transforms an [ClerkResult] into a [C] value. */
 @OptIn(ExperimentalContracts::class)
 @Suppress(
-  // Inline to allow contextual actions
   "NOTHING_TO_INLINE",
   // https://youtrack.jetbrains.com/issue/KT-71690
   "WRONG_INVOCATION_KIND",
@@ -73,7 +72,6 @@ public suspend inline fun <T : Any, E : Any, C> ClerkResult<T, E>.suspendingFold
 /** Transforms an [ClerkResult] into a [C] value. */
 @OptIn(ExperimentalContracts::class)
 @Suppress(
-  // Inline to allow contextual actions
   "NOTHING_TO_INLINE",
   // https://youtrack.jetbrains.com/issue/KT-71690
   "WRONG_INVOCATION_KIND",
