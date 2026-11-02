@@ -32,6 +32,7 @@ import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.markSensitive
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -109,7 +110,9 @@ private fun UserProfileMfaAddTotpContent(
         text = state.totpResource.secret!!,
         onClick = {
           scope.launch {
-            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.secret)))
+            clipboard.setClipEntry(
+              ClipEntry(ClipData.newPlainText("", state.totpResource.secret).markSensitive())
+            )
           }
         },
       )
@@ -122,7 +125,9 @@ private fun UserProfileMfaAddTotpContent(
         text = state.totpResource.uri!!,
         onClick = {
           scope.launch {
-            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.uri)))
+            clipboard.setClipEntry(
+              ClipEntry(ClipData.newPlainText("", state.totpResource.uri).markSensitive())
+            )
           }
         },
       )
