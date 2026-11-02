@@ -780,6 +780,7 @@ public class Auth internal constructor() {
 
   private suspend fun signOutSessionLocally(sessionId: String) {
     withContext(NonCancellable) {
+      SessionTokenFetcher.shared.removeSession(sessionId)
       removeSessionLocally(sessionId)
       SessionTokenFetcher.shared.removeSession(sessionId)
       RestoreCredentials.clearSilently()

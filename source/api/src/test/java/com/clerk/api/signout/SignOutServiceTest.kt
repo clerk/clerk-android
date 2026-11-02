@@ -22,6 +22,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
+import com.clerk.api.state.ClientStateStore
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -39,6 +40,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -232,6 +234,38 @@ class SignOutServiceTest {
     val result = mockSession.fetchToken()
 
     val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockSessionApi.tokens(any()) }
+  }
+
+  @Test
+  fun `signOut fences the held session before the client is cleared`() = runTest {
+    setupActiveSession()
+    coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    val store = Clerk.stateStore
+    val original = store.listener
+    var resultAtClear: ClerkResult<TokenResource, ClerkErrorResponse>? = null
+    store.listener =
+      object : ClientStateStore.Listener {
+        override fun onClientCommittedAfterWriteLock(commit: ClientStateStore.ClientCommit) {
+          if (commit.client.sessions.isEmpty() && resultAtClear == null) {
+            resultAtClear = runBlocking { mockSession.fetchToken() }
+          }
+          original?.onClientCommittedAfterWriteLock(commit)
+        }
+      }
+
+    try {
+      SignOutService.signOut()
+    } finally {
+      store.listener = original
+    }
+
+    val failure = resultAtClear as ClerkResult.Failure
     assertEquals(
       SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
       failure.error?.errors?.firstOrNull()?.code,

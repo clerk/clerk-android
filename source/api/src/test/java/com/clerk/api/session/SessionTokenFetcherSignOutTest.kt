@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
@@ -113,6 +114,18 @@ class SessionTokenFetcherSignOutTest {
       failure.error?.errors?.firstOrNull()?.code,
     )
     coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `authorizationTokenSelection refuses a signed-out session the client no longer lists`() {
+    every { mockSession.lastActiveToken } returns mockTokenResource
+    every { mockSession.factorVerificationAge } returns listOf(1, 2)
+    sessionTokenFetcher.signOut(listOf("session_123"))
+
+    val selection = sessionTokenFetcher.authorizationTokenSelection(mockSession)
+
+    assertNull(selection.token)
+    assertNull(selection.fallbackFactorVerificationAge)
   }
 
   @Test

@@ -134,6 +134,12 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
+  private fun listedSession(session: Session): Session? =
+    Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id }
+
+  private fun isSignedOutAndUnlisted(session: Session): Boolean =
+    listedSession(session) == null && session.id in signedOutSessions
+
   private fun invalidateSessionUnderLock(
     sessionId: String
   ): List<CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>> {
@@ -150,6 +156,9 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     nowMillis: Long = System.currentTimeMillis(),
   ): AuthorizationTokenSelection =
     synchronized(runtimeLock) {
+      if (isSignedOutAndUnlisted(session)) {
+        return AuthorizationTokenSelection(token = null, fallbackFactorVerificationAge = null)
+      }
       val requiresNewerOrigin = (sessionGenerations[session.id] ?: 0L) > 0L
       val cached =
         SessionTokensCache.getToken(session.tokenCacheKey(null))?.takeIf {
@@ -202,7 +211,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   ): ClerkResult<TokenResource, ClerkErrorResponse> {
     val context =
       synchronized(runtimeLock) {
-        val clientSession = Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id }
+        val clientSession = listedSession(session)
         if (clientSession == null && session.id in signedOutSessions) {
           return signedOutSessionFailure()
         }
