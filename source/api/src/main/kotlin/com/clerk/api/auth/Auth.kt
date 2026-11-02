@@ -33,6 +33,7 @@ import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
@@ -42,9 +43,12 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 
 /**
  * Main Auth class providing all authentication entry points.
@@ -753,10 +757,16 @@ public class Auth internal constructor() {
   public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     return reportingFailures {
       if (sessionId != null) {
-        when (val result = ClerkApi.session.removeSession(sessionId)) {
+        val result =
+          try {
+            ClerkApi.session.removeSession(sessionId)
+          } catch (e: CancellationException) {
+            signOutSessionLocally(sessionId)
+            throw e
+          }
+        when (result) {
           is ClerkResult.Success -> {
-            removeSessionLocally(sessionId)
-            RestoreCredentials.clearSilently()
+            signOutSessionLocally(sessionId)
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
@@ -765,6 +775,15 @@ public class Auth internal constructor() {
       } else {
         SignOutService.signOut()
       }
+    }
+  }
+
+  private suspend fun signOutSessionLocally(sessionId: String) {
+    withContext(NonCancellable) {
+      SessionTokenFetcher.shared.removeSession(sessionId)
+      removeSessionLocally(sessionId)
+      SessionTokenFetcher.shared.removeSession(sessionId)
+      RestoreCredentials.clearSilently()
     }
   }
 

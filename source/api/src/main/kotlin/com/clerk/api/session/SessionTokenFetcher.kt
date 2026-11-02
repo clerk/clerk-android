@@ -1,5 +1,6 @@
 package com.clerk.api.session
 
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.log.ClerkLogger
@@ -52,6 +53,12 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           "The token request was cancelled because the session or Clerk runtime changed while " +
             "it was in flight.",
       )
+
+    private fun signedOutSessionFailure(): ClerkResult.Failure<ClerkErrorResponse> =
+      localFailure(
+        code = TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+        longMessage = "The session was signed out, so it can no longer issue tokens.",
+      )
   }
 
   private data class FetchContext(
@@ -72,18 +79,63 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
   private val sessionGenerations = mutableMapOf<String, Long>()
+  private val signedOutSessions = mutableSetOf<String>()
 
   /**
    * Clears cached tokens, releases deduplicated waiters with a superseded failure, and removes
-   * requests registered by the previous Clerk runtime.
+   * requests registered by the previous Clerk runtime. Sessions signed out earlier stay refused
+   * until the client lists them again.
    */
   internal fun reset() {
+    releaseRuntime {}
+  }
+
+  @VisibleForTesting
+  internal fun clearSignedOutSessions() {
+    synchronized(runtimeLock) { signedOutSessions.clear() }
+  }
+
+  /**
+   * Clears every cached token and refuses tokens for [sessionIds], and for sessions removed
+   * earlier, until the client lists one of them again, so a [Session] the caller kept cannot serve
+   * its own last active token.
+   */
+  internal fun signOut(sessionIds: Collection<String>) {
+    releaseRuntime { signedOutSessions += sessionIds }
+  }
+
+  /**
+   * Refuses tokens for [sessionIds] once the client stops listing them and supersedes their cached
+   * tokens and the requests already in flight for them, without resuming any waiter, so a client
+   * update can record the fence inside the state store's write lock before it publishes a client
+   * without those sessions. A superseded request completes with the superseded failure when its
+   * response arrives, or earlier when [signOut] releases every request.
+   */
+  internal fun fenceSignedOutSessions(sessionIds: Collection<String>) {
+    synchronized(runtimeLock) {
+      signedOutSessions += sessionIds
+      sessionIds.forEach { supersedeSessionTokensUnderLock(it) }
+    }
+  }
+
+  private inline fun releaseRuntime(updateSignedOutSessions: () -> Unit) {
     val tasksToRelease =
       synchronized(runtimeLock) {
         runtimeGeneration += 1
         sessionGenerations.clear()
+        updateSignedOutSessions()
         SessionTokensCache.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
+      }
+    tasksToRelease.forEach { it.complete(supersededFailure()) }
+  }
+
+  /** Invalidates [sessionId]'s tokens and refuses new ones until the client lists it again. */
+  internal fun removeSession(sessionId: String) {
+    val tasksToRelease =
+      synchronized(runtimeLock) {
+        signedOutSessions += sessionId
+        invalidateSessionUnderLock(sessionId)
       }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
@@ -92,15 +144,28 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * Invalidates pre-reverification tokens and fences requests already in flight for this session.
    */
   internal fun invalidateSession(sessionId: String) {
-    val tasksToRelease =
-      synchronized(runtimeLock) {
-        sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
-        SessionTokensCache.removeTokens(sessionId)
-        tokenTasks.keys
-          .filter { it.belongsToSession(sessionId) }
-          .mapNotNull { tokenTasks.remove(it) }
-      }
+    val tasksToRelease = synchronized(runtimeLock) { invalidateSessionUnderLock(sessionId) }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
+  }
+
+  private fun listedSession(session: Session): Session? =
+    Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id }
+
+  private fun isSignedOutAndUnlisted(session: Session): Boolean =
+    listedSession(session) == null && session.id in signedOutSessions
+
+  private fun supersedeSessionTokensUnderLock(sessionId: String) {
+    sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
+    SessionTokensCache.removeTokens(sessionId)
+  }
+
+  private fun invalidateSessionUnderLock(
+    sessionId: String
+  ): List<CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>> {
+    supersedeSessionTokensUnderLock(sessionId)
+    return tokenTasks.keys
+      .filter { it.belongsToSession(sessionId) }
+      .mapNotNull { tokenTasks.remove(it) }
   }
 
   /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */
@@ -109,6 +174,9 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     nowMillis: Long = System.currentTimeMillis(),
   ): AuthorizationTokenSelection =
     synchronized(runtimeLock) {
+      if (isSignedOutAndUnlisted(session)) {
+        return AuthorizationTokenSelection(token = null, fallbackFactorVerificationAge = null)
+      }
       val requiresNewerOrigin = (sessionGenerations[session.id] ?: 0L) > 0L
       val cached =
         SessionTokensCache.getToken(session.tokenCacheKey(null))?.takeIf {
@@ -161,8 +229,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   ): ClerkResult<TokenResource, ClerkErrorResponse> {
     val context =
       synchronized(runtimeLock) {
-        val currentSession =
-          Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
+        val clientSession = listedSession(session)
+        if (clientSession == null && session.id in signedOutSessions) {
+          return signedOutSessionFailure()
+        }
+        val currentSession = clientSession ?: session
         FetchContext(
           session = currentSession,
           cacheKey = currentSession.tokenCacheKey(options.template),
@@ -328,32 +399,38 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private fun reconcileTokenResponse(
     context: FetchContext,
     tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
-  ): ClerkResult<TokenResource, ClerkErrorResponse> =
-    synchronized(runtimeLock) {
-      if (!isCurrentRuntime(context)) return@synchronized supersededFailure()
-
-      when (tokensRequest) {
-        is ClerkResult.Success -> {
-          SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
-          // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
-          // monotonic when responses complete out of order.
-          tokensRequest
-        }
-        is ClerkResult.Failure -> {
-          val invalidSession =
-            tokensRequest.error?.errors.orEmpty().any {
-              it.code?.lowercase() in sessionInvalidationErrorCodes
-            }
-          if (invalidSession && Clerk.session?.id == context.session.id) {
-            ClerkLogger.w(
-              "The session can no longer issue tokens. Clearing local session and user state."
-            )
-            Clerk.clearSessionAndUserState()
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
+    val reconciled =
+      synchronized(runtimeLock) {
+        when {
+          !isCurrentRuntime(context) -> supersededFailure()
+          tokensRequest is ClerkResult.Success -> {
+            SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
+            // Match Clerk JS: each forced refresh returns its own mint while the shared cache
+            // stays monotonic when responses complete out of order.
+            tokensRequest
           }
-          tokensRequest
+          else -> null
         }
       }
+    return reconciled ?: tokensRequest.also { clearSessionStateOutsideRuntimeLock(context, it) }
+  }
+
+  private fun clearSessionStateOutsideRuntimeLock(
+    context: FetchContext,
+    tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
+  ) {
+    val invalidSession =
+      (tokensRequest as? ClerkResult.Failure)?.error?.errors.orEmpty().any {
+        it.code?.lowercase() in sessionInvalidationErrorCodes
+      }
+    if (invalidSession && Clerk.session?.id == context.session.id) {
+      ClerkLogger.w(
+        "The session can no longer issue tokens. Clearing local session and user state."
+      )
+      Clerk.clearSessionAndUserState()
     }
+  }
 
   private fun isTokenValid(token: TokenResource, bufferSeconds: Long): Boolean {
     return try {

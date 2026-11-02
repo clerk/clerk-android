@@ -3,11 +3,14 @@ package com.clerk.api.signout
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.restorecredentials.RestoreCredentials
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import kotlinx.coroutines.CancellationException
@@ -24,11 +27,18 @@ internal object SignOutService {
    *   [ClerkResult.Failure] on failure.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
+    val signedOutSessionIds = currentSessionIds().toMutableSet()
+    val manualClientSyncRequest = ManualClientSyncRequest()
     var serverFailure: ClerkResult.Failure<ClerkErrorResponse>? = null
 
     try {
-      when (val result = ClerkApi.session.deleteSessions()) {
-        is ClerkResult.Success -> Clerk.updateClient(result.value)
+      when (val result = ClerkApi.session.deleteSessions(manualClientSyncRequest)) {
+        is ClerkResult.Success ->
+          manualClientSyncRequest.runIfResponseCurrent {
+            Clerk.stateStore.applyClientResponse(result.value, result.responseOrder()) { replaced ->
+              fenceReplacedSessions(replaced, signedOutSessionIds)
+            }
+          }
         is ClerkResult.Failure -> serverFailure = result
       }
     } catch (e: CancellationException) {
@@ -40,7 +50,10 @@ internal object SignOutService {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        Clerk.updateClient(Client())
+        Clerk.stateStore.applyClient(Client()) { replaced ->
+          fenceReplacedSessions(replaced, signedOutSessionIds)
+        }
+        SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
 
@@ -60,4 +73,12 @@ internal object SignOutService {
 
     return serverFailure ?: ClerkResult.success(Unit)
   }
+
+  private fun fenceReplacedSessions(replaced: Client?, signedOutSessionIds: MutableSet<String>) {
+    signedOutSessionIds += replaced?.sessions.orEmpty().map { it.id }
+    SessionTokenFetcher.shared.fenceSignedOutSessions(signedOutSessionIds)
+  }
+
+  private fun currentSessionIds(): List<String> =
+    Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
 }

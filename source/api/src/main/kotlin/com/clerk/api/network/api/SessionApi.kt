@@ -3,6 +3,7 @@ package com.clerk.api.network.api
 import com.clerk.api.Clerk
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -17,6 +18,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Tag
 
 @Suppress("TooManyFunctions")
 internal interface SessionApi {
@@ -28,7 +30,9 @@ internal interface SessionApi {
   ): ClerkResult<Session, ClerkErrorResponse>
 
   @DELETE(ApiPaths.Client.Sessions.BASE)
-  suspend fun deleteSessions(): ClerkResult<Client, ClerkErrorResponse>
+  suspend fun deleteSessions(
+    @Tag manualClientSyncRequest: ManualClientSyncRequest? = null
+  ): ClerkResult<Client, ClerkErrorResponse>
 
   @POST(ApiPaths.Client.Sessions.TOKENS)
   @FormUrlEncoded
