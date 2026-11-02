@@ -61,6 +61,7 @@ internal class SignUpEmailLinkViewModel(
 
     val signUp = Clerk.auth.currentSignUp
     if (signUp == null || signUp.emailAddress.isNullOrBlank()) {
+      linkSent = false
       _state.value = AuthenticationViewState.Error(null)
       return
     }
@@ -69,7 +70,10 @@ internal class SignUpEmailLinkViewModel(
       signUp
         .sendEmailLink()
         .onSuccess { _state.value = AuthenticationViewState.Idle }
-        .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
+        .onFailure { failure ->
+          linkSent = false
+          _state.value = AuthenticationViewState.Error(failure.errorMessage)
+        }
     }
   }
 

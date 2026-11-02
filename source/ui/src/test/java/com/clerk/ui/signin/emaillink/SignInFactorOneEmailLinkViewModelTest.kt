@@ -107,6 +107,22 @@ class SignInFactorOneEmailLinkViewModelTest {
   }
 
   @Test
+  fun `sendInitialLink sends again when the first send failed`() = runTest {
+    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
+    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns
+      ClerkResult.apiFailure(NativeMagicLinkError(reasonCode = "too_many_requests"))
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink("idn_123")
+    advanceUntilIdle()
+    viewModel.sendInitialLink("idn_123")
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") }
+  }
+
+  @Test
   fun `sendLink resends after the initial link`() = runTest {
     every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
     coEvery { auth.startEmailLinkSignIn("sam@clerk.dev", "idn_123") } returns

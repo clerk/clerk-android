@@ -60,6 +60,7 @@ internal class SignInFactorOneEmailLinkViewModel(
     guardSignIn(_state) { inProgressSignIn ->
       val identifier = inProgressSignIn.identifier
       if (identifier.isNullOrBlank() || !identifier.isEmailAddress) {
+        linkSent = false
         _state.value = AuthenticationViewState.Error(null)
         return@guardSignIn
       }
@@ -69,6 +70,7 @@ internal class SignInFactorOneEmailLinkViewModel(
           .startEmailLinkSignIn(identifier, emailAddressId)
           .onSuccess { _state.value = AuthenticationViewState.Idle }
           .onFailure { failure ->
+            linkSent = false
             _state.value = AuthenticationViewState.Error(failure.error?.message)
           }
       }

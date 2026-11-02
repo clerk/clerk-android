@@ -3,6 +3,7 @@ package com.clerk.ui.signup.emaillink
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailLink
@@ -81,6 +82,24 @@ class SignUpEmailLinkViewModelTest {
     advanceUntilIdle()
 
     coVerify(exactly = 1) { pendingSignUp.sendEmailLink(redirectUrl = null) }
+  }
+
+  @Test
+  fun `sendInitialLink sends again when the first send failed`() = runTest {
+    val pendingSignUp = signUp()
+    every { auth.currentSignUp } returns pendingSignUp
+    mockkStatic("com.clerk.api.signup.SignUpKt")
+    coEvery { pendingSignUp.sendEmailLink(redirectUrl = null) } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+
+    val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+    viewModel.sendInitialLink()
+    advanceUntilIdle()
+
+    coVerify(exactly = 2) { pendingSignUp.sendEmailLink(redirectUrl = null) }
   }
 
   @Test
