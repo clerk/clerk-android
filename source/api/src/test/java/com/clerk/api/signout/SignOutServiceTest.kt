@@ -305,6 +305,20 @@ class SignOutServiceTest {
   }
 
   @Test
+  fun `signOut clears local state before any client has loaded`() = runTest {
+    mockkObject(Clerk)
+    every { Clerk.clientOrNull } returns null
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    val result = SignOutService.signOut()
+
+    assertTrue(result is ClerkResult.Success)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
   fun `signOut preserves device ID while clearing device token`() = runTest {
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test_device_id")
