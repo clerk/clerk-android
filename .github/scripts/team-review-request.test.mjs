@@ -15,7 +15,7 @@ const riskComment = (level, commit = HEAD) => ({
   user: { login: 'coderabbitai[bot]' },
   body: `<!-- final_review_risk_start -->\n<!-- final_review_risk_label\n**Merge Risk:** **🔴 ${level}** · up to \`${commit.slice(0, 5)}\`\n-->\n<!-- final_review_risk_coverage:{"sourceCommitId":"${commit}","coveredCommitId":"${commit}","kind":"reviewed"} -->\n<!-- final_review_risk_end -->`,
 });
-const review = (login, state) => ({ user: { login }, state });
+const review = (login, state, commit = HEAD) => ({ user: { login }, state, commit_id: commit });
 
 function fakeGitHub({ author = 'outside-dev', draft = false, state = 'open', files = [{ filename: 'Sources/ClerkKit/Clerk.swift' }], pending = [], reviews = [], comments = [] }) {
   const requested = [];
