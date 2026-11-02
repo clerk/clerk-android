@@ -68,7 +68,7 @@ async function teamReviewRequest({ fetch, api, token, repo, number, team }) {
   const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
   const staleApprovers = new Set();
   for (const [login, review] of latestReviews(await paged(get, `/pulls/${number}/reviews`))) {
-    if (review.state === 'APPROVED' && review.commit_id !== pull.head.sha) {
+    if ((review.state === 'APPROVED' || review.state === 'DISMISSED') && review.commit_id !== pull.head.sha) {
       staleApprovers.add(login);
     } else {
       asked.add(login);

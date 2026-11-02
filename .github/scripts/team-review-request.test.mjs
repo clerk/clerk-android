@@ -177,6 +177,13 @@ describe('team review request', () => {
     assert.deepEqual(requested, ['mikepitre', 'seanperez29', 'wobsoriano']);
   });
 
+  it('asks a member again whose approval a push dismissed', async () => {
+    const dismissed = review('seanperez29', 'DISMISSED', 'e225ce56d448093f7910a36cf47bcc9a664e04d0');
+    const { requested, output } = await run({ author: 'swolfand', files: [{ filename: '.github/workflows/pr-ci.yml' }], reviews: [dismissed] });
+    assert.deepEqual(requested, ['seanperez29']);
+    assert.match(output, /Requested seanperez29 again/);
+  });
+
   it('requests nobody once Team Mobile approved', async () => {
     const { requested } = await run({ reviews: [review('wobsoriano', 'APPROVED')] });
     assert.deepEqual(requested, []);
