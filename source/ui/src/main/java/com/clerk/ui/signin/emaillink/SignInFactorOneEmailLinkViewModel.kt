@@ -67,9 +67,8 @@ internal class SignInFactorOneEmailLinkViewModel(
 
       sendsInFlight.incrementAndGet()
       viewModelScope.launch(ioDispatcher) {
-        val result = Clerk.auth.startEmailLinkSignIn(identifier, emailAddressId)
-        sendsInFlight.decrementAndGet()
-        result
+        Clerk.auth
+          .startEmailLinkSignIn(identifier, emailAddressId)
           .onSuccess {
             linkSent = true
             _state.value = AuthenticationViewState.Idle
@@ -77,6 +76,7 @@ internal class SignInFactorOneEmailLinkViewModel(
           .onFailure { failure ->
             _state.value = AuthenticationViewState.Error(failure.error?.message)
           }
+        sendsInFlight.decrementAndGet()
       }
     }
   }

@@ -68,14 +68,14 @@ internal class SignUpEmailLinkViewModel(
 
     sendsInFlight.incrementAndGet()
     viewModelScope.launch(ioDispatcher) {
-      val result = signUp.sendEmailLink()
-      sendsInFlight.decrementAndGet()
-      result
+      signUp
+        .sendEmailLink()
         .onSuccess {
           linkSent = true
           _state.value = AuthenticationViewState.Idle
         }
         .onFailure { failure -> _state.value = AuthenticationViewState.Error(failure.errorMessage) }
+      sendsInFlight.decrementAndGet()
     }
   }
 
