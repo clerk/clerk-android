@@ -42,6 +42,18 @@ class ClerkApiResultCallAdapterFactoryTest {
   }
 
   @Test
+  fun `undecodable 502 body becomes an http failure with the status code`() {
+    val retrofit = retrofit(Json.asConverterFactory(JSON))
+
+    val result = enqueueErrorResponse(retrofit, "<html>Bad Gateway</html>", code = 502)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
+    assertEquals(502, failure.code)
+    assertTrue(failure.throwable is SerializationException)
+  }
+
+  @Test
   fun `error thrown while decoding error body propagates`() {
     val error = OutOfMemoryError("decode")
     val retrofit = retrofit(ThrowingConverterFactory(error))
@@ -160,7 +172,11 @@ class ClerkApiResultCallAdapterFactoryTest {
       .build()
 
   @Suppress("UNCHECKED_CAST")
-  private fun enqueueErrorResponse(retrofit: Retrofit, body: String): ClerkResult<*, *>? {
+  private fun enqueueErrorResponse(
+    retrofit: Retrofit,
+    body: String,
+    code: Int = 400,
+  ): ClerkResult<*, *>? {
     val returnType = CallShapes::class.java.getMethod("unitCall").genericReturnType
     val adapter =
       retrofit.callAdapter(returnType, emptyArray())
@@ -170,7 +186,7 @@ class ClerkApiResultCallAdapterFactoryTest {
     every { call.enqueue(any()) } answers
       {
         firstArg<Callback<ClerkResult<*, *>>>()
-          .onResponse(call, Response.error(400, body.toResponseBody(JSON)))
+          .onResponse(call, Response.error(code, body.toResponseBody(JSON)))
       }
 
     var result: ClerkResult<*, *>? = null
