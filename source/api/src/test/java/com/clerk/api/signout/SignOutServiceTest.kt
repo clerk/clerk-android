@@ -10,13 +10,13 @@ import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.restorecredentials.RestoreCredentialManager
 import com.clerk.api.restorecredentials.RestoreCredentialManagerImpl
 import com.clerk.api.restorecredentials.RestoreCredentialStore
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.restorecredentials.RestorePasskey
-import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
