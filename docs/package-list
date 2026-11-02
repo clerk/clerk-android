@@ -3,6 +3,7 @@ $dokka.linkExtension:html
 
 module:Clerk Android API
 com.clerk.api
+com.clerk.api.appversion
 com.clerk.api.auth
 com.clerk.api.auth.builders
 com.clerk.api.auth.types
