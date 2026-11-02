@@ -15,6 +15,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.catchingClerkResult
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.logSummary
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import kotlinx.serialization.json.Json
@@ -39,7 +40,7 @@ internal object PasskeyCreationService {
 
     return when (val createPasskeyResult = ClerkApi.user.createPasskey()) {
       is ClerkResult.Failure -> {
-        ClerkLogger.e("Passkey creation failed: ${createPasskeyResult.error}")
+        ClerkLogger.e("Passkey creation failed: ${createPasskeyResult.logSummary()}")
         createPasskeyResult
       }
       is ClerkResult.Success -> {
@@ -82,7 +83,7 @@ internal object PasskeyCreationService {
         )
       verificationResult
         .onSuccess { ClerkLogger.d("Passkey created successfully: ${it}") }
-        .onFailure { ClerkLogger.e("Passkey creation failed: ${it}") }
+        .onFailure { ClerkLogger.e("Passkey creation failed: ${it.logSummary()}") }
       ClerkLogger.d("Passkey creation result: ${result.data}")
       verificationResult
     } catch (e: CreateCredentialException) {

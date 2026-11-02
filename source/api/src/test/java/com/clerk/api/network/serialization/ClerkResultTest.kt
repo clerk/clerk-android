@@ -2,10 +2,13 @@ package com.clerk.api.network.serialization
 
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import java.io.IOException
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -83,5 +86,33 @@ class ClerkResultTest {
     assertThrows(IllegalArgumentException::class.java) {
       ClerkResult.httpFailure<ClerkErrorResponse>(code = 200)
     }
+  }
+
+  @Test
+  fun `logSummary keeps error codes and messages and drops the trace id and meta`() {
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = "form_identifier_not_found",
+              message = "Couldn't find your account.",
+              meta = JsonObject(mapOf("session_id" to JsonPrimitive("sess_in_error_meta"))),
+            )
+          ),
+        meta = JsonObject(mapOf("client_id" to JsonPrimitive("client_in_meta"))),
+        clerkTraceId = "trace_secret",
+      )
+
+    val summary = ClerkResult.httpFailure(code = 422, error = errorResponse).logSummary()
+
+    assertEquals("HTTP 422 form_identifier_not_found: Couldn't find your account.", summary)
+  }
+
+  @Test
+  fun `logSummary names the throwable type without its message`() {
+    val summary = ClerkResult.unknownFailure(IOException("host api.clerk.com")).logSummary()
+
+    assertEquals("UNKNOWN IOException", summary)
   }
 }

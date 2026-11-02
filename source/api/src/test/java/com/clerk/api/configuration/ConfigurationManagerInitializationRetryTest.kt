@@ -10,6 +10,8 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.storage.StorageHelper
 import io.mockk.coEvery
@@ -27,6 +29,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,6 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowLog
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -245,6 +250,43 @@ class ConfigurationManagerInitializationRetryTest {
     assertTrue(manager.isInitialized.value)
     assertEquals("client_signed_in", Clerk.client.id)
     assertEquals("Recovered App", Clerk.applicationName)
+  }
+
+  @Test
+  fun `failed refresh logs the error code but not the trace id or meta`() = runTest {
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = "service_unavailable",
+              message = "Service unavailable",
+              meta = JsonObject(mapOf("session_id" to JsonPrimitive("sess_in_error_meta"))),
+            )
+          ),
+        meta = JsonObject(mapOf("client_id" to JsonPrimitive("client_in_meta"))),
+        clerkTraceId = "trace_secret",
+      )
+    coEvery { Client.get() } returns ClerkResult.httpFailure(code = 503, error = errorResponse)
+    ShadowLog.clear()
+
+    initialize()
+    runCurrent()
+
+    val logs = ShadowLog.getLogs()
+    assertTrue(
+      logs.any {
+        it.msg.contains("Failed to load client: HTTP 503 service_unavailable: Service unavailable")
+      }
+    )
+    assertTrue(logs.any { it.msg.contains("Failed to load environment: UNKNOWN IOException") })
+    assertTrue(
+      logs.none {
+        it.msg.contains("trace_secret") ||
+          it.msg.contains("sess_in_error_meta") ||
+          it.msg.contains("client_in_meta")
+      }
+    )
   }
 
   private fun TestScope.initialize() {
