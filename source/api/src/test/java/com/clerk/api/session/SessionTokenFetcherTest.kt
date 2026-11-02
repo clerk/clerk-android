@@ -33,6 +33,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -254,6 +255,31 @@ class SessionTokenFetcherTest {
 
     assertNull(result)
     verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+  }
+
+  @Test
+  fun `getToken clears local session state without holding the token runtime lock`() = runTest {
+    val error = Error(code = "session_revoked", message = "Session revoked")
+    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
+    var fencedWhileClearing = false
+    every { Clerk.clearSessionAndUserState() } answers
+      {
+        val fence = Thread { sessionTokenFetcher.fenceSignedOutSessions(listOf("session_123")) }
+        fence.isDaemon = true
+        fence.start()
+        fence.join(5_000)
+        fencedWhileClearing = !fence.isAlive
+      }
+
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.httpFailure(code = 401, error = errorResponse)
+
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    assertNull(result)
+    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+    assertTrue(fencedWhileClearing)
   }
 
   @Test

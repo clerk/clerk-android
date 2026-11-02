@@ -389,32 +389,35 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private fun reconcileTokenResponse(
     context: FetchContext,
     tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
-  ): ClerkResult<TokenResource, ClerkErrorResponse> =
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
     synchronized(runtimeLock) {
-      if (!isCurrentRuntime(context)) return@synchronized supersededFailure()
-
-      when (tokensRequest) {
-        is ClerkResult.Success -> {
-          SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
-          // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
-          // monotonic when responses complete out of order.
-          tokensRequest
-        }
-        is ClerkResult.Failure -> {
-          val invalidSession =
-            tokensRequest.error?.errors.orEmpty().any {
-              it.code?.lowercase() in sessionInvalidationErrorCodes
-            }
-          if (invalidSession && Clerk.session?.id == context.session.id) {
-            ClerkLogger.w(
-              "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
-            )
-            Clerk.clearSessionAndUserState()
-          }
-          tokensRequest
-        }
+      if (!isCurrentRuntime(context)) return supersededFailure()
+      if (tokensRequest is ClerkResult.Success) {
+        SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
+        // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
+        // monotonic when responses complete out of order.
+        return tokensRequest
       }
     }
+    clearSessionStateOutsideRuntimeLock(context, tokensRequest)
+    return tokensRequest
+  }
+
+  private fun clearSessionStateOutsideRuntimeLock(
+    context: FetchContext,
+    tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
+  ) {
+    val invalidSession =
+      (tokensRequest as? ClerkResult.Failure)?.error?.errors.orEmpty().any {
+        it.code?.lowercase() in sessionInvalidationErrorCodes
+      }
+    if (invalidSession && Clerk.session?.id == context.session.id) {
+      ClerkLogger.w(
+        "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
+      )
+      Clerk.clearSessionAndUserState()
+    }
+  }
 
   private fun isTokenValid(token: TokenResource, bufferSeconds: Long): Boolean {
     return try {
