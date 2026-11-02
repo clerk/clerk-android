@@ -23,6 +23,7 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
+import com.clerk.api.network.serialization.logSummary
 import com.clerk.api.redirect.RedirectCoordinator
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
@@ -826,8 +827,7 @@ internal class ConfigurationManager(
         }
       },
       onFailure = { failure ->
-        ClerkLogger.e("Failed to load client: ${failure.error}")
-        logApiError("Client", failure.errorType, failure.error.toString())
+        ClerkLogger.e("Failed to load client: ${failure.logSummary()}")
       },
     )
   }
@@ -840,22 +840,9 @@ internal class ConfigurationManager(
         }
       },
       onFailure = { failure ->
-        ClerkLogger.e("Failed to load environment: ${failure.error}")
-        logApiError("Environment", failure.errorType, failure.error.toString())
+        ClerkLogger.e("Failed to load environment: ${failure.logSummary()}")
       },
     )
-  }
-
-  private fun logApiError(
-    operation: String,
-    errorType: ClerkResult.Failure.ErrorType,
-    error: String,
-  ) {
-    when (errorType) {
-      ClerkResult.Failure.ErrorType.API -> ClerkLogger.e("$operation API error: $error")
-      ClerkResult.Failure.ErrorType.HTTP -> ClerkLogger.e("$operation HTTP error: $error")
-      ClerkResult.Failure.ErrorType.UNKNOWN -> ClerkLogger.e("$operation unknown error: $error")
-    }
   }
 
   /**

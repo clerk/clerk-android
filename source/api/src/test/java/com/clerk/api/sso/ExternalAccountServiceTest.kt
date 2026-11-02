@@ -45,6 +45,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -55,6 +57,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class ExternalAccountServiceTest {
@@ -145,6 +148,44 @@ class ExternalAccountServiceTest {
 
     assertEquals(CallbackOutcome.Ignored, outcome)
     assertFalse((RedirectCoordinator.current() is PendingRedirect.ExternalAccountConnection))
+  }
+
+  @Test
+  fun `connectExternalAccount logs the error code but not the trace id or meta`() = runTest {
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              code = "external_account_error",
+              message = "Provider not enabled",
+              meta = JsonObject(mapOf("session_id" to JsonPrimitive("sess_in_error_meta"))),
+            )
+          ),
+        meta = JsonObject(mapOf("client_id" to JsonPrimitive("client_in_meta"))),
+        clerkTraceId = "trace_secret",
+      )
+    coEvery { mockUserApi.createExternalAccount(any(), any()) } returns
+      ClerkResult.apiFailure(errorResponse)
+    ShadowLog.clear()
+
+    connect()
+
+    val logs = ShadowLog.getLogs()
+    assertTrue(
+      logs.any {
+        it.msg.contains(
+          "Failed to create external account: API external_account_error: Provider not enabled"
+        )
+      }
+    )
+    assertTrue(
+      logs.none {
+        it.msg.contains("trace_secret") ||
+          it.msg.contains("sess_in_error_meta") ||
+          it.msg.contains("client_in_meta")
+      }
+    )
   }
 
   @Test

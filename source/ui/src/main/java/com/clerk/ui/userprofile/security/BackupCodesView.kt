@@ -37,6 +37,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.extensions.markSensitive
 import com.clerk.ui.core.log.ClerkLog
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
@@ -108,7 +109,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       onClick = {
         scope.launch {
           val clipData = ClipData.newPlainText("Backup codes", codes.joinToString("\n"))
-          clipboard.setClipEntry(ClipEntry(clipData))
+          clipboard.setClipEntry(ClipEntry(clipData.markSensitive()))
         }
         Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
       },
