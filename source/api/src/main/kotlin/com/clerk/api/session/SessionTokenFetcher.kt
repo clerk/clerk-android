@@ -105,11 +105,17 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   }
 
   /**
-   * Refuses tokens for [sessionIds] once the client stops listing them, without clearing anything,
-   * so a client update can record the fence before it publishes a client without those sessions.
+   * Refuses tokens for [sessionIds] once the client stops listing them and supersedes their cached
+   * tokens and the requests already in flight for them, without resuming any waiter, so a client
+   * update can record the fence inside the state store's write lock before it publishes a client
+   * without those sessions. A superseded request completes with the superseded failure when its
+   * response arrives, or earlier when [signOut] releases every request.
    */
   internal fun fenceSignedOutSessions(sessionIds: Collection<String>) {
-    synchronized(runtimeLock) { signedOutSessions += sessionIds }
+    synchronized(runtimeLock) {
+      signedOutSessions += sessionIds
+      sessionIds.forEach { supersedeSessionTokensUnderLock(it) }
+    }
   }
 
   private inline fun releaseRuntime(updateSignedOutSessions: () -> Unit) {
@@ -148,11 +154,15 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private fun isSignedOutAndUnlisted(session: Session): Boolean =
     listedSession(session) == null && session.id in signedOutSessions
 
+  private fun supersedeSessionTokensUnderLock(sessionId: String) {
+    sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
+    SessionTokensCache.removeTokens(sessionId)
+  }
+
   private fun invalidateSessionUnderLock(
     sessionId: String
   ): List<CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>> {
-    sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
-    SessionTokensCache.removeTokens(sessionId)
+    supersedeSessionTokensUnderLock(sessionId)
     return tokenTasks.keys
       .filter { it.belongsToSession(sessionId) }
       .mapNotNull { tokenTasks.remove(it) }

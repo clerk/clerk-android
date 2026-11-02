@@ -13,6 +13,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -114,6 +116,31 @@ class SessionTokenFetcherSignOutTest {
       failure.error?.errors?.firstOrNull()?.code,
     )
     coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `fenceSignedOutSessions supersedes a token request already in flight`() = runTest {
+    val requestSent = CompletableDeferred<Unit>()
+    val response = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestSent.complete(Unit)
+        response.await()
+        ClerkResult.success(mockTokenResource)
+      }
+    val request = async { sessionTokenFetcher.getTokenResult(mockSession) }
+    requestSent.await()
+
+    sessionTokenFetcher.fenceSignedOutSessions(listOf("session_123"))
+    response.complete(Unit)
+
+    val failure = request.await() as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
   }
 
   @Test
