@@ -10,5 +10,7 @@ import android.os.PersistableBundle
 @SuppressLint("InlinedApi")
 internal fun ClipData.markSensitive(): ClipData = apply {
   description.extras =
-    PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
+    (description.extras ?: PersistableBundle()).apply {
+      putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+    }
 }

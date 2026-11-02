@@ -266,7 +266,9 @@ class SessionTokenFetcherTest {
 
     sessionTokenFetcher.getToken(mockSession)
 
-    assertTrue(ShadowLog.getLogs().none { it.msg.contains("session_123") })
+    val logs = ShadowLog.getLogs()
+    assertTrue(logs.any { it.msg.contains("Cannot fetch token: the session is pending") })
+    assertTrue(logs.none { it.msg.contains("session_123") })
   }
 
   @Test
@@ -281,7 +283,10 @@ class SessionTokenFetcherTest {
 
     sessionTokenFetcher.getToken(mockSession)
 
-    assertTrue(ShadowLog.getLogs().none { it.msg.contains("session_123") })
+    val logs = ShadowLog.getLogs()
+    assertTrue(logs.any { it.msg.contains("The session can no longer issue tokens") })
+    assertTrue(logs.none { it.msg.contains("session_123") })
+    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
   }
 
   @Test
