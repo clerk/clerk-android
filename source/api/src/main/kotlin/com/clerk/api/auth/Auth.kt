@@ -760,7 +760,7 @@ public class Auth internal constructor() {
           is ClerkResult.Success -> {
             withContext(NonCancellable) {
               removeSessionLocally(sessionId)
-              SessionTokenFetcher.shared.invalidateSession(sessionId)
+              SessionTokenFetcher.shared.removeSession(sessionId)
               RestoreCredentials.clearSilently()
             }
             refreshClientAfterSessionMutation()

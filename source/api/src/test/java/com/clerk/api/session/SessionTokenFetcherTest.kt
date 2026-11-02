@@ -683,6 +683,58 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `getToken refuses a held session after sign-out`() = runTest {
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    sessionTokenFetcher.signOut(listOf("session_123"))
+
+    val result = sessionTokenFetcher.getTokenResult(mockSession)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken refuses a held session after it was removed`() = runTest {
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    sessionTokenFetcher.removeSession("session_123")
+
+    val result = sessionTokenFetcher.getTokenResult(mockSession)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken serves a signed-out session again once the client lists it`() = runTest {
+    val activeSession = mockk<Session>(relaxed = true)
+    every { activeSession.id } returns "session_123"
+    every { activeSession.status } returns Session.SessionStatus.ACTIVE
+    sessionTokenFetcher.signOut(listOf("session_123"))
+    every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(activeSession)))
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    coEvery { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
+
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    assertSame(mockTokenResource, result)
+  }
+
+  @Test
   fun `getToken uses active status from current client snapshot`() = runTest {
     // Given - the caller holds a stale pending session while the current snapshot is active
     val activeSession = mockk<Session>(relaxed = true)

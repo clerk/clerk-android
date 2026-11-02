@@ -18,7 +18,9 @@ import com.clerk.api.restorecredentials.RestoreCredentialStore
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.restorecredentials.RestorePasskey
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
+import com.clerk.api.session.fetchToken
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -108,6 +110,7 @@ class SignOutServiceTest {
     Clerk.applicationContext = null
     RestoreCredentials.credentialManager = RestoreCredentialManagerImpl()
     StorageHelper.reset(context)
+    SessionTokenFetcher.shared.reset()
   }
 
   private fun setupActiveSession() {
@@ -214,6 +217,23 @@ class SignOutServiceTest {
     SignOutService.signOut()
 
     assertEquals(0, SessionTokensCache.size)
+  }
+
+  @Test
+  fun `signOut refuses tokens for a session the caller kept`() = runTest {
+    setupActiveSession()
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+    val result = mockSession.fetchToken()
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockSessionApi.tokens(any()) }
   }
 
   @Test

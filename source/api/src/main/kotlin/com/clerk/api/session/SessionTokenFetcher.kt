@@ -52,6 +52,12 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           "The token request was cancelled because the session or Clerk runtime changed while " +
             "it was in flight.",
       )
+
+    private fun signedOutSessionFailure(): ClerkResult.Failure<ClerkErrorResponse> =
+      localFailure(
+        code = TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+        longMessage = "The session was signed out, so it can no longer issue tokens.",
+      )
   }
 
   private data class FetchContext(
@@ -72,6 +78,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
   private val sessionGenerations = mutableMapOf<String, Long>()
+  private val signedOutSessions = mutableSetOf<String>()
 
   /**
    * Clears cached tokens, releases deduplicated waiters with a superseded failure, and removes
@@ -82,10 +89,26 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       synchronized(runtimeLock) {
         runtimeGeneration += 1
         sessionGenerations.clear()
+        signedOutSessions.clear()
         SessionTokensCache.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
+  }
+
+  /**
+   * Clears every cached token and refuses tokens for [sessionIds] until the client lists one of
+   * them again, so a [Session] the caller kept cannot serve its own last active token.
+   */
+  internal fun signOut(sessionIds: Collection<String>) {
+    reset()
+    synchronized(runtimeLock) { signedOutSessions += sessionIds }
+  }
+
+  /** Invalidates [sessionId]'s tokens and refuses new ones until the client lists it again. */
+  internal fun removeSession(sessionId: String) {
+    invalidateSession(sessionId)
+    synchronized(runtimeLock) { signedOutSessions += sessionId }
   }
 
   /**
@@ -161,8 +184,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   ): ClerkResult<TokenResource, ClerkErrorResponse> {
     val context =
       synchronized(runtimeLock) {
-        val currentSession =
-          Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
+        val clientSession = Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id }
+        if (clientSession == null && session.id in signedOutSessions) {
+          return signedOutSessionFailure()
+        }
+        val currentSession = clientSession ?: session
         FetchContext(
           session = currentSession,
           cacheKey = currentSession.tokenCacheKey(options.template),
