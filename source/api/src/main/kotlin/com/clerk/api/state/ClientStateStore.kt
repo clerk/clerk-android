@@ -128,7 +128,11 @@ internal class ClientStateStore(
     }
   }
 
-  fun applyClientResponse(client: Client, order: ResponseOrder?): Boolean {
+  fun applyClientResponse(
+    client: Client,
+    order: ResponseOrder?,
+    onReplaceUnderWriteLock: (Client?) -> Unit = {},
+  ): Boolean {
     val commit =
       synchronized(lock) {
         if (isStaleLocked(order)) {
@@ -136,6 +140,7 @@ internal class ClientStateStore(
           return false
         }
         advanceNewestAppliedOrderLocked(order)
+        onReplaceUnderWriteLock(state.clientOrEmptyAfterReset)
         commitClientLocked(
           client = client,
           serverFetchAtMillis = order?.serverDateMillis ?: clock(),

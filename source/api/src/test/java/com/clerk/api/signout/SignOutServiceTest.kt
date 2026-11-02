@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.SessionApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
@@ -248,6 +249,8 @@ class SignOutServiceTest {
       coEvery { mockSessionApi.deleteSessions(any()) } coAnswers
         {
           Clerk.updateClient(Client(sessions = listOf(lateSession)))
+          firstArg<ManualClientSyncRequest>()
+            .recordResponse(requestDeviceToken = null, responseDeviceToken = null)
           ClerkResult.success(Client())
         }
       coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())

@@ -4,6 +4,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -34,7 +35,9 @@ internal object SignOutService {
       when (val result = ClerkApi.session.deleteSessions(manualClientSyncRequest)) {
         is ClerkResult.Success ->
           manualClientSyncRequest.runIfResponseCurrent {
-            replaceClient(result.value, signedOutSessionIds)
+            Clerk.stateStore.applyClientResponse(result.value, result.responseOrder()) { replaced ->
+              signedOutSessionIds += replaced?.sessions.orEmpty().map { it.id }
+            }
           }
         is ClerkResult.Failure ->
           serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
@@ -48,7 +51,11 @@ internal object SignOutService {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        replaceClient(Client(), signedOutSessionIds)
+        val cleared = Clerk.mutateClient { client ->
+          signedOutSessionIds += client.sessions.map { it.id }
+          Client()
+        }
+        if (!cleared) Clerk.updateClient(Client())
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
@@ -76,12 +83,4 @@ internal object SignOutService {
 
   private fun currentSessionIds(): List<String> =
     Clerk.clientOrNull?.sessions.orEmpty().map { it.id }
-
-  private fun replaceClient(next: Client, signedOutSessionIds: MutableSet<String>) {
-    val replaced = Clerk.mutateClient { previous ->
-      signedOutSessionIds += previous.sessions.map { it.id }
-      next
-    }
-    if (!replaced) Clerk.updateClient(next)
-  }
 }
