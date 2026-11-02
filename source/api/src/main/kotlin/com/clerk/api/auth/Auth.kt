@@ -43,6 +43,7 @@ import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -756,13 +757,16 @@ public class Auth internal constructor() {
   public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     return reportingFailures {
       if (sessionId != null) {
-        when (val result = ClerkApi.session.removeSession(sessionId)) {
+        val result =
+          try {
+            ClerkApi.session.removeSession(sessionId)
+          } catch (e: CancellationException) {
+            signOutSessionLocally(sessionId)
+            throw e
+          }
+        when (result) {
           is ClerkResult.Success -> {
-            withContext(NonCancellable) {
-              removeSessionLocally(sessionId)
-              SessionTokenFetcher.shared.removeSession(sessionId)
-              RestoreCredentials.clearSilently()
-            }
+            signOutSessionLocally(sessionId)
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
@@ -771,6 +775,14 @@ public class Auth internal constructor() {
       } else {
         SignOutService.signOut()
       }
+    }
+  }
+
+  private suspend fun signOutSessionLocally(sessionId: String) {
+    withContext(NonCancellable) {
+      removeSessionLocally(sessionId)
+      SessionTokenFetcher.shared.removeSession(sessionId)
+      RestoreCredentials.clearSilently()
     }
   }
 

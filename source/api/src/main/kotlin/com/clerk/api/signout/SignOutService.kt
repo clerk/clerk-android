@@ -41,10 +41,10 @@ internal object SignOutService {
       serverError = e
     } finally {
       withContext(NonCancellable) {
-        SessionTokenFetcher.shared.signOut(signedOutSessionIds)
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
         Clerk.updateClient(Client())
+        SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
 
