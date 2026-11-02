@@ -46,8 +46,11 @@ internal object SignOutService {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
         StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        signedOutSessionIds += currentSessionIds()
-        Clerk.updateClient(Client())
+        val cleared = Clerk.mutateClient { client ->
+          signedOutSessionIds += client.sessions.map { it.id }
+          Client()
+        }
+        if (!cleared) Clerk.updateClient(Client())
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
