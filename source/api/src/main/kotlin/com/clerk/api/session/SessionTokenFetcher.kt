@@ -85,45 +85,56 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * requests registered by the previous Clerk runtime.
    */
   internal fun reset() {
+    releaseRuntime { signedOutSessions.clear() }
+  }
+
+  /**
+   * Clears every cached token and refuses tokens for [sessionIds], and for sessions removed
+   * earlier, until the client lists one of them again, so a [Session] the caller kept cannot serve
+   * its own last active token.
+   */
+  internal fun signOut(sessionIds: Collection<String>) {
+    releaseRuntime { signedOutSessions += sessionIds }
+  }
+
+  private inline fun releaseRuntime(updateSignedOutSessions: () -> Unit) {
     val tasksToRelease =
       synchronized(runtimeLock) {
         runtimeGeneration += 1
         sessionGenerations.clear()
-        signedOutSessions.clear()
+        updateSignedOutSessions()
         SessionTokensCache.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
-  /**
-   * Clears every cached token and refuses tokens for [sessionIds] until the client lists one of
-   * them again, so a [Session] the caller kept cannot serve its own last active token.
-   */
-  internal fun signOut(sessionIds: Collection<String>) {
-    reset()
-    synchronized(runtimeLock) { signedOutSessions += sessionIds }
-  }
-
   /** Invalidates [sessionId]'s tokens and refuses new ones until the client lists it again. */
   internal fun removeSession(sessionId: String) {
-    invalidateSession(sessionId)
-    synchronized(runtimeLock) { signedOutSessions += sessionId }
+    val tasksToRelease =
+      synchronized(runtimeLock) {
+        signedOutSessions += sessionId
+        invalidateSessionUnderLock(sessionId)
+      }
+    tasksToRelease.forEach { it.complete(supersededFailure()) }
   }
 
   /**
    * Invalidates pre-reverification tokens and fences requests already in flight for this session.
    */
   internal fun invalidateSession(sessionId: String) {
-    val tasksToRelease =
-      synchronized(runtimeLock) {
-        sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
-        SessionTokensCache.removeTokens(sessionId)
-        tokenTasks.keys
-          .filter { it.belongsToSession(sessionId) }
-          .mapNotNull { tokenTasks.remove(it) }
-      }
+    val tasksToRelease = synchronized(runtimeLock) { invalidateSessionUnderLock(sessionId) }
     tasksToRelease.forEach { it.complete(supersededFailure()) }
+  }
+
+  private fun invalidateSessionUnderLock(
+    sessionId: String
+  ): List<CompletableDeferred<ClerkResult<TokenResource, ClerkErrorResponse>>> {
+    sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
+    SessionTokensCache.removeTokens(sessionId)
+    return tokenTasks.keys
+      .filter { it.belongsToSession(sessionId) }
+      .mapNotNull { tokenTasks.remove(it) }
   }
 
   /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */

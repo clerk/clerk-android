@@ -717,6 +717,39 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `signOut keeps refusing a session that was removed earlier`() = runTest {
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    sessionTokenFetcher.removeSession("session_123")
+    sessionTokenFetcher.signOut(listOf("session_456"))
+
+    val result = sessionTokenFetcher.getTokenResult(mockSession)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(
+      SessionTokenFetcher.TOKEN_REQUEST_SUPERSEDED_ERROR_CODE,
+      failure.error?.errors?.firstOrNull()?.code,
+    )
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `reset lifts the sign-out fence`() = runTest {
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    coEvery { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
+    sessionTokenFetcher.removeSession("session_123")
+    sessionTokenFetcher.reset()
+
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    assertSame(mockTokenResource, result)
+  }
+
+  @Test
   fun `getToken serves a signed-out session again once the client lists it`() = runTest {
     val activeSession = mockk<Session>(relaxed = true)
     every { activeSession.id } returns "session_123"
