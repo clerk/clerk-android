@@ -28,7 +28,7 @@
     <string name="get_help">Uzyskaj pomoc</string>
     <string name="if_you_have_trouble_signing_into_your_account">Jeśli masz problem z zalogowaniem się na konto, napisz do nas, a pomożemy przywrócić dostęp tak szybko, jak to możliwe.</string>
     <string name="email_support">Napisz do pomocy</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Otwórz aplikację poczty</string>
     <string name="no_email_clients_installed_on_device">Na urządzeniu nie ma zainstalowanych klientów poczty e-mail.</string>
     <string name="set_new_password">Ustaw nowe hasło</string>
     <string name="reset_password">Zresetuj hasło</string>
@@ -48,7 +48,11 @@
     <string name="organization_name">Nazwa organizacji</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Prześlij logo</string>
+    <string name="change_logo">Zmień logo</string>
+    <string name="choose_file">Wybierz plik</string>
+    <string name="photo_library">Galeria zdjęć</string>
     <string name="remove_logo">Usuń logo</string>
+    <string name="remove_current_logo">Usuń bieżące logo</string>
     <string name="recommended_logo_size">Zalecany rozmiar 1:1, do 10 MB.</string>
     <string name="invite">Zaproś</string>
     <string name="invite_new_members">Zaproś nowych członków</string>
@@ -187,7 +191,6 @@
     <string name="backup_codes">Kody zapasowe</string>
     <string name="add_two_step_verification">Dodaj weryfikację dwuetapową</string>
     <string name="change_password">Zmień hasło</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Dodaj hasło</string>
     <string name="passkeys">Klucze dostępu</string>
     <string name="rename">Zmień nazwę</string>
@@ -263,6 +266,8 @@
     <string name="saved_to_downloads">Zapisano w Pobranych: %1$s</string>
     <string name="failed_to_save_file">Nie udało się zapisać pliku: %1$s</string>
     <string name="close">Zamknij</string>
+    <string name="show_password">Pokaż hasło</string>
+    <string name="hide_password">Ukryj hasło</string>
     <string name="type_delete_to_continue">Wpisz \"DELETE\", aby kontynuować</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Czy na pewno chcesz usunąć swoje konto? To działanie jest trwałe i nieodwracalne.</string>
     <string name="email_addresses">Adresy e-mail</string>
@@ -278,12 +283,24 @@
     <string name="current_organization">Bieżąca organizacja</string>
     <string name="open_organization_switcher">Otwórz przełącznik organizacji</string>
     <string name="secured_by">Zabezpieczone przez</string>
+    <string name="development_mode">Tryb deweloperski</string>
     <string name="i_agree_to_the">Akceptuję</string>
     <string name="terms_of_service">Regulamin</string>
     <string name="privacy_policy">Politykę prywatności</string>
     <string name="and_connector">i</string>
     <string name="set_up_two_step_verification">Skonfiguruj weryfikację dwuetapową</string>
     <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Wybierz preferowaną metodę ochrony konta dodatkową warstwą zabezpieczeń.</string>
+    <string name="continue_with_biometrics">Kontynuuj z biometrią</string>
+    <string name="sign_in_with_biometrics">Zaloguj się biometrycznie</string>
+    <string name="biometric_sign_in">Logowanie biometryczne</string>
+    <string name="enable_biometric_sign_in">Włącz logowanie biometryczne</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Włącz logowanie biometryczne, aby szybciej uzyskiwać dostęp do %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Włącz logowanie biometryczne, aby szybciej uzyskiwać dostęp</string>
+    <string name="allow">Zezwól</string>
+    <string name="not_now">Nie teraz</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s używa biometrii do logowania.</string>
+    <string name="use_biometrics_to_sign_in">Zaloguj się za pomocą biometrii.</string>
+    <string name="enroll_this_device">Zarejestruj to urządzenie</string>
     <string name="update_required">Wymagana aktualizacja</string>
     <string name="this_version_of_app_is_no_longer_supported">Ta wersja %1$s nie jest już obsługiwana. Zaktualizuj aplikację, aby kontynuować.</string>
     <string name="go_to_google_play">Przejdź do Google Play</string>

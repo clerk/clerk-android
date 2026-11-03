@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="country">Country</string>
     <string name="enter_your_phone_number">Enter your phone number</string>
     <string name="incorrect_verification_code">Incorrect verification code</string>
@@ -28,7 +28,7 @@
     <string name="get_help">Get help</string>
     <string name="if_you_have_trouble_signing_into_your_account">If you have trouble signing into your account, email us and we will work with you to restore access as soon as possible.</string>
     <string name="email_support">Email support</string>
-    <string name="open_email_app" tools:ignore="MissingTranslation">Open email app</string>
+    <string name="open_email_app">Open email app</string>
     <string name="support_clerk_com" translatable="false">support@clerk.com</string>
     <string name="no_email_clients_installed_on_device">No email clients installed on device.</string>
     <string name="set_new_password">Set new password</string>
@@ -36,7 +36,7 @@
     <string name="confirm_password">Confirm password</string>
     <string name="new_password">New password</string>
     <string name="passwords_dont_match">Passwords don\'t match</string>
-    <string name="account_requires_new_password_before_continue" tools:ignore="MissingTranslation">Your account requires a new password before you can continue</string>
+    <string name="account_requires_new_password_before_continue">Your account requires a new password before you can continue</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="choose_an_organization">Choose an organization</string>
     <string name="choose_an_account">Choose an account</string>
@@ -49,11 +49,11 @@
     <string name="organization_name">Organization name</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Upload logo</string>
-    <string name="change_logo" tools:ignore="MissingTranslation">Change logo</string>
-    <string name="choose_file" tools:ignore="MissingTranslation">Choose file</string>
-    <string name="photo_library" tools:ignore="MissingTranslation">Photo library</string>
+    <string name="change_logo">Change logo</string>
+    <string name="choose_file">Choose file</string>
+    <string name="photo_library">Photo library</string>
     <string name="remove_logo">Remove logo</string>
-    <string name="remove_current_logo" tools:ignore="MissingTranslation">Remove current logo</string>
+    <string name="remove_current_logo">Remove current logo</string>
     <string name="recommended_logo_size">Recommended size 1:1, up to 10MB.</string>
     <string name="invite">Invite</string>
     <string name="invite_new_members">Invite new members</string>
@@ -146,7 +146,7 @@
     <string name="last_name">Last name</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Facing issues? You can use any of these methods to sign in.</string>
     <string name="two_step_verification">Two-step verification</string>
-    <string name="signing_in_from_new_device" tools:ignore="MissingTranslation">You\'re signing in from a new device. We\'re asking for verification to keep your account secure.</string>
+    <string name="signing_in_from_new_device">You\'re signing in from a new device. We\'re asking for verification to keep your account secure.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">When signing in, you will need to enter a verification code sent to this phone number as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
     <string name="two_step_verification_is_now_enabled">Two-step verification is now enabled. When signing in, you will need to enter a verification code from this authenticator app as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
     <string name="backup_codes_are_now_enabled">Backup codes are now enabled. You can use one of these to sign in to your account, if you lose access to your authentication device. Each code can only be used once.</string>
@@ -198,7 +198,7 @@
     <string name="rename">Rename</string>
     <string name="created">Created: %1$s</string>
     <string name="last_used">Last used: %1$s</string>
-    <string name="last_used_badge" tools:ignore="MissingTranslation">Last used</string>
+    <string name="last_used_badge">Last used</string>
     <string name="add_a_passkey">Add a passkey</string>
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
@@ -268,8 +268,8 @@
     <string name="saved_to_downloads">Saved to Downloads: %1$s</string>
     <string name="failed_to_save_file">Failed to save file: %1$s</string>
     <string name="close">Close</string>
-    <string name="show_password" tools:ignore="MissingTranslation">Show password</string>
-    <string name="hide_password" tools:ignore="MissingTranslation">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
     <string name="type_delete_to_continue">Type \"DELETE\" to continue</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account? This action is permanent and irreversible.</string>
     <string name="email_addresses">Email Addresses</string>
@@ -285,24 +285,24 @@
     <string name="current_organization">Current organization</string>
     <string name="open_organization_switcher">Open organization switcher</string>
     <string name="secured_by">Secured by</string>
-    <string name="development_mode" tools:ignore="MissingTranslation">Development mode</string>
+    <string name="development_mode">Development mode</string>
     <string name="i_agree_to_the">I agree to the</string>
     <string name="terms_of_service">Terms of Service</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="and_connector">and</string>
-    <string name="set_up_two_step_verification" tools:ignore="MissingTranslation">Set up two-step verification</string>
-    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security" tools:ignore="MissingTranslation">Choose which method you prefer to protect your account with an extra layer of security.</string>
-    <string name="continue_with_biometrics" tools:ignore="MissingTranslation">Continue with biometrics</string>
-    <string name="sign_in_with_biometrics" tools:ignore="MissingTranslation">Sign in with biometrics</string>
-    <string name="biometric_sign_in" tools:ignore="MissingTranslation">Biometric sign-in</string>
-    <string name="enable_biometric_sign_in" tools:ignore="MissingTranslation">Enable biometric sign-in</string>
-    <string name="enable_biometric_sign_in_for_faster_access_to" tools:ignore="MissingTranslation">Enable biometric sign-in for faster access to %1$s</string>
-    <string name="enable_biometric_sign_in_for_faster_access" tools:ignore="MissingTranslation">Enable biometric sign-in for faster access</string>
-    <string name="allow" tools:ignore="MissingTranslation">Allow</string>
-    <string name="not_now" tools:ignore="MissingTranslation">Not now</string>
-    <string name="app_uses_biometrics_to_sign_you_in" tools:ignore="MissingTranslation">%1$s uses biometrics to sign you in.</string>
-    <string name="use_biometrics_to_sign_in" tools:ignore="MissingTranslation">Use biometrics to sign in.</string>
-    <string name="enroll_this_device" tools:ignore="MissingTranslation">Enroll this device</string>
+    <string name="set_up_two_step_verification">Set up two-step verification</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Choose which method you prefer to protect your account with an extra layer of security.</string>
+    <string name="continue_with_biometrics">Continue with biometrics</string>
+    <string name="sign_in_with_biometrics">Sign in with biometrics</string>
+    <string name="biometric_sign_in">Biometric sign-in</string>
+    <string name="enable_biometric_sign_in">Enable biometric sign-in</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Enable biometric sign-in for faster access to %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Enable biometric sign-in for faster access</string>
+    <string name="allow">Allow</string>
+    <string name="not_now">Not now</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s uses biometrics to sign you in.</string>
+    <string name="use_biometrics_to_sign_in">Use biometrics to sign in.</string>
+    <string name="enroll_this_device">Enroll this device</string>
     <string name="update_required">Update required</string>
     <string name="this_version_of_app_is_no_longer_supported">This version of %1$s is no longer supported. Please update to continue.</string>
     <string name="go_to_google_play">Go to Google Play</string>

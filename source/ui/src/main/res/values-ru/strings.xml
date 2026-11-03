@@ -28,7 +28,7 @@
     <string name="get_help">Получить помощь</string>
     <string name="if_you_have_trouble_signing_into_your_account">Если у вас возникли проблемы со входом в учетную запись, напишите нам, и мы поможем восстановить доступ как можно скорее.</string>
     <string name="email_support">Написать в поддержку</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Открыть почтовое приложение</string>
     <string name="no_email_clients_installed_on_device">На устройстве не установлены почтовые приложения.</string>
     <string name="set_new_password">Задать новый пароль</string>
     <string name="reset_password">Сбросить пароль</string>
@@ -48,7 +48,11 @@
     <string name="organization_name">Название организации</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Загрузить логотип</string>
+    <string name="change_logo">Изменить логотип</string>
+    <string name="choose_file">Выбрать файл</string>
+    <string name="photo_library">Галерея</string>
     <string name="remove_logo">Удалить логотип</string>
+    <string name="remove_current_logo">Удалить текущий логотип</string>
     <string name="recommended_logo_size">Рекомендуемый размер 1:1, до 10 МБ.</string>
     <string name="invite">Пригласить</string>
     <string name="invite_new_members">Пригласить новых участников</string>
@@ -187,7 +191,6 @@
     <string name="backup_codes">Резервные коды</string>
     <string name="add_two_step_verification">Добавить двухэтапную аутентификацию</string>
     <string name="change_password">Изменить пароль</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Добавить пароль</string>
     <string name="passkeys">Ключи доступа</string>
     <string name="rename">Переименовать</string>
@@ -263,6 +266,8 @@
     <string name="saved_to_downloads">Сохранено в Загрузки: %1$s</string>
     <string name="failed_to_save_file">Не удалось сохранить файл: %1$s</string>
     <string name="close">Закрыть</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
     <string name="type_delete_to_continue">Введите \"DELETE\", чтобы продолжить</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Вы уверены, что хотите удалить свою учетную запись? Это действие является постоянным и необратимым.</string>
     <string name="email_addresses">Адреса электронной почты</string>
@@ -278,12 +283,24 @@
     <string name="current_organization">Текущая организация</string>
     <string name="open_organization_switcher">Открыть переключатель организаций</string>
     <string name="secured_by">Защищено</string>
+    <string name="development_mode">Режим разработки</string>
     <string name="i_agree_to_the">Я принимаю</string>
     <string name="terms_of_service">Условия обслуживания</string>
     <string name="privacy_policy">Политику конфиденциальности</string>
     <string name="and_connector">и</string>
     <string name="set_up_two_step_verification">Настроить двухэтапную аутентификацию</string>
     <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Выберите предпочтительный способ защиты учетной записи дополнительным уровнем безопасности.</string>
+    <string name="continue_with_biometrics">Продолжить с биометрией</string>
+    <string name="sign_in_with_biometrics">Войти с помощью биометрии</string>
+    <string name="biometric_sign_in">Вход по биометрии</string>
+    <string name="enable_biometric_sign_in">Включить вход по биометрии</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Включите вход по биометрии, чтобы быстрее открывать %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Включите вход по биометрии для более быстрого доступа</string>
+    <string name="allow">Разрешить</string>
+    <string name="not_now">Не сейчас</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s использует биометрию для входа.</string>
+    <string name="use_biometrics_to_sign_in">Войдите с помощью биометрии.</string>
+    <string name="enroll_this_device">Зарегистрировать это устройство</string>
     <string name="update_required">Требуется обновление</string>
     <string name="this_version_of_app_is_no_longer_supported">Эта версия %1$s больше не поддерживается. Обновите приложение, чтобы продолжить.</string>
     <string name="go_to_google_play">Перейти в Google Play</string>
