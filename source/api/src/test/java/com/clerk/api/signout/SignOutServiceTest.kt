@@ -469,24 +469,6 @@ class SignOutServiceTest {
   }
 
   @Test
-  fun `signOut preserves device ID while clearing device token`() = runTest {
-    setupActiveSession()
-    StorageHelper.saveValue(StorageKey.DEVICE_ID, "test_device_id")
-    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
-
-    coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
-
-    SignOutService.signOut()
-
-    assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
-    assertTrue(
-      "Device ID should be preserved",
-      StorageHelper.loadValue(StorageKey.DEVICE_ID) == "test_device_id",
-    )
-  }
-
-  @Test
   fun `signOut refreshes client after local sign-out cleanup`() = runTest {
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")

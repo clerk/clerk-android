@@ -163,10 +163,6 @@ internal class ConfigurationManager(
    * 5. Initiates background client and environment data refresh (async)
    * 6. Sets up application lifecycle monitoring (async)
    *
-   * Storage initialization (Keystore), cached state decryption, and device ID generation run in the
-   * background so this method does not block the calling thread. Observe [isInitialized] for
-   * readiness, including readiness restored from the cached snapshot.
-   *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
    * @param options Additional configuration options.
@@ -259,12 +255,9 @@ internal class ConfigurationManager(
     activeSessionWatchJob = startTokenRefreshWhenASessionBecomesActive()
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
     val dataRefreshJob = async {
       refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
     }
-
-    deviceIdInitJob.await()
     AppLifecycleListener.configure {
       if (hasConfigured) {
         scope.launch {

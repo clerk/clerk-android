@@ -21,10 +21,6 @@ internal object StorageHelper {
     ((key: StorageKey, previous: String?, value: String?) -> Unit)? =
     null
 
-  /**
-   * Synchronously initializes the secure storage. We do this synchronously because we need to
-   * ensure that the storage is initialized before we generate a device ID.
-   */
   @Synchronized
   fun initialize(context: Context) {
     if (storageCipher == null) {
@@ -333,7 +329,6 @@ private object DeviceTokenCache {
 
 internal enum class StorageKey {
   DEVICE_TOKEN,
-  DEVICE_ID,
   PENDING_NATIVE_MAGIC_LINK_FLOW,
   SHARED_SESSION_SYNC_SNAPSHOT,
   CACHED_CLERK_STATE,

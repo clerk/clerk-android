@@ -62,44 +62,41 @@ class ClerkConfigurationSwitchTest {
   }
 
   @Test
-  fun `reset clears local configuration and runtime auth state while preserving device id`() =
-    runBlocking {
-      val (client, user) = signedInClient()
-      coEvery { Client.get() } returns ClerkResult.success(client)
-      coEvery { Environment.get() } returns ClerkResult.success(testEnvironment("Old Application"))
-      StorageHelper.saveValue(StorageKey.DEVICE_ID, "device_id_123")
+  fun `reset clears local configuration and runtime auth state`() = runBlocking {
+    val (client, user) = signedInClient()
+    coEvery { Client.get() } returns ClerkResult.success(client)
+    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment("Old Application"))
 
-      Clerk.initialize(
-        context = context,
-        publishableKey = FIRST_KEY,
-        options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = FIRST_PROXY),
-      )
-      withTimeout(1_000) { Clerk.isInitialized.first { it } }
-      Clerk.updateEnvironment(testEnvironment("Old Application"))
-      Clerk.updateClient(client)
-      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
-      SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+    Clerk.initialize(
+      context = context,
+      publishableKey = FIRST_KEY,
+      options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = FIRST_PROXY),
+    )
+    withTimeout(1_000) { Clerk.isInitialized.first { it } }
+    Clerk.updateEnvironment(testEnvironment("Old Application"))
+    Clerk.updateClient(client)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+    SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
 
-      assertEquals(user, Clerk.user)
-      assertEquals("Old Application", Clerk.applicationName)
-      assertEquals("device_token_123", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(user, Clerk.user)
+    assertEquals("Old Application", Clerk.applicationName)
+    assertEquals("device_token_123", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
 
-      Clerk.reset()
+    Clerk.reset()
 
-      assertNull(Clerk.session)
-      assertNull(Clerk.user)
-      assertNull(Clerk.clientFlow.value)
-      assertNull(Clerk.applicationName)
-      assertNull(Clerk.publishableKey)
-      assertNull(Clerk.proxyUrl)
-      assertEquals("", Clerk.baseUrl)
-      assertNull(ClerkApi.configuredBaseUrl)
-      assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
-      assertEquals("device_id_123", StorageHelper.loadValue(StorageKey.DEVICE_ID))
-      assertEquals(0, SessionTokensCache.size)
-      assertFalse(Clerk.debugMode)
-      assertFalse(Clerk.isInitialized.value)
-    }
+    assertNull(Clerk.session)
+    assertNull(Clerk.user)
+    assertNull(Clerk.clientFlow.value)
+    assertNull(Clerk.applicationName)
+    assertNull(Clerk.publishableKey)
+    assertNull(Clerk.proxyUrl)
+    assertEquals("", Clerk.baseUrl)
+    assertNull(ClerkApi.configuredBaseUrl)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals(0, SessionTokensCache.size)
+    assertFalse(Clerk.debugMode)
+    assertFalse(Clerk.isInitialized.value)
+  }
 
   @Test
   fun `switchConfiguration resets and configures the new tenant synchronously`() {
