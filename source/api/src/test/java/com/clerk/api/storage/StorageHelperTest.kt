@@ -93,8 +93,8 @@ class StorageHelperTest {
       1,
       initializedPreferences.size,
     )
-    StorageHelper.saveValue(StorageKey.DEVICE_ID, "test-value")
-    assertEquals("test-value", StorageHelper.loadValue(StorageKey.DEVICE_ID))
+    StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, "test-value")
+    assertEquals("test-value", StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE))
   }
 
   @Test
@@ -137,7 +137,7 @@ class StorageHelperTest {
   @Test
   fun `saveValue with empty string does not write to SharedPreferences`() {
     StorageHelper.initialize(context)
-    val testKey = StorageKey.DEVICE_ID
+    val testKey = StorageKey.CACHED_CLERK_STATE
     val testValue = "initial-value"
     StorageHelper.saveValue(testKey, testValue)
     assertEquals("Initial value should be saved", testValue, StorageHelper.loadValue(testKey))
@@ -155,15 +155,15 @@ class StorageHelperTest {
   fun `saveValue stores encrypted value in SharedPreferences`() {
     StorageHelper.initialize(context)
 
-    StorageHelper.saveValue(StorageKey.DEVICE_ID, "plain-device-id")
+    StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, "plain-cached-state")
 
-    val storedValue = preferences().getString(StorageKey.DEVICE_ID.name, null)
+    val storedValue = preferences().getString(StorageKey.CACHED_CLERK_STATE.name, null)
     assertNotNull("Encrypted value should be written to SharedPreferences", storedValue)
     assertTrue(
       "Stored value should be envelope-prefixed",
       storedValue!!.startsWith(ENCRYPTED_VALUE_PREFIX),
     )
-    assertTrue("Stored value should not equal plaintext", storedValue != "plain-device-id")
+    assertTrue("Stored value should not equal plaintext", storedValue != "plain-cached-state")
   }
 
   @Test
@@ -206,24 +206,24 @@ class StorageHelperTest {
       }
     }
     preferences().edit(commit = true) {
-      putString(StorageKey.DEVICE_ID.name, "${ENCRYPTED_VALUE_PREFIX}opaque")
+      putString(StorageKey.CACHED_CLERK_STATE.name, "${ENCRYPTED_VALUE_PREFIX}opaque")
     }
     StorageHelper.initialize(context)
 
-    val loadedValue = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+    val loadedValue = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE)
 
     assertNull("Malformed encrypted value should not be returned", loadedValue)
     assertFalse(
       "Malformed encrypted value should be removed from SharedPreferences",
-      preferences().contains(StorageKey.DEVICE_ID.name),
+      preferences().contains(StorageKey.CACHED_CLERK_STATE.name),
     )
   }
 
   @Test
   fun `after initialize isInitialized returns true and values can be saved loaded and deleted`() {
     StorageHelper.initialize(context)
-    val testKey = StorageKey.DEVICE_ID
-    val testValue = "test-device-id-123"
+    val testKey = StorageKey.CACHED_CLERK_STATE
+    val testValue = "cached-state-123"
 
     // Verify initialization state using reflection (since isInitialized is private)
     val field = StorageHelper::class.java.getDeclaredField("secureStorage")
@@ -236,7 +236,7 @@ class StorageHelperTest {
 
     assertEquals("Value should be saved", testValue, StorageHelper.loadValue(testKey))
 
-    val updatedValue = "updated-device-id-456"
+    val updatedValue = "updated-cached-state-456"
     StorageHelper.saveValue(testKey, updatedValue)
 
     assertEquals("Value should be updated", updatedValue, StorageHelper.loadValue(testKey))
@@ -249,23 +249,23 @@ class StorageHelperTest {
   @Test
   fun `multiple save and load operations work correctly after initialization`() {
     StorageHelper.initialize(context)
-    val deviceIdKey = StorageKey.DEVICE_ID
+    val cachedStateKey = StorageKey.CACHED_CLERK_STATE
     val deviceTokenKey = StorageKey.DEVICE_TOKEN
 
-    StorageHelper.saveValue(deviceIdKey, "device-id-1")
+    StorageHelper.saveValue(cachedStateKey, "cached-state-1")
     StorageHelper.saveValue(deviceTokenKey, "device-token-1")
 
-    assertEquals("device-id-1", StorageHelper.loadValue(deviceIdKey))
+    assertEquals("cached-state-1", StorageHelper.loadValue(cachedStateKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
 
-    StorageHelper.saveValue(deviceIdKey, "device-id-2")
+    StorageHelper.saveValue(cachedStateKey, "cached-state-2")
 
-    assertEquals("device-id-2", StorageHelper.loadValue(deviceIdKey))
+    assertEquals("cached-state-2", StorageHelper.loadValue(cachedStateKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
 
-    StorageHelper.deleteValue(deviceIdKey)
+    StorageHelper.deleteValue(cachedStateKey)
 
-    assertNull(StorageHelper.loadValue(deviceIdKey))
+    assertNull(StorageHelper.loadValue(cachedStateKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
   }
 
@@ -283,9 +283,9 @@ class StorageHelperTest {
             if ((index + iteration) % 3 == 0) {
               StorageHelper.initialize(context)
             } else {
-              StorageHelper.saveValue(StorageKey.DEVICE_ID, "value-$index-$iteration")
-              StorageHelper.loadValue(StorageKey.DEVICE_ID)
-              StorageHelper.deleteValue(StorageKey.DEVICE_ID)
+              StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, "value-$index-$iteration")
+              StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE)
+              StorageHelper.deleteValue(StorageKey.CACHED_CLERK_STATE)
             }
           }
         } catch (e: Throwable) {

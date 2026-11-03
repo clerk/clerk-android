@@ -77,6 +77,16 @@ class VersioningUserAgentMiddlewareTest {
   }
 
   @Test
+  fun `intercept never sends a device identifier`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+    AppVersionSupport.configure(AppBuild(packageName = "com.example.app", versionCode = 41))
+
+    val capturedRequest = captureRequest(request = Request.Builder().url(TEST_URL).get().build())
+
+    assertNull(capturedRequest.header("x-native-device-id"))
+  }
+
+  @Test
   fun `intercept identifies the app by package name and versionCode`() {
     AppVersionSupport.configure(AppBuild(packageName = "com.example.app", versionCode = 41))
 
