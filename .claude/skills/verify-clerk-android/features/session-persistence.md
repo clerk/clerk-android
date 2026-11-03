@@ -14,7 +14,7 @@ A signed-in user closes the app and opens it again. The app starts signed in, wi
 
 Preconditions:
 
-- The spec seeds a `+clerk_test` user and signs in with a ticket on the home. It declares no settings, so it launches on the standard instance.
+- The spec seeds a `+clerk_test` user and signs in with a ticket on the home. It runs on the standard settings.
 
 - **Relaunch.** Run `e2e-tests/bin/control-clerk-android run session-persistence`. The spec reads the session ID on the home (`e2e.auth.sessionId`), then launches again with `keepStorage: true` and no `signedInAs`. That launch stops the process and starts it with the same storage scope and no sign-in ticket. The spec waits for the home to show the same user, and expects the same session ID. Screenshot `relaunched`.
 - **Proof.** `specs/features/session-persistence/relaunch.e2e.ts` passes. The video shows the home with the user, the app closing, and the home with the same user and session ID.
