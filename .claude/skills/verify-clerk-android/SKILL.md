@@ -32,7 +32,7 @@ $ npm ci --prefix e2e-tests   # once per worktree
 $ e2e-tests/bin/control-clerk-android doctor
 $ e2e-tests/bin/control-clerk-android up
 backend local  this Mac runs the emulator itself, from the SDK at /Users/you/Library/Android/sdk
-instances CLERK_PLATFORM_API_KEY_FILE reaches the verification workspace org_3KHungJxbvIscuSvy8oos5MHAli
+instances MOBILE_VERIFICATION_PLATFORM_API_KEY_FILE reaches the verification workspace org_3KHungJxbvIscuSvy8oos5MHAli
 instance creating verify-throwaway-until-20261006t1126z-8ef8fb56 in org_3KHungJxbvIscuSvy8oos5MHAli
 build   android-cba5fdb5c161  local  building...
 instance app_<id>  up in 0.8s on standard, 62 settings match src/core/instances/base.json

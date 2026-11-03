@@ -89,9 +89,9 @@ An array leaf is set whole: name every value it keeps. The standard values are i
 
 One team key creates, changes, and deletes the application, and reads its secret key. The key needs four scopes: `applications:read`, `applications:manage`, `applications:delete`, and `application_secret_keys:read`. The CLI looks in this order, and `doctor` names the one it found in its `instances` line.
 
-1. `CLERK_PLATFORM_API_KEY` holds the key, or `CLERK_PLATFORM_API_KEY_FILE` names a file that holds it and that only you can read (mode 0600). A set variable that does not work is an error.
+1. `MOBILE_VERIFICATION_PLATFORM_API_KEY` holds the key, or `MOBILE_VERIFICATION_PLATFORM_API_KEY_FILE` names a file that holds it and that only you can read (mode 0600). A set variable that does not work is an error.
 2. A cloud environment attaches the key to requests for `api.clerk.com` after they leave the machine. The CLI finds this with one request that carries no key, and the output names the source as `a key attached outside this machine (no key is in this process)`.
-3. `VERIFY_PLATFORM_KEY_REFERENCE` holds a 1Password secret reference of the shape `op://<vault>/<item>/credential`, and the CLI reads the key through the 1Password CLI. The command then waits up to 60 seconds for the person at the machine to approve the request in the 1Password app.
+3. `MOBILE_VERIFICATION_PLATFORM_API_KEY_REFERENCE` holds a 1Password secret reference of the shape `op://<vault>/<item>/credential`, and the CLI reads the key through the 1Password CLI. The command then waits up to 60 seconds for the person at the machine to approve the request in the 1Password app.
 
 `doctor` checks the credential every time. `up` and `run` use it every time, because both read the application's secret key with it. `up` also creates, repairs, or replaces the application with it, and `run` does the same and changes and restores settings with it. `settings` reads the application's config with it. `down` uses it when the worktree holds an application. `screen` and `attach` never do. Each command looks it up at most once.
 
