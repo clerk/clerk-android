@@ -75,7 +75,7 @@
     <string name="no_members_search_results_description">Жоден учасник не відповідає запиту. Спробуйте інше ім\'я або адресу електронної пошти.</string>
     <string name="no_pending_invitations">Немає запрошень, що очікують.</string>
     <string name="no_invitations_sent">Запрошень не надіслано</string>
-    <string name="no_invitations_sent_description">Почніть із того, що запросіть когось приєднатися до вашої організації</string>
+    <string name="no_invitations_sent_description">Для початку запросіть когось приєднатися до вашої організації</string>
     <string name="no_membership_requests">Немає запитів на членство</string>
     <string name="no_membership_requests_description">Тут з\'являтимуться на розгляд запити користувачів, які хочуть приєднатися до вашої організації</string>
     <string name="role_set_migration_notice">Редагування ролей тимчасово недоступне, поки триває перенесення ролей.</string>
@@ -158,7 +158,7 @@
     <string name="add_authenticator_application">Додати застосунок автентифікації</string>
     <string name="set_up_a_new_sign_in_method">Налаштуйте новий спосіб входу в застосунку автентифікації та введіть ключ, наведений нижче.\n\nПереконайтеся, що ввімкнено одноразові паролі або паролі на основі часу, а потім завершіть прив\'язування облікового запису.</string>
     <string name="alternatively_if_your_authenticator_supports_totp">Якщо ваш застосунок автентифікації підтримує URI TOTP, можна також скопіювати повний URI.</string>
-    <string name="scan_qr_code_instead">Натомість сканувати QR-код</string>
+    <string name="scan_qr_code_instead">Відсканувати QR-код</string>
     <string name="verify_email_address">Підтвердити адресу електронної пошти</string>
     <string name="verify_phone_number">Підтвердити номер телефону</string>
     <string name="verify_authenticator_app">Підтвердити застосунок автентифікації</string>
