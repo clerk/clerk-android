@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { codeOwnerApproval } from './code-owner-approval.mjs';
+import { codeOwnerApproval, trusted } from './code-owner-approval.mjs';
 import { client, paged } from './github.mjs';
 
 const TEAM = 'team-mobile';
@@ -61,7 +61,9 @@ async function teamReviewRequest({ fetch, api, token, teamToken, repo, number })
   if (check.reason === 'coderabbit' && !ratedHighRisk(await paged(get, `/issues/${number}/comments`), pull.head.sha)) {
     return 'Waiting on CodeRabbit, which hasn\'t rated this commit high or critical risk.';
   }
-  const team = (await paged(teamGet, `/orgs/${repo.split('/')[0]}/teams/${TEAM}/members`)).map(user => user.login);
+  const members = (await paged(teamGet, `/orgs/${repo.split('/')[0]}/teams/${TEAM}/members`)).map(user => user.login);
+  // The team only grants write, and only members with maintain or admin can approve, so only they count as Team Mobile here.
+  const team = (await Promise.all(members.map(async login => ((await trusted(get, login)) ? login : null)))).filter(login => login !== null);
   const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
   const staleApprovers = new Set();
   for (const [login, review] of latestReviews(await paged(get, `/pulls/${number}/reviews`))) {
