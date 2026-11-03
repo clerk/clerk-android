@@ -64,7 +64,8 @@ async function teamReviewRequest({ fetch, api, token, teamToken, repo, number })
   const members = (await paged(teamGet, `/orgs/${repo.split('/')[0]}/teams/${TEAM}/members`)).map(user => user.login);
   // The team only grants write, and only members with maintain or admin can approve, so only they count as Team Mobile here.
   const team = (await Promise.all(members.map(async login => ((await trusted(get, login)) ? login : null)))).filter(login => login !== null);
-  const asked = new Set([author, ...pull.requested_reviewers.map(user => user.login)]);
+  const pending = await teamGet(`/repos/${repo}/pulls/${number}/requested_reviewers`);
+  const asked = new Set([author, ...pending.users.map(user => user.login)]);
   const staleApprovers = new Set();
   for (const [login, review] of latestReviews(await paged(get, `/pulls/${number}/reviews`))) {
     if ((review.state === 'APPROVED' || review.state === 'DISMISSED') && review.commit_id !== pull.head.sha) {
@@ -94,7 +95,7 @@ async function teamReviewRequest({ fetch, api, token, teamToken, repo, number })
       return askStale(`Requested nobody. ${check.message}`);
     }
   }
-  if (pull.requested_teams.some(requested => requested.slug === TEAM) || team.some(login => login !== author && asked.has(login))) {
+  if (pending.teams.some(requested => requested.slug === TEAM) || team.some(login => login !== author && asked.has(login))) {
     return askStale('Team Mobile is already requested, or a member is requested or has reviewed.');
   }
   await request({ team_reviewers: [TEAM] });
