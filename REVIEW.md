@@ -32,7 +32,7 @@ SDK paths below are under `source/api/src/main/kotlin/com/clerk/api/`.
 - Cancellation handling in a scope that is cancelled only at teardown, such as `viewModelScope`.
 - Behavior that matches clerk-js. Check `clerk/javascript` before you call a difference a bug.
 - Naming, wording, and test layout, unless a name is wrong about what the code does.
-- A failing `Code owner approval` check, or the comment that a protected path needs a Team Mobile approval. The check waits for an approval, from CodeRabbit on the latest commit or from another Team Mobile member, not for a code change.
+- A failing `Code owner approval` check, or the comment that a protected path needs a Team Mobile approval. The check waits for approvals, not for a code change. A protected path, or an author without maintain or admin access, needs another Team Mobile member's approval, and CodeRabbit's approval isn't enough there.
 
 ## Skip these paths
 
