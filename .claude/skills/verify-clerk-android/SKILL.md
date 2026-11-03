@@ -267,8 +267,11 @@ $ e2e-tests/bin/control-clerk-android down
 $ git switch <branch>
 $ e2e-tests/bin/control-clerk-android up --backend remote
 $ e2e-tests/bin/control-clerk-android run specs/explored/<name>.e2e.ts
+$ gh pr create --draft
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label> --before <before-run-id>
 $ e2e-tests/bin/control-clerk-android down
+$ gh pr view <n> --json body   # wait for the verify-evidence block, about a minute after down
+$ gh pr ready <n>
 $ git push origin --delete <branch>-before && git branch -D <branch>-before
 ```
 
