@@ -306,6 +306,37 @@ class SSOServiceTest {
   }
 
   @Test
+  fun `transfer to sign up carries legal_accepted from the sign in redirect`() = runTest {
+    val currentSignIn = createdSignIn()
+    val transferableSignIn =
+      SignIn(
+        id = SIGN_IN_ID,
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        firstFactorVerification = Verification(status = Verification.Status.TRANSFERABLE),
+      )
+    val createdSignUp = testSignUp(status = SignUp.Status.COMPLETE)
+    val transferParams = slot<Map<String, String>>()
+    every { auth.currentSignIn } returns currentSignIn
+    coEvery { signInApi.fetchSignIn(SIGN_IN_ID, null) } returns
+      ClerkResult.success(transferableSignIn)
+    coEvery { signUpApi.createSignUp(capture(transferParams)) } returns
+      ClerkResult.success(createdSignUp)
+    RedirectState.remember(AUTHORIZATION_URL, STATE)
+
+    val pendingResult =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, legalAccepted = true)
+      }
+
+    RedirectCoordinator.dispatch(bareCallback(STATE))
+
+    val result = (pendingResult.await() as ClerkResult.Success).value
+    assertSame(createdSignUp, result.signUp)
+    assertEquals("true", transferParams.captured["transfer"])
+    assertEquals("true", transferParams.captured["legal_accepted"])
+  }
+
+  @Test
   fun `bare callback cancels when the reloaded sign in is not transferable`() = runTest {
     val currentSignIn = createdSignIn()
     every { auth.currentSignIn } returns currentSignIn

@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.createSignUp
+import com.clerk.api.auth.postSignUp
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -76,7 +77,6 @@ internal object SSOService {
           put("locale", Clerk.locale.value.orEmpty())
           identifier?.let { put("identifier", it) }
           emailAddress?.let { put("email_address", it) }
-          legalAccepted?.let { put("legal_accepted", it.toString()) }
         }
       )
 
@@ -102,7 +102,11 @@ internal object SSOService {
           is ClerkResult.Success -> {
             prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl?.let {
               externalUrl ->
-              authenticateWithPreparedRedirect(externalUrl, transferable)
+              authenticateWithPreparedRedirect(
+                externalVerificationRedirectUrl = externalUrl,
+                transferable = transferable,
+                legalAccepted = legalAccepted,
+              )
             } ?: missingExternalUrlFailure()
           }
         }
@@ -188,6 +192,7 @@ internal object SSOService {
     transferable: Boolean = true,
     redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
     signUp: SignUp? = null,
+    legalAccepted: Boolean? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val context = Clerk.applicationContext?.get()
     val expectedState = RedirectState.expectedFor(externalVerificationRedirectUrl)
@@ -207,6 +212,7 @@ internal object SSOService {
               transferable = transferable,
               redirectFlow = redirectFlow,
               signUp = signUp,
+              legalAccepted = legalAccepted,
             ),
         )
     }
@@ -256,7 +262,7 @@ internal object SSOService {
     val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
     val result =
       when (pendingAuth.redirectFlow) {
-        RedirectFlow.SIGN_IN -> completeSignInRedirect(uri, nonce, pendingAuth.transferable)
+        RedirectFlow.SIGN_IN -> completeSignInRedirect(uri, nonce, pendingAuth)
         RedirectFlow.SIGN_UP -> completeSignUpRedirect(uri, nonce, pendingAuth.signUp)
       }
     RedirectCoordinator.finish(pendingAuth, result)
@@ -271,13 +277,13 @@ internal object SSOService {
   private suspend fun completeSignInRedirect(
     uri: Uri,
     nonce: String?,
-    transferable: Boolean,
+    pendingAuth: PendingRedirect.Sso,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> =
     when {
       nonce != null -> handleSignIn(nonce)
-      uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) -> completeSignUpTransfer(transferable)
+      uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) -> completeSignUpTransfer(pendingAuth)
       uri.hasCallbackOutcome() -> cancellation(uri)
-      else -> completeBareSignInCallback(uri, transferable)
+      else -> completeBareSignInCallback(uri, pendingAuth)
     }
 
   private suspend fun completeSignUpRedirect(
@@ -298,14 +304,14 @@ internal object SSOService {
    */
   private suspend fun completeBareSignInCallback(
     uri: Uri,
-    transferable: Boolean,
+    pendingAuth: PendingRedirect.Sso,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val signIn = Clerk.auth.currentSignIn ?: return cancellation(uri)
     return when (val reloaded = signIn.reload()) {
       is ClerkResult.Failure -> reloaded.signInToOAuthResult()
       is ClerkResult.Success ->
         if (reloaded.value.firstFactorVerification?.status == Verification.Status.TRANSFERABLE) {
-          completeSignUpTransfer(transferable)
+          completeSignUpTransfer(pendingAuth)
         } else {
           cancellation(uri)
         }
@@ -332,18 +338,36 @@ internal object SSOService {
   }
 
   private suspend fun completeSignUpTransfer(
-    transferable: Boolean
+    pendingAuth: PendingRedirect.Sso
   ): ClerkResult<OAuthResult, ClerkErrorResponse> =
-    if (transferable) handleSignUpTransfer() else transferBlocked()
+    if (pendingAuth.transferable) handleSignUpTransfer(pendingAuth.legalAccepted)
+    else transferBlocked()
 
   private suspend fun handleSignIn(nonce: String): ClerkResult<OAuthResult, ClerkErrorResponse> =
     requireNotNull(Clerk.auth.currentSignIn)
       .reload(rotatingTokenNonce = nonce)
       .signInToOAuthResult()
 
-  private suspend fun handleSignUpTransfer(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  /**
+   * FAPI rejects `legal_accepted` on sign-in creation with `form_param_unknown`, so a redirect
+   * sign-in holds the caller's consent and sends it here, on the sign-up the flow transfers into.
+   */
+  private suspend fun handleSignUpTransfer(
+    legalAccepted: Boolean?
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     ClerkLogger.d("Handling sign-up transfer")
-    return Clerk.auth.createSignUp(SignUp.CreateParams.Transfer).signUpToOAuthResult()
+    val result =
+      if (legalAccepted == null) {
+        Clerk.auth.createSignUp(SignUp.CreateParams.Transfer)
+      } else {
+        Clerk.auth.postSignUp(
+          mapOf(
+            Strategy.Transfer.value to "true",
+            "legal_accepted" to legalAccepted.toString(),
+          )
+        )
+      }
+    return result.signUpToOAuthResult()
   }
 
   private suspend fun handleSignUp(
