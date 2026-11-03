@@ -324,6 +324,8 @@ public data class SignUp(
      * @property legalAccepted Whether the user has accepted the legal terms.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property identifier The user's identifier for authentication.
+     * @property enterpriseConnectionId The enterprise connection to use when more than one matches
+     *   the email address.
      */
     @Serializable
     public data class EnterpriseSSO(
@@ -336,6 +338,7 @@ public data class SignUp(
       @Transient
       @SerialName("unsafe_metadata")
       override val unsafeMetadata: Map<String, Any>? = null,
+      @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
     ) : AuthenticateWithRedirectParams
   }
 

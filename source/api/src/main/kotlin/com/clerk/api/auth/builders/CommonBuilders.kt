@@ -61,6 +61,13 @@ public class EnterpriseSsoBuilder {
    */
   public var redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL
 
+  /**
+   * The enterprise connection to use when more than one matches [email]. Pass the
+   * [com.clerk.api.network.model.factor.Factor.enterpriseConnectionId] of one of the sign-in's
+   * `enterprise_sso` supported first factors. Leave it `null` when only one connection matches.
+   */
+  public var enterpriseConnectionId: String? = null
+
   internal fun emailAddress(): ClerkResult<String, ClerkErrorResponse> =
     email?.let { ClerkResult.success(it) }
       ?: invalidBuilderArguments("Email must be provided for Enterprise SSO")
