@@ -400,7 +400,8 @@ private constructor(
    * user to an external authentication provider.
    *
    * @property redirectUrl The URL to redirect to after authentication.
-   * @property legalAccepted Whether the user has accepted the legal terms.
+   * @property legalAccepted Whether the user has accepted the legal terms. A sign-in does not take
+   *   it, so it is sent only if the flow transfers to a sign-up.
    * @property emailAddress The user's email address for pre-filling authentication forms.
    * @property identifier The user's identifier for authentication.
    */
@@ -420,7 +421,8 @@ private constructor(
      * @param emailAddress The user's email address, which can be used to pre-fill the
      *   authentication form on the provider's site.
      * @param legalAccepted Indicates whether the user has accepted any legal terms, such as a
-     *   privacy policy or terms of service.
+     *   privacy policy or terms of service. A sign-in does not take it, so it is sent only if the
+     *   flow transfers to a sign-up.
      * @param identifier The user's identifier for authentication, which can be an email address or
      *   phone number.
      */
@@ -439,7 +441,8 @@ private constructor(
      *
      * @property strategy The Enterprise SSO strategy identifier.
      * @property redirectUrl The URL to redirect to after authentication.
-     * @property legalAccepted Whether the user has accepted the legal terms.
+     * @property legalAccepted Whether the user has accepted the legal terms. A sign-in does not
+     *   take it, so it is sent only if the flow transfers to a sign-up.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property identifier The user's identifier for authentication.
      */

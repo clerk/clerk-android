@@ -301,9 +301,39 @@ class SSOServiceTest {
     assertSame(createdSignUp, result.signUp)
     assertNull(result.signIn)
     assertEquals("true", transferParams.captured["transfer"])
+    assertFalse(transferParams.captured.containsKey("legal_accepted"))
     assertFalse(hasPendingSso())
     assertNull(RedirectState.expectedFor(AUTHORIZATION_URL))
   }
+
+  @Test
+  fun `transfer callback creates the sign up with legal_accepted from the sign in redirect`() =
+    runTest {
+      val createdSignUp = testSignUp(status = SignUp.Status.COMPLETE)
+      val transferParams = slot<Map<String, String>>()
+      every { auth.currentSignIn } returns createdSignIn()
+      coEvery { signUpApi.createSignUp(capture(transferParams)) } returns
+        ClerkResult.success(createdSignUp)
+      RedirectState.remember(AUTHORIZATION_URL, STATE)
+
+      val pendingResult =
+        async(start = CoroutineStart.UNDISPATCHED) {
+          SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, legalAccepted = false)
+        }
+
+      RedirectCoordinator.dispatch(
+        Uri.parse(
+          "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found" +
+            "&${RedirectState.QUERY_PARAMETER}=$STATE"
+        )
+      )
+
+      val result = (pendingResult.await() as ClerkResult.Success).value
+      assertSame(createdSignUp, result.signUp)
+      assertEquals("true", transferParams.captured["transfer"])
+      assertEquals("false", transferParams.captured["legal_accepted"])
+      coVerify(exactly = 0) { signInApi.fetchSignIn(any(), any()) }
+    }
 
   @Test
   fun `transfer to sign up carries legal_accepted from the sign in redirect`() = runTest {

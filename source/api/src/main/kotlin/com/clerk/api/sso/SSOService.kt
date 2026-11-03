@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
-import com.clerk.api.auth.createSignUp
 import com.clerk.api.auth.postSignUp
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.externalaccount.ExternalAccount
@@ -47,7 +46,8 @@ internal object SSOService {
    * @param redirectUrl The URL to redirect to after authentication completes
    * @param identifier Optional identifier for the authentication request
    * @param emailAddress Optional email address for the authentication request
-   * @param legalAccepted Optional flag indicating if legal terms have been accepted
+   * @param legalAccepted Optional flag indicating if legal terms have been accepted, sent only if
+   *   the flow transfers to a sign-up
    * @param transferable Whether this authentication flow allows transferring to a sign-up if the
    *   user doesn't have an account. Defaults to `true`.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
@@ -152,7 +152,7 @@ internal object SSOService {
           put("locale", Clerk.locale.value.orEmpty())
           identifier?.let { put("identifier", it) }
           emailAddress?.let { put("email_address", it) }
-          legalAccepted?.let { put("legal_accepted", it.toString()) }
+          legalAccepted?.let { put(LEGAL_ACCEPTED, it.toString()) }
           unsafeMetadata?.let { put("unsafe_metadata", toUnsafeMetadataJsonString(it)) }
         }
       )
@@ -356,18 +356,14 @@ internal object SSOService {
     legalAccepted: Boolean?
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     ClerkLogger.d("Handling sign-up transfer")
-    val result =
-      if (legalAccepted == null) {
-        Clerk.auth.createSignUp(SignUp.CreateParams.Transfer)
-      } else {
-        Clerk.auth.postSignUp(
-          mapOf(
-            Strategy.Transfer.value to "true",
-            "legal_accepted" to legalAccepted.toString(),
-          )
-        )
-      }
-    return result.signUpToOAuthResult()
+    return Clerk.auth
+      .postSignUp(
+        buildMap {
+          put(Strategy.Transfer.value, "true")
+          legalAccepted?.let { put(LEGAL_ACCEPTED, it.toString()) }
+        }
+      )
+      .signUpToOAuthResult()
   }
 
   private suspend fun handleSignUp(
@@ -435,4 +431,5 @@ internal object SSOService {
   private const val ERROR = "error"
   private const val EXTERNAL_ACCOUNT_VERIFICATION = "external_account"
   private const val ERROR_DESCRIPTION = "error_description"
+  private const val LEGAL_ACCEPTED = "legal_accepted"
 }

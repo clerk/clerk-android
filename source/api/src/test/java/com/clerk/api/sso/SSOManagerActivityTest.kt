@@ -10,7 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.auth.Auth
-import com.clerk.api.auth.createSignUp
+import com.clerk.api.auth.postSignUp
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.hostedauth.HostedAuthService
@@ -346,7 +346,7 @@ class SSOManagerActivityTest {
     every { Clerk.applicationContext } returns WeakReference(mockk(relaxed = true))
     val signUp = mockk<SignUp>(relaxed = true)
     val gate = CompletableDeferred<Unit>()
-    coEvery { auth.createSignUp(SignUp.CreateParams.Transfer) } coAnswers
+    coEvery { auth.postSignUp(mapOf("transfer" to "true")) } coAnswers
       {
         gate.await()
         ClerkResult.success(signUp)
@@ -385,7 +385,7 @@ class SSOManagerActivityTest {
     assertEquals(signUp, result.value.signUp)
     pumpMainLooperUntil { controller.get().isFinishing }
     assertEquals(Activity.RESULT_OK, Shadows.shadowOf(controller.get()).resultCode)
-    coVerify(exactly = 1) { auth.createSignUp(SignUp.CreateParams.Transfer) }
+    coVerify(exactly = 1) { auth.postSignUp(mapOf("transfer" to "true")) }
   }
 
   @Test

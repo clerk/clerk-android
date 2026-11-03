@@ -131,20 +131,22 @@ class AuthFacadeUiGapsTest {
   }
 
   @Test
-  fun `authenticateWithOAuth prepares the factor on this sign-in and opens its redirect`() =
+  fun `authenticateWithOAuth prepares the factor on this sign-in and opens its redirect with consent`() =
     runTest {
       val prepared = signIn.withRedirectUrl()
       mockkObject(SSOService)
       coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns
         ClerkResult.success(prepared)
-      coEvery { SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any()) } returns
-        ClerkResult.success(oauthResult)
+      coEvery {
+        SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any(), any())
+      } returns ClerkResult.success(oauthResult)
 
       val result =
         signIn.authenticateWithOAuth(
           OAuthProvider.GITHUB,
           transferable = false,
           redirectUrl = REDIRECT,
+          legalAccepted = true,
         )
 
       assertTrue(result is ClerkResult.Success)
@@ -155,7 +157,7 @@ class AuthFacadeUiGapsTest {
         )
       }
       coVerify(exactly = 1) {
-        SSOService.authenticateWithPreparedRedirect(EXTERNAL_URL, false, any(), any())
+        SSOService.authenticateWithPreparedRedirect(EXTERNAL_URL, false, any(), any(), true)
       }
     }
 
@@ -164,8 +166,9 @@ class AuthFacadeUiGapsTest {
     mockkObject(SSOService)
     coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns
       ClerkResult.success(signIn.withRedirectUrl())
-    coEvery { SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any()) } returns
-      ClerkResult.success(oauthResult)
+    coEvery {
+      SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any(), any())
+    } returns ClerkResult.success(oauthResult)
 
     signIn.authenticateWithEnterpriseSso(redirectUrl = REDIRECT)
 
@@ -176,7 +179,7 @@ class AuthFacadeUiGapsTest {
       )
     }
     coVerify(exactly = 1) {
-      SSOService.authenticateWithPreparedRedirect(EXTERNAL_URL, true, any(), any())
+      SSOService.authenticateWithPreparedRedirect(EXTERNAL_URL, true, any(), any(), null)
     }
   }
 
@@ -254,7 +257,7 @@ class AuthFacadeUiGapsTest {
 
     assertTrue(result is ClerkResult.Failure)
     coVerify(exactly = 0) {
-      SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any())
+      SSOService.authenticateWithPreparedRedirect(any(), any(), any(), any(), any())
     }
   }
 
