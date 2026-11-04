@@ -11,12 +11,13 @@ import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.math.BigInteger
-import java.security.AlgorithmParameters
 import java.security.KeyFactory
+import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.UnrecoverableKeyException
+import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
 import java.security.spec.ECPoint
@@ -224,10 +225,13 @@ class DeviceKeyInstrumentedTest {
   private fun JsonObject.coordinate(name: String): BigInteger =
     BigInteger(1, Base64.decode(getValue(name).jsonPrimitive.content, Base64.URL_SAFE))
 
+  // API 24 has no EC AlgorithmParameters, so take the curve from a software P-256 key.
   private fun p256(): ECParameterSpec =
-    AlgorithmParameters.getInstance("EC")
-      .apply { init(ECGenParameterSpec("secp256r1")) }
-      .getParameterSpec(ECParameterSpec::class.java)
+    (KeyPairGenerator.getInstance("EC")
+        .apply { initialize(ECGenParameterSpec("secp256r1")) }
+        .generateKeyPair()
+        .public as ECPublicKey)
+      .params
 
   private fun derFromRaw(rawSignature: ByteArray): ByteArray {
     fun derInteger(half: ByteArray): ByteArray {
