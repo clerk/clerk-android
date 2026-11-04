@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
+inheritance: true
 reviews:
   path_filters:
     - "!source/*/api/*.api"
@@ -54,4 +55,5 @@ reviews:
 knowledge_base:
   code_guidelines:
     filePatterns:
+      - "AGENTS.md"
       - "REVIEW.md"
