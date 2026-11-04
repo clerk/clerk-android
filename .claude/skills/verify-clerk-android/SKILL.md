@@ -268,6 +268,7 @@ $ git switch <branch>
 $ e2e-tests/bin/control-clerk-android up --backend remote
 $ e2e-tests/bin/control-clerk-android run specs/explored/<name>.e2e.ts
 $ gh pr create --draft
+$ # in a Claude Code cloud session, open the draft with gh api repos/clerk/clerk-android/pulls -f title='<title>' -f head=<branch> -f base=main -F draft=true -F body=@<file> instead
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label> --before <before-run-id>
 $ e2e-tests/bin/control-clerk-android down
 $ sh -c 'for i in $(seq 40); do gh api repos/clerk/clerk-android/pulls/<n> --jq .body | sed -n "/<!-- verify-evidence:android -->/,/<!-- \/verify-evidence:android -->/p" | grep -q "| :---:" && exit 0; sleep 15; done; exit 1' && gh pr ready <n>
