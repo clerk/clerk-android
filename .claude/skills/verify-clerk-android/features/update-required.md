@@ -1,6 +1,6 @@
 # Update required
 
-An instance sets a minimum version for an app. A build below it can't use Clerk: the SDK covers the app with an update screen that shows the build's version and links to Google Play. Users stay signed in, so they continue where they left off once the build is allowed again.
+An instance sets a minimum version for an app. Clerk rejects most requests from a build below it, and the SDK covers the app with an update screen that shows the build's version and links to Google Play. Users stay signed in, so they continue where they left off once the build is allowed again.
 
 ## Sub-features
 
@@ -22,7 +22,7 @@ Preconditions:
 
 - **Signed in.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "signed-in user"`. The spec signs in with a ticket, sets the minimum to `2`, and relaunches with `keepStorage: true`. It expects `1.0` and `Go to Google Play` (screenshot `update-required`). It then lowers the minimum to `1`, relaunches, and expects the same user and session ID on the home (screenshot `signed-in-after-lowering`).
 - **Signed out.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "signed-out user"`. The spec sets the minimum to `2` before the first launch, then expects the update screen and `1.0` (screenshot `update-required-signed-out`).
-- **At the minimum.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "at the minimum"`. The spec sets the minimum to `1`, signs in with a ticket, and expects the signed-in home with no update screen.
+- **At the minimum.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "at the minimum"`. The spec sets the minimum to `1`, signs in with a ticket, and expects the signed-in home with no update screen (screenshot `at-the-minimum`).
 - **Proof.** `specs/features/update-required/update-required.e2e.ts` passes. The video shows the update screen with `1.0`, then the home with the same user and session ID.
 
 ## States a spec cannot reach
