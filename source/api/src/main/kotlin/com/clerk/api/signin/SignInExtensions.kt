@@ -197,11 +197,15 @@ private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
  *
  * @param transferable Whether this authentication flow allows transferring to a sign-up if the user
  *   doesn't have an account. Defaults to `true`.
+ * @param legalAccepted Whether the user has accepted the instance's legal terms. A sign-in does not
+ *   take it, so it is sent only if the flow transfers to a sign-up. Defaults to `null`, which sends
+ *   nothing.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
 public suspend fun SignIn.authenticateWithPreparedRedirect(
-  transferable: Boolean = true
+  transferable: Boolean = true,
+  legalAccepted: Boolean? = null,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
     val externalVerificationRedirectUrl =
@@ -213,8 +217,15 @@ public suspend fun SignIn.authenticateWithPreparedRedirect(
     SSOService.authenticateWithPreparedRedirect(
       externalVerificationRedirectUrl = externalVerificationRedirectUrl,
       transferable = transferable,
+      legalAccepted = legalAccepted,
     )
   }
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+public suspend fun SignIn.authenticateWithPreparedRedirect(
+  transferable: Boolean = true
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  authenticateWithPreparedRedirect(transferable = transferable, legalAccepted = null)
 
 /**
  * Continues this sign-in with an OAuth provider.
@@ -229,6 +240,9 @@ public suspend fun SignIn.authenticateWithPreparedRedirect(
  * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
  *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
  *   in the application manifest.
+ * @param legalAccepted Whether the user has accepted the instance's legal terms. A sign-in does not
+ *   take it, so it is sent only if the flow transfers to a sign-up. Defaults to `null`, which sends
+ *   nothing.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
@@ -236,11 +250,21 @@ public suspend fun SignIn.authenticateWithOAuth(
   provider: OAuthProvider,
   transferable: Boolean = true,
   redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+  legalAccepted: Boolean? = null,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   authenticateWithRedirectFactor(
     SignIn.PrepareFirstFactorParams.OAuth(strategy = provider.strategy, redirectUrl = redirectUrl),
     transferable,
+    legalAccepted,
   )
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+public suspend fun SignIn.authenticateWithOAuth(
+  provider: OAuthProvider,
+  transferable: Boolean = true,
+  redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  authenticateWithOAuth(provider, transferable, redirectUrl, legalAccepted = null)
 
 /**
  * Continues this sign-in with Enterprise SSO.
@@ -256,6 +280,9 @@ public suspend fun SignIn.authenticateWithOAuth(
  * @param enterpriseConnectionId The enterprise connection to use when more than one matches the
  *   email address. Pass the [com.clerk.api.network.model.factor.Factor.enterpriseConnectionId] of
  *   one of the `enterprise_sso` factors in [SignIn.supportedFirstFactors].
+ * @param legalAccepted Whether the user has accepted the instance's legal terms. A sign-in does not
+ *   take it, so it is sent only if the flow transfers to a sign-up. Defaults to `null`, which sends
+ *   nothing.
  * @return A [ClerkResult] containing the redirect authentication result on success, or a
  *   [ClerkErrorResponse] on failure.
  */
@@ -263,6 +290,7 @@ public suspend fun SignIn.authenticateWithEnterpriseSso(
   transferable: Boolean = true,
   redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
   enterpriseConnectionId: String? = null,
+  legalAccepted: Boolean? = null,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   authenticateWithRedirectFactor(
     SignIn.PrepareFirstFactorParams.EnterpriseSSO(
@@ -270,16 +298,26 @@ public suspend fun SignIn.authenticateWithEnterpriseSso(
       enterpriseConnectionId = enterpriseConnectionId,
     ),
     transferable,
+    legalAccepted,
   )
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+public suspend fun SignIn.authenticateWithEnterpriseSso(
+  transferable: Boolean = true,
+  redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+): ClerkResult<OAuthResult, ClerkErrorResponse> =
+  authenticateWithEnterpriseSso(transferable, redirectUrl, legalAccepted = null)
 
 private suspend fun SignIn.authenticateWithRedirectFactor(
   params: SignIn.PrepareFirstFactorParams,
   transferable: Boolean,
+  legalAccepted: Boolean?,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   Clerk.auth.reportingFailures {
     when (val prepared = prepareFirstFactorImpl(params)) {
       is ClerkResult.Failure -> prepared
-      is ClerkResult.Success -> prepared.value.authenticateWithPreparedRedirect(transferable)
+      is ClerkResult.Success ->
+        prepared.value.authenticateWithPreparedRedirect(transferable, legalAccepted)
     }
   }
 

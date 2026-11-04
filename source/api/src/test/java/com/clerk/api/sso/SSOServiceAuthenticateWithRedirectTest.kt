@@ -96,6 +96,58 @@ class SSOServiceAuthenticateWithRedirectTest {
   }
 
   @Test
+  fun `authenticateWithRedirect keeps legal_accepted off the sign in and hands it to the transfer`() =
+    runTest {
+      mockkObject(ClerkApi)
+      mockkObject(SSOService)
+      val signInApi = mockk<SignInApi>()
+      val externalVerificationRedirectUrl = "https://oauth.example.com/start"
+      val createdSignIn = SignIn(id = "sign_in_123", status = SignIn.Status.NEEDS_FIRST_FACTOR)
+      val preparedSignIn =
+        SignIn(
+          id = createdSignIn.id,
+          firstFactorVerification =
+            Verification(externalVerificationRedirectUrl = externalVerificationRedirectUrl),
+        )
+      val oauthResult = OAuthResult(signIn = preparedSignIn)
+      val createParams = slot<Map<String, String>>()
+
+      every { ClerkApi.signIn } returns signInApi
+      coEvery { signInApi.createSignIn(capture(createParams)) } returns
+        ClerkResult.success(createdSignIn)
+      coEvery { signInApi.prepareSignInFirstFactor(createdSignIn.id, any()) } returns
+        ClerkResult.success(preparedSignIn)
+      coEvery {
+        SSOService.authenticateWithRedirect(any(), any(), any(), any(), any(), any())
+      } coAnswers { callOriginal() }
+      coEvery {
+        SSOService.authenticateWithPreparedRedirect(
+          externalVerificationRedirectUrl = externalVerificationRedirectUrl,
+          transferable = true,
+          legalAccepted = true,
+        )
+      } returns ClerkResult.success(oauthResult)
+
+      val result =
+        SSOService.authenticateWithRedirect(
+          strategy = "oauth_google",
+          redirectUrl = "clerk://example.callback",
+          legalAccepted = true,
+          transferable = true,
+        )
+
+      assertTrue(result is ClerkResult.Success)
+      assertFalse(createParams.captured.containsKey("legal_accepted"))
+      coVerify(exactly = 1) {
+        SSOService.authenticateWithPreparedRedirect(
+          externalVerificationRedirectUrl = externalVerificationRedirectUrl,
+          transferable = true,
+          legalAccepted = true,
+        )
+      }
+    }
+
+  @Test
   fun `enterprise SSO sign in prepares the chosen enterprise connection`() = runTest {
     mockkObject(ClerkApi)
     mockkObject(SSOService)

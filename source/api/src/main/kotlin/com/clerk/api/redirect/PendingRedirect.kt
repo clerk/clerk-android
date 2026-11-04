@@ -34,6 +34,7 @@ internal sealed class PendingRedirect<T : Any> {
     val transferable: Boolean,
     val redirectFlow: RedirectFlow,
     val signUp: SignUp?,
+    val legalAccepted: Boolean? = null,
   ) : PendingRedirect<OAuthResult>() {
     override val supersededReason = "New authentication started, cancelling previous attempt"
     override val cancelledReason = "Authentication cancelled"
