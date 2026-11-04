@@ -1,8 +1,11 @@
 package com.clerk.api.devicekey
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import android.security.KeyStoreException as PlatformKeyStoreException
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import java.security.GeneralSecurityException
-import java.security.InvalidKeyException
 import java.security.KeyPair
 import java.security.KeyStoreException
 import java.security.PrivateKey
@@ -39,38 +42,40 @@ private constructor(
   private fun signingFailure(cause: Exception): Exception =
     when {
       cause is DeviceKeyLostException -> cause
-      cause is InvalidKeyException || !isStored() -> DeviceKeyLostException(cause)
-      else -> cause
+      cause.provesKeyLost() -> DeviceKeyLostException(cause)
+      cause.isTransientKeystoreFailure() -> cause
+      else ->
+        catchingKeystoreFailures { isStored() }
+          .fold(
+            onSuccess = { stored -> if (stored) cause else DeviceKeyLostException(cause) },
+            onFailure = { cause.apply { addSuppressed(it) } },
+          )
     }
 
   private fun isStored(): Boolean =
-    store.storedPublicKey()?.encoded?.contentEquals(publicKey.encoded) == true
+    storedKeyPair(store)?.public?.encoded?.contentEquals(publicKey.encoded) == true
 
   companion object {
     fun getOrCreate(context: Context): AndroidKeystoreDeviceKey =
       getOrCreate(AndroidDeviceKeyStore(context))
 
     fun getOrCreate(store: DeviceKeyStore): AndroidKeystoreDeviceKey {
-      val keyPair = usableStoredKeyPair(store) ?: generateKeyPair(store)
+      val keyPair = storedKeyPair(store) ?: generateKeyPair(store)
       val publicKey =
         keyPair.public as? ECPublicKey
           ?: throw KeyStoreException("The device key is not an EC key.")
       return AndroidKeystoreDeviceKey(store, keyPair.private, publicKey)
     }
 
-    private fun usableStoredKeyPair(store: DeviceKeyStore): KeyPair? {
+    private fun storedKeyPair(store: DeviceKeyStore): KeyPair? {
       val privateKey =
-        try {
-          store.storedPrivateKey()
-        } catch (_: UnrecoverableKeyException) {
-          null
-        }
-      val publicKey = store.storedPublicKey()
-      return if (privateKey != null && publicKey != null) {
-        KeyPair(publicKey, privateKey)
-      } else {
-        null
-      }
+        catchingKeystoreFailures { store.storedPrivateKey() }
+          .getOrElse { if (it.provesKeyLost()) null else throw it } ?: return null
+      // KeyStore.getCertificate returns null for every Keystore error, not only a missing entry.
+      val publicKey =
+        store.storedPublicKey()
+          ?: throw KeyStoreException("The device key's certificate could not be read.")
+      return KeyPair(publicKey, privateKey)
     }
 
     private fun generateKeyPair(store: DeviceKeyStore): KeyPair {
@@ -84,3 +89,21 @@ private constructor(
     }
   }
 }
+
+// AndroidKeyStoreSpi.engineGetKey returns null only for a missing key. It wraps every other
+// Keystore error, transient ones included, in an UnrecoverableKeyException caused by an
+// android.security.KeyStoreException. That class is public from API 33, but it exists as a hidden
+// class from API 23 and the older Keystore throws it too.
+@SuppressLint("NewApi")
+private fun Throwable.provesKeyLost(): Boolean =
+  when (this) {
+    is KeyPermanentlyInvalidatedException -> true
+    is UnrecoverableKeyException -> cause !is PlatformKeyStoreException
+    else -> false
+  }
+
+private fun Throwable.isTransientKeystoreFailure(): Boolean =
+  Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+    generateSequence(this) { it.cause }
+      .filterIsInstance<PlatformKeyStoreException>()
+      .any { it.isTransientFailure }

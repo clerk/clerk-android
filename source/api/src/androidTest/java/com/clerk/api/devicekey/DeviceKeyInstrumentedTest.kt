@@ -12,7 +12,9 @@ import java.io.File
 import java.math.BigInteger
 import java.security.AlgorithmParameters
 import java.security.KeyFactory
+import java.security.PrivateKey
 import java.security.Signature
+import java.security.UnrecoverableKeyException
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
 import java.security.spec.ECPoint
@@ -89,6 +91,23 @@ class DeviceKeyInstrumentedTest {
     report("lost=${lost.thumbprint} replacement=${Es256.thumbprint(publicJwk)}")
     assertNotEquals(lost.publicJwk, publicJwk)
     assertTrue(verifies(publicJwk, data, signature))
+  }
+
+  @Test
+  fun replacesStoredKeyKeystoreCannotRecover() {
+    val keystore = AndroidDeviceKeyStore(context)
+    val original = AndroidKeystoreDeviceKey.getOrCreate(keystore)
+    val unrecoverable =
+      object : DeviceKeyStore by keystore {
+        override fun storedPrivateKey(): PrivateKey? =
+          throw UnrecoverableKeyException("Key algorithm unknown")
+      }
+
+    val replacement = AndroidKeystoreDeviceKey.getOrCreate(unrecoverable)
+
+    report("original=${original.thumbprint} replacement=${replacement.thumbprint}")
+    assertNotEquals(original.thumbprint, replacement.thumbprint)
+    assertEquals(replacement.thumbprint, AndroidKeystoreDeviceKey.getOrCreate(context).thumbprint)
   }
 
   @Test
