@@ -14,6 +14,7 @@ import com.clerk.api.appversion.UpdateRequiredViewLauncher
 import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
@@ -33,6 +34,7 @@ import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -235,6 +237,7 @@ internal class ConfigurationManager(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
       customHeaders = options?.customHeaders.orEmpty(),
+      serverClock = ServerClock(Clock.System),
     )
     hasConfigured = true
     configureConnectivityMonitor(context.applicationContext)

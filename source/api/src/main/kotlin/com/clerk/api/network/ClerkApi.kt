@@ -3,6 +3,7 @@ package com.clerk.api.network
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.ClientApi
@@ -99,11 +100,12 @@ internal object ClerkApi {
     baseUrl: String,
     context: Context,
     customHeaders: Map<String, String> = emptyMap(),
+    serverClock: ServerClock,
   ) {
     val effectiveCustomHeaders = customHeaders.toMap()
     configuredBaseUrl = baseUrl
     configuredCustomHeaders = effectiveCustomHeaders
-    val retrofit = buildRetrofit(baseUrl, effectiveCustomHeaders)
+    val retrofit = buildRetrofit(baseUrl, effectiveCustomHeaders, serverClock)
     _client = retrofit.create(ClientApi::class.java)
     _environment = retrofit.create(EnvironmentApi::class.java)
     _session = retrofit.create(SessionApi::class.java)
@@ -132,13 +134,17 @@ internal object ClerkApi {
     configuredCustomHeaders = emptyMap()
   }
 
-  private fun buildRetrofit(baseUrl: String, customHeaders: Map<String, String>): Retrofit {
+  private fun buildRetrofit(
+    baseUrl: String,
+    customHeaders: Map<String, String>,
+    serverClock: ServerClock,
+  ): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion
 
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
-      .client(buildHttpClient(customHeaders))
+      .client(buildHttpClient(customHeaders, serverClock))
       .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
       .addConverterFactory(ClerkApiResultConverterFactory)
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
@@ -146,11 +152,14 @@ internal object ClerkApi {
   }
 
   @VisibleForTesting
-  internal fun buildHttpClient(customHeaders: Map<String, String>): OkHttpClient =
+  internal fun buildHttpClient(
+    customHeaders: Map<String, String>,
+    serverClock: ServerClock,
+  ): OkHttpClient =
     OkHttpClient.Builder()
       .apply {
         connectionSpecs(listOf(ConnectionSpec.MODERN_TLS))
-        addInterceptor(ClientSyncingMiddleware(json = json))
+        addInterceptor(ClientSyncingMiddleware(json = json, serverClock = serverClock))
         addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
         addInterceptor(DeviceTokenSavingMiddleware())
         addInterceptor(AppVersionStatusMiddleware(json = json))
