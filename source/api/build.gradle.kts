@@ -121,8 +121,8 @@ dependencies {
   testImplementation(libs.robolectric)
 
   androidTestImplementation(platform(libs.compose.bom))
-  androidTestImplementation("androidx.test:runner:${libs.versions.androidxTest.get()}")
   androidTestImplementation(libs.androidx.compose.runtime)
+  androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.junit)
   androidTestImplementation(libs.kotlin.test)
 
