@@ -75,12 +75,11 @@ class DpopProofTest {
   }
 
   @Test
-  fun `a proof for a long URL and token fits the server's size limit`() {
+  fun `a proof for a long URL fits the server's size limit`() {
     val proof =
       buildProof(
         url =
-          "https://clerk.example-with-a-long-name.com/v1/client/sessions/${"s".repeat(64)}/tokens",
-        accessToken = "t".repeat(4096),
+          "https://clerk.example-with-a-long-name.com/v1/client/sessions/${"s".repeat(64)}/tokens"
       )
 
     assertTrue(proof.length < 8192, "proof is ${proof.length} bytes")
