@@ -47,17 +47,18 @@ internal object DeviceKeyFactory {
     }
 }
 
-internal fun signAndVerify(
-  privateKey: PrivateKey,
+internal fun derSignature(privateKey: PrivateKey, data: ByteArray): ByteArray =
+  Signature.getInstance(ES256_ALGORITHM).run {
+    initSign(privateKey)
+    update(data)
+    sign()
+  }
+
+internal fun rawSignatureVerifiedBy(
   publicKey: PublicKey,
   data: ByteArray,
+  derSignature: ByteArray,
 ): ByteArray {
-  val derSignature =
-    Signature.getInstance(ES256_ALGORITHM).run {
-      initSign(privateKey)
-      update(data)
-      sign()
-    }
   // On API 30 and lower a Keystore private key names its alias, not its key, so after the alias is
   // replaced it signs with the new key.
   val signedByPublicKey =

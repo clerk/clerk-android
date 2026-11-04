@@ -13,7 +13,7 @@ internal class JvmDeviceKey private constructor(private val keyPair: KeyPair) : 
 
   override fun sign(data: ByteArray): ByteArray {
     val stored = synchronized(lock) { storedKeyPair } ?: throw DeviceKeyLostException()
-    return signAndVerify(stored.private, keyPair.public, data)
+    return rawSignatureVerifiedBy(keyPair.public, data, derSignature(stored.private, data))
   }
 
   override fun delete() {
