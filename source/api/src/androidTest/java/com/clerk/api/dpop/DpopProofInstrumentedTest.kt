@@ -11,6 +11,7 @@ import java.io.File
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.json.Json
@@ -19,6 +20,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import okhttp3.Headers.Companion.headersOf
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assume.assumeTrue
@@ -45,7 +47,8 @@ class DpopProofInstrumentedTest {
   fun writesProofAfterRecordingDate() {
     val serverDate = arguments.getString("serverDate")
     assumeTrue("pass a server Date header value as serverDate", serverDate != null)
-    val serverClock = ServerClock().apply { record(serverDate) }
+    val serverTime = assertNotNull(headersOf("Date", serverDate!!).getDate("Date"))
+    val serverClock = ServerClock().apply { record(Instant.fromEpochMilliseconds(serverTime.time)) }
 
     report("serverDate=$serverDate local=${Clock.System.now()} server=${serverClock.now()}")
     write("server-clock", listOf(proofCase(clientUrl, now = serverClock.now())))
