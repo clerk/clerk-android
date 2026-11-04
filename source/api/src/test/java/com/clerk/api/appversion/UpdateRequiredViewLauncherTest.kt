@@ -2,6 +2,7 @@ package com.clerk.api.appversion
 
 import android.app.Activity
 import android.content.ComponentName
+import android.content.pm.ApplicationInfo
 import android.os.Looper
 import com.clerk.api.Clerk
 import java.lang.ref.WeakReference
@@ -15,6 +16,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class UpdateRequiredViewLauncherTest {
@@ -24,6 +26,7 @@ class UpdateRequiredViewLauncherTest {
 
   @Before
   fun setUp() {
+    ShadowLog.clear()
     AppVersionSupport.reset()
     AppVersionSupport.configure(AppBuild(TEST_PACKAGE_NAME, versionCode = 41))
     controller = Robolectric.buildActivity(Activity::class.java).setup()
@@ -96,6 +99,66 @@ class UpdateRequiredViewLauncherTest {
 
     assertNull(shadowOf(activity).nextStartedActivity)
   }
+
+  @Test
+  fun `a debuggable app without the UI library warns once it has a minimum`() {
+    debuggable(true)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
+    assertEquals(0, missingScreenWarnings())
+
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("41")))
+    shadowOf(Looper.getMainLooper()).idle()
+    AppVersionSupport.applyEnvironment(appVersionTestEnvironment(androidPolicy("42")))
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertEquals(1, missingScreenWarnings())
+  }
+
+  @Test
+  fun `a release build without the UI library doesn't warn`() {
+    debuggable(false)
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
+
+    block()
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertEquals(0, missingScreenWarnings())
+  }
+
+  @Test
+  fun `an app that turned the update screen off doesn't warn`() {
+    debuggable(true)
+    UpdateRequiredViewLauncher.start(activity, enabled = false)
+
+    block()
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertEquals(0, missingScreenWarnings())
+  }
+
+  @Test
+  fun `an app with the UI library doesn't warn`() {
+    debuggable(true)
+    includeUiLibrary()
+    UpdateRequiredViewLauncher.start(activity, enabled = true)
+
+    block()
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertEquals(0, missingScreenWarnings())
+  }
+
+  private fun debuggable(isDebuggable: Boolean) {
+    val info = activity.applicationInfo
+    info.flags =
+      if (isDebuggable) info.flags or ApplicationInfo.FLAG_DEBUGGABLE
+      else info.flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+  }
+
+  private fun missingScreenWarnings(): Int =
+    ShadowLog.getLogsForTag("ClerkLog").count {
+      it.msg.contains(UpdateRequiredViewLauncher.MISSING_UPDATE_SCREEN_WARNING)
+    }
 
   private fun block() {
     AppVersionSupport.applyUnsupportedAppVersion(meta = null, AppVersionSupport.nextRequest())
