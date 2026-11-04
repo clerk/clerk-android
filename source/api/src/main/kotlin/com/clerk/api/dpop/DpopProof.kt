@@ -40,7 +40,7 @@ internal object DpopProof {
 
   private fun accessTokenHash(accessToken: String): String =
     Es256.base64UrlEncode(
-      MessageDigest.getInstance("SHA-256").digest(accessToken.toByteArray(Charsets.US_ASCII))
+      MessageDigest.getInstance("SHA-256").digest(accessToken.toByteArray(Charsets.UTF_8))
     )
 
   private fun JsonObject.base64UrlEncode(): String =
