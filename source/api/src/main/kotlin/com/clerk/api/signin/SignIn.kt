@@ -445,6 +445,8 @@ private constructor(
      *   take it, so it is sent only if the flow transfers to a sign-up.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property identifier The user's identifier for authentication.
+     * @property enterpriseConnectionId The enterprise connection to use when more than one matches
+     *   the email address.
      */
     @Serializable
     public data class EnterpriseSSO(
@@ -453,6 +455,7 @@ private constructor(
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       override val identifier: String? = null,
+      @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
     ) : AuthenticateWithRedirectParams
   }
 
@@ -518,6 +521,7 @@ private constructor(
       override val strategy: String = AuthStrategy.EnterpriseSso.value,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
     ) : PrepareFirstFactorParams
 
     @Serializable

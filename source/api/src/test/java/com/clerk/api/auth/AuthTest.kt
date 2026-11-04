@@ -169,6 +169,72 @@ class AuthTest {
   }
 
   @Test
+  fun `signInWithEnterpriseSso forwards the chosen enterprise connection`() = runTest {
+    mockkObject(SSOService)
+    coEvery {
+      SSOService.authenticateWithRedirect(
+        any(),
+        any(),
+        any(),
+        any(),
+        any(),
+        any(),
+        enterpriseConnectionId = any(),
+      )
+    } returns ClerkResult.success(OAuthResult(signIn = null))
+
+    Auth().signInWithEnterpriseSso {
+      email = "user@company.com"
+      enterpriseConnectionId = "ent_conn_2"
+    }
+
+    coVerify(exactly = 1) {
+      SSOService.authenticateWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        transferable = true,
+        enterpriseConnectionId = "ent_conn_2",
+      )
+    }
+  }
+
+  @Test
+  fun `signUpWithEnterpriseSso forwards the chosen enterprise connection`() = runTest {
+    mockkObject(SSOService)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        any(),
+        any(),
+        any(),
+        any(),
+        any(),
+        any(),
+        enterpriseConnectionId = any(),
+      )
+    } returns ClerkResult.success(OAuthResult(signUp = mockk(relaxed = true)))
+
+    Auth().signUpWithEnterpriseSso {
+      email = "user@company.com"
+      enterpriseConnectionId = "ent_conn_2"
+    }
+
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "enterprise_sso",
+        redirectUrl = any(),
+        identifier = any(),
+        emailAddress = "user@company.com",
+        legalAccepted = any(),
+        unsafeMetadata = any(),
+        enterpriseConnectionId = "ent_conn_2",
+      )
+    }
+  }
+
+  @Test
   fun `signUp forwards unsafe metadata`() = runTest {
     val signUpApi = mockk<SignUpApi>()
     val createdSignUp = mockk<SignUp>(relaxed = true)

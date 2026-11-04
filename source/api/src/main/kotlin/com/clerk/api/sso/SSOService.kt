@@ -5,10 +5,12 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.postSignUp
+import com.clerk.api.auth.reportingFailures
 import com.clerk.api.auth.types.Strategy
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.log.ClerkLogger
+import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
@@ -16,6 +18,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.localFailure
+import com.clerk.api.network.serialization.suspendingFlatMap
 import com.clerk.api.redirect.PendingRedirect
 import com.clerk.api.redirect.PendingRedirect.RedirectFlow
 import com.clerk.api.redirect.RedirectCoordinator
@@ -50,6 +53,8 @@ internal object SSOService {
    *   the flow transfers to a sign-up
    * @param transferable Whether this authentication flow allows transferring to a sign-up if the
    *   user doesn't have an account. Defaults to `true`.
+   * @param enterpriseConnectionId The enterprise connection to prepare Enterprise SSO with when
+   *   more than one matches the email address.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
    *   failure
    */
@@ -60,6 +65,7 @@ internal object SSOService {
     emailAddress: String? = null,
     legalAccepted: Boolean? = null,
     transferable: Boolean = true,
+    enterpriseConnectionId: String? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     RedirectCoordinator.supersedePending()
     val resolvedStrategy =
@@ -91,7 +97,11 @@ internal object SSOService {
         when (
           val prepareResult =
             initialResult.value.prepareFirstFactorImpl(
-              firstFactorParams(strategy = resolvedStrategy, redirectUrl = redirectUrl)
+              firstFactorParams(
+                strategy = resolvedStrategy,
+                redirectUrl = redirectUrl,
+                enterpriseConnectionId = enterpriseConnectionId,
+              )
             )
         ) {
           is ClerkResult.Failure -> {
@@ -125,9 +135,13 @@ internal object SSOService {
   private fun firstFactorParams(
     strategy: String,
     redirectUrl: String,
+    enterpriseConnectionId: String?,
   ): SignIn.PrepareFirstFactorParams {
     return if (Strategy.from(strategy) == Strategy.EnterpriseSso) {
-      SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl)
+      SignIn.PrepareFirstFactorParams.EnterpriseSSO(
+        redirectUrl = redirectUrl,
+        enterpriseConnectionId = enterpriseConnectionId,
+      )
     } else {
       SignIn.PrepareFirstFactorParams.OAuth(strategy = strategy, redirectUrl = redirectUrl)
     }
@@ -140,22 +154,37 @@ internal object SSOService {
     emailAddress: String? = null,
     legalAccepted: Boolean? = null,
     unsafeMetadata: Map<String, Any>? = null,
+    enterpriseConnectionId: String? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     RedirectCoordinator.supersedePending()
     val state = RedirectState.generate()
 
+    val redirectFields = buildMap {
+      strategy?.let { put("strategy", it) }
+      put("redirect_url", RedirectState.withState(redirectUrl, state))
+    }
+    val signUpFields = buildMap {
+      put("locale", Clerk.locale.value.orEmpty())
+      identifier?.let { put("identifier", it) }
+      emailAddress?.let { put("email_address", it) }
+      legalAccepted?.let { put(LEGAL_ACCEPTED, it.toString()) }
+      unsafeMetadata?.let { put("unsafe_metadata", toUnsafeMetadataJsonString(it)) }
+    }
+
+    // FAPI reads enterprise_connection_id when updating a sign-up, not when creating one.
     val initialResult =
-      SignUp.create(
-        buildMap {
-          strategy?.let { put("strategy", it) }
-          put("redirect_url", RedirectState.withState(redirectUrl, state))
-          put("locale", Clerk.locale.value.orEmpty())
-          identifier?.let { put("identifier", it) }
-          emailAddress?.let { put("email_address", it) }
-          legalAccepted?.let { put(LEGAL_ACCEPTED, it.toString()) }
-          unsafeMetadata?.let { put("unsafe_metadata", toUnsafeMetadataJsonString(it)) }
+      if (enterpriseConnectionId == null) {
+        SignUp.create(signUpFields + redirectFields)
+      } else {
+        SignUp.create(signUpFields).suspendingFlatMap { created ->
+          Clerk.auth.reportingFailures {
+            ClerkApi.signUp.updateSignUp(
+              created.id,
+              redirectFields + ("enterprise_connection_id" to enterpriseConnectionId),
+            )
+          }
         }
-      )
+      }
 
     return when (initialResult) {
       is ClerkResult.Failure -> {

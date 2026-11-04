@@ -462,6 +462,7 @@ public class Auth internal constructor() {
           SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
             redirectUrl = builder.redirectUrl,
             emailAddress = email,
+            enterpriseConnectionId = builder.enterpriseConnectionId,
           ),
           transferable = transferable,
         )
@@ -702,6 +703,7 @@ public class Auth internal constructor() {
           SignUp.AuthenticateWithRedirectParams.EnterpriseSSO(
             redirectUrl = builder.redirectUrl,
             emailAddress = email,
+            enterpriseConnectionId = builder.enterpriseConnectionId,
           )
         )
       }

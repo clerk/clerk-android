@@ -430,8 +430,10 @@ public final class com/clerk/api/auth/builders/EnterpriseSsoBuilder {
 	public static final field $stable I
 	public fun <init> ()V
 	public final fun getEmail ()Ljava/lang/String;
+	public final fun getEnterpriseConnectionId ()Ljava/lang/String;
 	public final fun getRedirectUrl ()Ljava/lang/String;
 	public final fun setEmail (Ljava/lang/String;)V
+	public final fun setEnterpriseConnectionId (Ljava/lang/String;)V
 	public final fun setRedirectUrl (Ljava/lang/String;)V
 }
 
@@ -5350,17 +5352,19 @@ public abstract interface class com/clerk/api/signin/SignIn$AuthenticateWithRedi
 public final class com/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO : com/clerk/api/signin/SignIn$AuthenticateWithRedirectParams {
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/Boolean;
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;
-	public static synthetic fun copy$default (Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;
+	public static synthetic fun copy$default (Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/api/signin/SignIn$AuthenticateWithRedirectParams$EnterpriseSSO;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getEmailAddress ()Ljava/lang/String;
+	public final fun getEnterpriseConnectionId ()Ljava/lang/String;
 	public fun getIdentifier ()Ljava/lang/String;
 	public fun getLegalAccepted ()Ljava/lang/Boolean;
 	public fun getRedirectUrl ()Ljava/lang/String;
@@ -5877,13 +5881,15 @@ public final class com/clerk/api/signin/SignIn$PrepareFirstFactorParams$Enterpri
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;
-	public static synthetic fun copy$default (Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;
+	public static synthetic fun copy$default (Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/api/signin/SignIn$PrepareFirstFactorParams$EnterpriseSSO;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnterpriseConnectionId ()Ljava/lang/String;
 	public final fun getRedirectUrl ()Ljava/lang/String;
 	public fun getStrategy ()Ljava/lang/String;
 	public fun hashCode ()I
@@ -6229,9 +6235,9 @@ public final class com/clerk/api/signin/SignInExtensionsKt {
 	public static final fun alternativeFirstFactors (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/network/model/factor/Factor;)Ljava/util/List;
 	public static synthetic fun alternativeFirstFactors$default (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/network/model/factor/Factor;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun alternativeSecondFactors (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/network/model/factor/Factor;)Ljava/util/List;
-	public static final fun authenticateWithEnterpriseSso (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun authenticateWithEnterpriseSso (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final synthetic fun authenticateWithEnterpriseSso (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun authenticateWithEnterpriseSso$default (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun authenticateWithEnterpriseSso$default (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun authenticateWithEnterpriseSso$default (Lcom/clerk/api/signin/SignIn;ZLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun authenticateWithOAuth (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/sso/OAuthProvider;ZLjava/lang/String;Ljava/lang/Boolean;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final synthetic fun authenticateWithOAuth (Lcom/clerk/api/signin/SignIn;Lcom/clerk/api/sso/OAuthProvider;ZLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -6392,18 +6398,20 @@ public final class com/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$En
 	public static final field $stable I
 	public static final field Companion Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/Boolean;
 	public final fun component4 ()Ljava/lang/String;
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;
-	public static synthetic fun copy$default (Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;
+	public static synthetic fun copy$default (Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/clerk/api/signup/SignUp$AuthenticateWithRedirectParams$EnterpriseSSO;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getEmailAddress ()Ljava/lang/String;
+	public final fun getEnterpriseConnectionId ()Ljava/lang/String;
 	public fun getIdentifier ()Ljava/lang/String;
 	public fun getLegalAccepted ()Ljava/lang/Boolean;
 	public fun getRedirectUrl ()Ljava/lang/String;

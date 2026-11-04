@@ -277,6 +277,9 @@ public suspend fun SignIn.authenticateWithOAuth(
  * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK. A
  *   custom value needs an intent filter that routes it to `com.clerk.api.sso.SSOReceiverActivity`
  *   in the application manifest.
+ * @param enterpriseConnectionId The enterprise connection to use when more than one matches the
+ *   email address. Pass the [com.clerk.api.network.model.factor.Factor.enterpriseConnectionId] of
+ *   one of the `enterprise_sso` factors in [SignIn.supportedFirstFactors].
  * @param legalAccepted Whether the user has accepted the instance's legal terms. A sign-in does not
  *   take it, so it is sent only if the flow transfers to a sign-up. Defaults to `null`, which sends
  *   nothing.
@@ -286,10 +289,14 @@ public suspend fun SignIn.authenticateWithOAuth(
 public suspend fun SignIn.authenticateWithEnterpriseSso(
   transferable: Boolean = true,
   redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+  enterpriseConnectionId: String? = null,
   legalAccepted: Boolean? = null,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> =
   authenticateWithRedirectFactor(
-    SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl),
+    SignIn.PrepareFirstFactorParams.EnterpriseSSO(
+      redirectUrl = redirectUrl,
+      enterpriseConnectionId = enterpriseConnectionId,
+    ),
     transferable,
     legalAccepted,
   )

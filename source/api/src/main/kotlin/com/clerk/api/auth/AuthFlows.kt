@@ -65,6 +65,8 @@ internal suspend fun Auth.authenticateSignInWithRedirect(
     emailAddress = params.emailAddress,
     legalAccepted = params.legalAccepted,
     transferable = transferable,
+    enterpriseConnectionId =
+      (params as? SignIn.AuthenticateWithRedirectParams.EnterpriseSSO)?.enterpriseConnectionId,
   )
 }
 
@@ -113,5 +115,7 @@ internal suspend fun Auth.authenticateSignUpWithRedirect(
     emailAddress = params.emailAddress,
     legalAccepted = params.legalAccepted,
     unsafeMetadata = params.unsafeMetadata,
+    enterpriseConnectionId =
+      (params as? SignUp.AuthenticateWithRedirectParams.EnterpriseSSO)?.enterpriseConnectionId,
   )
 }
