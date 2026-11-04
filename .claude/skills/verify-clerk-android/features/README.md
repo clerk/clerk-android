@@ -53,7 +53,7 @@ On the standard instance an email sign-in for a user with no password goes strai
 
 ## Feature entry contract
 
-Each feature file starts with an H1 title and one paragraph describing the user-visible behavior, then exactly four H2 sections in this order: `Sub-features`, `How to get to it (user POV)`, `Driving it with verify`, and `Gotchas`. `Driving it with verify` starts with `Preconditions:` and names the specs that prove each sub-feature. `Gotchas` names each locator that falls back to visible text.
+Each feature file starts with an H1 title and one paragraph describing the user-visible behavior, then four H2 sections in this order: `Sub-features`, `How to get to it (user POV)`, `Driving it with verify`, and `Gotchas`. `Driving it with verify` starts with `Preconditions:` and names the specs that prove each sub-feature. `Gotchas` names each locator that falls back to visible text. A feature with states that no spec can reach has a `States a spec cannot reach` section before `Gotchas`, which names each state, where the app decides it, and what it takes.
 
 ## Features
 
