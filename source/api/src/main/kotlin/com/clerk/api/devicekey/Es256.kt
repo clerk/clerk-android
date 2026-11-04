@@ -2,6 +2,7 @@ package com.clerk.api.devicekey
 
 import android.util.Base64
 import java.math.BigInteger
+import java.security.MessageDigest
 import java.security.SignatureException
 import java.security.interfaces.ECPublicKey
 import kotlinx.serialization.json.JsonObject
@@ -16,12 +17,23 @@ internal object Es256 {
   private const val DER_LENGTH_MASK = 0x7F
   private const val DER_BYTE_MASK = 0xFF
 
+  // RFC 7638 section 3.2 hashes only the required members, in lexicographic order.
+  private val THUMBPRINT_MEMBERS = listOf("crv", "kty", "x", "y")
+
   fun publicJwk(publicKey: ECPublicKey): JsonObject = buildJsonObject {
     put("kty", "EC")
     put("crv", "P-256")
     put("x", base64UrlEncode(fixedWidthCoordinate(publicKey.w.affineX)))
     put("y", base64UrlEncode(fixedWidthCoordinate(publicKey.w.affineY)))
     put("alg", "ES256")
+  }
+
+  fun thumbprint(publicJwk: JsonObject): String {
+    val requiredMembers = JsonObject(THUMBPRINT_MEMBERS.associateWith { publicJwk.getValue(it) })
+    val digest =
+      MessageDigest.getInstance("SHA-256")
+        .digest(requiredMembers.toString().toByteArray(Charsets.UTF_8))
+    return base64UrlEncode(digest)
   }
 
   private fun fixedWidthCoordinate(coordinate: BigInteger): ByteArray {

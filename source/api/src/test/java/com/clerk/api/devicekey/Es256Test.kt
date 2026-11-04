@@ -83,6 +83,13 @@ class Es256Test {
     )
   }
 
+  @Test
+  fun `thumbprint matches the jkt that RFC 9449 gives for its example key`() {
+    val thumbprint = Es256.thumbprint(Es256.publicJwk(rfc9449ExampleKey))
+
+    assertEquals("0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I", thumbprint)
+  }
+
   private companion object {
     const val RFC9449_EXAMPLE_X = "l8tFrhx-34tV3hRICRDY9zCkDlpBhF42UQUfWVAWBFs"
     const val RFC9449_EXAMPLE_Y = "9VE4jf_Ok_o64zbTTlcuNJajHmt6v9TDVrU0CdvGRDA"
