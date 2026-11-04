@@ -146,6 +146,8 @@ await host.useSettings({
 
 To see what is on or off, run `e2e-tests/bin/control-clerk-android settings <prefix>`, such as `settings auth_multi_factor`. [references/instances.md](references/instances.md) has what a call waits for, how the CLI restores a change after a crash, and a table of the settings that tests often change.
 
+A test of the update screen calls `host.useMinimumAppVersion({ minimumVersion, updateUrl })`, which registers the app under test with the application and sets its minimum. The CLI removes the minimum when the test ends, pass or fail. [references/instances.md](references/instances.md) has the details.
+
 ### Committed and explored specs
 
 The specs under `specs/features/<feature>/` are committed and cover the Feature Map in `features/`. Prove your own change, and leave the rest of the committed specs to the `Verify end-to-end tests` workflow (`.github/workflows/verify-e2e.yml`). It runs every one of them on `main` each night at 07:17 UTC. The release workflow runs them again unchanged before it creates a release, and publishes nothing when one fails. When your change is to behavior a committed spec already covers, that spec is your proof: run it. A spec covers a behavior only when it asserts on it. A spec that passes through the screen you changed without checking what you changed is not your proof. Run another feature's specs yourself when you changed code that feature shares, because nothing runs them on a pull request, and a failure at release time stops the release.

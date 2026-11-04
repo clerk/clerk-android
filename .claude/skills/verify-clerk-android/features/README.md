@@ -6,7 +6,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 `SKILL.md` under Launch has the setup and the commands. These facts hold for every recipe here.
 
-- The standard settings have every auth method and signed-in feature that these recipes use, except the session tasks. A spec that needs a task turns it on with `host.useSettings`, and the CLI puts the settings back when the test ends. The `settings` check of `doctor` compares the live instance with the standard settings and names any leaf a test changed that is not restored yet, once the worktree holds an application.
+- The standard settings have every auth method and signed-in feature that these recipes use, except the session tasks and a minimum app version. A spec that needs a task turns it on with `host.useSettings`, a spec that needs a minimum sets it with `host.useMinimumAppVersion`, and the CLI puts them back when the test ends. The `settings` check of `doctor` compares the live instance with the standard settings and names any leaf a test changed that is not restored yet, once the worktree holds an application.
 - Every launch gets a new `verifyStorageScope`, so no spec inherits a session from another spec. A launch with `keepStorage: true` reuses the scope of the launch before it in the same test.
 - `down` deletes this worktree's application, and with it every user and organization a run created, including users created through the sign-up form.
 - The AuthView that `Sign in` opens takes the place of the home, so the home is readable only after AuthView has closed.

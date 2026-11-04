@@ -22,7 +22,7 @@ test('a signed-in user on a build below the minimum sees the update screen, and 
     await host.launch({ keepStorage: true, landsOn: host.app.signedIn });
     await host.expectSignedInAs(user);
     await expect(host.app.sessionId).toHaveText(sessionId);
-    await expect(title).toBeHidden();
+    await expect(title).toHaveCount(0);
     await host.screenshot('signed-in-after-lowering');
   });
 });
@@ -38,5 +38,5 @@ test('a build at the minimum opens as usual', async ({ host, screen }) => {
   await host.useMinimumAppVersion({ minimumVersion: E2E_APP_VERSION_CODE, updateUrl: UPDATE_URL });
   const user = await host.seedUser();
   await host.launch({ signedInAs: user });
-  await expect(screen.getByText('Update required')).toBeHidden();
+  await expect(screen.getByText('Update required')).toHaveCount(0);
 });
