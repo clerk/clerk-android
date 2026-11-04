@@ -1,6 +1,8 @@
 package com.clerk.api.devicekey
 
 import android.security.keystore.KeyPermanentlyInvalidatedException
+import android.security.keystore.KeyProperties
+import android.security.keystore.StrongBoxUnavailableException
 import java.security.InvalidKeyException
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -132,6 +134,60 @@ class AndroidKeystoreDeviceKeyTest {
     assertIs<DeviceKeyState.Unavailable>(holder.state())
     assertEquals(original.thumbprint, storedThumbprint())
   }
+
+  @Test
+  fun `a device with StrongBox gets a StrongBox key`() {
+    val store = FakeDeviceKeyStore(strongBox = true)
+
+    val key = assertIs<DeviceKeyState.Ready>(DeviceKeyHolder { getOrCreate(store) }.state()).key
+
+    assertEquals(DeviceKeySecurityLevel.STRONGBOX, key.securityLevel)
+  }
+
+  @Test
+  fun `a StrongBox failure falls back to a key outside StrongBox`() {
+    val store = FakeDeviceKeyStore(strongBox = true)
+    store.strongBoxFailure = StrongBoxUnavailableException("No StrongBox on this device")
+
+    val key = assertIs<DeviceKeyState.Ready>(DeviceKeyHolder { getOrCreate(store) }.state()).key
+
+    assertNotEquals(DeviceKeySecurityLevel.STRONGBOX, key.securityLevel)
+    assertEquals(key.publicJwk, Es256.publicJwk(assertIs<ECPublicKey>(store.stored?.public)))
+    assertEquals(64, key.sign(data).size)
+  }
+
+  @Test
+  fun `a key that fails in and out of StrongBox is unavailable`() {
+    val store = FakeDeviceKeyStore(strongBox = true)
+    val failure = ProviderException("Keystore is unavailable")
+    store.strongBoxFailure = StrongBoxUnavailableException("No StrongBox on this device")
+    store.generationFailure = failure
+
+    val state = DeviceKeyHolder { getOrCreate(store) }.state()
+
+    assertSame(failure, assertIs<DeviceKeyState.Unavailable>(state).cause)
+    assertEquals(null, store.stored)
+  }
+
+  @Test
+  fun `KeyInfo security levels map to the level the key reports`() {
+    val expected =
+      mapOf(
+        KeyProperties.SECURITY_LEVEL_STRONGBOX to DeviceKeySecurityLevel.STRONGBOX,
+        KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT to DeviceKeySecurityLevel.TEE,
+        KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE to DeviceKeySecurityLevel.TEE,
+        KeyProperties.SECURITY_LEVEL_SOFTWARE to DeviceKeySecurityLevel.SOFTWARE,
+        KeyProperties.SECURITY_LEVEL_UNKNOWN to DeviceKeySecurityLevel.SOFTWARE,
+      )
+
+    assertEquals(
+      expected,
+      expected.mapValues { (keyInfoLevel, _) -> securityLevelOf(keyInfoLevel) },
+    )
+  }
+
+  private fun getOrCreate(store: DeviceKeyStore): DeviceKey =
+    AndroidKeystoreDeviceKey.getOrCreate(store)
 
   private fun readyKey(): DeviceKey = assertIs<DeviceKeyState.Ready>(holder.state()).key
 

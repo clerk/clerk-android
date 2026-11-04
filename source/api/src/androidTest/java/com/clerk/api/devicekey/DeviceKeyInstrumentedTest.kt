@@ -2,9 +2,10 @@ package com.clerk.api.devicekey
 
 import android.app.KeyguardManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.SystemClock
+import android.security.keystore.KeyInfo
+import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
@@ -12,6 +13,7 @@ import java.io.File
 import java.math.BigInteger
 import java.security.AlgorithmParameters
 import java.security.KeyFactory
+import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.UnrecoverableKeyException
@@ -41,14 +43,14 @@ class DeviceKeyInstrumentedTest {
 
     val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
     assertIs<DeviceKeyState.Ready>(holder.state())
+    val keystoreLevel = levelKeystoreReportsForStoredKey()
 
     report(
-      "level=${key.securityLevel.wireName} api=${Build.VERSION.SDK_INT} thumbprint=${key.thumbprint}"
+      "level=${key.securityLevel.wireName} keystore_level=${keystoreLevel.wireName} " +
+        "api=${Build.VERSION.SDK_INT} thumbprint=${key.thumbprint}"
     )
     assertIs<AndroidKeystoreDeviceKey>(key)
-    if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)) {
-      assertNotEquals(DeviceKeySecurityLevel.STRONGBOX, key.securityLevel)
-    }
+    assertEquals(keystoreLevel, key.securityLevel)
     assertTrue(verifies(key.publicJwk, data, key.sign(data)))
   }
 
@@ -156,12 +158,43 @@ class DeviceKeyInstrumentedTest {
     val (key, keygenMs) = timed { AndroidKeystoreDeviceKey.getOrCreate(context) }
     val (_, loadMs) = timed { AndroidKeystoreDeviceKey.getOrCreate(context) }
     val signMs = List(SIGNATURE_COUNT) { timed { key.sign(data) }.second }.sorted()
+    val signP50Ms = signMs[signMs.size / 2]
+    val signBudgetMs =
+      if (key.securityLevel == DeviceKeySecurityLevel.STRONGBOX) {
+        STRONGBOX_SIGN_P50_BUDGET_MS
+      } else {
+        SIGN_P50_BUDGET_MS
+      }
 
     report(
       "level=${key.securityLevel.wireName} api=${Build.VERSION.SDK_INT} keygen_ms=$keygenMs " +
-        "load_ms=$loadMs sign_p50_ms=${signMs[signMs.size / 2]} " +
+        "load_ms=$loadMs sign_p50_ms=$signP50Ms " +
         "sign_p90_ms=${signMs[signMs.size * 9 / 10]} sign_max_ms=${signMs.last()}"
     )
+    assertTrue(keygenMs < KEYGEN_BUDGET_MS, "keygen took $keygenMs ms, over $KEYGEN_BUDGET_MS ms")
+    assertTrue(signP50Ms < signBudgetMs, "sign p50 took $signP50Ms ms, over $signBudgetMs ms")
+  }
+
+  private fun levelKeystoreReportsForStoredKey(): DeviceKeySecurityLevel {
+    val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
+    val privateKey = keyStore.getKey(DEVICE_KEY_ALIAS, null) as PrivateKey
+    val keyInfo =
+      KeyFactory.getInstance(privateKey.algorithm, ANDROID_KEY_STORE)
+        .getKeySpec(privateKey, KeyInfo::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      return when (keyInfo.securityLevel) {
+        KeyProperties.SECURITY_LEVEL_STRONGBOX -> DeviceKeySecurityLevel.STRONGBOX
+        KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT,
+        KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE -> DeviceKeySecurityLevel.TEE
+        else -> DeviceKeySecurityLevel.SOFTWARE
+      }
+    }
+    @Suppress("DEPRECATION")
+    return if (keyInfo.isInsideSecureHardware) {
+      DeviceKeySecurityLevel.TEE
+    } else {
+      DeviceKeySecurityLevel.SOFTWARE
+    }
   }
 
   private fun <T> timed(block: () -> T): Pair<T, Double> {
@@ -210,5 +243,10 @@ class DeviceKeyInstrumentedTest {
     const val TAG = "DeviceKeyTest"
     const val SIGNATURE_COUNT = 100
     const val NANOS_PER_MILLI = 1_000_000.0
+    const val KEYGEN_BUDGET_MS = 500.0
+    const val SIGN_P50_BUDGET_MS = 10.0
+    const val STRONGBOX_SIGN_P50_BUDGET_MS = 60.0
+    const val DEVICE_KEY_ALIAS = "com.clerk.device_key.v1"
+    const val ANDROID_KEY_STORE = "AndroidKeyStore"
   }
 }
