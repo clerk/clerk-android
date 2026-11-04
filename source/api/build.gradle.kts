@@ -116,6 +116,7 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
+  testImplementation(libs.nimbus.jose.jwt)
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.okhttp.tls)
   testImplementation(libs.robolectric)

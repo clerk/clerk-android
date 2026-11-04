@@ -1,0 +1,104 @@
+package com.clerk.api.dpop
+
+import com.clerk.api.devicekey.DeviceKey
+import com.clerk.api.devicekey.JvmDeviceKey
+import com.nimbusds.jose.JOSEObjectType
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.crypto.ECDSAVerifier
+import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jwt.SignedJWT
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@RunWith(RobolectricTestRunner::class)
+class DpopProofTest {
+  private val key: DeviceKey = JvmDeviceKey.getOrCreate()
+
+  @Test
+  fun `the embedded jwk verifies the signature`() {
+    val proof =
+      buildProof(
+        url = "https://clerk.example.com/v1/client?_is_native=true",
+        now = Clock.System.now(),
+      )
+    println("DPoP proof for GET https://clerk.example.com/v1/client: $proof")
+
+    val jwt = SignedJWT.parse(proof)
+    val jwk = assertIs<ECKey>(jwt.header.jwk)
+
+    assertTrue(jwt.verify(ECDSAVerifier(jwk)))
+    assertEquals(JOSEObjectType("dpop+jwt"), jwt.header.type)
+    assertEquals(JWSAlgorithm.ES256, jwt.header.algorithm)
+    assertFalse(jwk.isPrivate)
+    assertEquals(key.thumbprint, jwk.computeThumbprint().toString())
+    assertEquals("https://clerk.example.com/v1/client", jwt.jwtClaimsSet.getStringClaim("htu"))
+    assertEquals("GET", jwt.jwtClaimsSet.getStringClaim("htm"))
+    assertEquals("proof-id", jwt.jwtClaimsSet.jwtid)
+    assertEquals("software", jwt.jwtClaimsSet.getStringClaim("clerk_sl"))
+  }
+
+  @Test
+  fun `htu drops the query and fragment and keeps a proxy path`() {
+    val proof = buildProof(url = "https://app.example.com/__clerk/v1/client?_is_native=true#top")
+
+    assertEquals("https://app.example.com/__clerk/v1/client", claims(proof).getStringClaim("htu"))
+  }
+
+  @Test
+  fun `ath is the RFC 9449 hash of the access token`() {
+    val proof = buildProof(accessToken = "Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU")
+
+    assertEquals("fUHyO2r2Z3DZ53EsNrWBb0xWXoaNy59IiKCAqksmQEo", claims(proof).getStringClaim("ath"))
+  }
+
+  @Test
+  fun `a proof without an access token has no ath claim`() {
+    val proof = buildProof(accessToken = null)
+
+    assertFalse("ath" in claims(proof).claims)
+    assertFalse("\"ath\"" in SignedJWT.parse(proof).payload.toString())
+  }
+
+  @Test
+  fun `iat is whole seconds`() {
+    val proof = buildProof(now = Instant.fromEpochMilliseconds(1_700_000_000_999))
+
+    assertTrue("\"iat\":1700000000," in SignedJWT.parse(proof).payload.toString())
+  }
+
+  @Test
+  fun `a proof for a long URL and token fits the server's size limit`() {
+    val proof =
+      buildProof(
+        url =
+          "https://clerk.example-with-a-long-name.com/v1/client/sessions/${"s".repeat(64)}/tokens",
+        accessToken = "t".repeat(4096),
+      )
+
+    assertTrue(proof.length < 8192, "proof is ${proof.length} bytes")
+  }
+
+  private fun buildProof(
+    url: String = "https://clerk.example.com/v1/client",
+    accessToken: String? = null,
+    now: Instant = Instant.fromEpochSeconds(1_700_000_000),
+  ): String =
+    DpopProof.build(
+      key = key,
+      method = "GET",
+      url = url.toHttpUrl(),
+      accessToken = accessToken,
+      now = now,
+      jti = "proof-id",
+    )
+
+  private fun claims(proof: String) = SignedJWT.parse(proof).jwtClaimsSet
+}
