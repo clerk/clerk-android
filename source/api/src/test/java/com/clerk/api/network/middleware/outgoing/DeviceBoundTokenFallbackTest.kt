@@ -52,6 +52,7 @@ class DeviceBoundTokenFallbackTest {
   @Before
   fun setUp() {
     StorageHelper.reset(context)
+    Clerk.updateClient(Client())
     ConfiguredClerkForTest.setConfigured(context, true)
     mockkObject(Client.Companion, Environment.Companion)
     coEvery { Client.getSkippingClientId() } coAnswers

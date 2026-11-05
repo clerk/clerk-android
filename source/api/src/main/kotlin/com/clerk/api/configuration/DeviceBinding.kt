@@ -1,5 +1,6 @@
 package com.clerk.api.configuration
 
+import com.auth0.android.jwt.JWT
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyState
 import com.clerk.api.log.ClerkLogger
@@ -48,7 +49,47 @@ internal fun proofDecision(
   tokenHasCnf: Boolean,
   binding: DeviceBinding,
   signFailure: SignFailure?,
-): ProofDecision = TODO("red: $tokenHasCnf $binding $signFailure")
+): ProofDecision {
+  val transientReason =
+    when (binding) {
+      is DeviceBinding.Signing ->
+        when (signFailure) {
+          null -> return ProofDecision.Sign(binding.holder)
+          SignFailure.KEY_LOST -> null
+          SignFailure.NOT_A_LOSS -> ProofDecision.Reason.KEY_ERROR
+        }
+      is DeviceBinding.NotSigning ->
+        when (binding.reason) {
+          DeviceBinding.Reason.SHARED_SESSION_SYNC,
+          DeviceBinding.Reason.KEY_UNAVAILABLE -> null
+          DeviceBinding.Reason.TIMEOUT -> ProofDecision.Reason.KEY_NOT_READY
+        }
+    }
+  return if (tokenHasCnf && transientReason != null) {
+    ProofDecision.FailRequest(transientReason)
+  } else {
+    ProofDecision.SendUnsigned
+  }
+}
+
+internal class DeviceTokenCnfCheck {
+  @Volatile private var last: CheckedToken? = null
+
+  fun hasCnf(token: String?): Boolean {
+    if (token == null) return false
+    val checked =
+      last?.takeIf { it.token == token }
+        ?: CheckedToken(token, isDeviceBound(token)).also { last = it }
+    return checked.hasCnf
+  }
+
+  private data class CheckedToken(val token: String, val hasCnf: Boolean)
+}
+
+internal fun isDeviceBound(token: String): Boolean = runCatching {
+  CONFIRMATION_CLAIM in JWT(token).claims
+}
+  .getOrDefault(false)
 
 internal suspend fun Deferred<DeviceBinding>.awaitWithin(wait: Duration): DeviceBinding =
   withTimeoutOrNull(wait) { await() } ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
@@ -56,7 +97,6 @@ internal suspend fun Deferred<DeviceBinding>.awaitWithin(wait: Duration): Device
 internal fun CoroutineScope.resolveDeviceBinding(
   sharedSessionSync: Boolean,
   holder: DeviceKeyHolder,
-  keyTimeout: Duration = DEVICE_KEY_WAIT,
 ): Deferred<DeviceBinding> {
   if (sharedSessionSync) {
     return CompletableDeferred(
@@ -66,23 +106,26 @@ internal fun CoroutineScope.resolveDeviceBinding(
   val keyState = async(Dispatchers.IO) { loadKeyState(holder) }
   return async {
     logged(
-      when (withTimeoutOrNull(keyTimeout) { keyState.await() }) {
-        is DeviceKeyState.Ready -> DeviceBinding.Signing(holder)
+      when (keyState.await()) {
         is DeviceKeyState.Unavailable ->
           DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-        null -> DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+        is DeviceKeyState.Ready,
+        null -> DeviceBinding.Signing(holder)
       }
     )
   }
 }
 
-private fun loadKeyState(holder: DeviceKeyHolder): DeviceKeyState =
+private fun loadKeyState(holder: DeviceKeyHolder): DeviceKeyState? =
   try {
     holder.state()
   } catch (e: Exception) {
-    DeviceKeyState.Unavailable(e)
+    ClerkLogger.w("Device key load failed, each request retries it: ${e.javaClass.name}")
+    null
   }
 
 private fun logged(binding: DeviceBinding): DeviceBinding = binding.also {
   ClerkLogger.i("Device binding: $it")
 }
+
+private const val CONFIRMATION_CLAIM = "cnf"

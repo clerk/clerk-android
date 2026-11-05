@@ -905,7 +905,6 @@ internal class ConfigurationManager(
 }
 
 private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
-private const val DEVICE_TOKEN_CONFIRMATION_CLAIM = "cnf"
 
 private fun ClerkResult<*, ClerkErrorResponse>.isUnsupportedAppVersion(): Boolean =
   this is ClerkResult.Failure &&
@@ -926,11 +925,6 @@ private fun deviceTokenTargetsDifferentClient(previous: String?, next: String?):
         (deviceTokenClientId(previous) ?: Clerk.clientFlow.value?.id?.takeIf { it.isNotBlank() })
   }
 }
-
-private fun isDeviceBound(token: String): Boolean = runCatching {
-  DEVICE_TOKEN_CONFIRMATION_CLAIM in JWT(token).claims
-}
-  .getOrDefault(false)
 
 private fun deviceTokenClientId(token: String?): String? =
   token
