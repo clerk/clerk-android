@@ -191,6 +191,10 @@ internal class DeviceBindingState(
   private inner class WatchedLoad<T>(val result: Deferred<T>) {
     private var load: KeyLoad = KeyLoad.Pending(timeSource.markNow(), timedOutOnce = false)
 
+    init {
+      result.invokeOnCompletion { advance(afterWait = false) }
+    }
+
     suspend fun awaitWithin(wait: Duration): Boolean {
       val before = advance(afterWait = false)
       if (before is KeyLoad.Pending && !before.timedOutOnce) {
@@ -204,10 +208,10 @@ internal class DeviceBindingState(
         val pending = load as? KeyLoad.Pending ?: return load
         load =
           when {
-            result.isCompleted ->
-              KeyLoad.Ready.also { if (!result.isCancelled) resetTransientFailures() }
             pending.startedAt.elapsedNow() >= KEY_LOAD_GIVE_UP ->
               KeyLoad.Unavailable.also { giveUpOnKeyLoad() }
+            result.isCompleted ->
+              KeyLoad.Ready.also { if (!result.isCancelled) resetTransientFailures() }
             afterWait && !pending.timedOutOnce ->
               pending.copy(timedOutOnce = true).also { countTransientFailure() }
             else -> pending
