@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.DeviceBindingError
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
@@ -33,7 +34,10 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         "session_invalid",
         "authentication_invalid",
         "signed_out",
-      )
+      ) +
+        DeviceBindingError.entries
+          .filter { it.recovery == DeviceBindingError.Recovery.DROP_TOKEN }
+          .map { it.code }
 
     internal const val SESSION_PENDING_ERROR_CODE = "session_pending"
     internal const val TOKEN_REQUEST_SUPERSEDED_ERROR_CODE = "session_token_request_superseded"

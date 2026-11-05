@@ -6,6 +6,7 @@ import com.clerk.api.auth.AuthEvent
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.DeviceBindingError
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
@@ -41,6 +42,7 @@ internal class ClientSyncingMiddleware(
     val serverDate = response.headers.getDate(SERVER_DATE_HEADER)
     serverDate?.let { serverClock.record(Instant.fromEpochMilliseconds(it.time)) }
     val orderAtArrival = Clerk.stateStore.observeResponse(serverDate?.time)
+    dropDeviceTokenBoundElsewhere(response)
     val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
     manualClientSyncRequest?.recordResponse(
       requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
@@ -60,6 +62,14 @@ internal class ClientSyncingMiddleware(
         syncResponse(request = request, response = response, order = orderAtArrival)
           .withResponseOrder(orderAtArrival)
     }
+  }
+
+  private fun dropDeviceTokenBoundElsewhere(response: Response) {
+    val error = DeviceBindingError.of(response, json)
+    if (error?.recovery != DeviceBindingError.Recovery.DROP_TOKEN) return
+    val requestDeviceToken = response.request.header(AUTHORIZATION_HEADER) ?: return
+    ClerkLogger.w("Dropping the device token after ${error.code}")
+    Clerk.dropDeviceToken(requestDeviceToken)
   }
 
   @Suppress("NestedBlockDepth")

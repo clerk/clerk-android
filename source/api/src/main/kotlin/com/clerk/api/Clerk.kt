@@ -1236,6 +1236,15 @@ public object Clerk {
     configurationManager.fenceClientResponsesAfterSharedDeviceTokenChange()
   }
 
+  /**
+   * Drops [deviceToken] if it is still stored, then signs out locally and refreshes the client, as
+   * [setDeviceToken] does. Takes no lock that a refresh holds, so a network interceptor can call
+   * it.
+   */
+  internal fun dropDeviceToken(deviceToken: String) {
+    configurationManager.setDeviceToken(deviceToken = null, expectedDeviceToken = deviceToken)
+  }
+
   internal fun isClientResponseCurrent(
     requestDeviceToken: String?,
     responseDeviceToken: String?,
