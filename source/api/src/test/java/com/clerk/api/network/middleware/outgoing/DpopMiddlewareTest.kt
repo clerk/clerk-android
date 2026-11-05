@@ -235,20 +235,28 @@ class DpopMiddlewareTest {
   }
 
   @Test
-  fun `a key load that fails without a loss fails a bound token's request, and the next one signs`() {
+  fun `a request-time load that throws a non-Keystore exception sends bound requests unsigned`() {
     var loads = 0
-    val flakyHolder = DeviceKeyHolder {
+    val holder = DeviceKeyHolder {
       loads += 1
-      if (loads == 1) throw IOException("Keystore load failed") else JvmDeviceKey.getOrCreate()
+      throw IllegalStateException("vendor Keystore bug")
     }
-    val client = client(CompletableDeferred(DeviceBinding.Signing(flakyHolder)))
-    server.enqueue(MockResponse())
+    val state = DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder)))
+    val client = client(state)
+    repeat(2) { server.enqueue(MockResponse()) }
 
-    assertFailsWith<IOException> { execute(client, get("/").withToken(BOUND_DEVICE_TOKEN)) }
-    execute(client, get("/").withToken(BOUND_DEVICE_TOKEN))
+    repeat(2) { execute(client, get("/").withToken(BOUND_DEVICE_TOKEN)) }
 
-    assertEquals(1, server.requestCount)
-    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+    repeat(2) {
+      val recorded = server.takeRequest()
+      assertEquals(BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
+      assertNull(recorded.headers[DPOP_HEADER])
+    }
+    assertEquals(
+      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE),
+      runBlocking { state.current(DEVICE_KEY_WAIT) },
+    )
+    assertEquals(1, loads)
   }
 
   @Test

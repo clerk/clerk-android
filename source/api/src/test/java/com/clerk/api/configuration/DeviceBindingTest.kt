@@ -68,14 +68,21 @@ class DeviceBindingTest {
   }
 
   @Test
-  fun `a key load error that is not a Keystore failure keeps signing, so each request retries it`() =
+  fun `a key load error that is not a Keystore failure does not sign and is not retried`() =
     runBlocking {
       for (failure in listOf(IllegalStateException("vendor Keystore bug"), IOException("load"))) {
-        val holder = DeviceKeyHolder { throw failure }
+        var loads = 0
+        val holder = DeviceKeyHolder {
+          loads += 1
+          throw failure
+        }
 
         val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
-        assertEquals(DeviceBinding.Signing(holder), binding.current(DEVICE_KEY_WAIT))
+        val unavailable = DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+        assertEquals(unavailable, binding.current(DEVICE_KEY_WAIT))
+        assertEquals(unavailable, binding.current(DEVICE_KEY_WAIT))
+        assertEquals(1, loads)
       }
     }
 
