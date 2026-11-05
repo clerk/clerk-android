@@ -35,6 +35,8 @@ class ProofDecisionTest {
       Row(tokenHasCnf = true, signing, KEY_LOST, SendUnsigned),
       Row(tokenHasCnf = false, signing, NOT_A_LOSS, SendUnsigned),
       Row(tokenHasCnf = true, signing, NOT_A_LOSS, FailRequest(KEY_ERROR)),
+      Row(tokenHasCnf = false, signing, SignFailure.TIMEOUT, SendUnsigned),
+      Row(tokenHasCnf = true, signing, SignFailure.TIMEOUT, FailRequest(KEY_NOT_READY)),
       Row(tokenHasCnf = false, NotSigning(SHARED_SESSION_SYNC), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = true, NotSigning(SHARED_SESSION_SYNC), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = false, NotSigning(KEY_UNAVAILABLE), signFailure = null, SendUnsigned),

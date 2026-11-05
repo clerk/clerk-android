@@ -4,6 +4,7 @@ import com.auth0.android.jwt.JWT
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyState
 import com.clerk.api.log.ClerkLogger
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -11,6 +12,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -44,6 +46,7 @@ internal sealed interface ProofDecision {
 internal enum class SignFailure {
   KEY_LOST,
   NOT_A_LOSS,
+  TIMEOUT,
 }
 
 internal fun proofDecision(
@@ -69,6 +72,7 @@ private fun transientGap(binding: DeviceBinding, signFailure: SignFailure?): Pro
         null,
         SignFailure.KEY_LOST -> null
         SignFailure.NOT_A_LOSS -> ProofDecision.Reason.KEY_ERROR
+        SignFailure.TIMEOUT -> ProofDecision.Reason.KEY_NOT_READY
       }
     is DeviceBinding.NotSigning ->
       when (binding.reason) {
@@ -99,8 +103,12 @@ internal fun isDeviceBound(token: String): Boolean = runCatching {
 
 internal const val TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED = 3
 
+internal class DeviceKeyLoadTimeoutException(wait: Duration) :
+  IOException("The device key did not load within $wait")
+
 internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>) {
   private val transientFailuresInARow = AtomicInteger()
+  private val keyLoads = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
   suspend fun current(wait: Duration): DeviceBinding =
     if (stoppedSigning()) {
@@ -109,6 +117,12 @@ internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>)
       withTimeoutOrNull(wait) { resolved.await() }
         ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
     }
+
+  suspend fun loadKey(holder: DeviceKeyHolder, wait: Duration) {
+    if (holder.loadedState() != null) return
+    val load = keyLoads.async { holder.state() }
+    withTimeoutOrNull(wait) { load.await() } ?: throw DeviceKeyLoadTimeoutException(wait)
+  }
 
   fun recordSigned() {
     transientFailuresInARow.updateAndGet {

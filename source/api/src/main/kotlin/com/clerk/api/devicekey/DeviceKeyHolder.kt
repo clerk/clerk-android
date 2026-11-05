@@ -7,7 +7,7 @@ internal class DeviceKeyHolder(private val loadKey: () -> DeviceKey) {
 
   fun state(): DeviceKeyState = state ?: synchronized(this) { state ?: load() }
 
-  fun isUnavailable(): Boolean = state is DeviceKeyState.Unavailable
+  fun loadedState(): DeviceKeyState? = state
 
   fun <T> withKey(operation: (DeviceKey) -> T): Result<T> {
     val current = state()

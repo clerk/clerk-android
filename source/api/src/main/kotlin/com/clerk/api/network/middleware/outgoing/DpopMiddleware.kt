@@ -1,13 +1,14 @@
 package com.clerk.api.network.middleware.outgoing
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
-import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.configuration.DeviceBindingState
+import com.clerk.api.configuration.DeviceKeyLoadTimeoutException
 import com.clerk.api.configuration.DeviceTokenCnfCheck
 import com.clerk.api.configuration.ProofDecision
 import com.clerk.api.configuration.SignFailure
 import com.clerk.api.configuration.proofDecision
 import com.clerk.api.devicekey.DeviceKeyHolder
+import com.clerk.api.devicekey.DeviceKeyState
 import com.clerk.api.dpop.BoundRequest
 import com.clerk.api.dpop.DpopProof
 import com.clerk.api.dpop.ServerClock
@@ -34,7 +35,7 @@ internal class DpopMiddleware(
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val tokenHasCnf = cnfCheck.hasCnf(request.header(AUTHORIZATION_HEADER))
-    val binding = awaitBinding()
+    val binding = blocking { deviceBinding.current(deviceKeyWait) }
 
     fun act(signFailure: SignFailure?, cause: Throwable?): Response {
       deviceBinding.recordGap(binding, signFailure)
@@ -49,7 +50,7 @@ internal class DpopMiddleware(
                 deviceBinding.recordSigned()
                 chain.proceed(request.newBuilder().header(DPOP_HEADER, it).build())
               },
-              onFailure = { act(decision.holder.signFailure(), it) },
+              onFailure = { act(decision.holder.signFailure(it), it) },
             )
       }
     }
@@ -60,6 +61,7 @@ internal class DpopMiddleware(
   private fun proofFor(holder: DeviceKeyHolder, request: Request): Result<String> {
     val jti = UUID.randomUUID().toString()
     return try {
+        blocking { deviceBinding.loadKey(holder, deviceKeyWait) }
         holder.withKey { key ->
           DpopProof.build(
             key = key,
@@ -76,15 +78,19 @@ internal class DpopMiddleware(
       .onFailure { ClerkLogger.w("DPoP proof failed: ${it.javaClass.name}") }
   }
 
-  private fun awaitBinding(): DeviceBinding =
+  private fun <T> blocking(block: suspend () -> T): T =
     try {
-      runBlocking { deviceBinding.current(deviceKeyWait) }
+      runBlocking { block() }
     } catch (e: CancellationException) {
       throw IOException("Clerk was reset while this request waited for the device key", e)
     }
 }
 
-private fun DeviceKeyHolder.signFailure(): SignFailure =
-  if (isUnavailable()) SignFailure.KEY_LOST else SignFailure.NOT_A_LOSS
+private fun DeviceKeyHolder.signFailure(cause: Throwable): SignFailure =
+  when {
+    cause is DeviceKeyLoadTimeoutException -> SignFailure.TIMEOUT
+    loadedState() is DeviceKeyState.Unavailable -> SignFailure.KEY_LOST
+    else -> SignFailure.NOT_A_LOSS
+  }
 
 private const val JTI_LOG_LENGTH = 8
