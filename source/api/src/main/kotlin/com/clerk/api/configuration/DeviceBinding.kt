@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Whether this Clerk runtime signs a DPoP proof for each request, decided once per configure. */
 internal sealed interface DeviceBinding {
   data class Signing(val holder: DeviceKeyHolder) : DeviceBinding
 
@@ -25,10 +24,6 @@ internal sealed interface DeviceBinding {
   }
 }
 
-/**
- * Starts the one decision every request waits on. Any Keystore failure, and a key that is not ready
- * within [keyTimeout], leaves this runtime unsigned: an unbound app still works.
- */
 internal fun CoroutineScope.resolveDeviceBinding(
   sharedSessionSync: Boolean,
   holder: DeviceKeyHolder,

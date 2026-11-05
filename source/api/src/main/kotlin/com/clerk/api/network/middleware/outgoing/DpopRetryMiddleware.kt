@@ -6,11 +6,6 @@ import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.Response
 
-/**
- * Sends a request once more when FAPI rejects its signed proof as invalid. It must wrap
- * [com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware], which records the
- * rejection's Date in the ServerClock, so the second attempt's proof carries the server's time.
- */
 internal class DpopRetryMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()

@@ -6,7 +6,6 @@ import java.net.HttpURLConnection.HTTP_UNAUTHORIZED
 import kotlinx.serialization.json.Json
 import okhttp3.Response
 
-/** The 401 codes FAPI returns when a request's DPoP proof does not satisfy its bound token. */
 internal enum class DeviceBindingError(val code: String, val recovery: Recovery) {
   PROOF_INVALID("device_binding_proof_invalid", Recovery.RETRY_WITH_SERVER_CLOCK),
   PROOF_REPLAYED("device_binding_proof_replayed", Recovery.NONE),
@@ -14,10 +13,7 @@ internal enum class DeviceBindingError(val code: String, val recovery: Recovery)
   KEY_MISMATCH("device_binding_key_mismatch", Recovery.DROP_TOKEN);
 
   enum class Recovery {
-    /** The proof's iat came from a skewed clock; the rejection's Date corrects it. */
     RETRY_WITH_SERVER_CLOCK,
-
-    /** The token is bound to a key this device does not hold, so it can never work here. */
     DROP_TOKEN,
     NONE,
   }

@@ -17,10 +17,7 @@ import okhttp3.Response
 
 internal const val DPOP_HEADER = "DPoP"
 
-/**
- * Signs every network attempt, so OkHttp's own retries and redirect follow-ups each carry a fresh
- * proof for the URL they actually reach.
- */
+/** A network interceptor, because OkHttp runs those once per attempt, retries and redirects too. */
 internal class DpopMiddleware(
   private val deviceBinding: Deferred<DeviceBinding>,
   private val serverClock: ServerClock,
