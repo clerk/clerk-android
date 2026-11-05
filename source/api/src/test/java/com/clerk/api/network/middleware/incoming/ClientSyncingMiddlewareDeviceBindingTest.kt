@@ -3,7 +3,7 @@ package com.clerk.api.network.middleware.incoming
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
-import com.clerk.api.configuration.ConfigurationManager
+import com.clerk.api.configuration.ConfiguredClerkForTest
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -17,14 +17,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
-import java.lang.ref.WeakReference
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
@@ -64,7 +61,7 @@ class ClientSyncingMiddlewareDeviceBindingTest {
   @After
   fun tearDown() {
     releaseRefresh.complete(Unit)
-    setConfigured(false)
+    ConfiguredClerkForTest.setConfigured(context, false)
     unmockkAll()
     StorageHelper.reset(context)
     Clerk.updateClient(Client())
@@ -113,22 +110,22 @@ class ClientSyncingMiddlewareDeviceBindingTest {
 
   @Test
   fun `a rejection for a token that was already replaced leaves the new token alone`() {
-    setConfigured(true)
+    ConfiguredClerkForTest.setConfigured(context, true)
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_new")
     Clerk.updateClient(Client(id = "client_new"))
-    val fence = fenceGeneration()
+    val fence = ConfiguredClerkForTest.fenceGeneration()
 
     middleware.intercept(chainFor(rejection("device_binding_key_mismatch", "token_bound")))
 
     assertEquals("token_new", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
-    assertEquals(fence, fenceGeneration())
+    assertEquals(fence, ConfiguredClerkForTest.fenceGeneration())
     assertEquals("client_new", Clerk.clientFlow.value?.id)
     coVerify(exactly = 0) { Client.getSkippingClientId() }
   }
 
   @Test
   fun `proof_invalid keeps the token`() {
-    setConfigured(true)
+    ConfiguredClerkForTest.setConfigured(context, true)
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_bound")
 
     middleware.intercept(chainFor(rejection("device_binding_proof_invalid", "token_bound")))
@@ -138,15 +135,15 @@ class ClientSyncingMiddlewareDeviceBindingTest {
   }
 
   private fun assertRejectedTokenIsDropped(code: String) {
-    setConfigured(true)
+    ConfiguredClerkForTest.setConfigured(context, true)
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_bound")
     Clerk.updateClient(Client(id = "client_bound"))
-    val fence = fenceGeneration()
+    val fence = ConfiguredClerkForTest.fenceGeneration()
 
     middleware.intercept(chainFor(rejection(code, "token_bound")))
 
     assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
-    assertEquals(fence + 1, fenceGeneration())
+    assertEquals(fence + 1, ConfiguredClerkForTest.fenceGeneration())
     assertNull(Clerk.clientFlow.value?.id)
     coVerify(timeout = 5_000) { Client.getSkippingClientId() }
   }
@@ -180,26 +177,4 @@ class ClientSyncingMiddlewareDeviceBindingTest {
       every { it.request() } returns response.request
       every { it.proceed(response.request) } returns response
     }
-
-  private fun configurationManager(): ConfigurationManager =
-    Clerk::class.java.getDeclaredField("configurationManager").let {
-      it.isAccessible = true
-      it.get(Clerk) as ConfigurationManager
-    }
-
-  private fun managerField(name: String) =
-    ConfigurationManager::class.java.getDeclaredField(name).apply { isAccessible = true }
-
-  @Suppress("UNCHECKED_CAST")
-  private fun setConfigured(configured: Boolean) {
-    val manager = configurationManager()
-    managerField("context").set(manager, if (configured) WeakReference(context) else null)
-    managerField("hasConfigured").set(manager, configured)
-    managerField("storageInitialized").set(manager, false)
-    (managerField("_isInitialized").get(manager) as MutableStateFlow<Boolean>).value = configured
-  }
-
-  private fun fenceGeneration(): Int =
-    (managerField("sharedDeviceTokenFenceGeneration").get(configurationManager()) as AtomicInteger)
-      .get()
 }

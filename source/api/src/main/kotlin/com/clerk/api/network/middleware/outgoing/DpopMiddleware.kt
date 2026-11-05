@@ -48,7 +48,7 @@ internal class DpopMiddleware(
         Result.failure(e)
       }
       .onSuccess { ClerkLogger.d("DPoP proof attached jti=${jti.take(JTI_LOG_LENGTH)}") }
-      .onFailure { ClerkLogger.w("Sending without a DPoP proof: $it") }
+      .onFailure { ClerkLogger.w("Sending without a DPoP proof: ${it.javaClass.name}") }
       .getOrNull()
   }
 

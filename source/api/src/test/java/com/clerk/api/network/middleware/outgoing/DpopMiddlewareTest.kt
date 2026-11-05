@@ -1,6 +1,8 @@
 package com.clerk.api.network.middleware.outgoing
 
+import android.util.Log
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.devicekey.DeviceKey
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.dpop.ServerClock
@@ -9,6 +11,7 @@ import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jwt.SignedJWT
 import java.io.IOException
 import java.security.MessageDigest
+import java.security.ProviderException
 import java.util.Base64
 import java.util.UUID
 import kotlin.concurrent.thread
@@ -33,6 +36,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class DpopMiddlewareTest {
@@ -161,6 +165,33 @@ class DpopMiddlewareTest {
 
     assertFailsWith<IOException> { execute(binding, get("/v1/client")) }
     assertEquals(0, server.requestCount)
+  }
+
+  @Test
+  fun `a sign failure that is not a loss sends the request unsigned after one attempt`() {
+    for (failure in listOf(ProviderException("INVALID_KEY_BLOB"), IllegalStateException("bug"))) {
+      var signs = 0
+      val key = JvmDeviceKey.getOrCreate()
+      val failingKey =
+        object : DeviceKey by key {
+          override fun sign(data: ByteArray): ByteArray {
+            signs += 1
+            throw failure
+          }
+        }
+      server.enqueue(MockResponse())
+      ShadowLog.clear()
+
+      execute(CompletableDeferred(DeviceBinding.Signing(DeviceKeyHolder { failingKey })), get("/"))
+
+      assertNull(server.takeRequest().headers[DPOP_HEADER])
+      assertEquals(1, signs)
+      val warnings = ShadowLog.getLogsForTag("ClerkLog").filter { it.type == Log.WARN }
+      assertEquals(
+        listOf("Clerk warning: Sending without a DPoP proof: ${failure.javaClass.name}"),
+        warnings.map { it.msg },
+      )
+    }
   }
 
   private fun signing(): Deferred<DeviceBinding> =
