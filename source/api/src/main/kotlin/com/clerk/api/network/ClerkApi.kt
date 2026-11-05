@@ -3,6 +3,7 @@ package com.clerk.api.network
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
+import com.clerk.api.configuration.DEVICE_KEY_WAIT
 import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.api.BillingApi
@@ -25,6 +26,7 @@ import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
+import kotlin.time.Duration
 import kotlinx.coroutines.Deferred
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -162,6 +164,7 @@ internal object ClerkApi {
     customHeaders: Map<String, String>,
     deviceBinding: Deferred<DeviceBinding>,
     serverClock: ServerClock,
+    deviceKeyWait: Duration = DEVICE_KEY_WAIT,
   ): OkHttpClient =
     OkHttpClient.Builder()
       .apply {
@@ -176,7 +179,7 @@ internal object ClerkApi {
         if (Clerk.debugMode) {
           addInterceptor(RequestLoggingMiddleware.create())
         }
-        addNetworkInterceptor(DpopMiddleware(deviceBinding, serverClock))
+        addNetworkInterceptor(DpopMiddleware(deviceBinding, serverClock, deviceKeyWait))
       }
       .build()
       .forbiddingCertificates()

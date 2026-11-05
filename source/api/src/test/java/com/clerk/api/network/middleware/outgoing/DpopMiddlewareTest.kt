@@ -1,9 +1,11 @@
 package com.clerk.api.network.middleware.outgoing
 
 import android.util.Log
+import com.clerk.api.configuration.DEVICE_KEY_WAIT
 import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.devicekey.DeviceKey
 import com.clerk.api.devicekey.DeviceKeyHolder
+import com.clerk.api.devicekey.DeviceKeyLostException
 import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.dpop.ServerClock
 import com.nimbusds.jose.crypto.ECDSAVerifier
@@ -168,36 +170,106 @@ class DpopMiddlewareTest {
   }
 
   @Test
-  fun `a sign failure that is not a loss sends the request unsigned after one attempt`() {
+  fun `an unbound token goes out unsigned after one sign attempt that fails without a loss`() {
     for (failure in
       listOf(
         ProviderException("INVALID_KEY_BLOB"),
         IllegalStateException("bug"),
         IOException("Keystore I/O"),
       )) {
-      var signs = 0
-      val key = JvmDeviceKey.getOrCreate()
-      val failingKey =
-        object : DeviceKey by key {
-          override fun sign(data: ByteArray): ByteArray {
-            signs += 1
-            throw failure
-          }
-        }
+      val failingKey = FailingKey(failure)
       server.enqueue(MockResponse())
       ShadowLog.clear()
 
-      execute(CompletableDeferred(DeviceBinding.Signing(DeviceKeyHolder { failingKey })), get("/"))
+      execute(signingWith(failingKey), get("/").withToken(UNBOUND_DEVICE_TOKEN))
 
       assertNull(server.takeRequest().headers[DPOP_HEADER])
-      assertEquals(1, signs)
+      assertEquals(1, failingKey.signs)
       val warnings = ShadowLog.getLogsForTag("ClerkLog").filter { it.type == Log.WARN }
       assertEquals(
-        listOf("Clerk warning: Sending without a DPoP proof: ${failure.javaClass.name}"),
+        listOf("Clerk warning: DPoP proof failed: ${failure.javaClass.name}"),
         warnings.map { it.msg },
       )
     }
   }
+
+  @Test
+  fun `a bound token's request fails when a sign attempt fails without a loss`() {
+    for (failure in
+      listOf(
+        ProviderException("INVALID_KEY_BLOB"),
+        IllegalStateException("bug"),
+        IOException("Keystore I/O"),
+      )) {
+      val failingKey = FailingKey(failure)
+
+      val error =
+        assertFailsWith<IOException> {
+          execute(signingWith(failingKey), get("/").withToken(BOUND_DEVICE_TOKEN))
+        }
+
+      assertEquals(failure, error.cause)
+      assertTrue("KEY_ERROR" in error.message.orEmpty(), error.message)
+      assertEquals(1, failingKey.signs)
+    }
+    assertEquals(0, server.requestCount)
+  }
+
+  @Test
+  fun `a bound token goes out unsigned once the holder gives up a lost key`() {
+    val lostKey = FailingKey(DeviceKeyLostException())
+    server.enqueue(MockResponse())
+
+    execute(signingWith(lostKey), get("/").withToken(BOUND_DEVICE_TOKEN))
+
+    val recorded = server.takeRequest()
+    assertEquals(BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
+    assertNull(recorded.headers[DPOP_HEADER])
+  }
+
+  @Test
+  fun `a key load that fails without a loss fails a bound token's request, and the next one signs`() {
+    var loads = 0
+    val flakyHolder = DeviceKeyHolder {
+      loads += 1
+      if (loads == 1) throw IOException("Keystore load failed") else JvmDeviceKey.getOrCreate()
+    }
+    val client = client(CompletableDeferred(DeviceBinding.Signing(flakyHolder)))
+    server.enqueue(MockResponse())
+
+    assertFailsWith<IOException> { execute(client, get("/").withToken(BOUND_DEVICE_TOKEN)) }
+    execute(client, get("/").withToken(BOUND_DEVICE_TOKEN))
+
+    assertEquals(1, server.requestCount)
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+  }
+
+  @Test
+  fun `the cnf check follows the token a request carries`() {
+    val client = client(signingWith(FailingKey(IllegalStateException("bug"))))
+    server.enqueue(MockResponse())
+
+    execute(client, get("/").withToken(UNBOUND_DEVICE_TOKEN))
+    assertFailsWith<IOException> { execute(client, get("/").withToken(BOUND_DEVICE_TOKEN)) }
+
+    assertEquals(1, server.requestCount)
+  }
+
+  private class FailingKey(private val failure: Exception) :
+    DeviceKey by JvmDeviceKey.getOrCreate() {
+    var signs = 0
+
+    override fun sign(data: ByteArray): ByteArray {
+      signs += 1
+      throw failure
+    }
+  }
+
+  private fun signingWith(key: DeviceKey): Deferred<DeviceBinding> =
+    CompletableDeferred(DeviceBinding.Signing(DeviceKeyHolder { key }))
+
+  private fun Request.withToken(token: String): Request =
+    newBuilder().header("Authorization", token).build()
 
   private fun signing(): Deferred<DeviceBinding> =
     CompletableDeferred(DeviceBinding.Signing(holder))
@@ -205,7 +277,9 @@ class DpopMiddlewareTest {
   private fun get(path: String): Request = Request(server.url(path))
 
   private fun client(binding: Deferred<DeviceBinding>): OkHttpClient =
-    OkHttpClient.Builder().addNetworkInterceptor(DpopMiddleware(binding, serverClock)).build()
+    OkHttpClient.Builder()
+      .addNetworkInterceptor(DpopMiddleware(binding, serverClock, DEVICE_KEY_WAIT))
+      .build()
 
   private fun execute(binding: Deferred<DeviceBinding>, request: Request) {
     execute(client(binding), request)
@@ -221,4 +295,14 @@ class DpopMiddlewareTest {
   private fun jti(recorded: RecordedRequest): String = claims(recorded).jwtid
 
   private fun htu(recorded: RecordedRequest): String = claims(recorded).getStringClaim("htu")
+
+  private companion object {
+    val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
+    val UNBOUND_DEVICE_TOKEN = jwt("""{"id":"client_unbound"}""")
+
+    fun jwt(payload: String): String =
+      listOf("""{"alg":"RS256"}""", payload).joinToString(".", postfix = ".signature") {
+        Base64.getUrlEncoder().withoutPadding().encodeToString(it.toByteArray())
+      }
+  }
 }

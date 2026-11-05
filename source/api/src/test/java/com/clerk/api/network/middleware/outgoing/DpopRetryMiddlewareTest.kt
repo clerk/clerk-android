@@ -2,26 +2,16 @@ package com.clerk.api.network.middleware.outgoing
 
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.configuration.ConfiguredClerkForTest
 import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
-import com.clerk.api.network.model.environment.Environment
-import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.storage.StorageHelper
-import com.clerk.api.storage.StorageKey
 import com.nimbusds.jwt.SignedJWT
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
-import java.util.Base64
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
@@ -54,18 +44,10 @@ class DpopRetryMiddlewareTest {
     }
   private val serverClock = ServerClock(localClock)
   private val context: Context = RuntimeEnvironment.getApplication()
-  private val releaseRefresh = CompletableDeferred<Unit>()
 
   @Before
   fun setUp() {
     StorageHelper.reset(context)
-    mockkObject(Client.Companion, Environment.Companion)
-    coEvery { Client.getSkippingClientId() } coAnswers
-      {
-        releaseRefresh.await()
-        ClerkResult.success(Client(id = "client_new"))
-      }
-    coEvery { Environment.get() } returns ClerkResult.unknownFailure(IllegalStateException())
     server.useHttps(
       HandshakeCertificates.Builder().heldCertificate(certificate).build().sslSocketFactory()
     )
@@ -74,9 +56,6 @@ class DpopRetryMiddlewareTest {
 
   @After
   fun tearDown() {
-    releaseRefresh.complete(Unit)
-    ConfiguredClerkForTest.setConfigured(context, false)
-    unmockkAll()
     StorageHelper.reset(context)
     server.close()
     Clerk.updateClient(Client())
@@ -188,25 +167,6 @@ class DpopRetryMiddlewareTest {
     assertEquals(3, server.requestCount)
   }
 
-  @Test
-  fun `proof_missing for a runtime with no usable key drops the token without a second request`() {
-    ConfiguredClerkForTest.setConfigured(context, true)
-    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, BOUND_DEVICE_TOKEN)
-    server.enqueue(
-      rejection("device_binding_proof_missing", date = "Wed, 04 Nov 2026 12:00:00 GMT")
-    )
-
-    execute(CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)))
-      .use { assertEquals(401, it.code) }
-
-    val recorded = server.takeRequest()
-    assertEquals(BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
-    assertNull(recorded.headers[DPOP_HEADER])
-    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
-    coVerify(timeout = 5_000, exactly = 1) { Client.getSkippingClientId() }
-    assertEquals(1, server.requestCount)
-  }
-
   private fun rejection(code: String, date: String?): MockResponse =
     MockResponse.Builder()
       .code(401)
@@ -238,12 +198,4 @@ class DpopRetryMiddlewareTest {
 
   private fun claims(recorded: RecordedRequest) =
     SignedJWT.parse(recorded.headers[DPOP_HEADER]).jwtClaimsSet
-
-  private companion object {
-    val BOUND_DEVICE_TOKEN =
-      listOf("""{"alg":"RS256"}""", """{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
-        .joinToString(".", postfix = ".signature") {
-          Base64.getUrlEncoder().withoutPadding().encodeToString(it.toByteArray())
-        }
-  }
 }

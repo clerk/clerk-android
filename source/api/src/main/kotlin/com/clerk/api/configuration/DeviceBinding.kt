@@ -24,10 +24,39 @@ internal sealed interface DeviceBinding {
   }
 }
 
+internal val DEVICE_KEY_WAIT: Duration = 5.seconds
+
+internal sealed interface ProofDecision {
+  data class Sign(val holder: DeviceKeyHolder) : ProofDecision
+
+  data object SendUnsigned : ProofDecision
+
+  data class FailRequest(val reason: Reason) : ProofDecision
+
+  enum class Reason {
+    KEY_NOT_READY,
+    KEY_ERROR,
+  }
+}
+
+internal enum class SignFailure {
+  KEY_LOST,
+  NOT_A_LOSS,
+}
+
+internal fun proofDecision(
+  tokenHasCnf: Boolean,
+  binding: DeviceBinding,
+  signFailure: SignFailure?,
+): ProofDecision = TODO("red: $tokenHasCnf $binding $signFailure")
+
+internal suspend fun Deferred<DeviceBinding>.awaitWithin(wait: Duration): DeviceBinding =
+  withTimeoutOrNull(wait) { await() } ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+
 internal fun CoroutineScope.resolveDeviceBinding(
   sharedSessionSync: Boolean,
   holder: DeviceKeyHolder,
-  keyTimeout: Duration = 5.seconds,
+  keyTimeout: Duration = DEVICE_KEY_WAIT,
 ): Deferred<DeviceBinding> {
   if (sharedSessionSync) {
     return CompletableDeferred(

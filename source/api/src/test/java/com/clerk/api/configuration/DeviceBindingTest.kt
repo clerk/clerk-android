@@ -61,39 +61,32 @@ class DeviceBindingTest {
   }
 
   @Test
-  fun `an undocumented Keystore exception does not sign`() = runBlocking {
-    val holder = DeviceKeyHolder { throw IllegalStateException("vendor Keystore bug") }
+  fun `a key load error that is not a Keystore failure keeps signing, so each request retries it`() =
+    runBlocking {
+      for (failure in listOf(IllegalStateException("vendor Keystore bug"), IOException("load"))) {
+        val holder = DeviceKeyHolder { throw failure }
 
-    val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
+        val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
-    assertEquals(DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE), binding.await())
-  }
-
-  @Test
-  fun `a checked exception from the key load does not sign`() = runBlocking {
-    val holder = DeviceKeyHolder { throw IOException("Keystore load failed") }
-
-    val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
-
-    assertEquals(DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE), binding.await())
-  }
-
-  @Test
-  fun `a key that is not ready in time does not sign`() = runBlocking {
-    val keyCreated = CountDownLatch(1)
-    val holder = DeviceKeyHolder {
-      keyCreated.await()
-      JvmDeviceKey.getOrCreate()
+        assertEquals(DeviceBinding.Signing(holder), binding.await())
+      }
     }
 
-    val binding =
-      scope.resolveDeviceBinding(
-        sharedSessionSync = false,
-        holder = holder,
-        keyTimeout = 50.milliseconds,
-      )
+  @Test
+  fun `a wait shorter than the key load sees TIMEOUT each time, then Signing once the key is ready`() =
+    runBlocking {
+      val keyCreated = CountDownLatch(1)
+      val holder = DeviceKeyHolder {
+        keyCreated.await()
+        JvmDeviceKey.getOrCreate()
+      }
 
-    assertEquals(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT), binding.await())
-    keyCreated.countDown()
-  }
+      val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
+
+      val timedOut = DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+      assertEquals(timedOut, binding.awaitWithin(50.milliseconds))
+      assertEquals(timedOut, binding.awaitWithin(50.milliseconds))
+      keyCreated.countDown()
+      assertEquals(DeviceBinding.Signing(holder), binding.awaitWithin(DEVICE_KEY_WAIT))
+    }
 }

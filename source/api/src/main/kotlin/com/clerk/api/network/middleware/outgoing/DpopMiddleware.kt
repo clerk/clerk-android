@@ -2,12 +2,14 @@ package com.clerk.api.network.middleware.outgoing
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.awaitWithin
 import com.clerk.api.dpop.BoundRequest
 import com.clerk.api.dpop.DpopProof
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.log.ClerkLogger
 import java.io.IOException
 import java.util.UUID
+import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
@@ -21,6 +23,7 @@ internal const val DPOP_HEADER = "DPoP"
 internal class DpopMiddleware(
   private val deviceBinding: Deferred<DeviceBinding>,
   private val serverClock: ServerClock,
+  private val deviceKeyWait: Duration,
 ) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
@@ -51,7 +54,7 @@ internal class DpopMiddleware(
 
   private fun awaitBinding(): DeviceBinding =
     try {
-      runBlocking { deviceBinding.await() }
+      runBlocking { deviceBinding.awaitWithin(deviceKeyWait) }
     } catch (e: CancellationException) {
       throw IOException("Clerk was reset while this request waited for the device key", e)
     }
