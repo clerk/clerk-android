@@ -234,6 +234,96 @@ class SessionVerificationTest {
   }
 
   @Test
+  fun `send reset password email code prepares reset password email first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
+    val params = mapOf("strategy" to "reset_password_email_code", "email_address_id" to "idn_email")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.sendResetPasswordEmailCode(emailAddressId = "idn_email")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `send reset password phone code prepares reset password phone first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
+    val params = mapOf("strategy" to "reset_password_phone_code", "phone_number_id" to "idn_phone")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.sendResetPasswordPhoneCode(phoneNumberId = "idn_phone")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with reset password email code sends code and new password`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_SECOND_FACTOR)
+    val params =
+      mapOf(
+        "strategy" to "reset_password_email_code",
+        "code" to "424242",
+        "password" to "new-password",
+        "sign_out_of_other_sessions" to "true",
+      )
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.attemptFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result =
+      session.verifyWithResetPasswordEmailCode(
+        code = "424242",
+        newPassword = "new-password",
+        signOutOfOtherSessions = true,
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.attemptFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with reset password phone code keeps other sessions by default`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    val params =
+      mapOf(
+        "strategy" to "reset_password_phone_code",
+        "code" to "424242",
+        "password" to "new-password",
+        "sign_out_of_other_sessions" to "false",
+      )
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.attemptFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result =
+      session.verifyWithResetPasswordPhoneCode(code = "424242", newPassword = "new-password")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.attemptFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
   fun `send mfa phone code prepares second factor`() = runTest {
     val sessionApi = mockk<SessionApi>()
     val session = testSession()

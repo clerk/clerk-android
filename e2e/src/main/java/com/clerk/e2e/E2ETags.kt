@@ -21,6 +21,16 @@ internal object E2ETags {
 
   object Home {
     const val CUSTOM_SIGN_IN = "e2e.home.customSignIn"
+    const val RESET_PASSWORD_REVERIFICATION = "e2e.home.resetPasswordReverification"
+  }
+
+  object ResetPasswordReverification {
+    const val SEND_CODE = "verify.resetPasswordReverification.sendCode"
+    const val SENT_TO = "verify.resetPasswordReverification.sentTo"
+    const val CODE = "verify.resetPasswordReverification.code"
+    const val NEW_PASSWORD = "verify.resetPasswordReverification.newPassword"
+    const val VERIFY = "verify.resetPasswordReverification.verify"
+    const val ERROR = "verify.resetPasswordReverification.error"
   }
 
   object Launch {

@@ -23,6 +23,7 @@ enum class VerifyScreen(override val wireName: String) : HostScreen {
   Home("home"),
   Auth("auth"),
   CustomSignIn("customSignIn"),
+  ResetPasswordReverification("resetPasswordReverification"),
 }
 
 data class VerifyLaunchConfig(

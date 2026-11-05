@@ -63,6 +63,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Custom sign-in flow](./custom-flow-sign-in.md) covers the host's own form on `Clerk.auth.signInWithOtp`.
 - [Sign up](./sign-up.md) covers the password step, requesting the sign-up code, completing sign-up in each AuthView the home opens, and signing up with a phone number.
 - [Session persistence](./session-persistence.md) covers a session that survives a restart of the app.
+- [Session reverification](./session-reverification.md) covers reverifying a session with a reset password code sent by email, which also sets a new password, through the host's own form on the SDK's API.
 - [User button and profile](./user-button-and-profile.md) covers UserButton, UserProfileView, its Manage account and Security screens, sign-out, and deleting the account.
 - [Session tasks](./session-tasks.md) covers the setup-MFA and choose-organization tasks after sign-in, the setup-MFA task after sign-up, and finishing the setup-MFA task with an authenticator code.
 - [Organizations](./organizations.md) covers creating an organization from OrganizationSwitcher and switching between it and the personal account.
