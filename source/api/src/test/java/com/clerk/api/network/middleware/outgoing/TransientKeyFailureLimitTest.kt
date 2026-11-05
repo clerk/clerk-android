@@ -13,6 +13,7 @@ import java.security.ProviderException
 import java.util.Base64
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -26,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -177,8 +179,7 @@ class TransientKeyFailureLimitTest {
     assertEquals(unsigned(), runBlocking { state.current(wait) })
 
     loadReleased.countDown()
-    awaitLoaded(holder)
-    Thread.sleep(LOAD_SETTLE_MILLIS)
+    awaitBinding(state, DeviceBinding.Signing(holder))
     server.enqueue(MockResponse())
     execute(client, BOUND_DEVICE_TOKEN)
 
@@ -194,13 +195,19 @@ class TransientKeyFailureLimitTest {
       loadReleased.await(HUNG_LOAD_SECONDS, TimeUnit.SECONDS)
       key
     }
-    val client = client(DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder))))
+    val loadThread = Executors.newSingleThreadExecutor()
+    val client =
+      client(
+        DeviceBindingState(
+          CompletableDeferred(DeviceBinding.Signing(holder)),
+          ioDispatcher = loadThread.asCoroutineDispatcher(),
+        )
+      )
 
     val first = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
     assertTrue("KEY_NOT_READY" in first.message.orEmpty(), first.message)
     loadReleased.countDown()
-    awaitLoaded(holder)
-    Thread.sleep(LOAD_SETTLE_MILLIS)
+    awaitIdle(loadThread)
     repeat(2) {
       val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
       assertTrue("KEY_ERROR" in error.message.orEmpty(), error.message)
@@ -303,6 +310,26 @@ class TransientKeyFailureLimitTest {
     }
   }
 
+  private fun awaitBinding(state: DeviceBindingState, expected: DeviceBinding) {
+    val started = TimeSource.Monotonic.markNow()
+    var seen = runBlocking { state.current(wait) }
+    while (seen != expected) {
+      assertTrue(started.elapsedNow() < LOAD_DEADLINE, "the binding was $seen after $LOAD_DEADLINE")
+      Thread.sleep(10)
+      seen = runBlocking { state.current(wait) }
+    }
+  }
+
+  private fun awaitIdle(loadThread: ExecutorService) {
+    val idle = CountDownLatch(1)
+    loadThread.execute(idle::countDown)
+    loadThread.shutdown()
+    assertTrue(
+      idle.await(LOAD_DEADLINE.inWholeMilliseconds, TimeUnit.MILLISECONDS),
+      "the key load thread was still busy after $LOAD_DEADLINE",
+    )
+  }
+
   private fun unsigned(): DeviceBinding =
     DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
 
@@ -334,7 +361,6 @@ class TransientKeyFailureLimitTest {
   private companion object {
     val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
     const val HUNG_LOAD_SECONDS = 3L
-    const val LOAD_SETTLE_MILLIS = 100L
     val LOAD_DEADLINE = 5.seconds
     val AT_ONCE = 100.milliseconds
     val UNBOUND_DEVICE_TOKEN = jwt("""{"id":"client_unbound"}""")
