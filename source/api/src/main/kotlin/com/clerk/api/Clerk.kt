@@ -55,11 +55,9 @@ import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import java.util.UUID
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 
 /**
  * Main entrypoint class for the Clerk SDK.
@@ -1106,8 +1104,7 @@ public object Clerk {
    *   refused the delete.
    */
   @FrameworkIntegrationApi
-  public suspend fun deleteDeviceKey(): Boolean =
-    withContext(Dispatchers.IO) { configurationManager.deleteDeviceKey() }
+  public suspend fun deleteDeviceKey(): Boolean = configurationManager.deleteDeviceKey()
 
   // endregion
 

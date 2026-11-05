@@ -11,6 +11,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -121,9 +122,10 @@ private sealed interface KeyLoad {
 internal class DeviceBindingState(
   private val resolved: Deferred<DeviceBinding>,
   private val timeSource: TimeSource = TimeSource.Monotonic,
+  ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
   private val transientFailuresInARow = AtomicInteger()
-  private val keyLoads = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+  private val keyLoads = CoroutineScope(SupervisorJob() + ioDispatcher)
   private val bindingLoad = WatchedLoad(resolved)
   private var requestTimeLoad: WatchedLoad<DeviceKeyState>? = null
 
@@ -224,15 +226,17 @@ internal class DeviceBindingState(
 internal fun CoroutineScope.resolveDeviceBinding(
   sharedSessionSync: Boolean,
   holder: DeviceKeyHolder,
+  ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): DeviceBindingState {
   if (sharedSessionSync) {
     return DeviceBindingState(
       CompletableDeferred(
         logged(DeviceBinding.NotSigning(DeviceBinding.Reason.SHARED_SESSION_SYNC))
-      )
+      ),
+      ioDispatcher = ioDispatcher,
     )
   }
-  val keyState = async(Dispatchers.IO) { loadKeyState(holder) }
+  val keyState = async(ioDispatcher) { loadKeyState(holder) }
   return DeviceBindingState(
     async {
       logged(
@@ -243,7 +247,8 @@ internal fun CoroutineScope.resolveDeviceBinding(
           null -> DeviceBinding.Signing(holder)
         }
       )
-    }
+    },
+    ioDispatcher = ioDispatcher,
   )
 }
 

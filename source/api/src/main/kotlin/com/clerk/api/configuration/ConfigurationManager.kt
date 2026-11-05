@@ -315,7 +315,9 @@ internal class ConfigurationManager(
 
   fun isConfigured(): Boolean = hasConfigured
 
-  fun deleteDeviceKey(): Boolean {
+  suspend fun deleteDeviceKey(): Boolean = scope.async { deleteDeviceKeyNow() }.await()
+
+  private fun deleteDeviceKeyNow(): Boolean {
     val holder = deviceKeyHolder
     val context = context?.get()
     if (holder == null || context == null) return false

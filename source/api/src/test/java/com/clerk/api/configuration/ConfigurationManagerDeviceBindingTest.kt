@@ -97,7 +97,7 @@ class ConfigurationManagerDeviceBindingTest {
   }
 
   @Test
-  fun `deleteDeviceKey deletes the stored device key`() {
+  fun `deleteDeviceKey deletes the stored device key`() = runBlocking {
     configure(sharedSessionSync = null)
     val before = JvmDeviceKey.getOrCreate().thumbprint
 
@@ -107,7 +107,7 @@ class ConfigurationManagerDeviceBindingTest {
   }
 
   @Test
-  fun `deleteDeviceKey does nothing before configure`() {
+  fun `deleteDeviceKey does nothing before configure`() = runBlocking {
     val before = JvmDeviceKey.getOrCreate().thumbprint
 
     assertFalse(manager.deleteDeviceKey())
