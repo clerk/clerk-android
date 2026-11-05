@@ -32,6 +32,7 @@ import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.fetchToken
+import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
@@ -267,9 +268,9 @@ internal class ConfigurationManager(
         expectedConfigurationVersion = configuredVersion,
       )
     if (!restoreLocalState(configuredVersion)) return@launch
+    Clerk.sharedSessionSyncCoordinator?.let { adoptSiblingStateThenDropDeviceBoundToken(it) }
     activeSessionWatchJob = startTokenRefreshWhenASessionBecomesActive()
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
-    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val dataRefreshJob = async {
       refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
     }
@@ -296,6 +297,20 @@ internal class ConfigurationManager(
     ensureStorageInitialized()
     hydrateCachedStateIfNeeded(Clerk.baseUrl)
     return true
+  }
+
+  private suspend fun adoptSiblingStateThenDropDeviceBoundToken(
+    coordinator: SharedSessionSyncCoordinator
+  ) {
+    coordinator.reloadFromSharedStorage()
+    dropDeviceBoundToken()
+  }
+
+  private fun dropDeviceBoundToken() {
+    val deviceToken = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) ?: return
+    if (!isDeviceBound(deviceToken)) return
+    ClerkLogger.i("Dropping a device-bound token: shared session sync keeps this client unbound")
+    setDeviceToken(deviceToken = null, expectedDeviceToken = deviceToken)
   }
 
   fun isConfigured(): Boolean = hasConfigured
@@ -876,6 +891,7 @@ internal class ConfigurationManager(
 }
 
 private const val DEVICE_TOKEN_CLIENT_ID_CLAIM = "id"
+private const val DEVICE_TOKEN_CONFIRMATION_CLAIM = "cnf"
 
 private fun ClerkResult<*, ClerkErrorResponse>.isUnsupportedAppVersion(): Boolean =
   this is ClerkResult.Failure &&
@@ -896,6 +912,11 @@ private fun deviceTokenTargetsDifferentClient(previous: String?, next: String?):
         (deviceTokenClientId(previous) ?: Clerk.clientFlow.value?.id?.takeIf { it.isNotBlank() })
   }
 }
+
+private fun isDeviceBound(token: String): Boolean = runCatching {
+  DEVICE_TOKEN_CONFIRMATION_CLAIM in JWT(token).claims
+}
+  .getOrDefault(false)
 
 private fun deviceTokenClientId(token: String?): String? =
   token
