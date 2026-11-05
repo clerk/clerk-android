@@ -2,6 +2,7 @@ package com.clerk.api.devicekey
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.security.KeyStoreException as PlatformKeyStoreException
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import java.security.GeneralSecurityException
@@ -70,10 +71,13 @@ private constructor(
         catchingKeystoreFailures { store.storedPrivateKey() }
           .getOrElse { if (it.provesKeyLost()) null else throw it } ?: return null
       // KeyStore.getCertificate returns null for every Keystore error, not only a missing entry.
-      val publicKey =
-        store.storedPublicKey()
-          ?: throw KeyStoreException("The device key's certificate could not be read.")
-      return KeyPair(publicKey, privateKey)
+      val publicKey = store.storedPublicKey()
+      return when {
+        publicKey != null -> KeyPair(publicKey, privateKey)
+        keystoreTellsAFailedReadFromLoss() ->
+          throw KeyStoreException("The device key's certificate could not be read.")
+        else -> null
+      }
     }
 
     private fun generateKeyPair(store: DeviceKeyStore): KeyPair {
@@ -96,12 +100,18 @@ private constructor(
 private fun Throwable.provesKeyLost(): Boolean =
   when (this) {
     is KeyPermanentlyInvalidatedException -> true
-    is UnrecoverableKeyException -> cause !is PlatformKeyStoreException
+    is UnrecoverableKeyException ->
+      cause !is PlatformKeyStoreException || !keystoreTellsAFailedReadFromLoss()
     else ->
       generateSequence(this) { it.cause }
         .filterIsInstance<PlatformKeyStoreException>()
         .any { error -> KeyMintErrorThatEndsTheKey.entries.any { it.isNamedBy(error) } }
   }
+
+// Below API 31 the Keystore reports a failed binder call the same way as a key blob it cannot read,
+// and a process death between keygen and storing the certificate leaves a key with no certificate.
+private fun keystoreTellsAFailedReadFromLoss(): Boolean =
+  Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
 // An app cannot read the KeyMint error code. KeyStoreException.getErrorCode is a blocked hidden
 // API, and getNumericErrorCode gives KM_ERROR_INVALID_KEY_BLOB the same ERROR_KEYMINT_FAILURE as
