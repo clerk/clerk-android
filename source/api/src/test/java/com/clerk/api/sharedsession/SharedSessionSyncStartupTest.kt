@@ -40,6 +40,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,6 +54,8 @@ class SharedSessionSyncStartupTest {
   private val context: Context = RuntimeEnvironment.getApplication()
   private val sessionApi = mockk<SessionApi>()
   private val firstSessionTokenFetch = CountDownLatch(1)
+  private val firstClientFetch = CountDownLatch(1)
+  private val firstEnvironmentFetch = CountDownLatch(1)
   private val tokensSentBySessionTokenFetches =
     Collections.synchronizedList(mutableListOf<String?>())
   private val tokensSentByClientRequests = Collections.synchronizedList(mutableListOf<String?>())
@@ -75,9 +78,9 @@ class SharedSessionSyncStartupTest {
         firstSessionTokenFetch.countDown()
         ClerkResult.unknownFailure(IOException("offline"))
       }
-    coEvery { Client.get() } coAnswers { offlineAfterRecordingToken() }
+    coEvery { Client.get() } coAnswers { offlineAfterRecordingToken(firstClientFetch) }
     coEvery { Client.getSkippingClientId() } coAnswers { offlineAfterRecordingToken() }
-    coEvery { Environment.get() } coAnswers { offlineAfterRecordingToken() }
+    coEvery { Environment.get() } coAnswers { offlineAfterRecordingToken(firstEnvironmentFetch) }
   }
 
   @After
@@ -96,7 +99,8 @@ class SharedSessionSyncStartupTest {
 
     initializeWithSharedSessionSync()
 
-    coVerify(timeout = 5_000) { sessionApi.tokens(SESSION_ID, any(), any(), any()) }
+    assertTrue(firstSessionTokenFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
+    coVerify { sessionApi.tokens(SESSION_ID, any(), any(), any()) }
     assertEquals(SIBLING_DEVICE_TOKEN, tokensSentBySessionTokenFetches.first())
   }
 
@@ -108,8 +112,8 @@ class SharedSessionSyncStartupTest {
 
     initializeWithSharedSessionSync()
 
-    coVerify(timeout = 5_000) { Client.get() }
-    coVerify(timeout = 5_000) { Environment.get() }
+    assertTrue(firstClientFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
+    assertTrue(firstEnvironmentFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
     val sent = tokensSentBySessionTokenFetches + tokensSentByClientRequests
     assertFalse("requests sent $sent", BOUND_SIBLING_DEVICE_TOKEN in sent)
     assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
@@ -184,8 +188,11 @@ class SharedSessionSyncStartupTest {
     )
   }
 
-  private fun <T : Any> offlineAfterRecordingToken(): ClerkResult<T, Nothing> {
+  private fun <T : Any> offlineAfterRecordingToken(
+    recorded: CountDownLatch? = null
+  ): ClerkResult<T, Nothing> {
     tokensSentByClientRequests += StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
+    recorded?.countDown()
     return ClerkResult.unknownFailure(IOException("offline"))
   }
 
@@ -228,6 +235,7 @@ class SharedSessionSyncStartupTest {
     const val SIBLING_PACKAGE = "com.example.sibling"
     const val SIBLING_AUTHORITY = SIBLING_PACKAGE + SharedSessionSyncContract.AUTHORITY_SUFFIX
     const val SIBLING_ANSWER_DELAY_MILLIS = 500L
+    const val REQUEST_WAIT_SECONDS = 5L
     val CERTIFICATE = Signature("0a0b0c0d")
     val LOCAL_DEVICE_TOKEN = jwt("""{"id":"client_local"}""")
     val SIBLING_DEVICE_TOKEN = jwt("""{"id":"client_sibling"}""")
