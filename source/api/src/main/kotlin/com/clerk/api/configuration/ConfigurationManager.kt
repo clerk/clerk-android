@@ -38,6 +38,7 @@ import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -63,6 +64,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+
+internal val SHARED_STORAGE_RELOAD_WAIT: Duration = 2.seconds
 
 internal class ConfigurationManager(
   private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

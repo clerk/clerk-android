@@ -15,6 +15,7 @@ import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.SharedSessionSyncConfig
+import com.clerk.api.configuration.SHARED_STORAGE_RELOAD_WAIT
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.network.ClerkApi
@@ -29,6 +30,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.io.IOException
@@ -36,6 +38,8 @@ import java.util.Base64
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -59,6 +63,7 @@ class SharedSessionSyncStartupTest {
   private val tokensSentBySessionTokenFetches =
     Collections.synchronizedList(mutableListOf<String?>())
   private val tokensSentByClientRequests = Collections.synchronizedList(mutableListOf<String?>())
+  private val releaseSilentSibling = CountDownLatch(1)
 
   @Before
   fun setUp() {
@@ -85,6 +90,7 @@ class SharedSessionSyncStartupTest {
 
   @After
   fun tearDown() {
+    releaseSilentSibling.countDown()
     Clerk.reset()
     unmockkAll()
     StorageHelper.reset(context)
@@ -119,6 +125,41 @@ class SharedSessionSyncStartupTest {
     assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
   }
 
+  @Test
+  fun `a sibling that never answers holds the first session token fetch no longer than the reload bound`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, LOCAL_DEVICE_TOKEN)
+    signInLocally()
+    siblingAnswersWith(SilentSiblingProvider(releaseSilentSibling))
+    val launched = TimeSource.Monotonic.markNow()
+
+    initializeWithSharedSessionSync()
+
+    assertTrue(firstSessionTokenFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
+    val firstFetchAfter = launched.elapsedNow()
+    assertTrue(
+      "first fetch after $firstFetchAfter",
+      firstFetchAfter < SHARED_STORAGE_RELOAD_WAIT + RELOAD_WAIT_SLACK,
+    )
+    assertEquals(LOCAL_DEVICE_TOKEN, tokensSentBySessionTokenFetches.first())
+  }
+
+  @Test
+  fun `a reload that throws still drops a cnf token and starts the fetches`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, BOUND_LOCAL_DEVICE_TOKEN)
+    signInLocally()
+    mockkConstructor(SharedSessionSyncCoordinator::class)
+    coEvery { anyConstructed<SharedSessionSyncCoordinator>().reloadFromSharedStorage() } throws
+      IllegalStateException("peer discovery failed")
+
+    initializeWithSharedSessionSync()
+
+    assertTrue(firstClientFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
+    assertTrue(firstEnvironmentFetch.await(REQUEST_WAIT_SECONDS, TimeUnit.SECONDS))
+    val sent = tokensSentBySessionTokenFetches + tokensSentByClientRequests
+    assertFalse("requests sent $sent", BOUND_LOCAL_DEVICE_TOKEN in sent)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
   private fun signInLocally() {
     val session =
       Session(
@@ -147,6 +188,12 @@ class SharedSessionSyncStartupTest {
             value = deviceToken,
           ),
       )
+    siblingAnswersWith(
+      SlowSiblingProvider(SharedSessionSyncSnapshot.encode(snapshot), firstSessionTokenFetch)
+    )
+  }
+
+  private fun siblingAnswersWith(siblingProvider: ContentProvider) {
     val packageManager = shadowOf(context.packageManager)
     packageManager.getInternalMutablePackageInfo(context.packageName).signatures =
       arrayOf(CERTIFICATE)
@@ -170,10 +217,7 @@ class SharedSessionSyncStartupTest {
       provider,
       IntentFilter(SharedSessionSyncContract.DISCOVERY_ACTION),
     )
-    ShadowContentResolver.registerProviderInternal(
-      SIBLING_AUTHORITY,
-      SlowSiblingProvider(SharedSessionSyncSnapshot.encode(snapshot), firstSessionTokenFetch),
-    )
+    ShadowContentResolver.registerProviderInternal(SIBLING_AUTHORITY, siblingProvider)
   }
 
   private fun initializeWithSharedSessionSync() {
@@ -196,11 +240,23 @@ class SharedSessionSyncStartupTest {
     return ClerkResult.unknownFailure(IOException("offline"))
   }
 
+  private class SilentSiblingProvider(private val released: CountDownLatch) : SiblingProvider() {
+    override fun query(
+      uri: Uri,
+      projection: Array<out String>?,
+      selection: String?,
+      selectionArgs: Array<out String>?,
+      sortOrder: String?,
+    ): Cursor? {
+      released.await()
+      return null
+    }
+  }
+
   private class SlowSiblingProvider(
     private val snapshot: String,
     private val sessionTokenFetchStarted: CountDownLatch,
-  ) : ContentProvider() {
-    override fun onCreate(): Boolean = true
+  ) : SiblingProvider() {
 
     override fun query(
       uri: Uri,
@@ -214,6 +270,10 @@ class SharedSessionSyncStartupTest {
         addRow(arrayOf(snapshot))
       }
     }
+  }
+
+  private abstract class SiblingProvider : ContentProvider() {
+    override fun onCreate(): Boolean = true
 
     override fun getType(uri: Uri): String? = null
 
@@ -236,9 +296,11 @@ class SharedSessionSyncStartupTest {
     const val SIBLING_AUTHORITY = SIBLING_PACKAGE + SharedSessionSyncContract.AUTHORITY_SUFFIX
     const val SIBLING_ANSWER_DELAY_MILLIS = 500L
     const val REQUEST_WAIT_SECONDS = 5L
+    val RELOAD_WAIT_SLACK = 1.seconds
     val CERTIFICATE = Signature("0a0b0c0d")
     val LOCAL_DEVICE_TOKEN = jwt("""{"id":"client_local"}""")
     val SIBLING_DEVICE_TOKEN = jwt("""{"id":"client_sibling"}""")
+    val BOUND_LOCAL_DEVICE_TOKEN = jwt("""{"id":"client_local","cnf":{"jkt":"0ZcOCORZNYy"}}""")
     val BOUND_SIBLING_DEVICE_TOKEN = jwt("""{"id":"client_sibling","cnf":{"jkt":"0ZcOCORZNYy"}}""")
 
     fun jwt(payload: String): String =
