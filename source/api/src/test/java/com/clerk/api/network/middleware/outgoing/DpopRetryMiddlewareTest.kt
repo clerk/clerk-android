@@ -9,6 +9,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.nimbusds.jwt.SignedJWT
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
@@ -63,6 +64,85 @@ class DpopRetryMiddlewareTest {
 
     assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
   }
+
+  @Test
+  fun `a proof rejected as invalid is retried once with the rejection's Date`() {
+    server.enqueue(
+      rejection("device_binding_proof_invalid", date = "Wed, 04 Nov 2026 12:20:00 GMT")
+    )
+    server.enqueue(MockResponse())
+
+    val response = execute(signing())
+
+    assertEquals(200, response.code)
+    response.close()
+    val rejected = claims(server.takeRequest())
+    val retried = claims(server.takeRequest())
+    assertEquals(Instant.parse("2026-11-04T12:00:00Z").epochSeconds, rejected.issueTime.time / 1000)
+    assertEquals(Instant.parse("2026-11-04T12:20:00Z").epochSeconds, retried.issueTime.time / 1000)
+    assertNotEquals(rejected.jwtid, retried.jwtid)
+  }
+
+  @Test
+  fun `a rejection without a Date is not retried`() {
+    server.enqueue(rejection("device_binding_proof_invalid", date = null))
+
+    execute(signing()).use { assertEquals(401, it.code) }
+
+    assertEquals(1, server.requestCount)
+  }
+
+  @Test
+  fun `a second invalid proof is not retried again`() {
+    server.enqueue(
+      rejection("device_binding_proof_invalid", date = "Wed, 04 Nov 2026 12:20:00 GMT")
+    )
+    server.enqueue(
+      rejection("device_binding_proof_invalid", date = "Wed, 04 Nov 2026 12:20:01 GMT")
+    )
+    server.enqueue(MockResponse())
+
+    execute(signing()).use { assertEquals(401, it.code) }
+
+    assertEquals(2, server.requestCount)
+  }
+
+  @Test
+  fun `an unsigned request is not retried`() {
+    server.enqueue(
+      rejection("device_binding_proof_invalid", date = "Wed, 04 Nov 2026 12:20:00 GMT")
+    )
+    server.enqueue(MockResponse())
+
+    execute(CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT))).use {
+      assertEquals(401, it.code)
+    }
+
+    assertEquals(1, server.requestCount)
+  }
+
+  @Test
+  fun `the other binding rejections are not retried`() {
+    for (code in
+      listOf(
+        "device_binding_proof_missing",
+        "device_binding_proof_replayed",
+        "device_binding_key_mismatch",
+      )) {
+      server.enqueue(rejection(code, date = "Wed, 04 Nov 2026 12:20:00 GMT"))
+      execute(signing()).use { assertEquals(401, it.code) }
+    }
+
+    assertEquals(3, server.requestCount)
+  }
+
+  private fun rejection(code: String, date: String?): MockResponse =
+    MockResponse.Builder()
+      .code(401)
+      .addHeader("Content-Type", "application/json")
+      .apply { if (date != null) addHeader("Date", date) else removeHeader("Date") }
+      .body("""{"errors":[{"code":"$code","message":"rejected"}]}""")
+      .build()
 
   private fun signing(): Deferred<DeviceBinding> =
     CompletableDeferred(DeviceBinding.Signing(holder))

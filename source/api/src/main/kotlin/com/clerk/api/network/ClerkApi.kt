@@ -19,6 +19,7 @@ import com.clerk.api.network.middleware.incoming.AppVersionStatusMiddleware
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.api.network.middleware.outgoing.DpopMiddleware
+import com.clerk.api.network.middleware.outgoing.DpopRetryMiddleware
 import com.clerk.api.network.middleware.outgoing.RequestLoggingMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
@@ -165,6 +166,7 @@ internal object ClerkApi {
     OkHttpClient.Builder()
       .apply {
         connectionSpecs(listOf(ConnectionSpec.MODERN_TLS))
+        addInterceptor(DpopRetryMiddleware(json = json))
         addInterceptor(ClientSyncingMiddleware(json = json, serverClock = serverClock))
         addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
         addInterceptor(DeviceTokenSavingMiddleware())
