@@ -14,6 +14,8 @@ import com.clerk.api.appversion.UpdateRequiredViewLauncher
 import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.devicekey.DeviceKeyFactory
+import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLogger
@@ -38,6 +40,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -114,6 +117,8 @@ internal class ConfigurationManager(
   @Volatile private var configurationVersion = 0
 
   private val sharedDeviceTokenFenceGeneration = AtomicInteger()
+
+  @Volatile private var deviceBinding: Deferred<DeviceBinding>? = null
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -233,10 +238,17 @@ internal class ConfigurationManager(
       config = options?.sharedSessionSync,
     )
     BiometricCredentialStorage.initialize(context.applicationContext)
+    val deviceBinding =
+      scope.resolveDeviceBinding(
+        sharedSessionSync = options?.sharedSessionSync != null,
+        holder = DeviceKeyHolder { DeviceKeyFactory.create(context.applicationContext) },
+      )
+    this.deviceBinding = deviceBinding
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
       customHeaders = options?.customHeaders.orEmpty(),
+      deviceBinding = deviceBinding,
       serverClock = ServerClock(Clock.System),
     )
     hasConfigured = true

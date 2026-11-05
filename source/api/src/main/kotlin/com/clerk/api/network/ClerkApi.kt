@@ -3,6 +3,7 @@ package com.clerk.api.network
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
+import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
@@ -17,11 +18,13 @@ import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.AppVersionStatusMiddleware
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
+import com.clerk.api.network.middleware.outgoing.DpopMiddleware
 import com.clerk.api.network.middleware.outgoing.RequestLoggingMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
+import kotlinx.coroutines.Deferred
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -100,12 +103,13 @@ internal object ClerkApi {
     baseUrl: String,
     context: Context,
     customHeaders: Map<String, String> = emptyMap(),
+    deviceBinding: Deferred<DeviceBinding>,
     serverClock: ServerClock,
   ) {
     val effectiveCustomHeaders = customHeaders.toMap()
     configuredBaseUrl = baseUrl
     configuredCustomHeaders = effectiveCustomHeaders
-    val retrofit = buildRetrofit(baseUrl, effectiveCustomHeaders, serverClock)
+    val retrofit = buildRetrofit(baseUrl, effectiveCustomHeaders, deviceBinding, serverClock)
     _client = retrofit.create(ClientApi::class.java)
     _environment = retrofit.create(EnvironmentApi::class.java)
     _session = retrofit.create(SessionApi::class.java)
@@ -137,6 +141,7 @@ internal object ClerkApi {
   private fun buildRetrofit(
     baseUrl: String,
     customHeaders: Map<String, String>,
+    deviceBinding: Deferred<DeviceBinding>,
     serverClock: ServerClock,
   ): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
@@ -144,7 +149,7 @@ internal object ClerkApi {
 
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
-      .client(buildHttpClient(customHeaders, serverClock))
+      .client(buildHttpClient(customHeaders, deviceBinding, serverClock))
       .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
       .addConverterFactory(ClerkApiResultConverterFactory)
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
@@ -154,6 +159,7 @@ internal object ClerkApi {
   @VisibleForTesting
   internal fun buildHttpClient(
     customHeaders: Map<String, String>,
+    deviceBinding: Deferred<DeviceBinding>,
     serverClock: ServerClock,
   ): OkHttpClient =
     OkHttpClient.Builder()
@@ -168,6 +174,7 @@ internal object ClerkApi {
         if (Clerk.debugMode) {
           addInterceptor(RequestLoggingMiddleware.create())
         }
+        addNetworkInterceptor(DpopMiddleware(deviceBinding, serverClock))
       }
       .build()
       .forbiddingCertificates()
