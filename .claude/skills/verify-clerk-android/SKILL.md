@@ -274,7 +274,8 @@ $ # in a Claude Code cloud session, open the draft with gh api repos/clerk/clerk
 $ e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label> --before <before-run-id>
 $ e2e-tests/bin/control-clerk-android down
 $ sh -c 'for i in $(seq 40); do gh api repos/clerk/clerk-android/pulls/<n> --jq .body | sed -n "/<!-- verify-evidence:android -->/,/<!-- \/verify-evidence:android -->/p" | grep -q "| :---:" && exit 0; sleep 15; done; exit 1'
-$ # check the description, as Evidence says, then:
+$ # if that exited 1, stop: leave the pull request a draft and report that the evidence table did not appear
+$ # otherwise check the description, as Evidence says, then:
 $ gh pr ready <n>
 $ # in a Claude Code cloud session, use gh api -X POST repos/clerk/clerk-android/pulls/<n>/ccr/ready_for_review in place of gh pr ready
 $ git push origin --delete <branch>-before && git branch -D <branch>-before
