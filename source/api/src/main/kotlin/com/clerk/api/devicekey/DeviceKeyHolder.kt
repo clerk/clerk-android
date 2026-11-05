@@ -1,6 +1,7 @@
 package com.clerk.api.devicekey
 
 import com.clerk.api.log.ClerkLogger
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class DeviceKeyHolder(private val loadKey: () -> DeviceKey) {
   @Volatile private var state: DeviceKeyState? = null
@@ -36,14 +37,7 @@ internal class DeviceKeyHolder(private val loadKey: () -> DeviceKey) {
       }
     }
 
-  private fun load(): DeviceKeyState =
-    record(
-      catchingKeystoreFailures(loadKey)
-        .fold(
-          onSuccess = { DeviceKeyState.Ready(it) },
-          onFailure = { DeviceKeyState.Unavailable(it) },
-        )
-    )
+  private fun load(): DeviceKeyState = record(readyOrUnavailable(loadKey))
 
   private fun giveUp(cause: Throwable): DeviceKeyState =
     synchronized(this) {
@@ -60,6 +54,16 @@ internal class DeviceKeyHolder(private val loadKey: () -> DeviceKey) {
     return next
   }
 }
+
+// Vendor Keystores throw runtime exceptions from key loading that the platform does not document.
+private inline fun readyOrUnavailable(loadKey: () -> DeviceKey): DeviceKeyState =
+  try {
+    DeviceKeyState.Ready(loadKey())
+  } catch (e: CancellationException) {
+    throw e
+  } catch (e: Exception) {
+    DeviceKeyState.Unavailable(e)
+  }
 
 private fun <T> DeviceKeyState.attempt(operation: (DeviceKey) -> T): Result<T> =
   when (this) {

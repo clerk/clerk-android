@@ -238,29 +238,20 @@ internal fun CoroutineScope.resolveDeviceBinding(
       ioDispatcher = ioDispatcher,
     )
   }
-  val keyState = async(ioDispatcher) { loadKeyState(holder) }
+  val keyState = async(ioDispatcher) { holder.state() }
   return DeviceBindingState(
     async {
       logged(
         when (keyState.await()) {
           is DeviceKeyState.Unavailable ->
             DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-          is DeviceKeyState.Ready,
-          null -> DeviceBinding.Signing(holder)
+          is DeviceKeyState.Ready -> DeviceBinding.Signing(holder)
         }
       )
     },
     ioDispatcher = ioDispatcher,
   )
 }
-
-private fun loadKeyState(holder: DeviceKeyHolder): DeviceKeyState? =
-  try {
-    holder.state()
-  } catch (e: Exception) {
-    ClerkLogger.w("Device key load failed, each request retries it: ${e.javaClass.name}")
-    null
-  }
 
 private fun logged(binding: DeviceBinding): DeviceBinding = binding.also {
   ClerkLogger.i("Device binding: $it")
