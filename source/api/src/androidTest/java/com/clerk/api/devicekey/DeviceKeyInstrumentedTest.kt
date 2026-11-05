@@ -49,11 +49,10 @@ class DeviceKeyInstrumentedTest {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         keyInfo.securityLevel to
           mapOf(
-              KeyProperties.SECURITY_LEVEL_SOFTWARE to DeviceKeySecurityLevel.SOFTWARE,
-              KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT to DeviceKeySecurityLevel.TEE,
-              KeyProperties.SECURITY_LEVEL_STRONGBOX to DeviceKeySecurityLevel.STRONGBOX,
-            )
-            .getValue(keyInfo.securityLevel)
+            KeyProperties.SECURITY_LEVEL_SOFTWARE to DeviceKeySecurityLevel.SOFTWARE,
+            KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT to DeviceKeySecurityLevel.TEE,
+            KeyProperties.SECURITY_LEVEL_STRONGBOX to DeviceKeySecurityLevel.STRONGBOX,
+          )[keyInfo.securityLevel]
       } else {
         @Suppress("DEPRECATION") val insideSecureHardware = keyInfo.isInsideSecureHardware
         insideSecureHardware to
@@ -65,7 +64,7 @@ class DeviceKeyInstrumentedTest {
         "api=${Build.VERSION.SDK_INT} thumbprint=${key.thumbprint}"
     )
     assertIs<AndroidKeystoreDeviceKey>(key)
-    assertEquals(expectedLevel, key.securityLevel)
+    assertEquals(expectedLevel, key.securityLevel, "KeyInfo level $keyInfoLevel")
     assertTrue(verifies(key.publicJwk, data, key.sign(data)))
   }
 
