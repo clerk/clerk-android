@@ -1,9 +1,11 @@
 package com.clerk.api.devicekey
 
 import android.os.Build
+import android.security.KeyStoreException as PlatformKeyStoreException
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
+import java.lang.reflect.Method
 import java.security.InvalidKeyException
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -31,11 +33,64 @@ class AndroidKeystoreDeviceKeyTest {
   private val holder = DeviceKeyHolder { AndroidKeystoreDeviceKey.getOrCreate(store) }
 
   @Test
-  fun `a key the platform permanently invalidated is replaced at signing`() {
-    val original = readyKey()
-    store.failNextSigning(KeyPermanentlyInvalidatedException())
+  fun `a stored key whose blob KeyMint rejects is replaced`() {
+    assertReplacedAtLoad(
+      unrecoverable(cause = platformKeystoreException(KM_ERROR_INVALID_KEY_BLOB))
+    )
+  }
 
-    assertReplaced(original, signedBy())
+  @Test
+  fun `a stored key whose blob Keystore reports corrupted is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = platformKeystoreException(VALUE_CORRUPTED)))
+  }
+
+  @Test
+  fun `a stored key that Keystore cannot recover is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = null))
+  }
+
+  @Test
+  fun `a stored key the platform permanently invalidated is replaced`() {
+    assertReplacedAtLoad(KeyPermanentlyInvalidatedException())
+  }
+
+  @Test
+  fun `a stored key read during a Keystore system error is kept`() {
+    assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR)))
+  }
+
+  @Test
+  fun `a stored key read while KeyMint runs too many operations is kept`() {
+    assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(KM_ERROR_TOO_MANY_OPERATIONS)))
+  }
+
+  @Test
+  fun `a stored key read while the secure hardware is busy is kept`() {
+    assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(KM_ERROR_SECURE_HW_BUSY)))
+  }
+
+  @Test
+  fun `from API 31 a stored key whose certificate reads empty is kept`() {
+    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
+    store.getCertificatePublicKey = { null }
+
+    assertIs<DeviceKeyState.Unavailable>(holder.state())
+    assertEquals(original.thumbprint, storedThumbprint())
+  }
+
+  @Test
+  fun `a key whose blob KeyMint rejects is replaced at signing`() {
+    assertReplacedAtSigning(keystoreFailure(KM_ERROR_INVALID_KEY_BLOB))
+  }
+
+  @Test
+  fun `a key whose blob Keystore reports corrupted is replaced at signing`() {
+    assertReplacedAtSigning(keystoreFailure(VALUE_CORRUPTED))
+  }
+
+  @Test
+  fun `a key the platform permanently invalidated is replaced at signing`() {
+    assertReplacedAtSigning(KeyPermanentlyInvalidatedException())
   }
 
   @Test
@@ -57,31 +112,30 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a Keystore error at signing keeps a key the alias still holds`() {
+  fun `a key Keystore cannot recover after a failed sign is replaced`() {
     val original = readyKey()
-    val failure = keystoreFailure(SYSTEM_ERROR)
-    store.failNextSigning(failure)
-
-    assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
-    assertKept(original)
-  }
-
-  @Test
-  fun `a key whose blob KeyMint rejects is replaced at signing`() {
-    val original = readyKey()
-    store.failEverySigning(storedPrivateKey(), keystoreFailure(KM_ERROR_INVALID_KEY_BLOB))
+    val unreadable = store.stored
+    store.failNextSigning(keystoreFailure(SYSTEM_ERROR))
+    store.getKey = {
+      if (store.stored === unreadable) throw unrecoverable(cause = null) else store.stored?.private
+    }
 
     assertReplaced(original, signedBy())
   }
 
   @Test
-  fun `KeyMint running out of operations at signing keeps the key`() {
-    val original = readyKey()
-    val failure = keystoreFailure(KM_ERROR_TOO_MANY_OPERATIONS)
-    store.failNextSigning(failure)
+  fun `a Keystore system error at signing keeps the key`() {
+    assertKeptAtSigning(keystoreFailure(SYSTEM_ERROR))
+  }
 
-    assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
-    assertKept(original)
+  @Test
+  fun `KeyMint running too many operations at signing keeps the key`() {
+    assertKeptAtSigning(keystoreFailure(KM_ERROR_TOO_MANY_OPERATIONS))
+  }
+
+  @Test
+  fun `busy secure hardware at signing keeps the key`() {
+    assertKeptAtSigning(keystoreFailure(KM_ERROR_SECURE_HW_BUSY))
   }
 
   @Test
@@ -101,64 +155,6 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `from API 31 a stored key that Keystore cannot read for a stated reason is kept`() {
-    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
-    val failure = unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR))
-    store.getKey = { throw failure }
-
-    val state = holder.state()
-
-    assertSame(failure, assertIs<DeviceKeyState.Unavailable>(state).cause)
-    assertEquals(original.thumbprint, storedThumbprint())
-  }
-
-  @Test
-  fun `a stored key that Keystore cannot recover is replaced`() {
-    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
-    store.getKey = { throw unrecoverable(cause = null) }
-
-    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
-
-    assertNotEquals(original.thumbprint, key.thumbprint)
-    assertEquals(key.thumbprint, storedThumbprint())
-  }
-
-  @Test
-  fun `a stored key the platform permanently invalidated is replaced`() {
-    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
-    store.getKey = { throw KeyPermanentlyInvalidatedException() }
-
-    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
-
-    assertNotEquals(original.thumbprint, key.thumbprint)
-    assertEquals(key.thumbprint, storedThumbprint())
-  }
-
-  @Test
-  fun `from API 31 a stored key whose certificate reads empty is kept`() {
-    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
-    store.getCertificatePublicKey = { null }
-
-    assertIs<DeviceKeyState.Unavailable>(holder.state())
-    assertEquals(original.thumbprint, storedThumbprint())
-  }
-
-  @Test
-  @Config(sdk = [30])
-  fun `below API 31 a stored key that Keystore cannot read is replaced whatever the error`() {
-    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
-    val unreadable = store.stored
-    val failure = unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR))
-    store.getKey = { if (store.stored === unreadable) throw failure else store.stored?.private }
-
-    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
-
-    assertNotEquals(original.thumbprint, key.thumbprint)
-    assertEquals(key.thumbprint, storedThumbprint())
-    assertEquals(key.thumbprint, nextStartThumbprint())
-  }
-
-  @Test
   @Config(sdk = [30])
   fun `below API 31 a stored key left without its certificate is replaced`() {
     val original = AndroidKeystoreDeviceKey.getOrCreate(store)
@@ -170,6 +166,80 @@ class AndroidKeystoreDeviceKeyTest {
     assertNotEquals(original.thumbprint, key.thumbprint)
     assertEquals(key.thumbprint, storedThumbprint())
     assertEquals(key.thumbprint, nextStartThumbprint())
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a system error reading the key characteristics keeps the key`() {
+    assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR)))
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a system error that outlasts a failed sign keeps the key`() {
+    val original = readyKey()
+    val signingFailure = keystoreFailure(SYSTEM_ERROR)
+    val readFailure = unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR))
+    store.failNextSigning(signingFailure)
+    store.getKey = { throw readFailure }
+
+    val failure = holder.withKey { it.sign(data) }.exceptionOrNull()
+
+    assertSame(signingFailure, failure)
+    assertTrue(readFailure in signingFailure.suppressed)
+    assertKept(original)
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a stored key whose blob KeyMint rejects is replaced`() {
+    assertReplacedAtLoad(
+      unrecoverable(cause = platformKeystoreException(KM_ERROR_INVALID_KEY_BLOB))
+    )
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a key whose blob KeyMint rejects is replaced at signing`() {
+    assertReplacedAtSigning(keystoreFailure(KM_ERROR_INVALID_KEY_BLOB))
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a stored key whose blob Keystore reports corrupted is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = platformKeystoreException(VALUE_CORRUPTED)))
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a key whose blob Keystore reports corrupted is replaced at signing`() {
+    assertReplacedAtSigning(keystoreFailure(VALUE_CORRUPTED))
+  }
+
+  @Test
+  @Config(sdk = [32])
+  fun `on API 32 a stored key whose blob Keystore reports corrupted is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = platformKeystoreException(VALUE_CORRUPTED)))
+  }
+
+  @Test
+  @Config(sdk = [32])
+  fun `on API 32 a key whose blob Keystore reports corrupted is replaced at signing`() {
+    assertReplacedAtSigning(keystoreFailure(VALUE_CORRUPTED))
+  }
+
+  @Test
+  @Config(sdk = [33])
+  fun `from API 33 a stored key whose public error code says corrupted is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = keyCorruptedByPublicCodeOnly()))
+  }
+
+  @Test
+  @Config(sdk = [33])
+  fun `from API 33 a key whose public error code says corrupted is replaced at signing`() {
+    assertReplacedAtSigning(
+      InvalidKeyException("Keystore operation failed", keyCorruptedByPublicCodeOnly())
+    )
   }
 
   @Test
@@ -228,6 +298,44 @@ class AndroidKeystoreDeviceKeyTest {
 
   private fun readyKey(): DeviceKey = assertIs<DeviceKeyState.Ready>(holder.state()).key
 
+  private fun assertReplacedAtLoad(failure: Exception) {
+    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
+    val unreadable = store.stored
+    store.getKey = { if (store.stored === unreadable) throw failure else store.stored?.private }
+
+    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
+
+    assertNotEquals(original.thumbprint, key.thumbprint)
+    assertEquals(key.thumbprint, storedThumbprint())
+    assertEquals(key.thumbprint, nextStartThumbprint())
+  }
+
+  private fun assertKeptAtLoad(failure: Exception) {
+    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
+    store.getKey = { throw failure }
+
+    assertSame(failure, assertIs<DeviceKeyState.Unavailable>(holder.state()).cause)
+    assertEquals(original.thumbprint, storedThumbprint())
+
+    store.getKey = { store.stored?.private }
+    assertEquals(original.thumbprint, nextStartThumbprint())
+  }
+
+  private fun assertReplacedAtSigning(failure: Exception) {
+    val original = readyKey()
+    store.failEverySigning(storedPrivateKey(), failure)
+
+    assertReplaced(original, signedBy())
+  }
+
+  private fun assertKeptAtSigning(failure: Exception) {
+    val original = readyKey()
+    store.failNextSigning(failure)
+
+    assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
+    assertKept(original)
+  }
+
   private fun nextStartThumbprint(): String =
     assertIs<DeviceKeyState.Ready>(DeviceKeyHolder { getOrCreate(store) }.state()).key.thumbprint
 
@@ -264,24 +372,40 @@ class AndroidKeystoreDeviceKeyTest {
     }
 
   private fun platformKeystoreException(errorCode: Int): Exception =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      Class.forName("android.security.KeyStore2")
-        .getDeclaredMethod("getKeyStoreException", Int::class.javaPrimitiveType, String::class.java)
-        .apply { isAccessible = true }
-        .invoke(null, errorCode, "keystore2 error $errorCode") as Exception
-    } else {
-      Class.forName("android.security.KeyStore")
-        .getMethod("getKeyStoreException", Int::class.javaPrimitiveType)
-        .invoke(null, errorCode) as Exception
+    when {
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+        keystoreExceptionFactory("android.security.KeyStore2", String::class.java)
+          .invoke(null, errorCode, "keystore2 error $errorCode")
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        keystoreExceptionFactory("android.security.KeyStore2").invoke(null, errorCode)
+      else -> keystoreExceptionFactory("android.security.KeyStore").invoke(null, errorCode)
     }
+      as Exception
+
+  private fun keystoreExceptionFactory(className: String, vararg moreParameters: Class<*>): Method =
+    Class.forName(className)
+      .getDeclaredMethod("getKeyStoreException", Int::class.javaPrimitiveType, *moreParameters)
+      .apply { isAccessible = true }
 
   private fun storedPrivateKey(): PrivateKey = checkNotNull(store.stored).private
+
+  private fun keyCorruptedByPublicCodeOnly(): Exception =
+    PlatformKeyStoreException::class
+      .java
+      .getDeclaredConstructor(Int::class.javaPrimitiveType, String::class.java)
+      .apply { isAccessible = true }
+      .newInstance(VALUE_CORRUPTED, "keystore2 error $VALUE_CORRUPTED")
+      .also {
+        assertEquals(PlatformKeyStoreException.ERROR_KEY_CORRUPTED, it.numericErrorCode)
+      }
 
   private companion object {
     const val SYSTEM_ERROR = 4
     const val KEY_NOT_FOUND = 7
+    const val VALUE_CORRUPTED = 8
     const val KM_ERROR_TOO_MANY_OPERATIONS = -31
     const val KM_ERROR_INVALID_KEY_BLOB = -33
+    const val KM_ERROR_SECURE_HW_BUSY = -48
   }
 }
 
