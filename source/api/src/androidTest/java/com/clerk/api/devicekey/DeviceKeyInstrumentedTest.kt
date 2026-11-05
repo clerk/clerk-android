@@ -44,14 +44,28 @@ class DeviceKeyInstrumentedTest {
 
     val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
     assertIs<DeviceKeyState.Ready>(holder.state())
-    val keystoreLevel = levelKeystoreReportsForStoredKey()
+    val keyInfo = storedKeyInfo()
+    val (keyInfoLevel, expectedLevel) =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        keyInfo.securityLevel to
+          mapOf(
+              KeyProperties.SECURITY_LEVEL_SOFTWARE to DeviceKeySecurityLevel.SOFTWARE,
+              KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT to DeviceKeySecurityLevel.TEE,
+              KeyProperties.SECURITY_LEVEL_STRONGBOX to DeviceKeySecurityLevel.STRONGBOX,
+            )
+            .getValue(keyInfo.securityLevel)
+      } else {
+        @Suppress("DEPRECATION") val insideSecureHardware = keyInfo.isInsideSecureHardware
+        insideSecureHardware to
+          if (insideSecureHardware) DeviceKeySecurityLevel.TEE else DeviceKeySecurityLevel.SOFTWARE
+      }
 
     report(
-      "level=${key.securityLevel.wireName} keystore_level=${keystoreLevel.wireName} " +
+      "level=${key.securityLevel.wireName} keyinfo_level=$keyInfoLevel " +
         "api=${Build.VERSION.SDK_INT} thumbprint=${key.thumbprint}"
     )
     assertIs<AndroidKeystoreDeviceKey>(key)
-    assertEquals(keystoreLevel, key.securityLevel)
+    assertEquals(expectedLevel, key.securityLevel)
     assertTrue(verifies(key.publicJwk, data, key.sign(data)))
   }
 
@@ -183,26 +197,11 @@ class DeviceKeyInstrumentedTest {
     assertTrue(signP50Ms < signBudgetMs, "sign p50 took $signP50Ms ms, over $signBudgetMs ms")
   }
 
-  private fun levelKeystoreReportsForStoredKey(): DeviceKeySecurityLevel {
+  private fun storedKeyInfo(): KeyInfo {
     val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
     val privateKey = keyStore.getKey(DEVICE_KEY_ALIAS, null) as PrivateKey
-    val keyInfo =
-      KeyFactory.getInstance(privateKey.algorithm, ANDROID_KEY_STORE)
-        .getKeySpec(privateKey, KeyInfo::class.java)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      return when (keyInfo.securityLevel) {
-        KeyProperties.SECURITY_LEVEL_STRONGBOX -> DeviceKeySecurityLevel.STRONGBOX
-        KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT,
-        KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE -> DeviceKeySecurityLevel.TEE
-        else -> DeviceKeySecurityLevel.SOFTWARE
-      }
-    }
-    @Suppress("DEPRECATION")
-    return if (keyInfo.isInsideSecureHardware) {
-      DeviceKeySecurityLevel.TEE
-    } else {
-      DeviceKeySecurityLevel.SOFTWARE
-    }
+    return KeyFactory.getInstance(privateKey.algorithm, ANDROID_KEY_STORE)
+      .getKeySpec(privateKey, KeyInfo::class.java)
   }
 
   private fun <T> timed(block: () -> T): Pair<T, Double> {
