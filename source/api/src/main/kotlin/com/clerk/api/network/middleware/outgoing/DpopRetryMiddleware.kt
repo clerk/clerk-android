@@ -17,7 +17,8 @@ internal class DpopRetryMiddleware(private val json: Json) : Interceptor {
   }
 
   private fun Response.rejectsSignedProofWithServerTime(): Boolean =
-    networkResponse?.request?.header(DPOP_HEADER) != null &&
+    request.body?.isOneShot() != true &&
+      networkResponse?.request?.header(DPOP_HEADER) != null &&
       headers.getDate(DATE_HEADER) != null &&
       DeviceBindingError.of(this, json)?.recovery ==
         DeviceBindingError.Recovery.RETRY_WITH_SERVER_CLOCK

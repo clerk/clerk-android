@@ -31,9 +31,11 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.tls.HandshakeCertificates
 import okhttp3.tls.HeldCertificate
+import okio.BufferedSink
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -41,7 +43,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** Runs requests through the SDK's own OkHttp client, so the order of its interceptors counts. */
 @RunWith(RobolectricTestRunner::class)
 class DpopRetryMiddlewareTest {
   private val certificate = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
@@ -108,6 +109,30 @@ class DpopRetryMiddlewareTest {
     assertEquals(Instant.parse("2026-11-04T12:00:00Z").epochSeconds, rejected.issueTime.time / 1000)
     assertEquals(Instant.parse("2026-11-04T12:20:00Z").epochSeconds, retried.issueTime.time / 1000)
     assertNotEquals(rejected.jwtid, retried.jwtid)
+  }
+
+  @Test
+  fun `a request with a one-shot body is not retried`() {
+    server.enqueue(
+      rejection("device_binding_proof_invalid", date = "Wed, 04 Nov 2026 12:20:00 GMT")
+    )
+    server.enqueue(MockResponse())
+    val oneShotBody =
+      object : RequestBody() {
+        override fun contentType() = null
+
+        override fun isOneShot() = true
+
+        override fun writeTo(sink: BufferedSink) {
+          sink.writeUtf8("once")
+        }
+      }
+
+    execute(signing(), Request(server.url("/v1/client"), method = "POST", body = oneShotBody)).use {
+      assertEquals(401, it.code)
+    }
+
+    assertEquals(1, server.requestCount)
   }
 
   @Test
@@ -193,7 +218,10 @@ class DpopRetryMiddlewareTest {
   private fun signing(): Deferred<DeviceBinding> =
     CompletableDeferred(DeviceBinding.Signing(holder))
 
-  private fun execute(binding: Deferred<DeviceBinding>): Response {
+  private fun execute(binding: Deferred<DeviceBinding>): Response =
+    execute(binding, Request(server.url("/v1/client")))
+
+  private fun execute(binding: Deferred<DeviceBinding>, request: Request): Response {
     val trusted =
       HandshakeCertificates.Builder().addTrustedCertificate(certificate.certificate).build()
     val client: OkHttpClient =
@@ -205,7 +233,7 @@ class DpopRetryMiddlewareTest {
         .newBuilder()
         .sslSocketFactory(trusted.sslSocketFactory(), trusted.trustManager)
         .build()
-    return client.newCall(Request(server.url("/v1/client"))).execute()
+    return client.newCall(request).execute()
   }
 
   private fun claims(recorded: RecordedRequest) =

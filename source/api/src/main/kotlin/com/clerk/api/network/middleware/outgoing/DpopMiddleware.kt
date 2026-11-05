@@ -41,7 +41,7 @@ internal class DpopMiddleware(
             jti = jti,
           )
         }
-      } catch (e: RuntimeException) {
+      } catch (e: Exception) {
         Result.failure(e)
       }
       .onSuccess { ClerkLogger.d("DPoP proof attached jti=${jti.take(JTI_LOG_LENGTH)}") }

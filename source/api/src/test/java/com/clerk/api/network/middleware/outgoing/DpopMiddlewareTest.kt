@@ -169,7 +169,12 @@ class DpopMiddlewareTest {
 
   @Test
   fun `a sign failure that is not a loss sends the request unsigned after one attempt`() {
-    for (failure in listOf(ProviderException("INVALID_KEY_BLOB"), IllegalStateException("bug"))) {
+    for (failure in
+      listOf(
+        ProviderException("INVALID_KEY_BLOB"),
+        IllegalStateException("bug"),
+        IOException("Keystore I/O"),
+      )) {
       var signs = 0
       val key = JvmDeviceKey.getOrCreate()
       val failingKey =

@@ -109,6 +109,24 @@ class ClientSyncingMiddlewareDeviceBindingTest {
   }
 
   @Test
+  fun `a rejection that carries a rotated token drops the rotated token`() {
+    ConfiguredClerkForTest.setConfigured(context, true)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_rotated")
+
+    middleware.intercept(
+      chainFor(
+        rejection("device_binding_key_mismatch", "token_bound")
+          .newBuilder()
+          .header(AUTHORIZATION_HEADER, "token_rotated")
+          .build()
+      )
+    )
+
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    coVerify(timeout = 5_000) { Client.getSkippingClientId() }
+  }
+
+  @Test
   fun `a rejection for a token that was already replaced leaves the new token alone`() {
     ConfiguredClerkForTest.setConfigured(context, true)
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token_new")

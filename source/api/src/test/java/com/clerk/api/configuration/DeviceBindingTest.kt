@@ -2,6 +2,7 @@ package com.clerk.api.configuration
 
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
+import java.io.IOException
 import java.security.KeyStoreException
 import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
@@ -62,6 +63,15 @@ class DeviceBindingTest {
   @Test
   fun `an undocumented Keystore exception does not sign`() = runBlocking {
     val holder = DeviceKeyHolder { throw IllegalStateException("vendor Keystore bug") }
+
+    val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
+
+    assertEquals(DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE), binding.await())
+  }
+
+  @Test
+  fun `a checked exception from the key load does not sign`() = runBlocking {
+    val holder = DeviceKeyHolder { throw IOException("Keystore load failed") }
 
     val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 

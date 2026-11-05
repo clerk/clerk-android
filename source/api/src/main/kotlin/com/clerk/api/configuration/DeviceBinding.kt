@@ -50,7 +50,7 @@ internal fun CoroutineScope.resolveDeviceBinding(
 private fun loadKeyState(holder: DeviceKeyHolder): DeviceKeyState =
   try {
     holder.state()
-  } catch (e: RuntimeException) {
+  } catch (e: Exception) {
     DeviceKeyState.Unavailable(e)
   }
 

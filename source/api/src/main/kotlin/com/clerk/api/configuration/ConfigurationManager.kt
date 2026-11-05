@@ -319,10 +319,13 @@ internal class ConfigurationManager(
     val holder = deviceKeyHolder
     val context = context?.get()
     if (holder == null || context == null) return false
-    return holder
-      .deleteKey { DeviceKeyFactory.delete(context) }
-      .onFailure { ClerkLogger.w("Failed to delete the device key: ${it.javaClass.name}") }
-      .isSuccess
+    return try {
+      holder.deleteKey { DeviceKeyFactory.delete(context) }.getOrThrow()
+      true
+    } catch (e: Exception) {
+      ClerkLogger.w("Failed to delete the device key: ${e.javaClass.name}")
+      false
+    }
   }
 
   @Synchronized

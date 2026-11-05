@@ -6,7 +6,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** Marks the Clerk singleton configured without running initialize and its network refresh. */
 internal object ConfiguredClerkForTest {
   @Suppress("UNCHECKED_CAST")
   fun setConfigured(context: Context, configured: Boolean) {

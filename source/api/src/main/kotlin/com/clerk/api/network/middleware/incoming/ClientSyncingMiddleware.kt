@@ -67,9 +67,12 @@ internal class ClientSyncingMiddleware(
   private fun dropDeviceTokenBoundElsewhere(response: Response) {
     val error = DeviceBindingError.of(response, json)
     if (error?.recovery != DeviceBindingError.Recovery.DROP_TOKEN) return
-    val requestDeviceToken = response.request.header(AUTHORIZATION_HEADER) ?: return
+    val deviceToken =
+      response.header(AUTHORIZATION_HEADER)
+        ?: response.request.header(AUTHORIZATION_HEADER)
+        ?: return
     ClerkLogger.w("Dropping the device token after ${error.code}")
-    Clerk.dropDeviceToken(requestDeviceToken)
+    Clerk.dropDeviceToken(deviceToken)
   }
 
   @Suppress("NestedBlockDepth")
