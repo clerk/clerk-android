@@ -107,21 +107,24 @@ private fun classify(failure: Throwable): KeystoreFailure =
       KeystoreFailure.LOSS
     generateSequence(failure) { it.cause }
       .filterIsInstance<PlatformKeyStoreException>()
-      .any { it.namesADeadBlob() } -> KeystoreFailure.LOSS
+      .any { it.saysTheKeyIsLost() } -> KeystoreFailure.LOSS
     else -> KeystoreFailure.KEEP
   }
 
 // An app cannot read the internal Keystore code: KeyStoreException.getErrorCode is a blocked hidden
 // API, and getNumericErrorCode gives KM_ERROR_INVALID_KEY_BLOB the same public code as transient
-// KeyMint errors. The platform starts the message with a fixed text per code instead. On API 30 and
-// lower KeyStore.getKeyStoreException writes "Key blob corrupted" for VALUE_CORRUPTED and
-// KeymasterDefs.getErrorMessage for KeyMint codes; from API 31 KeyStore2.java:402-403 and 429 (API
-// 37) do the same, and KeymasterDefs.java:412 names KM_ERROR_INVALID_KEY_BLOB "Invalid key blob".
-private val DEAD_BLOB_MESSAGES = listOf("Invalid key blob", "Key blob corrupted")
+// KeyMint errors. The platform starts the message with a fixed text per code instead. On API 30
+// and lower KeyStore.getKeyStoreException writes "Key not found" for KEY_NOT_FOUND, "Key blob
+// corrupted" for VALUE_CORRUPTED, and KeymasterDefs.getErrorMessage for KeyMint codes. From API 31
+// KeyStore2.java:400-404 and 429 (API 37) do the same, and KeymasterDefs.java:412 names
+// KM_ERROR_INVALID_KEY_BLOB "Invalid key blob". The API 24 Keystore reports a key file it cannot
+// read as KEY_NOT_FOUND after contains() found the file. From API 31 the platform itself reads
+// KEY_NOT_FOUND as no key (AndroidKeyStoreSpi.java:130-134, KeyStoreCryptoOperationUtils.java:117).
+private val LOST_KEY_MESSAGES = listOf("Invalid key blob", "Key blob corrupted", "Key not found")
 
 @SuppressLint("NewApi")
-private fun PlatformKeyStoreException.namesADeadBlob(): Boolean =
-  DEAD_BLOB_MESSAGES.any { message?.startsWith(it) == true } ||
+private fun PlatformKeyStoreException.saysTheKeyIsLost(): Boolean =
+  LOST_KEY_MESSAGES.any { message?.startsWith(it) == true } ||
     (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
       numericErrorCode == PlatformKeyStoreException.ERROR_KEY_CORRUPTED)
 
