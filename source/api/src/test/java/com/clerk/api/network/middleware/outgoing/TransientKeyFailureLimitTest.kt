@@ -129,7 +129,26 @@ class TransientKeyFailureLimitTest {
   }
 
   @Test
-  fun `a load that completes after KEY_LOAD_GIVE_UP with no request in between stops signing`() {
+  fun `a load that completes after KEY_LOAD_GIVE_UP resumes signing`() {
+    val clock = TestTimeSource()
+    val binding = CompletableDeferred<DeviceBinding>()
+    val state = DeviceBindingState(binding, clock)
+    val client = client(state)
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    clock += KEY_LOAD_GIVE_UP
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+    assertNull(server.takeRequest().headers[DPOP_HEADER])
+
+    binding.complete(DeviceBinding.Signing(DeviceKeyHolder { JvmDeviceKey.getOrCreate() }))
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+  }
+
+  @Test
+  fun `a load that completes after KEY_LOAD_GIVE_UP with no request in between signs`() {
     val clock = TestTimeSource()
     val binding = CompletableDeferred<DeviceBinding>()
     val state = DeviceBindingState(binding, clock)
@@ -139,8 +158,31 @@ class TransientKeyFailureLimitTest {
     server.enqueue(MockResponse())
     execute(client(state), BOUND_DEVICE_TOKEN)
 
-    assertNull(server.takeRequest().headers[DPOP_HEADER])
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+  }
+
+  @Test
+  fun `a request-time load that completes after KEY_LOAD_GIVE_UP resumes signing`() {
+    val clock = TestTimeSource()
+    val loadReleased = CountDownLatch(1)
+    val holder = DeviceKeyHolder {
+      loadReleased.await(HUNG_LOAD_SECONDS, TimeUnit.SECONDS)
+      JvmDeviceKey.getOrCreate()
+    }
+    val state = DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder)), clock)
+    val client = client(state)
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    clock += KEY_LOAD_GIVE_UP
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
     assertEquals(unsigned(), runBlocking { state.current(wait) })
+
+    loadReleased.countDown()
+    while (holder.loadedState() == null) Thread.sleep(10)
+    Thread.sleep(LOAD_SETTLE_MILLIS)
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
   }
 
   @Test
