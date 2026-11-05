@@ -71,7 +71,9 @@ private constructor(
         catchingKeystoreFailures { store.storedPrivateKey() }
           .getOrElse { if (classify(it) == KeystoreFailure.LOSS) null else throw it } ?: return null
       // KeyStore.getCertificate returns null for every Keystore error, not only a missing entry
-      // (AndroidKeyStoreSpi.java:171-175 in API 37, KeyStore.get on API 30 and lower).
+      // (AndroidKeyStoreSpi.java:171-175 in API 37). On API 30 and lower the Keystore service
+      // returns no item for every error (keystore/key_store_service.cpp:77-81 in android-7.0.0_r1,
+      // 172-177 in android-9.0.0_r1).
       val publicKey = store.storedPublicKey()
       return when {
         publicKey != null -> KeyPair(publicKey, privateKey)
@@ -117,9 +119,14 @@ private fun classify(failure: Throwable): KeystoreFailure =
 // and lower KeyStore.getKeyStoreException writes "Key not found" for KEY_NOT_FOUND, "Key blob
 // corrupted" for VALUE_CORRUPTED, and KeymasterDefs.getErrorMessage for KeyMint codes. From API 31
 // KeyStore2.java:400-404 and 429 (API 37) do the same, and KeymasterDefs.java:412 names
-// KM_ERROR_INVALID_KEY_BLOB "Invalid key blob". The API 24 Keystore reports a key file it cannot
-// read as KEY_NOT_FOUND after contains() found the file. From API 31 the platform itself reads
-// KEY_NOT_FOUND as no key (AndroidKeyStoreSpi.java:130-134, KeyStoreCryptoOperationUtils.java:117).
+// KM_ERROR_INVALID_KEY_BLOB "Invalid key blob". On API 24 to 26 without the late-2017 Keystore
+// patch, getKeyForName reports every failed read of a key file that exists as KEY_NOT_FOUND
+// (keystore/keystore.cpp:506-512 in android-7.0.0_r1, 541-549 in android-8.0.0_r36), including a
+// transient SYSTEM_ERROR from open() or close() (keystore/blob.cpp:155-165 in android-7.0.0_r1),
+// so there a transient read error also replaces the key. android-7.1.2_r39 and android-8.1.0_r1
+// return the read's own code (keystore.cpp:544-553 and 572-581). From API 31 the platform itself
+// reads KEY_NOT_FOUND as no key (AndroidKeyStoreSpi.java:130-134,
+// KeyStoreCryptoOperationUtils.java:117).
 private val LOST_KEY_MESSAGES = listOf("Invalid key blob", "Key blob corrupted", "Key not found")
 
 @SuppressLint("NewApi")
