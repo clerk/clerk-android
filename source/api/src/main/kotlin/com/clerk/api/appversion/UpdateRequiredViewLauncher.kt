@@ -23,9 +23,9 @@ internal object UpdateRequiredViewLauncher {
     "com.clerk.ui.updaterequired.UpdateRequiredActivity"
 
   internal const val MISSING_UPDATE_SCREEN_WARNING =
-    "This app has a minimum version set, and Clerk rejects requests from builds below it, but no " +
-      "update screen can show them: com.clerk:clerk-android-ui isn't included. Add it, or show " +
-      "your own screen from Clerk.appVersionSupportStatus and turn this off with " +
+    "This app has a minimum version set, and Clerk rejects requests from builds below it, but " +
+      "the update screen can't show because com.clerk:clerk-android-ui isn't included. Add it, " +
+      "or show your own screen from Clerk.appVersionSupportStatus and turn this off with " +
       "withUpdateRequiredViewDisabled()."
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
