@@ -88,10 +88,10 @@ private constructor(
   }
 }
 
-// AndroidKeyStoreSpi.engineGetKey returns null only for a missing key. It wraps every other
-// Keystore error, transient ones included, in an UnrecoverableKeyException caused by an
-// android.security.KeyStoreException. That class is public from API 33, but it exists as a hidden
-// class from API 23 and the older Keystore throws it too.
+// On API 31 and later, AndroidKeyStoreSpi.engineGetKey returns null only for a missing key. It
+// wraps every other Keystore error, transient ones included, in an UnrecoverableKeyException caused
+// by an android.security.KeyStoreException. That class is public from API 33, but it exists as a
+// hidden class from API 23 and the older Keystore throws it too.
 @SuppressLint("NewApi")
 private fun Throwable.provesKeyLost(): Boolean =
   when (this) {
