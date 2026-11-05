@@ -114,9 +114,9 @@ internal class DeviceKeyLoadTimeoutException(wait: Duration) :
 private sealed interface KeyLoad {
   data class Pending(val startedAt: TimeMark, val timedOutOnce: Boolean) : KeyLoad
 
-  data object Ready : KeyLoad
+  data object GaveUp : KeyLoad
 
-  data object Unavailable : KeyLoad
+  data object Ready : KeyLoad
 }
 
 internal class DeviceBindingState(
@@ -155,8 +155,8 @@ internal class DeviceBindingState(
   }
 
   private fun resetTransientFailures() {
-    transientFailuresInARow.updateAndGet {
-      if (it >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) it else 0
+    if (transientFailuresInARow.getAndSet(0) >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) {
+      ClerkLogger.i("Device binding: the device key loaded, signing again")
     }
   }
 
@@ -207,16 +207,18 @@ internal class DeviceBindingState(
 
     private fun advance(afterWait: Boolean): KeyLoad =
       synchronized(this) {
-        val pending = load as? KeyLoad.Pending ?: return load
+        val current = load
         load =
           when {
-            pending.startedAt.elapsedNow() >= KEY_LOAD_GIVE_UP ->
-              KeyLoad.Unavailable.also { giveUpOnKeyLoad() }
+            current == KeyLoad.Ready -> current
             result.isCompleted ->
               KeyLoad.Ready.also { if (!result.isCancelled) resetTransientFailures() }
-            afterWait && !pending.timedOutOnce ->
-              pending.copy(timedOutOnce = true).also { countTransientFailure() }
-            else -> pending
+            current !is KeyLoad.Pending -> current
+            current.startedAt.elapsedNow() >= KEY_LOAD_GIVE_UP ->
+              KeyLoad.GaveUp.also { giveUpOnKeyLoad() }
+            afterWait && !current.timedOutOnce ->
+              current.copy(timedOutOnce = true).also { countTransientFailure() }
+            else -> current
           }
         load
       }
