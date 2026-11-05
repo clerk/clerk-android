@@ -52,6 +52,8 @@ class DeviceKeyInstrumentedTest {
             KeyProperties.SECURITY_LEVEL_SOFTWARE to DeviceKeySecurityLevel.SOFTWARE,
             KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT to DeviceKeySecurityLevel.TEE,
             KeyProperties.SECURITY_LEVEL_STRONGBOX to DeviceKeySecurityLevel.STRONGBOX,
+            KeyProperties.SECURITY_LEVEL_UNKNOWN_SECURE to DeviceKeySecurityLevel.TEE,
+            KeyProperties.SECURITY_LEVEL_UNKNOWN to DeviceKeySecurityLevel.SOFTWARE,
           )[keyInfo.securityLevel]
       } else {
         @Suppress("DEPRECATION") val insideSecureHardware = keyInfo.isInsideSecureHardware
