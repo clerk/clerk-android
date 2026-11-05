@@ -63,6 +63,13 @@ class DpopProofTest {
   }
 
   @Test
+  fun `ath hashes the UTF-8 bytes of a non-ASCII access token`() {
+    val proof = buildProof(accessToken = "tökén-日本")
+
+    assertEquals("TNYs-KYciDl4w33VRjNr0j_SXJmNv8v1ZvJ5VQIPz68", claims(proof).getStringClaim("ath"))
+  }
+
+  @Test
   fun `a proof without an access token has no ath claim`() {
     val proof = buildProof(accessToken = null)
 
