@@ -6,11 +6,15 @@ import java.io.IOException
 import java.security.KeyStoreException
 import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,7 +80,7 @@ class DeviceBindingTest {
     }
 
   @Test
-  fun `a wait shorter than the key load sees TIMEOUT each time, then Signing once the key is ready`() =
+  fun `a wait shorter than the key load sees TIMEOUT, later calls do not wait, then Signing once the key is ready`() =
     runBlocking {
       val keyCreated = CountDownLatch(1)
       val holder = DeviceKeyHolder {
@@ -88,8 +92,12 @@ class DeviceBindingTest {
 
       val timedOut = DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
       assertEquals(timedOut, binding.current(50.milliseconds))
-      assertEquals(timedOut, binding.current(50.milliseconds))
+      val started = TimeSource.Monotonic.markNow()
+      assertEquals(timedOut, binding.current(DEVICE_KEY_WAIT))
+      assertTrue(started.elapsedNow() < 50.milliseconds, "waited ${started.elapsedNow()}")
       keyCreated.countDown()
-      assertEquals(DeviceBinding.Signing(holder), binding.current(DEVICE_KEY_WAIT))
+      withTimeout(DEVICE_KEY_WAIT) {
+        while (binding.current(DEVICE_KEY_WAIT) != DeviceBinding.Signing(holder)) delay(10)
+      }
     }
 }

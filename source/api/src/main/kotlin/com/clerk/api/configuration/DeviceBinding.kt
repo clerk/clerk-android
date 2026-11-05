@@ -8,6 +8,7 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -109,41 +110,55 @@ internal const val TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED = 3
 internal class DeviceKeyLoadTimeoutException(wait: Duration) :
   IOException("The device key did not load within $wait")
 
+private sealed interface KeyLoad {
+  data class Pending(val startedAt: TimeMark, val timedOutOnce: Boolean) : KeyLoad
+
+  data object Ready : KeyLoad
+
+  data object Unavailable : KeyLoad
+}
+
 internal class DeviceBindingState(
   private val resolved: Deferred<DeviceBinding>,
   private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
   private val transientFailuresInARow = AtomicInteger()
   private val keyLoads = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+  private val bindingLoad = WatchedLoad(resolved)
+  private var requestTimeLoad: WatchedLoad<DeviceKeyState>? = null
 
   suspend fun current(wait: Duration): DeviceBinding {
-    if (stoppedSigning()) return DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-    val binding =
-      withTimeoutOrNull(wait) { resolved.await() }
-        ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
-    return if (
-      binding is DeviceBinding.Signing && binding.holder.loadedState() is DeviceKeyState.Unavailable
-    ) {
-      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-    } else {
-      binding
+    val binding = if (!stoppedSigning() && bindingLoad.awaitWithin(wait)) resolved.await() else null
+    return when {
+      stoppedSigning() -> DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+      binding == null -> DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+      binding is DeviceBinding.Signing &&
+        binding.holder.loadedState() is DeviceKeyState.Unavailable ->
+        DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+      else -> binding
     }
   }
 
   suspend fun loadKey(holder: DeviceKeyHolder, wait: Duration) {
     if (holder.loadedState() != null) return
-    val load = keyLoads.async { holder.state() }
-    withTimeoutOrNull(wait) { load.await() } ?: throw DeviceKeyLoadTimeoutException(wait)
+    val load = requestTimeLoadOf(holder)
+    if (!load.awaitWithin(wait)) throw DeviceKeyLoadTimeoutException(wait)
+    load.result.await()
   }
 
-  fun recordSigned() {
+  fun recordSigned() = resetTransientFailures()
+
+  fun recordSignFailure(failure: SignFailure) {
+    if (failure == SignFailure.NOT_A_LOSS) countTransientFailure()
+  }
+
+  private fun resetTransientFailures() {
     transientFailuresInARow.updateAndGet {
       if (it >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) it else 0
     }
   }
 
-  fun recordGap(binding: DeviceBinding, signFailure: SignFailure?) {
-    if (transientGap(binding, signFailure) == null) return
+  private fun countTransientFailure() {
     if (transientFailuresInARow.incrementAndGet() == TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) {
       ClerkLogger.w(
         "Device binding: NotSigning(reason=KEY_UNAVAILABLE) after " +
@@ -152,8 +167,54 @@ internal class DeviceBindingState(
     }
   }
 
+  private fun giveUpOnKeyLoad() {
+    val before = transientFailuresInARow.getAndUpdate {
+      maxOf(it, TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED)
+    }
+    if (before < TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) {
+      ClerkLogger.w(
+        "Device binding: NotSigning(reason=KEY_UNAVAILABLE) after a key load " +
+          "still pending at $KEY_LOAD_GIVE_UP"
+      )
+    }
+  }
+
   private fun stoppedSigning(): Boolean =
     transientFailuresInARow.get() >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED
+
+  private fun requestTimeLoadOf(holder: DeviceKeyHolder): WatchedLoad<DeviceKeyState> =
+    synchronized(this) {
+      requestTimeLoad?.takeUnless { it.result.isCompleted }
+        ?: WatchedLoad(keyLoads.async { holder.state() }).also { requestTimeLoad = it }
+    }
+
+  private inner class WatchedLoad<T>(val result: Deferred<T>) {
+    private var load: KeyLoad = KeyLoad.Pending(timeSource.markNow(), timedOutOnce = false)
+
+    suspend fun awaitWithin(wait: Duration): Boolean {
+      val before = advance(afterWait = false)
+      if (before is KeyLoad.Pending && !before.timedOutOnce) {
+        withTimeoutOrNull(wait) { result.join() }
+      }
+      return advance(afterWait = true) == KeyLoad.Ready
+    }
+
+    private fun advance(afterWait: Boolean): KeyLoad =
+      synchronized(this) {
+        val pending = load as? KeyLoad.Pending ?: return load
+        load =
+          when {
+            result.isCompleted ->
+              KeyLoad.Ready.also { if (!result.isCancelled) resetTransientFailures() }
+            pending.startedAt.elapsedNow() >= KEY_LOAD_GIVE_UP ->
+              KeyLoad.Unavailable.also { giveUpOnKeyLoad() }
+            afterWait && !pending.timedOutOnce ->
+              pending.copy(timedOutOnce = true).also { countTransientFailure() }
+            else -> pending
+          }
+        load
+      }
+  }
 }
 
 internal fun CoroutineScope.resolveDeviceBinding(

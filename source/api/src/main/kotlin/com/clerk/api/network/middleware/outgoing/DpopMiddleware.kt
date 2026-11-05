@@ -38,7 +38,7 @@ internal class DpopMiddleware(
     val binding = blocking { deviceBinding.current(deviceKeyWait) }
 
     fun act(signFailure: SignFailure?, cause: Throwable?): Response {
-      deviceBinding.recordGap(binding, signFailure)
+      signFailure?.let(deviceBinding::recordSignFailure)
       return when (val decision = proofDecision(tokenHasCnf, binding, signFailure)) {
         ProofDecision.SendUnsigned -> chain.proceed(request)
         is ProofDecision.FailRequest ->
