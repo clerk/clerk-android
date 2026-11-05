@@ -22,6 +22,7 @@ import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidKeystoreDeviceKeyTest {
@@ -100,7 +101,7 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a stored key that Keystore cannot read for a stated reason is kept`() {
+  fun `from API 31 a stored key that Keystore cannot read for a stated reason is kept`() {
     val original = AndroidKeystoreDeviceKey.getOrCreate(store)
     val failure = unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR))
     store.getKey = { throw failure }
@@ -134,12 +135,41 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a stored key whose certificate reads empty is kept`() {
+  fun `from API 31 a stored key whose certificate reads empty is kept`() {
     val original = AndroidKeystoreDeviceKey.getOrCreate(store)
     store.getCertificatePublicKey = { null }
 
     assertIs<DeviceKeyState.Unavailable>(holder.state())
     assertEquals(original.thumbprint, storedThumbprint())
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a stored key that Keystore cannot read is replaced whatever the error`() {
+    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
+    val unreadable = store.stored
+    val failure = unrecoverable(cause = platformKeystoreException(SYSTEM_ERROR))
+    store.getKey = { if (store.stored === unreadable) throw failure else store.stored?.private }
+
+    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
+
+    assertNotEquals(original.thumbprint, key.thumbprint)
+    assertEquals(key.thumbprint, storedThumbprint())
+    assertEquals(key.thumbprint, nextStartThumbprint())
+  }
+
+  @Test
+  @Config(sdk = [30])
+  fun `below API 31 a stored key left without its certificate is replaced`() {
+    val original = AndroidKeystoreDeviceKey.getOrCreate(store)
+    val withoutCertificate = store.stored
+    store.getCertificatePublicKey = { store.stored.takeIf { it !== withoutCertificate }?.public }
+
+    val key = assertIs<DeviceKeyState.Ready>(holder.state()).key
+
+    assertNotEquals(original.thumbprint, key.thumbprint)
+    assertEquals(key.thumbprint, storedThumbprint())
+    assertEquals(key.thumbprint, nextStartThumbprint())
   }
 
   @Test
@@ -197,6 +227,9 @@ class AndroidKeystoreDeviceKeyTest {
     AndroidKeystoreDeviceKey.getOrCreate(store)
 
   private fun readyKey(): DeviceKey = assertIs<DeviceKeyState.Ready>(holder.state()).key
+
+  private fun nextStartThumbprint(): String =
+    assertIs<DeviceKeyState.Ready>(DeviceKeyHolder { getOrCreate(store) }.state()).key.thumbprint
 
   private fun signedBy(): String =
     holder
