@@ -26,7 +26,10 @@ internal object DpopProof {
     val payload = buildJsonObject {
       put("jti", jti)
       put("htm", method)
-      put("htu", url.newBuilder().query(null).fragment(null).build().toString())
+      put(
+        "htu",
+        url.newBuilder().username("").password("").query(null).fragment(null).build().toString(),
+      )
       put("iat", now.epochSeconds)
       if (accessToken != null) {
         put("ath", accessTokenHash(accessToken))

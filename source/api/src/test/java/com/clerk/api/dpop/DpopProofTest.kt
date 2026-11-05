@@ -56,6 +56,13 @@ class DpopProofTest {
   }
 
   @Test
+  fun `htu drops userinfo, which the server's verifier rejects`() {
+    val proof = buildProof(url = "https://user:secret@clerk.example.com/v1/client")
+
+    assertEquals("https://clerk.example.com/v1/client", claims(proof).getStringClaim("htu"))
+  }
+
+  @Test
   fun `ath is the RFC 9449 hash of the access token`() {
     val proof = buildProof(accessToken = "Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU")
 
