@@ -2,7 +2,6 @@ package com.clerk.api.devicekey
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.security.KeyStoreException as PlatformKeyStoreException
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import java.security.GeneralSecurityException
@@ -43,7 +42,6 @@ private constructor(
     when {
       cause is DeviceKeyLostException -> cause
       cause.provesKeyLost() -> DeviceKeyLostException(cause)
-      cause.isTransientKeystoreFailure() -> cause
       else ->
         catchingKeystoreFailures { isStored() }
           .fold(
@@ -101,9 +99,3 @@ private fun Throwable.provesKeyLost(): Boolean =
     is UnrecoverableKeyException -> cause !is PlatformKeyStoreException
     else -> false
   }
-
-private fun Throwable.isTransientKeystoreFailure(): Boolean =
-  Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-    generateSequence(this) { it.cause }
-      .filterIsInstance<PlatformKeyStoreException>()
-      .any { it.isTransientFailure }

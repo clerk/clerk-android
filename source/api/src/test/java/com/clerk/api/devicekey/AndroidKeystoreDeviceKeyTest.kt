@@ -65,18 +65,6 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a transient Keystore error at signing keeps the key even when the alias reads empty`() {
-    val original = readyKey()
-    val failure = keystoreFailure(SECURE_HW_BUSY)
-    store.failNextSigning(failure)
-    store.getKey = { null }
-    store.getCertificatePublicKey = { null }
-
-    assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
-    assertKept(original)
-  }
-
-  @Test
   fun `a failed alias read after a signing failure keeps the key and reports the signing failure`() {
     val original = readyKey()
     val signingFailure = ProviderException("Keystore operation failed")
@@ -232,7 +220,6 @@ class AndroidKeystoreDeviceKeyTest {
   private companion object {
     const val SYSTEM_ERROR = 4
     const val KEY_NOT_FOUND = 7
-    const val SECURE_HW_BUSY = -48
   }
 }
 
