@@ -110,13 +110,19 @@ internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>)
   private val transientFailuresInARow = AtomicInteger()
   private val keyLoads = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-  suspend fun current(wait: Duration): DeviceBinding =
-    if (stoppedSigning()) {
-      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-    } else {
+  suspend fun current(wait: Duration): DeviceBinding {
+    if (stoppedSigning()) return DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+    val binding =
       withTimeoutOrNull(wait) { resolved.await() }
         ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+    return if (
+      binding is DeviceBinding.Signing && binding.holder.loadedState() is DeviceKeyState.Unavailable
+    ) {
+      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+    } else {
+      binding
     }
+  }
 
   suspend fun loadKey(holder: DeviceKeyHolder, wait: Duration) {
     if (holder.loadedState() != null) return
