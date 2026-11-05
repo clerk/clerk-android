@@ -4,6 +4,7 @@ import com.auth0.android.jwt.JWT
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyState
 import com.clerk.api.log.ClerkLogger
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -50,27 +51,32 @@ internal fun proofDecision(
   binding: DeviceBinding,
   signFailure: SignFailure?,
 ): ProofDecision {
-  val transientReason =
-    when (binding) {
-      is DeviceBinding.Signing ->
-        when (signFailure) {
-          null -> return ProofDecision.Sign(binding.holder)
-          SignFailure.KEY_LOST -> null
-          SignFailure.NOT_A_LOSS -> ProofDecision.Reason.KEY_ERROR
-        }
-      is DeviceBinding.NotSigning ->
-        when (binding.reason) {
-          DeviceBinding.Reason.SHARED_SESSION_SYNC,
-          DeviceBinding.Reason.KEY_UNAVAILABLE -> null
-          DeviceBinding.Reason.TIMEOUT -> ProofDecision.Reason.KEY_NOT_READY
-        }
-    }
-  return if (tokenHasCnf && transientReason != null) {
-    ProofDecision.FailRequest(transientReason)
+  if (binding is DeviceBinding.Signing && signFailure == null) {
+    return ProofDecision.Sign(binding.holder)
+  }
+  val gap = transientGap(binding, signFailure)
+  return if (tokenHasCnf && gap != null) {
+    ProofDecision.FailRequest(gap)
   } else {
     ProofDecision.SendUnsigned
   }
 }
+
+private fun transientGap(binding: DeviceBinding, signFailure: SignFailure?): ProofDecision.Reason? =
+  when (binding) {
+    is DeviceBinding.Signing ->
+      when (signFailure) {
+        null,
+        SignFailure.KEY_LOST -> null
+        SignFailure.NOT_A_LOSS -> ProofDecision.Reason.KEY_ERROR
+      }
+    is DeviceBinding.NotSigning ->
+      when (binding.reason) {
+        DeviceBinding.Reason.SHARED_SESSION_SYNC,
+        DeviceBinding.Reason.KEY_UNAVAILABLE -> null
+        DeviceBinding.Reason.TIMEOUT -> ProofDecision.Reason.KEY_NOT_READY
+      }
+  }
 
 internal class DeviceTokenCnfCheck {
   @Volatile private var last: CheckedToken? = null
@@ -91,10 +97,37 @@ internal fun isDeviceBound(token: String): Boolean = runCatching {
 }
   .getOrDefault(false)
 
+internal const val TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED = 3
+
 internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>) {
+  private val transientFailuresInARow = AtomicInteger()
+
   suspend fun current(wait: Duration): DeviceBinding =
-    withTimeoutOrNull(wait) { resolved.await() }
-      ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+    if (stoppedSigning()) {
+      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+    } else {
+      withTimeoutOrNull(wait) { resolved.await() }
+        ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+    }
+
+  fun recordSigned() {
+    transientFailuresInARow.updateAndGet {
+      if (it >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) it else 0
+    }
+  }
+
+  fun recordGap(binding: DeviceBinding, signFailure: SignFailure?) {
+    if (transientGap(binding, signFailure) == null) return
+    if (transientFailuresInARow.incrementAndGet() == TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) {
+      ClerkLogger.w(
+        "Device binding: NotSigning(reason=KEY_UNAVAILABLE) after " +
+          "$TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED transient key failures in a row"
+      )
+    }
+  }
+
+  private fun stoppedSigning(): Boolean =
+    transientFailuresInARow.get() >= TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED
 }
 
 internal fun CoroutineScope.resolveDeviceBinding(

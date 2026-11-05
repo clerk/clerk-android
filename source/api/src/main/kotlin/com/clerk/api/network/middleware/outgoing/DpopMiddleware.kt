@@ -36,22 +36,25 @@ internal class DpopMiddleware(
     val tokenHasCnf = cnfCheck.hasCnf(request.header(AUTHORIZATION_HEADER))
     val binding = awaitBinding()
 
-    fun act(decision: ProofDecision, cause: Throwable?): Response =
-      when (decision) {
+    fun act(signFailure: SignFailure?, cause: Throwable?): Response {
+      deviceBinding.recordGap(binding, signFailure)
+      return when (val decision = proofDecision(tokenHasCnf, binding, signFailure)) {
         ProofDecision.SendUnsigned -> chain.proceed(request)
         is ProofDecision.FailRequest ->
           throw IOException("A device-bound request needs a DPoP proof: ${decision.reason}", cause)
         is ProofDecision.Sign ->
           proofFor(decision.holder, request)
             .fold(
-              onSuccess = { chain.proceed(request.newBuilder().header(DPOP_HEADER, it).build()) },
-              onFailure = {
-                act(proofDecision(tokenHasCnf, binding, decision.holder.signFailure()), it)
+              onSuccess = {
+                deviceBinding.recordSigned()
+                chain.proceed(request.newBuilder().header(DPOP_HEADER, it).build())
               },
+              onFailure = { act(decision.holder.signFailure(), it) },
             )
       }
+    }
 
-    return act(proofDecision(tokenHasCnf, binding, signFailure = null), cause = null)
+    return act(signFailure = null, cause = null)
   }
 
   private fun proofFor(holder: DeviceKeyHolder, request: Request): Result<String> {
