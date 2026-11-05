@@ -97,5 +97,18 @@ private fun Throwable.provesKeyLost(): Boolean =
   when (this) {
     is KeyPermanentlyInvalidatedException -> true
     is UnrecoverableKeyException -> cause !is PlatformKeyStoreException
-    else -> false
+    else ->
+      generateSequence(this) { it.cause }
+        .filterIsInstance<PlatformKeyStoreException>()
+        .any { error -> KeyMintErrorThatEndsTheKey.entries.any { it.isNamedBy(error) } }
   }
+
+// An app cannot read the KeyMint error code. KeyStoreException.getErrorCode is a blocked hidden
+// API, and getNumericErrorCode gives KM_ERROR_INVALID_KEY_BLOB the same ERROR_KEYMINT_FAILURE as
+// KM_ERROR_TOO_MANY_OPERATIONS. On every API level the platform starts the exception's message
+// with KeymasterDefs.getErrorMessage(code).
+private enum class KeyMintErrorThatEndsTheKey(private val platformMessage: String) {
+  KM_ERROR_INVALID_KEY_BLOB("Invalid key blob");
+
+  fun isNamedBy(error: Throwable): Boolean = error.message?.startsWith(platformMessage) == true
+}
