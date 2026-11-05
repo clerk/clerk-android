@@ -28,7 +28,7 @@
     <string name="get_help">Obține ajutor</string>
     <string name="if_you_have_trouble_signing_into_your_account">Dacă ai probleme la autentificarea în cont, trimite-ne un email și vom lucra cu tine pentru a restabili accesul cât mai curând posibil.</string>
     <string name="email_support">Trimite email către suport</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Deschide aplicația de email</string>
     <string name="no_email_clients_installed_on_device">Nu există aplicații de email instalate pe dispozitiv.</string>
     <string name="set_new_password">Setează parola nouă</string>
     <string name="reset_password">Resetează parola</string>
@@ -48,7 +48,11 @@
     <string name="organization_name">Numele organizației</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Încarcă sigla</string>
+    <string name="change_logo">Schimbă sigla</string>
+    <string name="choose_file">Alege fișierul</string>
+    <string name="photo_library">Galerie foto</string>
     <string name="remove_logo">Elimină sigla</string>
+    <string name="remove_current_logo">Elimină sigla actuală</string>
     <string name="recommended_logo_size">Dimensiune recomandată 1:1, până la 10 MB.</string>
     <string name="invite">Invită</string>
     <string name="invite_new_members">Invită membri noi</string>
@@ -187,7 +191,6 @@
     <string name="backup_codes">Coduri de rezervă</string>
     <string name="add_two_step_verification">Adaugă verificare în doi pași</string>
     <string name="change_password">Schimbă parola</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Adaugă parolă</string>
     <string name="passkeys">Chei de acces</string>
     <string name="rename">Redenumește</string>
@@ -263,6 +266,8 @@
     <string name="saved_to_downloads">Salvat în Descărcări: %1$s</string>
     <string name="failed_to_save_file">Nu s-a putut salva fișierul: %1$s</string>
     <string name="close">Închide</string>
+    <string name="show_password">Afișează parola</string>
+    <string name="hide_password">Ascunde parola</string>
     <string name="type_delete_to_continue">Tastează \"DELETE\" pentru a continua</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Sigur vrei să ștergi contul? Această acțiune este permanentă și ireversibilă.</string>
     <string name="email_addresses">Adrese de email</string>
@@ -278,12 +283,24 @@
     <string name="current_organization">Organizația curentă</string>
     <string name="open_organization_switcher">Deschide selectorul de organizații</string>
     <string name="secured_by">Securizat de</string>
+    <string name="development_mode">Mod de dezvoltare</string>
     <string name="i_agree_to_the">Sunt de acord cu</string>
     <string name="terms_of_service">Termenii și condițiile</string>
     <string name="privacy_policy">Politica de confidențialitate</string>
     <string name="and_connector">și</string>
     <string name="set_up_two_step_verification">Configurează verificarea în doi pași</string>
     <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Alege metoda preferată pentru a-ți proteja contul cu un nivel suplimentar de securitate.</string>
+    <string name="continue_with_biometrics">Continuă cu biometria</string>
+    <string name="sign_in_with_biometrics">Autentifică-te cu biometria</string>
+    <string name="biometric_sign_in">Autentificare biometrică</string>
+    <string name="enable_biometric_sign_in">Activează autentificarea biometrică</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Activează autentificarea biometrică pentru acces mai rapid la %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Activează autentificarea biometrică pentru acces mai rapid</string>
+    <string name="allow">Permite</string>
+    <string name="not_now">Nu acum</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s folosește biometria pentru a te autentifica.</string>
+    <string name="use_biometrics_to_sign_in">Folosește biometria pentru a te autentifica.</string>
+    <string name="enroll_this_device">Înregistrează acest dispozitiv</string>
     <string name="update_required">Actualizare necesară</string>
     <string name="this_version_of_app_is_no_longer_supported">Această versiune a %1$s nu mai este acceptată. Actualizează aplicația pentru a continua.</string>
     <string name="go_to_google_play">Mergi la Google Play</string>

@@ -28,12 +28,13 @@
     <string name="get_help">Obtenir de l\'aide</string>
     <string name="if_you_have_trouble_signing_into_your_account">Si vous avez des difficultés à vous connecter à votre compte, envoyez-nous un e-mail et nous travaillerons avec vous pour rétablir l\'accès dès que possible.</string>
     <string name="email_support">Support par e-mail</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Ouvrir l\'app de messagerie</string>
     <string name="no_email_clients_installed_on_device">Aucun client e-mail installé sur l\'appareil.</string>
     <string name="set_new_password">Définir un nouveau mot de passe</string>
     <string name="reset_password">Réinitialiser le mot de passe</string>
     <string name="confirm_password">Confirmer le mot de passe</string>
     <string name="passwords_dont_match">Les mots de passe ne correspondent pas</string>
+    <string name="account_requires_new_password_before_continue">Votre compte nécessite un nouveau mot de passe avant que vous puissiez continuer</string>
     <string name="new_password">Nouveau mot de passe</string>
     <string name="sign_out_of_all_other_devices">Se déconnecter de tous les autres appareils</string>
     <string name="back">Retour</string>
@@ -88,6 +89,7 @@
     <string name="last_name">Nom de famille</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Vous rencontrez des problèmes ? Vous pouvez utiliser l\'une de ces méthodes pour vous connecter.</string>
     <string name="two_step_verification">Vérification en deux étapes</string>
+    <string name="signing_in_from_new_device">Vous vous connectez depuis un nouvel appareil. Nous vous demandons une vérification pour assurer la sécurité de votre compte.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">Lors de la connexion, vous devrez entrer un code de vérification envoyé à ce numéro de téléphone comme étape supplémentaire.\n\nEnregistrez ces codes de sauvegarde et stockez-les dans un endroit sûr. Si vous perdez l\'accès à votre appareil d\'authentification, vous pouvez utiliser les codes de sauvegarde pour vous connecter.</string>
     <string name="two_step_verification_is_now_enabled">La vérification en deux étapes est maintenant activée. Lors de la connexion, vous devrez entrer un code de vérification de cette application d\'authentification comme étape supplémentaire.\n\nEnregistrez ces codes de sauvegarde et stockez-les dans un endroit sûr. Si vous perdez l\'accès à votre appareil d\'authentification, vous pouvez utiliser les codes de sauvegarde pour vous connecter.</string>
     <string name="backup_codes_are_now_enabled">Les codes de sauvegarde sont maintenant activés. Vous pouvez en utiliser un pour vous connecter à votre compte, si vous perdez l\'accès à votre appareil d\'authentification. Chaque code ne peut être utilisé qu\'une seule fois.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">Codes de sauvegarde</string>
     <string name="add_two_step_verification">Ajouter la vérification en deux étapes</string>
     <string name="change_password">Changer le mot de passe</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Ajouter un mot de passe</string>
     <string name="passkeys">Clés d\'accès</string>
     <string name="rename">Renommer</string>
     <string name="created">Créé : %1$s</string>
     <string name="last_used">Dernière utilisation : %1$s</string>
+    <string name="last_used_badge">Dernière utilisation</string>
     <string name="add_a_passkey">Ajouter une clé d\'accès</string>
     <string name="account">Compte</string>
     <string name="delete_account">Supprimer le compte</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">Enregistré dans Téléchargements : %1$s</string>
     <string name="failed_to_save_file">Échec de l\'enregistrement du fichier : %1$s</string>
     <string name="close">Fermer</string>
+    <string name="show_password">Afficher le mot de passe</string>
+    <string name="hide_password">Masquer le mot de passe</string>
     <string name="type_delete_to_continue">Tapez \"DELETE\" pour continuer</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est permanente et irréversible.</string>
     <string name="email_addresses">Adresses e-mail</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">Avatar de l\'utilisateur</string>
     <string name="open_user_profile">Ouvrir le profil utilisateur</string>
     <string name="secured_by">Sécurisé par</string>
+    <string name="development_mode">Mode développement</string>
     <string name="i_agree_to_the">J\'accepte les</string>
     <string name="terms_of_service">Conditions d\'utilisation</string>
     <string name="privacy_policy">Politique de confidentialité</string>
     <string name="and_connector">et la</string>
+    <string name="set_up_two_step_verification">Configurer la vérification en deux étapes</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Choisissez la méthode que vous préférez pour protéger votre compte avec une couche de sécurité supplémentaire.</string>
+    <string name="continue_with_biometrics">Continuer avec la biométrie</string>
+    <string name="sign_in_with_biometrics">Se connecter avec la biométrie</string>
+    <string name="biometric_sign_in">Connexion biométrique</string>
+    <string name="enable_biometric_sign_in">Activer la connexion biométrique</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Activez la connexion biométrique pour accéder plus rapidement à %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Activez la connexion biométrique pour un accès plus rapide</string>
+    <string name="allow">Autoriser</string>
+    <string name="not_now">Pas maintenant</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s utilise la biométrie pour vous connecter.</string>
+    <string name="use_biometrics_to_sign_in">Utilisez la biométrie pour vous connecter.</string>
+    <string name="enroll_this_device">Enregistrer cet appareil</string>
     <string name="choose_an_organization">Choisir une organisation</string>
     <string name="choose_an_account">Choisir un compte</string>
     <string name="select_the_account_with_which_you_wish_to_continue">Sélectionnez le compte avec lequel vous souhaitez continuer.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">Nom de l\'organisation</string>
     <string name="slug">Identifiant (slug)</string>
     <string name="upload_logo">Télécharger le logo</string>
+    <string name="change_logo">Changer le logo</string>
+    <string name="choose_file">Choisir un fichier</string>
+    <string name="photo_library">Galerie photo</string>
     <string name="remove_logo">Supprimer le logo</string>
+    <string name="remove_current_logo">Supprimer le logo actuel</string>
     <string name="recommended_logo_size">Taille recommandée : 1:1, jusqu’à 10 Mo.</string>
     <string name="invite">Inviter</string>
     <string name="invite_new_members">Inviter de nouveaux membres</string>

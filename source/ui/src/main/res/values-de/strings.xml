@@ -28,12 +28,13 @@
     <string name="get_help">Hilfe erhalten</string>
     <string name="if_you_have_trouble_signing_into_your_account">Wenn Sie Probleme beim Anmelden bei Ihrem Konto haben, senden Sie uns eine E-Mail und wir arbeiten mit Ihnen zusammen, um den Zugriff so schnell wie möglich wiederherzustellen.</string>
     <string name="email_support">E-Mail-Support</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">E-Mail-App öffnen</string>
     <string name="no_email_clients_installed_on_device">Keine E-Mail-Clients auf dem Gerät installiert.</string>
     <string name="set_new_password">Neues Passwort festlegen</string>
     <string name="reset_password">Passwort zurücksetzen</string>
     <string name="confirm_password">Passwort bestätigen</string>
     <string name="passwords_dont_match">Passwörter stimmen nicht überein</string>
+    <string name="account_requires_new_password_before_continue">Für Ihr Konto ist ein neues Passwort erforderlich, bevor Sie fortfahren können</string>
     <string name="new_password">Neues Passwort</string>
     <string name="sign_out_of_all_other_devices">Von allen anderen Geräten abmelden</string>
     <string name="back">Zurück</string>
@@ -88,6 +89,7 @@
     <string name="last_name">Nachname</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Probleme? Sie können eine dieser Methoden zum Anmelden verwenden.</string>
     <string name="two_step_verification">Zwei-Faktor-Authentifizierung</string>
+    <string name="signing_in_from_new_device">Sie melden sich von einem neuen Gerät an. Zum Schutz Ihres Kontos bitten wir Sie um eine Bestätigung.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">Beim Anmelden müssen Sie einen Bestätigungscode eingeben, der an diese Telefonnummer gesendet wird, als zusätzlichen Schritt.\n\nSpeichern Sie diese Backup-Codes und bewahren Sie sie an einem sicheren Ort auf. Wenn Sie den Zugriff auf Ihr Authentifizierungsgerät verlieren, können Sie Backup-Codes zum Anmelden verwenden.</string>
     <string name="two_step_verification_is_now_enabled">Die Zwei-Faktor-Authentifizierung ist jetzt aktiviert. Beim Anmelden müssen Sie einen Bestätigungscode von dieser Authentifizierungs-App als zusätzlichen Schritt eingeben.\n\nSpeichern Sie diese Backup-Codes und bewahren Sie sie an einem sicheren Ort auf. Wenn Sie den Zugriff auf Ihr Authentifizierungsgerät verlieren, können Sie Backup-Codes zum Anmelden verwenden.</string>
     <string name="backup_codes_are_now_enabled">Backup-Codes sind jetzt aktiviert. Sie können einen davon verwenden, um sich bei Ihrem Konto anzumelden, wenn Sie den Zugriff auf Ihr Authentifizierungsgerät verlieren. Jeder Code kann nur einmal verwendet werden.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">Backup-Codes</string>
     <string name="add_two_step_verification">Zwei-Faktor-Authentifizierung hinzufügen</string>
     <string name="change_password">Passwort ändern</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Passwort hinzufügen</string>
     <string name="passkeys">Passkeys</string>
     <string name="rename">Umbenennen</string>
     <string name="created">Erstellt: %1$s</string>
     <string name="last_used">Zuletzt verwendet: %1$s</string>
+    <string name="last_used_badge">Zuletzt verwendet</string>
     <string name="add_a_passkey">Passkey hinzufügen</string>
     <string name="account">Konto</string>
     <string name="delete_account">Konto löschen</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">In Downloads gespeichert: %1$s</string>
     <string name="failed_to_save_file">Datei konnte nicht gespeichert werden: %1$s</string>
     <string name="close">Schließen</string>
+    <string name="show_password">Passwort anzeigen</string>
+    <string name="hide_password">Passwort ausblenden</string>
     <string name="type_delete_to_continue">Geben Sie \"DELETE\" ein, um fortzufahren</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden.</string>
     <string name="email_addresses">E-Mail-Adressen</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">Benutzer-Avatar</string>
     <string name="open_user_profile">Benutzerprofil öffnen</string>
     <string name="secured_by">Gesichert von</string>
+    <string name="development_mode">Entwicklungsmodus</string>
     <string name="i_agree_to_the">Ich stimme den</string>
     <string name="terms_of_service">Nutzungsbedingungen</string>
     <string name="privacy_policy">Datenschutzrichtlinie</string>
     <string name="and_connector">und der</string>
+    <string name="set_up_two_step_verification">Zwei-Faktor-Authentifizierung einrichten</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Wählen Sie die Methode, mit der Sie Ihr Konto durch eine zusätzliche Sicherheitsebene schützen möchten.</string>
+    <string name="continue_with_biometrics">Mit Biometrie fortfahren</string>
+    <string name="sign_in_with_biometrics">Mit Biometrie anmelden</string>
+    <string name="biometric_sign_in">Biometrische Anmeldung</string>
+    <string name="enable_biometric_sign_in">Biometrische Anmeldung aktivieren</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Aktivieren Sie die biometrische Anmeldung für einen schnelleren Zugriff auf %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Aktivieren Sie die biometrische Anmeldung für einen schnelleren Zugriff</string>
+    <string name="allow">Zulassen</string>
+    <string name="not_now">Nicht jetzt</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s verwendet Biometrie, um Sie anzumelden.</string>
+    <string name="use_biometrics_to_sign_in">Melden Sie sich mit Biometrie an.</string>
+    <string name="enroll_this_device">Dieses Gerät registrieren</string>
     <string name="choose_an_organization">Organisation auswählen</string>
     <string name="choose_an_account">Konto auswählen</string>
     <string name="select_the_account_with_which_you_wish_to_continue">Wählen Sie das Konto aus, mit dem Sie fortfahren möchten.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">Organisationsname</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Logo hochladen</string>
+    <string name="change_logo">Logo ändern</string>
+    <string name="choose_file">Datei auswählen</string>
+    <string name="photo_library">Fotogalerie</string>
     <string name="remove_logo">Logo entfernen</string>
+    <string name="remove_current_logo">Aktuelles Logo entfernen</string>
     <string name="recommended_logo_size">Empfohlene Größe 1:1, bis zu 10 MB.</string>
     <string name="invite">Einladen</string>
     <string name="invite_new_members">Neue Mitglieder einladen</string>
