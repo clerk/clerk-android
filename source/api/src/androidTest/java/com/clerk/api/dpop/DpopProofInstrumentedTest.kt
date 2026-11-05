@@ -48,7 +48,8 @@ class DpopProofInstrumentedTest {
     val serverDate = arguments.getString("serverDate")
     assumeTrue("pass a server Date header value as serverDate", serverDate != null)
     val serverTime = assertNotNull(headersOf("Date", serverDate!!).getDate("Date"))
-    val serverClock = ServerClock().apply { record(Instant.fromEpochMilliseconds(serverTime.time)) }
+    val serverClock =
+      ServerClock(Clock.System).apply { record(Instant.fromEpochMilliseconds(serverTime.time)) }
 
     report("serverDate=$serverDate local=${Clock.System.now()} server=${serverClock.now()}")
     write("server-clock", listOf(proofCase(clientUrl, now = serverClock.now())))
