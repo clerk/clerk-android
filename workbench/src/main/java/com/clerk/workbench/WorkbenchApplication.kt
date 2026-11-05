@@ -12,6 +12,7 @@ class WorkbenchApplication : Application() {
 
     val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY)
     val proxyUrl = StorageHelper.loadValue(StorageKey.PROXY_URL)
+    KeystoreFault.apply(enabled = StorageHelper.loadValue(StorageKey.KEYSTORE_FAULT) != null)
     publicKey?.let { key ->
       Clerk.initialize(
         this,
