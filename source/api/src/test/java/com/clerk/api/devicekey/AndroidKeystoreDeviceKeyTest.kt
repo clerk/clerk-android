@@ -1,5 +1,6 @@
 package com.clerk.api.devicekey
 
+import android.os.Build
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
@@ -58,6 +59,24 @@ class AndroidKeystoreDeviceKeyTest {
   fun `a Keystore error at signing keeps a key the alias still holds`() {
     val original = readyKey()
     val failure = keystoreFailure(SYSTEM_ERROR)
+    store.failNextSigning(failure)
+
+    assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
+    assertKept(original)
+  }
+
+  @Test
+  fun `a key whose blob KeyMint rejects is replaced at signing`() {
+    val original = readyKey()
+    store.failEverySigning(storedPrivateKey(), keystoreFailure(KM_ERROR_INVALID_KEY_BLOB))
+
+    assertReplaced(original, signedBy())
+  }
+
+  @Test
+  fun `KeyMint running out of operations at signing keeps the key`() {
+    val original = readyKey()
+    val failure = keystoreFailure(KM_ERROR_TOO_MANY_OPERATIONS)
     store.failNextSigning(failure)
 
     assertSame(failure, holder.withKey { it.sign(data) }.exceptionOrNull())
@@ -211,15 +230,25 @@ class AndroidKeystoreDeviceKeyTest {
       }
     }
 
-  private fun platformKeystoreException(responseCode: Int): Exception =
-    android.security.KeyStoreException::class
-      .java
-      .getConstructor(Int::class.javaPrimitiveType, String::class.java)
-      .newInstance(responseCode, "keystore2 response $responseCode")
+  private fun platformKeystoreException(errorCode: Int): Exception =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      Class.forName("android.security.KeyStore2")
+        .getDeclaredMethod("getKeyStoreException", Int::class.javaPrimitiveType, String::class.java)
+        .apply { isAccessible = true }
+        .invoke(null, errorCode, "keystore2 error $errorCode") as Exception
+    } else {
+      Class.forName("android.security.KeyStore")
+        .getMethod("getKeyStoreException", Int::class.javaPrimitiveType)
+        .invoke(null, errorCode) as Exception
+    }
+
+  private fun storedPrivateKey(): PrivateKey = checkNotNull(store.stored).private
 
   private companion object {
     const val SYSTEM_ERROR = 4
     const val KEY_NOT_FOUND = 7
+    const val KM_ERROR_TOO_MANY_OPERATIONS = -31
+    const val KM_ERROR_INVALID_KEY_BLOB = -33
   }
 }
 
@@ -230,10 +259,15 @@ internal class FakeDeviceKeyStore(private val strongBox: Boolean = false) : Devi
   var strongBoxFailure: Exception? = null
   var generationFailure: Exception? = null
   private var nextSigningFailure: Exception? = null
+  private val signingFailures = mutableMapOf<PrivateKey, Exception>()
   private val strongBoxKeys = mutableSetOf<PrivateKey>()
 
   fun failNextSigning(failure: Exception) {
     nextSigningFailure = failure
+  }
+
+  fun failEverySigning(privateKey: PrivateKey, failure: Exception) {
+    signingFailures[privateKey] = failure
   }
 
   override fun hasStrongBox(): Boolean = strongBox
@@ -261,6 +295,7 @@ internal class FakeDeviceKeyStore(private val strongBox: Boolean = false) : Devi
       nextSigningFailure = null
       throw it
     }
+    signingFailures[privateKey]?.let { throw it }
     return derSignature(privateKey, data)
   }
 
