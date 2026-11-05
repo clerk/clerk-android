@@ -3,6 +3,7 @@ package com.clerk.api.network.middleware.outgoing
 import android.util.Log
 import com.clerk.api.configuration.DEVICE_KEY_WAIT
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.devicekey.DeviceKey
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyLostException
@@ -278,7 +279,9 @@ class DpopMiddlewareTest {
 
   private fun client(binding: Deferred<DeviceBinding>): OkHttpClient =
     OkHttpClient.Builder()
-      .addNetworkInterceptor(DpopMiddleware(binding, serverClock, DEVICE_KEY_WAIT))
+      .addNetworkInterceptor(
+        DpopMiddleware(DeviceBindingState(binding), serverClock, DEVICE_KEY_WAIT)
+      )
       .build()
 
   private fun execute(binding: Deferred<DeviceBinding>, request: Request) {

@@ -3,6 +3,7 @@ package com.clerk.api.network.middleware.outgoing
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.dpop.ServerClock
@@ -187,7 +188,7 @@ class DpopRetryMiddlewareTest {
     val client: OkHttpClient =
       ClerkApi.buildHttpClient(
           customHeaders = emptyMap(),
-          deviceBinding = binding,
+          deviceBinding = DeviceBindingState(binding),
           serverClock = serverClock,
         )
         .newBuilder()

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.configuration.DEVICE_KEY_WAIT
-import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
@@ -27,7 +27,6 @@ import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import kotlin.time.Duration
-import kotlinx.coroutines.Deferred
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -106,7 +105,7 @@ internal object ClerkApi {
     baseUrl: String,
     context: Context,
     customHeaders: Map<String, String> = emptyMap(),
-    deviceBinding: Deferred<DeviceBinding>,
+    deviceBinding: DeviceBindingState,
     serverClock: ServerClock,
   ) {
     val effectiveCustomHeaders = customHeaders.toMap()
@@ -144,7 +143,7 @@ internal object ClerkApi {
   private fun buildRetrofit(
     baseUrl: String,
     customHeaders: Map<String, String>,
-    deviceBinding: Deferred<DeviceBinding>,
+    deviceBinding: DeviceBindingState,
     serverClock: ServerClock,
   ): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
@@ -162,7 +161,7 @@ internal object ClerkApi {
   @VisibleForTesting
   internal fun buildHttpClient(
     customHeaders: Map<String, String>,
-    deviceBinding: Deferred<DeviceBinding>,
+    deviceBinding: DeviceBindingState,
     serverClock: ServerClock,
     deviceKeyWait: Duration = DEVICE_KEY_WAIT,
   ): OkHttpClient =

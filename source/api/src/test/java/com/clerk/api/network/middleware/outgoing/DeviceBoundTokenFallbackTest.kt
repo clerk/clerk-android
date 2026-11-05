@@ -4,6 +4,7 @@ import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.configuration.ConfiguredClerkForTest
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.dpop.ServerClock
@@ -147,7 +148,7 @@ class DeviceBoundTokenFallbackTest {
       HandshakeCertificates.Builder().addTrustedCertificate(certificate.certificate).build()
     return ClerkApi.buildHttpClient(
         customHeaders = emptyMap(),
-        deviceBinding = binding,
+        deviceBinding = DeviceBindingState(binding),
         serverClock = ServerClock(Clock.System),
         deviceKeyWait = deviceKeyWait,
       )

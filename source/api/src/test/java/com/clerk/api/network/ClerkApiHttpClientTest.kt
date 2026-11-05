@@ -1,6 +1,7 @@
 package com.clerk.api.network
 
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.dpop.ServerClock
 import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
@@ -21,7 +22,10 @@ class ClerkApiHttpClientTest {
     val client =
       ClerkApi.buildHttpClient(
         customHeaders = emptyMap(),
-        deviceBinding = CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)),
+        deviceBinding =
+          DeviceBindingState(
+            CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT))
+          ),
         serverClock = ServerClock(Clock.System),
       )
 
@@ -33,7 +37,10 @@ class ClerkApiHttpClientTest {
     val client =
       ClerkApi.buildHttpClient(
         customHeaders = emptyMap(),
-        deviceBinding = CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)),
+        deviceBinding =
+          DeviceBindingState(
+            CompletableDeferred(DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT))
+          ),
         serverClock = ServerClock(Clock.System),
       )
 

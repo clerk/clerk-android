@@ -2,10 +2,10 @@ package com.clerk.api.network.middleware.outgoing
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.configuration.DeviceBinding
+import com.clerk.api.configuration.DeviceBindingState
 import com.clerk.api.configuration.DeviceTokenCnfCheck
 import com.clerk.api.configuration.ProofDecision
 import com.clerk.api.configuration.SignFailure
-import com.clerk.api.configuration.awaitWithin
 import com.clerk.api.configuration.proofDecision
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.dpop.BoundRequest
@@ -16,7 +16,6 @@ import java.io.IOException
 import java.util.UUID
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -26,7 +25,7 @@ internal const val DPOP_HEADER = "DPoP"
 
 /** A network interceptor, because OkHttp runs those once per attempt, retries and redirects too. */
 internal class DpopMiddleware(
-  private val deviceBinding: Deferred<DeviceBinding>,
+  private val deviceBinding: DeviceBindingState,
   private val serverClock: ServerClock,
   private val deviceKeyWait: Duration,
 ) : Interceptor {
@@ -76,7 +75,7 @@ internal class DpopMiddleware(
 
   private fun awaitBinding(): DeviceBinding =
     try {
-      runBlocking { deviceBinding.awaitWithin(deviceKeyWait) }
+      runBlocking { deviceBinding.current(deviceKeyWait) }
     } catch (e: CancellationException) {
       throw IOException("Clerk was reset while this request waited for the device key", e)
     }

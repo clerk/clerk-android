@@ -37,7 +37,7 @@ class DeviceBindingTest {
 
     assertEquals(
       DeviceBinding.NotSigning(DeviceBinding.Reason.SHARED_SESSION_SYNC),
-      binding.await(),
+      binding.current(DEVICE_KEY_WAIT),
     )
     assertEquals(0, loads)
   }
@@ -48,7 +48,7 @@ class DeviceBindingTest {
 
     val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
-    assertEquals(DeviceBinding.Signing(holder), binding.await())
+    assertEquals(DeviceBinding.Signing(holder), binding.current(DEVICE_KEY_WAIT))
   }
 
   @Test
@@ -57,7 +57,10 @@ class DeviceBindingTest {
 
     val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
-    assertEquals(DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE), binding.await())
+    assertEquals(
+      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE),
+      binding.current(DEVICE_KEY_WAIT),
+    )
   }
 
   @Test
@@ -68,7 +71,7 @@ class DeviceBindingTest {
 
         val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
-        assertEquals(DeviceBinding.Signing(holder), binding.await())
+        assertEquals(DeviceBinding.Signing(holder), binding.current(DEVICE_KEY_WAIT))
       }
     }
 
@@ -84,9 +87,9 @@ class DeviceBindingTest {
       val binding = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
 
       val timedOut = DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
-      assertEquals(timedOut, binding.awaitWithin(50.milliseconds))
-      assertEquals(timedOut, binding.awaitWithin(50.milliseconds))
+      assertEquals(timedOut, binding.current(50.milliseconds))
+      assertEquals(timedOut, binding.current(50.milliseconds))
       keyCreated.countDown()
-      assertEquals(DeviceBinding.Signing(holder), binding.awaitWithin(DEVICE_KEY_WAIT))
+      assertEquals(DeviceBinding.Signing(holder), binding.current(DEVICE_KEY_WAIT))
     }
 }

@@ -91,29 +91,36 @@ internal fun isDeviceBound(token: String): Boolean = runCatching {
 }
   .getOrDefault(false)
 
-internal suspend fun Deferred<DeviceBinding>.awaitWithin(wait: Duration): DeviceBinding =
-  withTimeoutOrNull(wait) { await() } ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>) {
+  suspend fun current(wait: Duration): DeviceBinding =
+    withTimeoutOrNull(wait) { resolved.await() }
+      ?: DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+}
 
 internal fun CoroutineScope.resolveDeviceBinding(
   sharedSessionSync: Boolean,
   holder: DeviceKeyHolder,
-): Deferred<DeviceBinding> {
+): DeviceBindingState {
   if (sharedSessionSync) {
-    return CompletableDeferred(
-      logged(DeviceBinding.NotSigning(DeviceBinding.Reason.SHARED_SESSION_SYNC))
+    return DeviceBindingState(
+      CompletableDeferred(
+        logged(DeviceBinding.NotSigning(DeviceBinding.Reason.SHARED_SESSION_SYNC))
+      )
     )
   }
   val keyState = async(Dispatchers.IO) { loadKeyState(holder) }
-  return async {
-    logged(
-      when (keyState.await()) {
-        is DeviceKeyState.Unavailable ->
-          DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
-        is DeviceKeyState.Ready,
-        null -> DeviceBinding.Signing(holder)
-      }
-    )
-  }
+  return DeviceBindingState(
+    async {
+      logged(
+        when (keyState.await()) {
+          is DeviceKeyState.Unavailable ->
+            DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
+          is DeviceKeyState.Ready,
+          null -> DeviceBinding.Signing(holder)
+        }
+      )
+    }
+  )
 }
 
 private fun loadKeyState(holder: DeviceKeyHolder): DeviceKeyState? =
