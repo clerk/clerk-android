@@ -41,7 +41,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -119,7 +118,7 @@ internal class ConfigurationManager(
 
   private val sharedDeviceTokenFenceGeneration = AtomicInteger()
 
-  @Volatile private var deviceBinding: Deferred<DeviceBinding>? = null
+  @Volatile private var deviceKeyHolder: DeviceKeyHolder? = null
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -239,12 +238,13 @@ internal class ConfigurationManager(
       config = options?.sharedSessionSync,
     )
     BiometricCredentialStorage.initialize(context.applicationContext)
+    val deviceKeyHolder = DeviceKeyHolder { DeviceKeyFactory.create(context.applicationContext) }
+    this.deviceKeyHolder = deviceKeyHolder
     val deviceBinding =
       scope.resolveDeviceBinding(
         sharedSessionSync = options?.sharedSessionSync != null,
-        holder = DeviceKeyHolder { DeviceKeyFactory.create(context.applicationContext) },
+        holder = deviceKeyHolder,
       )
-    this.deviceBinding = deviceBinding
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -315,6 +315,16 @@ internal class ConfigurationManager(
 
   fun isConfigured(): Boolean = hasConfigured
 
+  fun deleteDeviceKey(): Boolean {
+    val holder = deviceKeyHolder
+    val context = context?.get()
+    if (holder == null || context == null) return false
+    return holder
+      .deleteKey { DeviceKeyFactory.delete(context) }
+      .onFailure { ClerkLogger.w("Failed to delete the device key: ${it.javaClass.name}") }
+      .isSuccess
+  }
+
   @Synchronized
   fun reset() {
     configurationVersion += 1
@@ -330,6 +340,7 @@ internal class ConfigurationManager(
     refreshJobSessionId = null
     activeSessionWatchJob = null
     context = null
+    deviceKeyHolder = null
     storageInitialized = false
     hasConfigured = false
     storedOptions = null

@@ -3,9 +3,11 @@ package com.clerk.api.configuration
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.FrameworkIntegrationApi
 import com.clerk.api.SharedSessionSyncConfig
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.devicekey.JvmDeviceKey
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.serialization.ClerkResult
@@ -20,8 +22,11 @@ import java.io.IOException
 import java.util.Base64
 import java.util.Collections
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -89,6 +94,31 @@ class ConfigurationManagerDeviceBindingTest {
     awaitFirstRequests()
 
     assertEquals(BOUND_DEVICE_TOKEN, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `deleteDeviceKey deletes the stored device key`() {
+    configure(sharedSessionSync = null)
+    val before = JvmDeviceKey.getOrCreate().thumbprint
+
+    assertTrue(manager.deleteDeviceKey())
+
+    assertNotEquals(before, JvmDeviceKey.getOrCreate().thumbprint)
+  }
+
+  @Test
+  fun `deleteDeviceKey does nothing before configure`() {
+    val before = JvmDeviceKey.getOrCreate().thumbprint
+
+    assertFalse(manager.deleteDeviceKey())
+
+    assertEquals(before, JvmDeviceKey.getOrCreate().thumbprint)
+  }
+
+  @OptIn(FrameworkIntegrationApi::class)
+  @Test
+  fun `Clerk deleteDeviceKey reports false before initialize`() = runBlocking {
+    assertFalse(Clerk.deleteDeviceKey())
   }
 
   private fun configure(sharedSessionSync: SharedSessionSyncConfig?) {

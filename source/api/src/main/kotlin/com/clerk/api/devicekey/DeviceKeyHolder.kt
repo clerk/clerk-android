@@ -20,6 +20,9 @@ internal class DeviceKeyHolder(private val loadKey: () -> DeviceKey) {
     }
   }
 
+  fun deleteKey(deleteStoredKey: () -> Unit): Result<Unit> =
+    synchronized(this) { catchingKeystoreFailures(deleteStoredKey).onSuccess { state = null } }
+
   private fun replace(lost: DeviceKey): DeviceKeyState =
     synchronized(this) {
       val current = state

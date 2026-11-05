@@ -55,9 +55,11 @@ import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 
 /**
  * Main entrypoint class for the Clerk SDK.
@@ -1091,6 +1093,20 @@ public object Clerk {
   @FrameworkIntegrationApi
   public fun setDeviceToken(token: String?, expected: String?): Boolean =
     configurationManager.setDeviceToken(deviceToken = token, expectedDeviceToken = expected)
+
+  /**
+   * Deletes this device's signing key from the Android Keystore, whatever state the key is in.
+   *
+   * The next request signs with a new key, so FAPI rejects a device token bound to the old key and
+   * the user is signed out. Intended for debug tools that test how the SDK recovers from a lost
+   * key.
+   *
+   * @return true if the stored key is gone; false if Clerk is not initialized or the Keystore
+   *   refused the delete.
+   */
+  @FrameworkIntegrationApi
+  public suspend fun deleteDeviceKey(): Boolean =
+    withContext(Dispatchers.IO) { configurationManager.deleteDeviceKey() }
 
   // endregion
 
