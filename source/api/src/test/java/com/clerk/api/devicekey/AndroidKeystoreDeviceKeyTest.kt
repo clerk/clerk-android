@@ -94,18 +94,18 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a key another process deleted is replaced at signing`() {
+  fun `a key another process deleted is replaced after a Keystore error at signing`() {
     val original = readyKey()
-    store.failNextSigning(keystoreFailure(KEY_NOT_FOUND))
+    store.failNextSigning(keystoreFailure(SYSTEM_ERROR))
     store.stored = null
 
     assertReplaced(original, signedBy())
   }
 
   @Test
-  fun `a key another process replaced is replaced at signing`() {
+  fun `a key another process replaced is replaced after a Keystore error at signing`() {
     val original = readyKey()
-    store.failNextSigning(keystoreFailure(KEY_NOT_FOUND))
+    store.failNextSigning(keystoreFailure(SYSTEM_ERROR))
     store.stored = newKeyPair()
 
     assertReplaced(original, signedBy())
@@ -214,6 +214,28 @@ class AndroidKeystoreDeviceKeyTest {
   @Config(sdk = [30])
   fun `below API 31 a key whose blob Keystore reports corrupted is replaced at signing`() {
     assertReplacedAtSigning(keystoreFailure(VALUE_CORRUPTED))
+  }
+
+  @Test
+  @Config(sdk = [24])
+  fun `on API 24 a stored key Keystore reports not found is replaced`() {
+    assertReplacedAtLoad(unrecoverable(cause = platformKeystoreException(KEY_NOT_FOUND)))
+  }
+
+  @Test
+  @Config(sdk = [24])
+  fun `on API 24 a key Keystore reports not found is replaced at signing`() {
+    val original = readyKey()
+    val unreadable = store.stored
+    store.failEverySigning(storedPrivateKey(), keystoreFailure(KEY_NOT_FOUND))
+    store.getKey = {
+      if (store.stored === unreadable) {
+        throw unrecoverable(cause = platformKeystoreException(KEY_NOT_FOUND))
+      }
+      store.stored?.private
+    }
+
+    assertReplaced(original, signedBy())
   }
 
   @Test
