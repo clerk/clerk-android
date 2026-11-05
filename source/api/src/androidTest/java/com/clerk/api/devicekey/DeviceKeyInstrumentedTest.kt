@@ -98,17 +98,24 @@ class DeviceKeyInstrumentedTest {
 
   @Test
   fun replacesStoredKeyKeystoreCannotRecover() {
+    val platformError = Class.forName("android.security.KeyStoreException")
     val keystore = AndroidDeviceKeyStore(context)
     val original = AndroidKeystoreDeviceKey.getOrCreate(keystore)
     val unrecoverable =
       object : DeviceKeyStore by keystore {
         override fun storedPrivateKey(): PrivateKey? =
-          throw UnrecoverableKeyException("Key algorithm unknown")
+          throw UnrecoverableKeyException("Key algorithm unknown").apply {
+            initCause(IllegalStateException("not a Keystore error"))
+          }
       }
 
     val replacement = AndroidKeystoreDeviceKey.getOrCreate(unrecoverable)
 
-    report("original=${original.thumbprint} replacement=${replacement.thumbprint}")
+    report(
+      "platform_error_class=${platformError.name} original=${original.thumbprint} " +
+        "replacement=${replacement.thumbprint}"
+    )
+    assertTrue(Exception::class.java.isAssignableFrom(platformError))
     assertNotEquals(original.thumbprint, replacement.thumbprint)
     assertEquals(replacement.thumbprint, AndroidKeystoreDeviceKey.getOrCreate(context).thumbprint)
   }
