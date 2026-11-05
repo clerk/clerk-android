@@ -40,5 +40,6 @@ Preconditions:
 - The button's label is a text node beside an unnamed button, so `getByRole('button', { name })` does not find it. The spec uses `getByText`.
 - The screen has no test tags of its own, so the spec finds it by its text. A change to that wording changes the spec.
 - A minimum applies to the next request or launch. The spec relaunches instead of waiting for a running app to foreground.
+- A relaunch restores the cached environment first, and `AppVersionSupport.applyEnvironment` runs for it too. So right after the minimum is lowered, the update screen can open for a moment on the old minimum. `UpdateRequiredActivity` closes once `Clerk.isInitialized` is true and the status is supported, and `landsOn: host.app.signedIn` waits through that. Don't assert that the update screen never appears after that relaunch.
 - The subtitle names the application, which here is the `verify-throwaway-...` name. Don't assert on it.
 - The update screen replaces what the home shows, so the home's locators aren't on screen while it shows. A launch that expects it needs `landsOn`.
