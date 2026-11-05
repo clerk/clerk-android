@@ -9,6 +9,8 @@ import com.clerk.api.dpop.ServerClock
 import java.io.IOException
 import java.security.ProviderException
 import java.util.Base64
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -101,6 +103,32 @@ class TransientKeyFailureLimitTest {
     assertNull(recorded.headers[DPOP_HEADER])
   }
 
+  @Test
+  fun `a key load that does not finish fails a bound token's request within the wait and counts`() {
+    val loadReleased = CountDownLatch(1)
+    val holder = DeviceKeyHolder {
+      loadReleased.await(HUNG_LOAD_SECONDS, TimeUnit.SECONDS)
+      JvmDeviceKey.getOrCreate()
+    }
+    val client = client(DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder))))
+    server.enqueue(MockResponse())
+
+    try {
+      repeat(3) {
+        val started = TimeSource.Monotonic.markNow()
+        val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+        assertTrue(started.elapsedNow() < wait * 2, "the request waited ${started.elapsedNow()}")
+        assertTrue("KEY_NOT_READY" in error.message.orEmpty(), error.message)
+      }
+      execute(client, BOUND_DEVICE_TOKEN)
+    } finally {
+      loadReleased.countDown()
+    }
+
+    assertEquals(1, server.requestCount)
+    assertNull(server.takeRequest().headers[DPOP_HEADER])
+  }
+
   private class ScriptedKey(
     vararg failures: Exception?,
     private val key: DeviceKey = JvmDeviceKey.getOrCreate(),
@@ -134,6 +162,7 @@ class TransientKeyFailureLimitTest {
 
   private companion object {
     val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
+    const val HUNG_LOAD_SECONDS = 3L
     val OTHER_BOUND_DEVICE_TOKEN = jwt("""{"id":"client_other","cnf":{"jkt":"9YbNBNQYMXx"}}""")
 
     fun jwt(payload: String): String =
