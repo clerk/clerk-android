@@ -4,6 +4,7 @@ import android.util.Log
 import com.clerk.api.configuration.DEVICE_KEY_WAIT
 import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.configuration.DeviceBindingState
+import com.clerk.api.configuration.resolveDeviceBinding
 import com.clerk.api.devicekey.DeviceKey
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyLostException
@@ -13,6 +14,7 @@ import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jwt.SignedJWT
 import java.io.IOException
+import java.security.KeyStoreException
 import java.security.MessageDigest
 import java.security.ProviderException
 import java.util.Base64
@@ -27,7 +29,11 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
@@ -246,6 +252,30 @@ class DpopMiddlewareTest {
   }
 
   @Test
+  fun `a request-time key load that records Unavailable stops signing and sends the request unsigned`() {
+    var loads = 0
+    val holder = DeviceKeyHolder {
+      loads += 1
+      throw if (loads == 1) IOException("Keystore busy") else KeyStoreException("no Keystore")
+    }
+    val scope = CoroutineScope(Dispatchers.IO)
+    val state = scope.resolveDeviceBinding(sharedSessionSync = false, holder = holder)
+    server.enqueue(MockResponse())
+
+    execute(client(state), get("/").withToken(BOUND_DEVICE_TOKEN))
+
+    val recorded = server.takeRequest()
+    assertEquals(BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
+    assertNull(recorded.headers[DPOP_HEADER])
+    assertEquals(
+      DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE),
+      runBlocking { state.current(DEVICE_KEY_WAIT) },
+    )
+    assertEquals(2, loads)
+    scope.cancel()
+  }
+
+  @Test
   fun `the cnf check follows the token a request carries`() {
     val client = client(signingWith(FailingKey(IllegalStateException("bug"))))
     server.enqueue(MockResponse())
@@ -278,10 +308,11 @@ class DpopMiddlewareTest {
   private fun get(path: String): Request = Request(server.url(path))
 
   private fun client(binding: Deferred<DeviceBinding>): OkHttpClient =
+    client(DeviceBindingState(binding))
+
+  private fun client(state: DeviceBindingState): OkHttpClient =
     OkHttpClient.Builder()
-      .addNetworkInterceptor(
-        DpopMiddleware(DeviceBindingState(binding), serverClock, DEVICE_KEY_WAIT)
-      )
+      .addNetworkInterceptor(DpopMiddleware(state, serverClock, DEVICE_KEY_WAIT))
       .build()
 
   private fun execute(binding: Deferred<DeviceBinding>, request: Request) {
