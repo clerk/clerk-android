@@ -9,15 +9,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl
 
+internal data class BoundRequest(val method: String, val url: HttpUrl, val accessToken: String?)
+
 internal object DpopProof {
-  fun build(
-    key: DeviceKey,
-    method: String,
-    url: HttpUrl,
-    accessToken: String?,
-    now: Instant,
-    jti: String,
-  ): String {
+  fun build(key: DeviceKey, request: BoundRequest, now: Instant, jti: String): String {
+    val (method, url, accessToken) = request
     val header = buildJsonObject {
       put("typ", "dpop+jwt")
       put("alg", "ES256")

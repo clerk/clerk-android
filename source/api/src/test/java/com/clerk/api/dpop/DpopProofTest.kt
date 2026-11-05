@@ -109,9 +109,7 @@ class DpopProofTest {
   ): String =
     DpopProof.build(
       key = key,
-      method = "GET",
-      url = url.toHttpUrl(),
-      accessToken = accessToken,
+      request = BoundRequest(method = "GET", url = url.toHttpUrl(), accessToken = accessToken),
       now = now,
       jti = "proof-id",
     )

@@ -127,9 +127,7 @@ class DpopProofInstrumentedTest {
   ): String =
     DpopProof.build(
       key = key,
-      method = "GET",
-      url = url,
-      accessToken = accessToken,
+      request = BoundRequest(method = "GET", url = url, accessToken = accessToken),
       now = now,
       jti = UUID.randomUUID().toString(),
     )
