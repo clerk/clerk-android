@@ -177,7 +177,7 @@ class TransientKeyFailureLimitTest {
     assertEquals(unsigned(), runBlocking { state.current(wait) })
 
     loadReleased.countDown()
-    while (holder.loadedState() == null) Thread.sleep(10)
+    awaitLoaded(holder)
     Thread.sleep(LOAD_SETTLE_MILLIS)
     server.enqueue(MockResponse())
     execute(client, BOUND_DEVICE_TOKEN)
@@ -196,9 +196,10 @@ class TransientKeyFailureLimitTest {
     }
     val client = client(DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder))))
 
-    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    val first = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    assertTrue("KEY_NOT_READY" in first.message.orEmpty(), first.message)
     loadReleased.countDown()
-    while (holder.loadedState() == null) Thread.sleep(10)
+    awaitLoaded(holder)
     Thread.sleep(LOAD_SETTLE_MILLIS)
     repeat(2) {
       val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
@@ -273,7 +274,7 @@ class TransientKeyFailureLimitTest {
     } finally {
       loadReleased.countDown()
     }
-    while (holder.loadedState() == null) Thread.sleep(10)
+    awaitLoaded(holder)
     execute(client, BOUND_DEVICE_TOKEN)
 
     assertEquals(1, server.requestCount)
@@ -291,6 +292,14 @@ class TransientKeyFailureLimitTest {
       signs += 1
       script.removeFirst()?.let { throw it }
       return key.sign(data)
+    }
+  }
+
+  private fun awaitLoaded(holder: DeviceKeyHolder) {
+    val started = TimeSource.Monotonic.markNow()
+    while (holder.loadedState() == null) {
+      assertTrue(started.elapsedNow() < LOAD_DEADLINE, "the key did not load in $LOAD_DEADLINE")
+      Thread.sleep(10)
     }
   }
 
@@ -326,6 +335,7 @@ class TransientKeyFailureLimitTest {
     val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
     const val HUNG_LOAD_SECONDS = 3L
     const val LOAD_SETTLE_MILLIS = 100L
+    val LOAD_DEADLINE = 5.seconds
     val AT_ONCE = 100.milliseconds
     val UNBOUND_DEVICE_TOKEN = jwt("""{"id":"client_unbound"}""")
     val OTHER_BOUND_DEVICE_TOKEN = jwt("""{"id":"client_other","cnf":{"jkt":"9YbNBNQYMXx"}}""")
