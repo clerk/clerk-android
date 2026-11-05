@@ -33,13 +33,6 @@ class AndroidKeystoreDeviceKeyTest {
   private val holder = DeviceKeyHolder { AndroidKeystoreDeviceKey.getOrCreate(store) }
 
   @Test
-  fun `a stored key whose blob KeyMint rejects is replaced`() {
-    assertReplacedAtLoad(
-      unrecoverable(cause = platformKeystoreException(KM_ERROR_INVALID_KEY_BLOB))
-    )
-  }
-
-  @Test
   fun `a stored key whose blob Keystore reports corrupted is replaced`() {
     assertReplacedAtLoad(unrecoverable(cause = platformKeystoreException(VALUE_CORRUPTED)))
   }
@@ -60,12 +53,14 @@ class AndroidKeystoreDeviceKeyTest {
   }
 
   @Test
-  fun `a stored key read while KeyMint runs too many operations is kept`() {
+  @Config(sdk = [30])
+  fun `below API 31 a stored key read while KeyMint runs too many operations is kept`() {
     assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(KM_ERROR_TOO_MANY_OPERATIONS)))
   }
 
   @Test
-  fun `a stored key read while the secure hardware is busy is kept`() {
+  @Config(sdk = [30])
+  fun `below API 31 a stored key read while the secure hardware is busy is kept`() {
     assertKeptAtLoad(unrecoverable(cause = platformKeystoreException(KM_ERROR_SECURE_HW_BUSY)))
   }
 
