@@ -129,6 +129,46 @@ class TransientKeyFailureLimitTest {
   }
 
   @Test
+  fun `a load that completes after KEY_LOAD_GIVE_UP with no request in between stops signing`() {
+    val clock = TestTimeSource()
+    val binding = CompletableDeferred<DeviceBinding>()
+    val state = DeviceBindingState(binding, clock)
+
+    clock += KEY_LOAD_GIVE_UP + 5.seconds
+    binding.complete(DeviceBinding.Signing(DeviceKeyHolder { JvmDeviceKey.getOrCreate() }))
+    server.enqueue(MockResponse())
+    execute(client(state), BOUND_DEVICE_TOKEN)
+
+    assertNull(server.takeRequest().headers[DPOP_HEADER])
+    assertEquals(unsigned(), runBlocking { state.current(wait) })
+  }
+
+  @Test
+  fun `a request-time load that completes between requests resets the count`() {
+    val loadReleased = CountDownLatch(1)
+    val keyError = ProviderException("INVALID_KEY_BLOB")
+    val key = ScriptedKey(keyError, keyError, null)
+    val holder = DeviceKeyHolder {
+      loadReleased.await(HUNG_LOAD_SECONDS, TimeUnit.SECONDS)
+      key
+    }
+    val client = client(DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(holder))))
+
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    loadReleased.countDown()
+    while (holder.loadedState() == null) Thread.sleep(10)
+    Thread.sleep(LOAD_SETTLE_MILLIS)
+    repeat(2) {
+      val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+      assertTrue("KEY_ERROR" in error.message.orEmpty(), error.message)
+    }
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+  }
+
+  @Test
   fun `a successful sign resets the count, so two failures after it still fail the request`() {
     val keyError = ProviderException("INVALID_KEY_BLOB")
     val key = ScriptedKey(keyError, keyError, null, keyError, keyError)
@@ -243,6 +283,7 @@ class TransientKeyFailureLimitTest {
   private companion object {
     val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
     const val HUNG_LOAD_SECONDS = 3L
+    const val LOAD_SETTLE_MILLIS = 100L
     val AT_ONCE = 100.milliseconds
     val UNBOUND_DEVICE_TOKEN = jwt("""{"id":"client_unbound"}""")
     val OTHER_BOUND_DEVICE_TOKEN = jwt("""{"id":"client_other","cnf":{"jkt":"9YbNBNQYMXx"}}""")
