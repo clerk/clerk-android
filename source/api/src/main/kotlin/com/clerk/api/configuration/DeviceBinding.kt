@@ -8,6 +8,7 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -29,6 +30,8 @@ internal sealed interface DeviceBinding {
 }
 
 internal val DEVICE_KEY_WAIT: Duration = 5.seconds
+
+internal val KEY_LOAD_GIVE_UP: Duration = 15.seconds
 
 internal sealed interface ProofDecision {
   data class Sign(val holder: DeviceKeyHolder) : ProofDecision
@@ -106,7 +109,10 @@ internal const val TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED = 3
 internal class DeviceKeyLoadTimeoutException(wait: Duration) :
   IOException("The device key did not load within $wait")
 
-internal class DeviceBindingState(private val resolved: Deferred<DeviceBinding>) {
+internal class DeviceBindingState(
+  private val resolved: Deferred<DeviceBinding>,
+  private val timeSource: TimeSource = TimeSource.Monotonic,
+) {
   private val transientFailuresInARow = AtomicInteger()
   private val keyLoads = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

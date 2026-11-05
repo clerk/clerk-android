@@ -2,6 +2,8 @@ package com.clerk.api.network.middleware.outgoing
 
 import com.clerk.api.configuration.DeviceBinding
 import com.clerk.api.configuration.DeviceBindingState
+import com.clerk.api.configuration.KEY_LOAD_GIVE_UP
+import com.clerk.api.configuration.TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED
 import com.clerk.api.devicekey.DeviceKey
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
@@ -9,7 +11,9 @@ import com.clerk.api.dpop.ServerClock
 import java.io.IOException
 import java.security.ProviderException
 import java.util.Base64
+import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -18,6 +22,8 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -47,19 +53,75 @@ class TransientKeyFailureLimitTest {
   }
 
   @Test
-  fun `three timeouts in a row stop signing, and the next request goes out unsigned at once`() {
+  fun `three parallel waiters on one slow load count once, and a request after the load completes signs`() {
+    val binding = CompletableDeferred<DeviceBinding>()
+    val client = client(DeviceBindingState(binding))
+
+    val errors =
+      inParallel(3) { assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) } }
+    errors.forEach { assertTrue("KEY_NOT_READY" in it.message.orEmpty(), it.message) }
+    binding.complete(DeviceBinding.Signing(DeviceKeyHolder { JvmDeviceKey.getOrCreate() }))
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+
+    assertEquals(1, server.requestCount)
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+  }
+
+  @Test
+  fun `requests that find the load already timed out return at once without counting`() {
     val state = DeviceBindingState(CompletableDeferred())
     val client = client(state)
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
 
-    repeat(3) {
+    repeat(TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED + 1) {
+      val started = TimeSource.Monotonic.markNow()
       val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+      assertTrue(started.elapsedNow() < AT_ONCE, "the request waited ${started.elapsedNow()}")
       assertTrue("KEY_NOT_READY" in error.message.orEmpty(), error.message)
     }
     server.enqueue(MockResponse())
     val started = TimeSource.Monotonic.markNow()
+    execute(client, UNBOUND_DEVICE_TOKEN)
+
+    assertTrue(started.elapsedNow() < AT_ONCE, "the request waited ${started.elapsedNow()}")
+    assertNull(server.takeRequest().headers[DPOP_HEADER])
+    assertEquals(timedOut(), runBlocking { state.current(wait) })
+  }
+
+  @Test
+  fun `a load that completes at six seconds after one timeout resets the count and signs`() {
+    val clock = TestTimeSource()
+    val binding = CompletableDeferred<DeviceBinding>()
+    val keyError = ProviderException("INVALID_KEY_BLOB")
+    val key = ScriptedKey(keyError, keyError, null)
+    val client = client(DeviceBindingState(binding, clock))
+
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    clock += 6.seconds
+    binding.complete(DeviceBinding.Signing(DeviceKeyHolder { key }))
+    repeat(2) {
+      val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+      assertTrue("KEY_ERROR" in error.message.orEmpty(), error.message)
+    }
+    server.enqueue(MockResponse())
     execute(client, BOUND_DEVICE_TOKEN)
 
-    assertTrue(started.elapsedNow() < wait, "the request waited ${started.elapsedNow()}")
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
+    assertEquals(3, key.signs)
+  }
+
+  @Test
+  fun `a load still pending past KEY_LOAD_GIVE_UP stops signing`() {
+    val clock = TestTimeSource()
+    val state = DeviceBindingState(CompletableDeferred(), clock)
+    val client = client(state)
+
+    assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
+    clock += KEY_LOAD_GIVE_UP
+    server.enqueue(MockResponse())
+    execute(client, BOUND_DEVICE_TOKEN)
+
     val recorded = server.takeRequest()
     assertEquals(BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
     assertNull(recorded.headers[DPOP_HEADER])
@@ -88,9 +150,13 @@ class TransientKeyFailureLimitTest {
   }
 
   @Test
-  fun `the count runs across tokens`() {
-    val state = DeviceBindingState(CompletableDeferred())
-    val client = client(state)
+  fun `three sign failures in a row stop signing, counted across tokens`() {
+    val keyError = ProviderException("INVALID_KEY_BLOB")
+    val key = ScriptedKey(keyError, keyError, keyError)
+    val client =
+      client(
+        DeviceBindingState(CompletableDeferred(DeviceBinding.Signing(DeviceKeyHolder { key })))
+      )
 
     assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
     assertFailsWith<IOException> { execute(client, OTHER_BOUND_DEVICE_TOKEN) }
@@ -101,10 +167,11 @@ class TransientKeyFailureLimitTest {
     val recorded = server.takeRequest()
     assertEquals(OTHER_BOUND_DEVICE_TOKEN, recorded.headers["Authorization"])
     assertNull(recorded.headers[DPOP_HEADER])
+    assertEquals(3, key.signs)
   }
 
   @Test
-  fun `a key load that does not finish fails a bound token's request within the wait and counts`() {
+  fun `a request-time key load that does not finish is waited on once, counted once, then signs`() {
     val loadReleased = CountDownLatch(1)
     val holder = DeviceKeyHolder {
       loadReleased.await(HUNG_LOAD_SECONDS, TimeUnit.SECONDS)
@@ -114,19 +181,21 @@ class TransientKeyFailureLimitTest {
     server.enqueue(MockResponse())
 
     try {
-      repeat(3) {
+      repeat(TRANSIENT_KEY_FAILURES_BEFORE_UNSIGNED) { attempt ->
         val started = TimeSource.Monotonic.markNow()
         val error = assertFailsWith<IOException> { execute(client, BOUND_DEVICE_TOKEN) }
-        assertTrue(started.elapsedNow() < wait * 2, "the request waited ${started.elapsedNow()}")
+        val limit = if (attempt == 0) wait * 2 else AT_ONCE
+        assertTrue(started.elapsedNow() < limit, "the request waited ${started.elapsedNow()}")
         assertTrue("KEY_NOT_READY" in error.message.orEmpty(), error.message)
       }
-      execute(client, BOUND_DEVICE_TOKEN)
     } finally {
       loadReleased.countDown()
     }
+    while (holder.loadedState() == null) Thread.sleep(10)
+    execute(client, BOUND_DEVICE_TOKEN)
 
     assertEquals(1, server.requestCount)
-    assertNull(server.takeRequest().headers[DPOP_HEADER])
+    assertEquals(1, server.takeRequest().headers.values(DPOP_HEADER).size)
   }
 
   private class ScriptedKey(
@@ -146,6 +215,17 @@ class TransientKeyFailureLimitTest {
   private fun unsigned(): DeviceBinding =
     DeviceBinding.NotSigning(DeviceBinding.Reason.KEY_UNAVAILABLE)
 
+  private fun timedOut(): DeviceBinding = DeviceBinding.NotSigning(DeviceBinding.Reason.TIMEOUT)
+
+  private fun <T> inParallel(count: Int, block: () -> T): List<T> {
+    val pool = Executors.newFixedThreadPool(count)
+    try {
+      return List(count) { pool.submit(Callable(block)) }.map { it.get() }
+    } finally {
+      pool.shutdown()
+    }
+  }
+
   private fun client(state: DeviceBindingState, deviceKeyWait: Duration = wait): OkHttpClient =
     OkHttpClient.Builder()
       .addNetworkInterceptor(DpopMiddleware(state, ServerClock(Clock.System), deviceKeyWait))
@@ -163,6 +243,8 @@ class TransientKeyFailureLimitTest {
   private companion object {
     val BOUND_DEVICE_TOKEN = jwt("""{"id":"client_bound","cnf":{"jkt":"0ZcOCORZNYy"}}""")
     const val HUNG_LOAD_SECONDS = 3L
+    val AT_ONCE = 100.milliseconds
+    val UNBOUND_DEVICE_TOKEN = jwt("""{"id":"client_unbound"}""")
     val OTHER_BOUND_DEVICE_TOKEN = jwt("""{"id":"client_other","cnf":{"jkt":"9YbNBNQYMXx"}}""")
 
     fun jwt(payload: String): String =
