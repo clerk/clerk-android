@@ -13,6 +13,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,7 +74,7 @@ class DpopProofTest {
   fun `iat is whole seconds`() {
     val proof = buildProof(now = Instant.fromEpochMilliseconds(1_700_000_000_999))
 
-    assertTrue("\"iat\":1700000000," in SignedJWT.parse(proof).payload.toString())
+    assertEquals(JsonPrimitive(1_700_000_000L), payload(proof)["iat"])
   }
 
   @Test
@@ -100,4 +103,7 @@ class DpopProofTest {
     )
 
   private fun claims(proof: String) = SignedJWT.parse(proof).jwtClaimsSet
+
+  private fun payload(proof: String) =
+    Json.parseToJsonElement(SignedJWT.parse(proof).payload.toString()).jsonObject
 }
