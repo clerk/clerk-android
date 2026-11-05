@@ -305,8 +305,28 @@ internal class ConfigurationManager(
   private suspend fun adoptSiblingStateThenDropDeviceBoundToken(
     coordinator: SharedSessionSyncCoordinator
   ) {
-    coordinator.reloadFromSharedStorage()
+    awaitSiblingReloadWithin(coordinator, SHARED_STORAGE_RELOAD_WAIT)
     dropDeviceBoundToken()
+  }
+
+  private suspend fun awaitSiblingReloadWithin(
+    coordinator: SharedSessionSyncCoordinator,
+    wait: Duration,
+  ) {
+    val reload = scope.async { coordinator.reloadFromSharedStorage() }
+    try {
+      if (withTimeoutOrNull(wait) { reload.await() } == null) {
+        ClerkLogger.w(
+          "Shared session sync: siblings did not answer within $wait, starting without them"
+        )
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      ClerkLogger.w(
+        "Shared session sync: reload failed, starting without siblings: ${e.javaClass.name}"
+      )
+    }
   }
 
   private fun dropDeviceBoundToken() {
