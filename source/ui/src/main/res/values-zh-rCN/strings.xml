@@ -28,12 +28,13 @@
     <string name="get_help">获取帮助</string>
     <string name="if_you_have_trouble_signing_into_your_account">如果您在登录账户时遇到问题，请给我们发邮件，我们将尽快与您合作恢复访问权限。</string>
     <string name="email_support">电子邮件支持</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">打开电子邮件应用</string>
     <string name="no_email_clients_installed_on_device">设备上未安装电子邮件客户端。</string>
     <string name="set_new_password">设置新密码</string>
     <string name="reset_password">重置密码</string>
     <string name="confirm_password">确认密码</string>
     <string name="passwords_dont_match">密码不匹配</string>
+    <string name="account_requires_new_password_before_continue">您的账户需要设置新密码后才能继续</string>
     <string name="new_password">新密码</string>
     <string name="sign_out_of_all_other_devices">退出所有其他设备</string>
     <string name="back">返回</string>
@@ -88,6 +89,7 @@
     <string name="last_name">姓氏</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">遇到问题？您可以使用以下任何方法登录。</string>
     <string name="two_step_verification">两步验证</string>
+    <string name="signing_in_from_new_device">您正在从新设备登录。为保障您的账户安全，我们需要进行验证。</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">登录时，您需要输入发送到此电话号码的验证码作为额外步骤。\n\n请保存这些备份代码并将其存放在安全的地方。如果您无法访问身份验证设备，可以使用备份代码登录。</string>
     <string name="two_step_verification_is_now_enabled">现已启用两步验证。登录时，您需要输入此身份验证器应用的验证码作为额外步骤。\n\n请保存这些备份代码并将其存放在安全的地方。如果您无法访问身份验证设备，可以使用备份代码登录。</string>
     <string name="backup_codes_are_now_enabled">现已启用备份代码。如果您无法访问身份验证设备，可以使用其中一个代码登录您的账户。每个代码只能使用一次。</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">备份代码</string>
     <string name="add_two_step_verification">添加两步验证</string>
     <string name="change_password">更改密码</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">添加密码</string>
     <string name="passkeys">通行密钥</string>
     <string name="rename">重命名</string>
     <string name="created">创建时间：%1$s</string>
     <string name="last_used">最后使用：%1$s</string>
+    <string name="last_used_badge">上次使用</string>
     <string name="add_a_passkey">添加通行密钥</string>
     <string name="account">账户</string>
     <string name="delete_account">删除账户</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">已保存到下载：%1$s</string>
     <string name="failed_to_save_file">保存文件失败：%1$s</string>
     <string name="close">关闭</string>
+    <string name="show_password">显示密码</string>
+    <string name="hide_password">隐藏密码</string>
     <string name="type_delete_to_continue">输入 \"DELETE\" 以继续</string>
     <string name="are_you_sure_you_want_to_delete_your_account">您确定要删除您的账户吗？此操作是永久性的且不可撤销。</string>
     <string name="email_addresses">电子邮件地址</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">用户头像</string>
     <string name="open_user_profile">打开用户个人资料</string>
     <string name="secured_by">安全保护</string>
+    <string name="development_mode">开发模式</string>
     <string name="i_agree_to_the">我同意</string>
     <string name="terms_of_service">服务条款</string>
     <string name="privacy_policy">隐私政策</string>
     <string name="and_connector">和</string>
+    <string name="set_up_two_step_verification">设置两步验证</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">选择您偏好的方式，为您的账户增加一层额外的安全保护。</string>
+    <string name="continue_with_biometrics">使用生物识别继续</string>
+    <string name="sign_in_with_biometrics">使用生物识别登录</string>
+    <string name="biometric_sign_in">生物识别登录</string>
+    <string name="enable_biometric_sign_in">启用生物识别登录</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">启用生物识别登录，更快地访问%1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">启用生物识别登录，访问更快捷</string>
+    <string name="allow">允许</string>
+    <string name="not_now">以后再说</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s使用生物识别为您登录。</string>
+    <string name="use_biometrics_to_sign_in">使用生物识别登录。</string>
+    <string name="enroll_this_device">注册此设备</string>
     <string name="choose_an_organization">选择组织</string>
     <string name="choose_an_account">选择账户</string>
     <string name="select_the_account_with_which_you_wish_to_continue">选择您希望用于继续操作的账户。</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">组织名称</string>
     <string name="slug">URL 简称</string>
     <string name="upload_logo">上传徽标</string>
+    <string name="change_logo">更换徽标</string>
+    <string name="choose_file">选择文件</string>
+    <string name="photo_library">照片图库</string>
     <string name="remove_logo">移除徽标</string>
+    <string name="remove_current_logo">移除当前徽标</string>
     <string name="recommended_logo_size">建议尺寸为 1:1，最大 10MB。</string>
     <string name="invite">邀请</string>
     <string name="invite_new_members">邀请新成员</string>

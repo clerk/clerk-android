@@ -65,6 +65,8 @@ private fun VerifyApp(host: VerifyHost) {
     VerifyScreen.Home -> Home(host.config.authMode, host::open)
     VerifyScreen.Auth -> RootAuthView(host.config.authMode, host.config.initialIdentifier)
     VerifyScreen.CustomSignIn -> HostSurface { CustomSignIn { host.open(VerifyScreen.Home) } }
+    VerifyScreen.ResetPasswordReverification ->
+      HostSurface { ResetPasswordReverification { host.open(VerifyScreen.Home) } }
   }
 }
 
@@ -99,7 +101,7 @@ private fun Home(authMode: AuthMode, open: (VerifyScreen) -> Unit) {
   } else {
     HostSurface {
       if (activeSession != null && signedInUser != null) {
-        SignedInHome(signedInUser, activeSession)
+        SignedInHome(signedInUser, activeSession, open)
       } else {
         Text("Signed out", modifier = Modifier.testTag(E2ETags.Auth.SIGNED_OUT))
         TextAction("Sign in", E2ETags.Auth.SIGN_IN) { showsAuthView = true }
@@ -115,7 +117,7 @@ private fun Home(authMode: AuthMode, open: (VerifyScreen) -> Unit) {
 }
 
 @Composable
-private fun SignedInHome(user: User, session: Session) {
+private fun SignedInHome(user: User, session: Session, open: (VerifyScreen) -> Unit) {
   val scope = rememberCoroutineScope()
 
   UserButton()
@@ -136,6 +138,9 @@ private fun SignedInHome(user: User, session: Session) {
     }
   }
   OrganizationSwitcher()
+  TextAction("Reverify with a reset code", E2ETags.Home.RESET_PASSWORD_REVERIFICATION) {
+    open(VerifyScreen.ResetPasswordReverification)
+  }
   TextAction("Sign out", E2ETags.Auth.SIGN_OUT) { scope.launch { Clerk.auth.signOut() } }
 }
 

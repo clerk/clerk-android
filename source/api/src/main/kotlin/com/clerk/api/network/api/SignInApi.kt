@@ -28,16 +28,6 @@ internal interface SignInApi {
     @Field("token") token: String,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  @FormUrlEncoded
-  @POST(ApiPaths.Client.SignIn.BASE)
-  suspend fun authenticateWithRedirect(
-    @Field("strategy") strategy: String? = null,
-    @Field("redirect_url") redirectUrl: String?,
-    @Field("identifier") identifier: String? = null,
-    @Field("email_address") emailAddress: String? = null,
-    @Field("legal_accepted") legalAccepted: Boolean? = null,
-  ): ClerkResult<SignIn, ClerkErrorResponse>
-
   @GET(ApiPaths.Client.SignIn.WITH_ID)
   suspend fun fetchSignIn(
     @Path(ApiParams.ID) id: String,

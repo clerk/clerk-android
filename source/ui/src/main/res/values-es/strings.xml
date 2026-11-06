@@ -28,12 +28,13 @@
     <string name="get_help">Obtener ayuda</string>
     <string name="if_you_have_trouble_signing_into_your_account">Si tienes problemas para iniciar sesión en tu cuenta, envíanos un correo electrónico y trabajaremos contigo para restaurar el acceso lo antes posible.</string>
     <string name="email_support">Soporte por correo electrónico</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Abrir app de correo</string>
     <string name="no_email_clients_installed_on_device">No hay clientes de correo electrónico instalados en el dispositivo.</string>
     <string name="set_new_password">Establecer nueva contraseña</string>
     <string name="reset_password">Restablecer contraseña</string>
     <string name="confirm_password">Confirmar contraseña</string>
     <string name="passwords_dont_match">Las contraseñas no coinciden</string>
+    <string name="account_requires_new_password_before_continue">Tu cuenta requiere una nueva contraseña antes de que puedas continuar</string>
     <string name="new_password">Nueva contraseña</string>
     <string name="sign_out_of_all_other_devices">Cerrar sesión en todos los demás dispositivos</string>
     <string name="back">Atrás</string>
@@ -88,6 +89,7 @@
     <string name="last_name">Apellido</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">¿Tienes problemas? Puedes usar cualquiera de estos métodos para iniciar sesión.</string>
     <string name="two_step_verification">Verificación en dos pasos</string>
+    <string name="signing_in_from_new_device">Estás iniciando sesión desde un dispositivo nuevo. Te pedimos una verificación para mantener tu cuenta segura.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">Al iniciar sesión, necesitarás ingresar un código de verificación enviado a este número de teléfono como un paso adicional.\n\nGuarda estos códigos de respaldo y almacénalos en un lugar seguro. Si pierdes el acceso a tu dispositivo de autenticación, puedes usar los códigos de respaldo para iniciar sesión.</string>
     <string name="two_step_verification_is_now_enabled">La verificación en dos pasos está ahora habilitada. Al iniciar sesión, necesitarás ingresar un código de verificación de esta aplicación de autenticación como un paso adicional.\n\nGuarda estos códigos de respaldo y almacénalos en un lugar seguro. Si pierdes el acceso a tu dispositivo de autenticación, puedes usar los códigos de respaldo para iniciar sesión.</string>
     <string name="backup_codes_are_now_enabled">Los códigos de respaldo están ahora habilitados. Puedes usar uno de estos para iniciar sesión en tu cuenta, si pierdes el acceso a tu dispositivo de autenticación. Cada código solo puede usarse una vez.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">Códigos de respaldo</string>
     <string name="add_two_step_verification">Agregar verificación en dos pasos</string>
     <string name="change_password">Cambiar contraseña</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Agregar contraseña</string>
     <string name="passkeys">Claves de acceso</string>
     <string name="rename">Renombrar</string>
     <string name="created">Creado: %1$s</string>
     <string name="last_used">Último uso: %1$s</string>
+    <string name="last_used_badge">Último usado</string>
     <string name="add_a_passkey">Agregar una clave de acceso</string>
     <string name="account">Cuenta</string>
     <string name="delete_account">Eliminar cuenta</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">Guardado en Descargas: %1$s</string>
     <string name="failed_to_save_file">Error al guardar el archivo: %1$s</string>
     <string name="close">Cerrar</string>
+    <string name="show_password">Mostrar contraseña</string>
+    <string name="hide_password">Ocultar contraseña</string>
     <string name="type_delete_to_continue">Escribe \"DELETE\" para continuar</string>
     <string name="are_you_sure_you_want_to_delete_your_account">¿Estás seguro de que deseas eliminar tu cuenta? Esta acción es permanente e irreversible.</string>
     <string name="email_addresses">Direcciones de correo electrónico</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">Avatar del usuario</string>
     <string name="open_user_profile">Abrir perfil de usuario</string>
     <string name="secured_by">Protegido por</string>
+    <string name="development_mode">Modo de desarrollo</string>
     <string name="i_agree_to_the">Acepto los</string>
     <string name="terms_of_service">Términos de Servicio</string>
     <string name="privacy_policy">Política de Privacidad</string>
     <string name="and_connector">y la</string>
+    <string name="set_up_two_step_verification">Configurar la verificación en dos pasos</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Elige el método que prefieras para proteger tu cuenta con una capa adicional de seguridad.</string>
+    <string name="continue_with_biometrics">Continuar con biometría</string>
+    <string name="sign_in_with_biometrics">Iniciar sesión con biometría</string>
+    <string name="biometric_sign_in">Inicio de sesión biométrico</string>
+    <string name="enable_biometric_sign_in">Activar el inicio de sesión biométrico</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Activa el inicio de sesión biométrico para acceder más rápido a %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Activa el inicio de sesión biométrico para acceder más rápido</string>
+    <string name="allow">Permitir</string>
+    <string name="not_now">Ahora no</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s usa biometría para iniciar tu sesión.</string>
+    <string name="use_biometrics_to_sign_in">Usa la biometría para iniciar sesión.</string>
+    <string name="enroll_this_device">Registrar este dispositivo</string>
     <string name="choose_an_organization">Elegir una organización</string>
     <string name="choose_an_account">Elegir una cuenta</string>
     <string name="select_the_account_with_which_you_wish_to_continue">Elige la cuenta con la que quieres continuar.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">Nombre de la organización</string>
     <string name="slug">Identificador</string>
     <string name="upload_logo">Cargar logotipo</string>
+    <string name="change_logo">Cambiar logotipo</string>
+    <string name="choose_file">Elegir archivo</string>
+    <string name="photo_library">Galería de fotos</string>
     <string name="remove_logo">Eliminar logotipo</string>
+    <string name="remove_current_logo">Eliminar logotipo actual</string>
     <string name="recommended_logo_size">Tamaño recomendado 1:1, hasta 10 MB.</string>
     <string name="invite">Invitar</string>
     <string name="invite_new_members">Invitar a nuevos miembros</string>

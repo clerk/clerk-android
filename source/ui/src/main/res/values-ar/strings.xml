@@ -28,12 +28,13 @@
     <string name="get_help">احصل على المساعدة</string>
     <string name="if_you_have_trouble_signing_into_your_account">إذا واجهت مشكلة في تسجيل الدخول إلى حسابك، أرسل لنا بريداً إلكترونياً وسنعمل معك لاستعادة الوصول في أقرب وقت ممكن.</string>
     <string name="email_support">دعم البريد الإلكتروني</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">فتح تطبيق البريد الإلكتروني</string>
     <string name="no_email_clients_installed_on_device">لا توجد تطبيقات بريد إلكتروني مثبتة على الجهاز.</string>
     <string name="set_new_password">تعيين كلمة مرور جديدة</string>
     <string name="reset_password">إعادة تعيين كلمة المرور</string>
     <string name="confirm_password">تأكيد كلمة المرور</string>
     <string name="passwords_dont_match">كلمتا المرور غير متطابقتين</string>
+    <string name="account_requires_new_password_before_continue">يتطلب حسابك كلمة مرور جديدة قبل أن تتمكن من المتابعة</string>
     <string name="new_password">كلمة مرور جديدة</string>
     <string name="sign_out_of_all_other_devices">تسجيل الخروج من جميع الأجهزة الأخرى</string>
     <string name="back">رجوع</string>
@@ -88,6 +89,7 @@
     <string name="last_name">اسم العائلة</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">تواجه مشاكل؟ يمكنك استخدام أي من هذه الطرق لتسجيل الدخول.</string>
     <string name="two_step_verification">التحقق بخطوتين</string>
+    <string name="signing_in_from_new_device">أنت تسجّل الدخول من جهاز جديد. نطلب التحقق للحفاظ على أمان حسابك.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">عند تسجيل الدخول، ستحتاج إلى إدخال رمز تحقق يتم إرساله إلى رقم الهاتف هذا كخطوة إضافية.\n\nاحفظ رموز النسخ الاحتياطي هذه واحفظها في مكان آمن. إذا فقدت الوصول إلى جهاز المصادقة الخاص بك، يمكنك استخدام رموز النسخ الاحتياطي لتسجيل الدخول.</string>
     <string name="two_step_verification_is_now_enabled">تم تفعيل التحقق بخطوتين الآن. عند تسجيل الدخول، ستحتاج إلى إدخال رمز تحقق من تطبيق المصادقة هذا كخطوة إضافية.\n\nاحفظ رموز النسخ الاحتياطي هذه واحفظها في مكان آمن. إذا فقدت الوصول إلى جهاز المصادقة الخاص بك، يمكنك استخدام رموز النسخ الاحتياطي لتسجيل الدخول.</string>
     <string name="backup_codes_are_now_enabled">تم تفعيل رموز النسخ الاحتياطي الآن. يمكنك استخدام أحدها لتسجيل الدخول إلى حسابك، إذا فقدت الوصول إلى جهاز المصادقة الخاص بك. يمكن استخدام كل رمز مرة واحدة فقط.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">رموز النسخ الاحتياطي</string>
     <string name="add_two_step_verification">إضافة التحقق بخطوتين</string>
     <string name="change_password">تغيير كلمة المرور</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">إضافة كلمة مرور</string>
     <string name="passkeys">مفاتيح المرور</string>
     <string name="rename">إعادة تسمية</string>
     <string name="created">تم الإنشاء: %1$s</string>
     <string name="last_used">آخر استخدام: %1$s</string>
+    <string name="last_used_badge">آخر استخدام</string>
     <string name="add_a_passkey">إضافة مفتاح مرور</string>
     <string name="account">الحساب</string>
     <string name="delete_account">حذف الحساب</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">تم الحفظ في التنزيلات: %1$s</string>
     <string name="failed_to_save_file">فشل حفظ الملف: %1$s</string>
     <string name="close">إغلاق</string>
+    <string name="show_password">إظهار كلمة المرور</string>
+    <string name="hide_password">إخفاء كلمة المرور</string>
     <string name="type_delete_to_continue">اكتب \"DELETE\" للمتابعة</string>
     <string name="are_you_sure_you_want_to_delete_your_account">هل أنت متأكد أنك تريد حذف حسابك؟ هذا الإجراء دائم ولا يمكن التراجع عنه.</string>
     <string name="email_addresses">عناوين البريد الإلكتروني</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">صورة المستخدم الرمزية</string>
     <string name="open_user_profile">فتح ملف المستخدم الشخصي</string>
     <string name="secured_by">محمي بواسطة</string>
+    <string name="development_mode">وضع التطوير</string>
     <string name="i_agree_to_the">أوافق على</string>
     <string name="terms_of_service">شروط الخدمة</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
     <string name="and_connector">و</string>
+    <string name="set_up_two_step_verification">إعداد التحقق بخطوتين</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">اختر الطريقة التي تفضلها لحماية حسابك بطبقة إضافية من الأمان.</string>
+    <string name="continue_with_biometrics">المتابعة باستخدام القياسات الحيوية</string>
+    <string name="sign_in_with_biometrics">تسجيل الدخول باستخدام القياسات الحيوية</string>
+    <string name="biometric_sign_in">تسجيل الدخول بالقياسات الحيوية</string>
+    <string name="enable_biometric_sign_in">تفعيل تسجيل الدخول بالقياسات الحيوية</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">فعّل تسجيل الدخول بالقياسات الحيوية للوصول بشكل أسرع إلى %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">فعّل تسجيل الدخول بالقياسات الحيوية للوصول بشكل أسرع</string>
+    <string name="allow">السماح</string>
+    <string name="not_now">ليس الآن</string>
+    <string name="app_uses_biometrics_to_sign_you_in">يستخدم %1$s القياسات الحيوية لتسجيل دخولك.</string>
+    <string name="use_biometrics_to_sign_in">استخدم القياسات الحيوية لتسجيل الدخول.</string>
+    <string name="enroll_this_device">تسجيل هذا الجهاز</string>
     <string name="choose_an_organization">اختر منظمة</string>
     <string name="choose_an_account">اختر حسابًا</string>
     <string name="select_the_account_with_which_you_wish_to_continue">اختر الحساب الذي تريد المتابعة باستخدامه.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">اسم المنظمة</string>
     <string name="slug">رابط المنظمة</string>
     <string name="upload_logo">تحميل الشعار</string>
+    <string name="change_logo">تغيير الشعار</string>
+    <string name="choose_file">اختيار ملف</string>
+    <string name="photo_library">مكتبة الصور</string>
     <string name="remove_logo">إزالة الشعار</string>
+    <string name="remove_current_logo">إزالة الشعار الحالي</string>
     <string name="recommended_logo_size">الحجم الموصى به 1:1، حتى 10 ميجابايت.</string>
     <string name="invite">دعوة</string>
     <string name="invite_new_members">دعوة أعضاء جدد</string>

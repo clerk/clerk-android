@@ -28,12 +28,13 @@
     <string name="get_help">ヘルプを取得</string>
     <string name="if_you_have_trouble_signing_into_your_account">アカウントにサインインする際に問題が発生した場合は、メールでお問い合わせください。できるだけ早くアクセスを復元するために協力いたします。</string>
     <string name="email_support">メールサポート</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">メールアプリを開く</string>
     <string name="no_email_clients_installed_on_device">デバイスにメールクライアントがインストールされていません。</string>
     <string name="set_new_password">新しいパスワードを設定</string>
     <string name="reset_password">パスワードをリセット</string>
     <string name="confirm_password">パスワードを確認</string>
     <string name="passwords_dont_match">パスワードが一致しません</string>
+    <string name="account_requires_new_password_before_continue">続行するには、アカウントに新しいパスワードを設定する必要があります</string>
     <string name="new_password">新しいパスワード</string>
     <string name="sign_out_of_all_other_devices">他のすべてのデバイスからサインアウト</string>
     <string name="back">戻る</string>
@@ -88,6 +89,7 @@
     <string name="last_name">姓</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">問題が発生していますか？これらの方法のいずれかを使用してサインインできます。</string>
     <string name="two_step_verification">二段階認証</string>
+    <string name="signing_in_from_new_device">新しいデバイスからサインインしています。アカウントを保護するため、確認をお願いしています。</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">サインインする際、この電話番号に送信される確認コードを追加のステップとして入力する必要があります。\n\nこれらのバックアップコードを保存し、安全な場所に保管してください。認証デバイスにアクセスできなくなった場合、バックアップコードを使用してサインインできます。</string>
     <string name="two_step_verification_is_now_enabled">二段階認証が有効になりました。サインインする際、この認証アプリからの確認コードを追加のステップとして入力する必要があります。\n\nこれらのバックアップコードを保存し、安全な場所に保管してください。認証デバイスにアクセスできなくなった場合、バックアップコードを使用してサインインできます。</string>
     <string name="backup_codes_are_now_enabled">バックアップコードが有効になりました。認証デバイスにアクセスできなくなった場合、これらのいずれかを使用してアカウントにサインインできます。各コードは1回のみ使用できます。</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">バックアップコード</string>
     <string name="add_two_step_verification">二段階認証を追加</string>
     <string name="change_password">パスワードを変更</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">パスワードを追加</string>
     <string name="passkeys">パスキー</string>
     <string name="rename">名前を変更</string>
     <string name="created">作成日: %1$s</string>
     <string name="last_used">最終使用: %1$s</string>
+    <string name="last_used_badge">前回使用</string>
     <string name="add_a_passkey">パスキーを追加</string>
     <string name="account">アカウント</string>
     <string name="delete_account">アカウントを削除</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">ダウンロードに保存: %1$s</string>
     <string name="failed_to_save_file">ファイルの保存に失敗しました: %1$s</string>
     <string name="close">閉じる</string>
+    <string name="show_password">パスワードを表示</string>
+    <string name="hide_password">パスワードを非表示</string>
     <string name="type_delete_to_continue">続けるには \"DELETE\" と入力</string>
     <string name="are_you_sure_you_want_to_delete_your_account">アカウントを削除してもよろしいですか？この操作は永続的で元に戻せません。</string>
     <string name="email_addresses">メールアドレス</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">ユーザーアバター</string>
     <string name="open_user_profile">ユーザープロフィールを開く</string>
     <string name="secured_by">セキュリティ提供</string>
+    <string name="development_mode">開発モード</string>
     <string name="i_agree_to_the">同意します:</string>
     <string name="terms_of_service">利用規約</string>
     <string name="privacy_policy">プライバシーポリシー</string>
     <string name="and_connector">および</string>
+    <string name="set_up_two_step_verification">二段階認証を設定</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">追加のセキュリティでアカウントを保護するために、希望する方法を選択してください。</string>
+    <string name="continue_with_biometrics">生体認証で続ける</string>
+    <string name="sign_in_with_biometrics">生体認証でサインイン</string>
+    <string name="biometric_sign_in">生体認証によるサインイン</string>
+    <string name="enable_biometric_sign_in">生体認証によるサインインを有効にする</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">生体認証によるサインインを有効にすると、%1$sにすばやくアクセスできます</string>
+    <string name="enable_biometric_sign_in_for_faster_access">生体認証によるサインインを有効にすると、すばやくアクセスできます</string>
+    <string name="allow">許可</string>
+    <string name="not_now">後で</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$sは生体認証を使用してサインインします。</string>
+    <string name="use_biometrics_to_sign_in">生体認証を使用してサインインします。</string>
+    <string name="enroll_this_device">このデバイスを登録</string>
     <string name="choose_an_organization">組織を選択</string>
     <string name="choose_an_account">アカウントを選択</string>
     <string name="select_the_account_with_which_you_wish_to_continue">続行するアカウントを選択してください。</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">組織名</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">ロゴをアップロード</string>
+    <string name="change_logo">ロゴを変更</string>
+    <string name="choose_file">ファイルを選択</string>
+    <string name="photo_library">フォトライブラリ</string>
     <string name="remove_logo">ロゴを削除</string>
+    <string name="remove_current_logo">現在のロゴを削除</string>
     <string name="recommended_logo_size">推奨サイズ 1:1、最大 10MB</string>
     <string name="invite">招待</string>
     <string name="invite_new_members">新しいメンバーを招待</string>
