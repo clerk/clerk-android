@@ -1092,6 +1092,20 @@ public object Clerk {
   public fun setDeviceToken(token: String?, expected: String?): Boolean =
     configurationManager.setDeviceToken(deviceToken = token, expectedDeviceToken = expected)
 
+  /**
+   * Deletes this device's signing key from the Android Keystore, whatever state the key is in.
+   *
+   * If this runtime signs requests, the next request signs with a new key, so FAPI rejects a device
+   * token bound to the old key and the user is signed out. A runtime that does not sign, because
+   * shared session sync is on or the key was unavailable at [initialize], keeps not signing until
+   * the next [initialize]. Intended for debug tools that test how the SDK recovers from a lost key.
+   *
+   * @return true if the stored key is gone; false if Clerk is not initialized or the Keystore
+   *   refused the delete.
+   */
+  @FrameworkIntegrationApi
+  public suspend fun deleteDeviceKey(): Boolean = configurationManager.deleteDeviceKey()
+
   // endregion
 
   // region Internal Methods
@@ -1234,6 +1248,10 @@ public object Clerk {
 
   internal fun fenceClientResponsesAfterSharedDeviceTokenChange() {
     configurationManager.fenceClientResponsesAfterSharedDeviceTokenChange()
+  }
+
+  internal fun dropDeviceToken(deviceToken: String) {
+    configurationManager.setDeviceToken(deviceToken = null, expectedDeviceToken = deviceToken)
   }
 
   internal fun isClientResponseCurrent(

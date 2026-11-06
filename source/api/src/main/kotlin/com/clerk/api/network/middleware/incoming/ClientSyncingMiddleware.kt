@@ -3,8 +3,10 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.DeviceBindingError
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
@@ -14,9 +16,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.state.ClientStateStore
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
+import kotlin.time.Instant
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -31,13 +31,18 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
 private const val SERVER_DATE_HEADER = "Date"
-private const val SERVER_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
-internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
+internal class ClientSyncingMiddleware(
+  private val json: Json,
+  private val serverClock: ServerClock,
+) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
-    val orderAtArrival = Clerk.stateStore.observeResponse(response.serverDateMillis())
+    val serverDate = response.headers.getDate(SERVER_DATE_HEADER)
+    serverDate?.let { serverClock.record(Instant.fromEpochMilliseconds(it.time)) }
+    val orderAtArrival = Clerk.stateStore.observeResponse(serverDate?.time)
+    dropDeviceTokenBoundElsewhere(response)
     val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
     manualClientSyncRequest?.recordResponse(
       requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
@@ -57,6 +62,17 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         syncResponse(request = request, response = response, order = orderAtArrival)
           .withResponseOrder(orderAtArrival)
     }
+  }
+
+  private fun dropDeviceTokenBoundElsewhere(response: Response) {
+    val error = DeviceBindingError.of(response, json)
+    if (error?.recovery != DeviceBindingError.Recovery.DROP_TOKEN) return
+    val deviceToken =
+      response.header(AUTHORIZATION_HEADER)
+        ?: response.request.header(AUTHORIZATION_HEADER)
+        ?: return
+    ClerkLogger.w("Dropping the device token after ${error.code}")
+    Clerk.dropDeviceToken(deviceToken)
   }
 
   @Suppress("NestedBlockDepth")
@@ -288,16 +304,4 @@ private fun Response.withResponseOrder(order: ClientStateStore.ResponseOrder?): 
   order ?: return this
   val taggedRequest = request.newBuilder().tag(ClientStateStore.ResponseOrder::class.java, order)
   return newBuilder().request(taggedRequest.build()).build()
-}
-
-private fun Response.serverDateMillis(): Long? {
-  val serverDate = header(SERVER_DATE_HEADER) ?: return null
-  return try {
-    SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
-      .apply { timeZone = TimeZone.getTimeZone("GMT") }
-      .parse(serverDate)
-      ?.time
-  } catch (_: Exception) {
-    null
-  }
 }

@@ -14,6 +14,9 @@ import com.clerk.api.appversion.UpdateRequiredViewLauncher
 import com.clerk.api.biometriccredential.BiometricCredentialStorage
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.devicekey.DeviceKeyFactory
+import com.clerk.api.devicekey.DeviceKeyHolder
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
@@ -29,10 +32,13 @@ import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.fetchToken
+import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +64,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+
+internal val SHARED_STORAGE_RELOAD_WAIT: Duration = 2.seconds
 
 internal class ConfigurationManager(
   private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -112,6 +120,8 @@ internal class ConfigurationManager(
   @Volatile private var configurationVersion = 0
 
   private val sharedDeviceTokenFenceGeneration = AtomicInteger()
+
+  @Volatile private var deviceKeyHolder: DeviceKeyHolder? = null
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -231,10 +241,19 @@ internal class ConfigurationManager(
       config = options?.sharedSessionSync,
     )
     BiometricCredentialStorage.initialize(context.applicationContext)
+    val deviceKeyHolder = DeviceKeyHolder { DeviceKeyFactory.create(context.applicationContext) }
+    this.deviceKeyHolder = deviceKeyHolder
+    val deviceBinding =
+      scope.resolveDeviceBinding(
+        sharedSessionSync = options?.sharedSessionSync != null,
+        holder = deviceKeyHolder,
+      )
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
       customHeaders = options?.customHeaders.orEmpty(),
+      deviceBinding = deviceBinding,
+      serverClock = ServerClock(Clock.System),
     )
     hasConfigured = true
     configureConnectivityMonitor(context.applicationContext)
@@ -252,9 +271,9 @@ internal class ConfigurationManager(
         expectedConfigurationVersion = configuredVersion,
       )
     if (!restoreLocalState(configuredVersion)) return@launch
+    Clerk.sharedSessionSyncCoordinator?.let { adoptSiblingStateThenDropDeviceBoundToken(it) }
     activeSessionWatchJob = startTokenRefreshWhenASessionBecomesActive()
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
-    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val dataRefreshJob = async {
       refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
     }
@@ -283,7 +302,56 @@ internal class ConfigurationManager(
     return true
   }
 
+  private suspend fun adoptSiblingStateThenDropDeviceBoundToken(
+    coordinator: SharedSessionSyncCoordinator
+  ) {
+    awaitSiblingReloadWithin(coordinator, SHARED_STORAGE_RELOAD_WAIT)
+    dropDeviceBoundToken()
+  }
+
+  private suspend fun awaitSiblingReloadWithin(
+    coordinator: SharedSessionSyncCoordinator,
+    wait: Duration,
+  ) {
+    val reload = scope.async { coordinator.reloadFromSharedStorage() }
+    try {
+      if (withTimeoutOrNull(wait) { reload.await() } == null) {
+        ClerkLogger.w(
+          "Shared session sync: siblings did not answer within $wait, starting without them"
+        )
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      ClerkLogger.w(
+        "Shared session sync: reload failed, starting without siblings: ${e.javaClass.name}"
+      )
+    }
+  }
+
+  private fun dropDeviceBoundToken() {
+    val deviceToken = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) ?: return
+    if (!isDeviceBound(deviceToken)) return
+    ClerkLogger.i("Dropping a device-bound token: shared session sync keeps this client unbound")
+    setDeviceToken(deviceToken = null, expectedDeviceToken = deviceToken)
+  }
+
   fun isConfigured(): Boolean = hasConfigured
+
+  suspend fun deleteDeviceKey(): Boolean = scope.async { deleteDeviceKeyNow() }.await()
+
+  private fun deleteDeviceKeyNow(): Boolean {
+    val holder = deviceKeyHolder
+    val context = context?.get()
+    if (holder == null || context == null) return false
+    return try {
+      holder.deleteKey { DeviceKeyFactory.delete(context) }.getOrThrow()
+      true
+    } catch (e: Exception) {
+      ClerkLogger.w("Failed to delete the device key: ${e.javaClass.name}")
+      false
+    }
+  }
 
   @Synchronized
   fun reset() {
@@ -300,6 +368,7 @@ internal class ConfigurationManager(
     refreshJobSessionId = null
     activeSessionWatchJob = null
     context = null
+    deviceKeyHolder = null
     storageInitialized = false
     hasConfigured = false
     storedOptions = null

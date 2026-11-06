@@ -77,6 +77,9 @@ class MainActivity : ComponentActivity() {
           },
           onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
           onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
+          onClickDeviceBinding = {
+            context.startActivity(Intent(context, DeviceBindingActivity::class.java))
+          },
         )
       }
     }
@@ -90,6 +93,7 @@ private fun MainContent(
   onSave: (String, String) -> Unit,
   onClickFirstItem: () -> Unit,
   onClickSecondItem: () -> Unit,
+  onClickDeviceBinding: () -> Unit,
 ) {
   var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -116,7 +120,11 @@ private fun MainContent(
       Spacer(modifier = Modifier.height(Spacing.large))
       InstructionsCard()
       Spacer(modifier = Modifier.height(Spacing.large))
-      TestOptionsCard(onClickFirstItem = onClickFirstItem, onClickSecondItem = onClickSecondItem)
+      TestOptionsCard(
+        onClickFirstItem = onClickFirstItem,
+        onClickSecondItem = onClickSecondItem,
+        onClickDeviceBinding = onClickDeviceBinding,
+      )
     }
   }
 
@@ -170,12 +178,18 @@ private fun InstructionsCard() {
 }
 
 @Composable
-private fun TestOptionsCard(onClickFirstItem: () -> Unit, onClickSecondItem: () -> Unit) {
+private fun TestOptionsCard(
+  onClickFirstItem: () -> Unit,
+  onClickSecondItem: () -> Unit,
+  onClickDeviceBinding: () -> Unit,
+) {
   WorkbenchCard {
     Column(modifier = Modifier.padding(Spacing.small)) {
       ClickableTestItem(text = "Test 1", onClickFirstItem)
       WorkbenchDivider()
       ClickableTestItem(text = "Test 2", onClick = onClickSecondItem)
+      WorkbenchDivider()
+      ClickableTestItem(text = "Device binding", onClick = onClickDeviceBinding)
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.clerk.api.user
 
 import com.clerk.api.Clerk
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.UserApi
@@ -15,6 +16,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -42,7 +44,7 @@ class UserReloadTest {
   fun setup() {
     val httpClient =
       OkHttpClient.Builder()
-        .addInterceptor(ClientSyncingMiddleware(ClerkApi.json))
+        .addInterceptor(ClientSyncingMiddleware(ClerkApi.json, ServerClock(Clock.System)))
         .addInterceptor { chain ->
           whileFetchIsInFlight()
           val response = ClerkApi.json.encodeToString(Client.serializer(), fetchedClient)
