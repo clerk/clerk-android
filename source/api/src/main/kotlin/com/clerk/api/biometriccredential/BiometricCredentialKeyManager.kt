@@ -8,19 +8,19 @@ import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import android.util.Base64
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.core.content.ContextCompat
 import com.clerk.api.Clerk
+import com.clerk.api.devicekey.Es256
 import java.io.IOException
-import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.ProviderException
 import java.security.Signature
+import java.security.SignatureException
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import kotlin.coroutines.cancellation.CancellationException
@@ -116,13 +116,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
   private const val KEY_ALIAS_PREFIX = "com.clerk.trusted_device."
   private const val SIGNATURE_ALGORITHM = "SHA256withECDSA"
   private const val EC_CURVE = "secp256r1"
-  private const val COORDINATE_SIZE_BYTES = 32
   private const val LOCAL_KEY_ID_PREFIX = "tdlk_"
-  private const val DER_SEQUENCE_TAG = 0x30
-  private const val DER_INTEGER_TAG = 0x02
-  private const val DER_LONG_FORM_FLAG = 0x80
-  private const val DER_LENGTH_MASK = 0x7F
-  private const val DER_BYTE_MASK = 0xFF
 
   override fun isSupported(policy: BiometricCredentialPolicy): Boolean {
     val context = applicationContext()
@@ -165,7 +159,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
       val publicKey = keyPair.public as ECPublicKey
       return BiometricCredentialLocalKey(
         localKeyId = localKeyId,
-        publicKeyJwk = publicKeyJwk(publicKey),
+        publicKeyJwk = Es256.publicJwk(publicKey).toString(),
         policy = policy,
       )
     } catch (e: BiometricCredentialKeyManagerException) {
@@ -216,7 +210,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
       val rawSignature = rawES256SignatureFromDer(derSignature)
       return BiometricCredentialKeySignature(
         clientData = clientData,
-        signature = base64UrlEncode(rawSignature),
+        signature = Es256.base64UrlEncode(rawSignature),
       )
     } catch (e: BiometricCredentialKeyManagerException) {
       throw e
@@ -410,122 +404,16 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     return builder.build()
   }
 
-  private fun publicKeyJwk(publicKey: ECPublicKey): String {
-    val x = base64UrlEncode(fixedWidthCoordinate(publicKey.w.affineX))
-    val y = base64UrlEncode(fixedWidthCoordinate(publicKey.w.affineY))
-    return """{"kty":"EC","crv":"P-256","x":"$x","y":"$y","alg":"ES256"}"""
-  }
-
-  private fun fixedWidthCoordinate(coordinate: BigInteger): ByteArray {
-    val bytes = coordinate.toByteArray()
-    return when {
-      bytes.size == COORDINATE_SIZE_BYTES -> bytes
-      // Strip the sign byte added by BigInteger for values with the high bit set.
-      bytes.size > COORDINATE_SIZE_BYTES ->
-        bytes.copyOfRange(bytes.size - COORDINATE_SIZE_BYTES, bytes.size)
-      else -> ByteArray(COORDINATE_SIZE_BYTES - bytes.size) + bytes
-    }
-  }
-
-  internal fun rawES256SignatureFromDer(signature: ByteArray): ByteArray {
-    val reader = DerReader(signature)
-    validateES256Signature(reader.readByte() == DER_SEQUENCE_TAG)
-
-    val sequenceLength = reader.readLength()
-    validateES256Signature(sequenceLength == reader.remainingBytes)
-
-    val r = reader.readInteger()
-    val s = reader.readInteger()
-    validateES256Signature(reader.remainingBytes == 0)
-
-    return paddedES256Component(r) + paddedES256Component(s)
-  }
-
-  private fun validateES256Signature(isValid: Boolean) {
-    if (!isValid) {
-      throw invalidES256Signature()
-    }
-  }
-
-  private fun paddedES256Component(component: ByteArray): ByteArray {
-    if (component.isEmpty() || component.first().toInt() and DER_LONG_FORM_FLAG != 0) {
-      throw invalidES256Signature()
-    }
-
-    var startIndex = 0
-    while (
-      component.size - startIndex > COORDINATE_SIZE_BYTES && component[startIndex].toInt() == 0
-    ) {
-      startIndex += 1
-    }
-
-    val componentSize = component.size - startIndex
-    if (componentSize !in 1..COORDINATE_SIZE_BYTES) {
-      throw invalidES256Signature()
-    }
-
-    return ByteArray(COORDINATE_SIZE_BYTES).also { padded ->
-      component.copyInto(
-        destination = padded,
-        destinationOffset = COORDINATE_SIZE_BYTES - componentSize,
-        startIndex = startIndex,
+  internal fun rawES256SignatureFromDer(signature: ByteArray): ByteArray =
+    try {
+      Es256.rawSignatureFromDer(signature)
+    } catch (e: SignatureException) {
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
+        "Android Keystore returned an invalid ES256 signature.",
+        e,
       )
     }
-  }
-
-  private fun invalidES256Signature(): BiometricCredentialKeyManagerException {
-    return BiometricCredentialKeyManagerException(
-      BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
-      "Android Keystore returned an invalid ES256 signature.",
-    )
-  }
-
-  private class DerReader(private val bytes: ByteArray) {
-    private var offset: Int = 0
-
-    val remainingBytes: Int
-      get() = bytes.size - offset
-
-    fun readByte(): Int {
-      if (offset >= bytes.size) {
-        throw invalidES256Signature()
-      }
-      return bytes[offset++].toInt() and DER_BYTE_MASK
-    }
-
-    fun readLength(): Int {
-      val first = readByte()
-      if (first and DER_LONG_FORM_FLAG == 0) {
-        return first
-      }
-
-      val byteCount = first and DER_LENGTH_MASK
-      if (byteCount == 0 || byteCount > Int.SIZE_BYTES || byteCount > remainingBytes) {
-        throw invalidES256Signature()
-      }
-
-      var length = 0
-      repeat(byteCount) { length = (length shl Byte.SIZE_BITS) or readByte() }
-      return length
-    }
-
-    fun readInteger(): ByteArray {
-      if (readByte() != DER_INTEGER_TAG) {
-        throw invalidES256Signature()
-      }
-
-      val length = readLength()
-      if (length <= 0 || length > remainingBytes) {
-        throw invalidES256Signature()
-      }
-
-      return bytes.copyOfRange(offset, offset + length).also { offset += length }
-    }
-  }
-
-  private fun base64UrlEncode(bytes: ByteArray): String {
-    return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-  }
 
   private fun makeLocalKeyId(): String {
     return LOCAL_KEY_ID_PREFIX + java.util.UUID.randomUUID().toString().replace("-", "").lowercase()
