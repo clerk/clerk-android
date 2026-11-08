@@ -7,6 +7,7 @@ An instance sets a minimum version for an app. Clerk rejects most requests from 
 - `signed-in` covers a signed-in user's app with the update screen on a build below the minimum, showing `Your version` and `Go to Google Play`. Lowering the minimum returns the same user and session.
 - `signed-out` covers a signed-out user's app with the update screen too.
 - `at-the-minimum` leaves a build at the minimum to open as usual.
+- `update-app` shows `Update app` instead of `Go to Google Play` when the update URL is on another host.
 
 ## How to get to it (user POV)
 
@@ -23,6 +24,7 @@ Preconditions:
 - **Signed in.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "signed-in user"`. The spec signs in with a ticket, sets the minimum to `2`, and relaunches with `keepStorage: true`. It expects `1.0` and `Go to Google Play` (screenshot `update-required`). It then lowers the minimum to `1`, relaunches, and expects the same user and session ID on the home (screenshot `signed-in-after-lowering`).
 - **Signed out.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "signed-out user"`. The spec sets the minimum to `2` before the first launch, then expects the update screen and `1.0` (screenshot `update-required-signed-out`).
 - **At the minimum.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "at the minimum"`. The spec sets the minimum to `1`, signs in with a ticket, and expects the signed-in home with no update screen (screenshot `at-the-minimum`).
+- **Update app.** Run `e2e-tests/bin/control-clerk-android run update-required --grep "outside Google Play"`. The spec sets the minimum to `2` with an update URL on `example.com`, then expects `Update app` and no `Go to Google Play` (screenshot `update-app`).
 - **Proof.** `specs/features/update-required/update-required.e2e.ts` passes. The video shows the update screen with `1.0`, then the home with the same user and session ID.
 
 ## States a spec cannot reach
@@ -36,7 +38,7 @@ Preconditions:
 ## Gotchas
 
 - A build with no `versionCode`, or one below `1`, is never blocked: `AppBuild.from` in `AppVersionSupport.kt` logs a warning and the SDK skips the check. A spec on such a build would pass `at the minimum` and fail the others.
-- `Go to Google Play` opens an outside app, so the spec checks that the text shows and does not tap it. An update URL on another host shows `Update app` instead (`storeButtonText`).
+- `Go to Google Play` and `Update app` open an outside app, so the spec checks that the text shows and does not tap it. `storeButtonText` picks the label by the update URL's host.
 - The button's label is a text node beside an unnamed button, so `getByRole('button', { name })` does not find it. The spec uses `getByText`.
 - The screen has no test tags of its own, so the spec finds it by its text. A change to that wording changes the spec.
 - A minimum applies to the next request or launch. The spec relaunches instead of waiting for a running app to foreground.

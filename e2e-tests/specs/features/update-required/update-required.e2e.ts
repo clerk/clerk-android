@@ -4,6 +4,7 @@ const E2E_APP_VERSION_NAME = '1.0';
 const E2E_APP_VERSION_CODE = '1';
 const ABOVE_E2E_APP_VERSION_CODE = '2';
 const UPDATE_URL = 'https://play.google.com/store/apps/details?id=com.clerk.e2e';
+const OTHER_STORE_UPDATE_URL = 'https://example.com/com.clerk.e2e';
 
 test('a signed-in user on a build below the minimum sees the update screen, and is still signed in once the minimum is lowered', async ({ host, screen }) => {
   const title = screen.getByText('Update required');
@@ -32,6 +33,14 @@ test('a signed-out user on a build below the minimum sees the update screen', as
   await host.launch({ landsOn: screen.getByText('Update required') });
   await expect(screen.getByText(E2E_APP_VERSION_NAME)).toBeVisible();
   await host.screenshot('update-required-signed-out');
+});
+
+test('an update URL outside Google Play shows Update app', async ({ host, screen }) => {
+  await host.useMinimumAppVersion({ minimumVersion: ABOVE_E2E_APP_VERSION_CODE, updateUrl: OTHER_STORE_UPDATE_URL });
+  await host.launch({ landsOn: screen.getByText('Update required') });
+  await expect(screen.getByText('Update app')).toBeVisible();
+  await expect(screen.getByText('Go to Google Play')).toHaveCount(0);
+  await host.screenshot('update-app');
 });
 
 test('a build at the minimum opens as usual', async ({ host, screen }) => {
