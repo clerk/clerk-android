@@ -1,6 +1,6 @@
 [versions]
 activityKtx = "1.13.0"
-agp = "9.5.0"
+agp = "9.5.1"
 appcompat = "1.8.0"
 asm = "9.11.1"
 binaryCompatibilityValidator = "0.18.2"
