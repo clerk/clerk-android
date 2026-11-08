@@ -28,12 +28,13 @@
     <string name="get_help">Obter ajuda</string>
     <string name="if_you_have_trouble_signing_into_your_account">Se você tiver problemas para entrar na sua conta, envie-nos um e-mail e trabalharemos com você para restaurar o acesso o mais rápido possível.</string>
     <string name="email_support">Suporte por e-mail</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Abrir app de e-mail</string>
     <string name="no_email_clients_installed_on_device">Nenhum cliente de e-mail instalado no dispositivo.</string>
     <string name="set_new_password">Definir nova senha</string>
     <string name="reset_password">Redefinir senha</string>
     <string name="confirm_password">Confirmar senha</string>
     <string name="passwords_dont_match">As senhas não coincidem</string>
+    <string name="account_requires_new_password_before_continue">Sua conta exige uma nova senha antes que você possa continuar</string>
     <string name="new_password">Nova senha</string>
     <string name="sign_out_of_all_other_devices">Sair de todos os outros dispositivos</string>
     <string name="back">Voltar</string>
@@ -88,6 +89,7 @@
     <string name="last_name">Sobrenome</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Tendo problemas? Você pode usar qualquer um desses métodos para entrar.</string>
     <string name="two_step_verification">Verificação em duas etapas</string>
+    <string name="signing_in_from_new_device">Você está entrando por um novo dispositivo. Pedimos uma verificação para manter sua conta segura.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">Ao entrar, você precisará digitar um código de verificação enviado para este número de telefone como uma etapa adicional.\n\nSalve esses códigos de backup e guarde-os em um local seguro. Se você perder o acesso ao seu dispositivo de autenticação, poderá usar os códigos de backup para entrar.</string>
     <string name="two_step_verification_is_now_enabled">A verificação em duas etapas está agora ativada. Ao entrar, você precisará digitar um código de verificação deste aplicativo autenticador como uma etapa adicional.\n\nSalve esses códigos de backup e guarde-os em um local seguro. Se você perder o acesso ao seu dispositivo de autenticação, poderá usar os códigos de backup para entrar.</string>
     <string name="backup_codes_are_now_enabled">Os códigos de backup estão agora ativados. Você pode usar um deles para entrar na sua conta, se perder o acesso ao seu dispositivo de autenticação. Cada código pode ser usado apenas uma vez.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">Códigos de backup</string>
     <string name="add_two_step_verification">Adicionar verificação em duas etapas</string>
     <string name="change_password">Alterar senha</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Adicionar senha</string>
     <string name="passkeys">Chaves de acesso</string>
     <string name="rename">Renomear</string>
     <string name="created">Criado: %1$s</string>
     <string name="last_used">Último uso: %1$s</string>
+    <string name="last_used_badge">Último usado</string>
     <string name="add_a_passkey">Adicionar uma chave de acesso</string>
     <string name="account">Conta</string>
     <string name="delete_account">Excluir conta</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">Salvo em Downloads: %1$s</string>
     <string name="failed_to_save_file">Falha ao salvar arquivo: %1$s</string>
     <string name="close">Fechar</string>
+    <string name="show_password">Mostrar senha</string>
+    <string name="hide_password">Ocultar senha</string>
     <string name="type_delete_to_continue">Digite \"DELETE\" para continuar</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Tem certeza de que deseja excluir sua conta? Esta ação é permanente e irreversível.</string>
     <string name="email_addresses">Endereços de e-mail</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">Avatar do usuário</string>
     <string name="open_user_profile">Abrir perfil do usuário</string>
     <string name="secured_by">Protegido por</string>
+    <string name="development_mode">Modo de desenvolvimento</string>
     <string name="i_agree_to_the">Eu concordo com os</string>
     <string name="terms_of_service">Termos de Serviço</string>
     <string name="privacy_policy">Política de Privacidade</string>
     <string name="and_connector">e a</string>
+    <string name="set_up_two_step_verification">Configurar a verificação em duas etapas</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Escolha o método que preferir para proteger sua conta com uma camada extra de segurança.</string>
+    <string name="continue_with_biometrics">Continuar com biometria</string>
+    <string name="sign_in_with_biometrics">Entrar com biometria</string>
+    <string name="biometric_sign_in">Login biométrico</string>
+    <string name="enable_biometric_sign_in">Ativar login biométrico</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Ative o login biométrico para acessar %1$s mais rápido</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Ative o login biométrico para acessar mais rápido</string>
+    <string name="allow">Permitir</string>
+    <string name="not_now">Agora não</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s usa biometria para fazer seu login.</string>
+    <string name="use_biometrics_to_sign_in">Use a biometria para entrar.</string>
+    <string name="enroll_this_device">Registrar este dispositivo</string>
     <string name="choose_an_organization">Escolha uma organização</string>
     <string name="choose_an_account">Escolha uma conta</string>
     <string name="select_the_account_with_which_you_wish_to_continue">Selecione a conta com a qual deseja continuar.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">Nome da organização</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Carregar logotipo</string>
+    <string name="change_logo">Alterar logotipo</string>
+    <string name="choose_file">Escolher arquivo</string>
+    <string name="photo_library">Galeria de fotos</string>
     <string name="remove_logo">Remover logotipo</string>
+    <string name="remove_current_logo">Remover logotipo atual</string>
     <string name="recommended_logo_size">Tamanho recomendado 1:1, até 10 MB.</string>
     <string name="invite">Convidar</string>
     <string name="invite_new_members">Convidar novos membros</string>

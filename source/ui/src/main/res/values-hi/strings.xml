@@ -28,12 +28,13 @@
     <string name="get_help">सहायता प्राप्त करें</string>
     <string name="if_you_have_trouble_signing_into_your_account">यदि आपको अपने खाते में साइन इन करने में परेशानी हो रही है, तो हमें ईमेल करें और हम जल्द से जल्द पहुंच बहाल करने के लिए आपके साथ काम करेंगे।</string>
     <string name="email_support">ईमेल सहायता</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">ईमेल ऐप खोलें</string>
     <string name="no_email_clients_installed_on_device">डिवाइस पर कोई ईमेल क्लाइंट स्थापित नहीं है।</string>
     <string name="set_new_password">नया पासवर्ड सेट करें</string>
     <string name="reset_password">पासवर्ड रीसेट करें</string>
     <string name="confirm_password">पासवर्ड की पुष्टि करें</string>
     <string name="passwords_dont_match">पासवर्ड मेल नहीं खाते</string>
+    <string name="account_requires_new_password_before_continue">जारी रखने से पहले आपके खाते के लिए नया पासवर्ड आवश्यक है</string>
     <string name="new_password">नया पासवर्ड</string>
     <string name="sign_out_of_all_other_devices">अन्य सभी डिवाइस से साइन आउट करें</string>
     <string name="back">वापस</string>
@@ -88,6 +89,7 @@
     <string name="last_name">अंतिम नाम</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">समस्याओं का सामना कर रहे हैं? आप साइन इन करने के लिए इनमें से कोई भी विधि उपयोग कर सकते हैं।</string>
     <string name="two_step_verification">दो-चरणीय सत्यापन</string>
+    <string name="signing_in_from_new_device">आप एक नए डिवाइस से साइन इन कर रहे हैं। आपके खाते को सुरक्षित रखने के लिए हम सत्यापन मांग रहे हैं।</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">साइन इन करते समय, आपको इस फ़ोन नंबर पर भेजे गए सत्यापन कोड को एक अतिरिक्त चरण के रूप में दर्ज करना होगा।\n\nइन बैकअप कोड को सहेजें और उन्हें कहीं सुरक्षित स्थान पर संग्रहीत करें। यदि आप अपने प्रमाणीकरण डिवाइस तक पहुंच खो देते हैं, तो आप साइन इन करने के लिए बैकअप कोड का उपयोग कर सकते हैं।</string>
     <string name="two_step_verification_is_now_enabled">दो-चरणीय सत्यापन अब सक्षम है। साइन इन करते समय, आपको इस प्रमाणक ऐप से सत्यापन कोड को एक अतिरिक्त चरण के रूप में दर्ज करना होगा।\n\nइन बैकअप कोड को सहेजें और उन्हें कहीं सुरक्षित स्थान पर संग्रहीत करें। यदि आप अपने प्रमाणीकरण डिवाइस तक पहुंच खो देते हैं, तो आप साइन इन करने के लिए बैकअप कोड का उपयोग कर सकते हैं।</string>
     <string name="backup_codes_are_now_enabled">बैकअप कोड अब सक्षम हैं। यदि आप अपने प्रमाणीकरण डिवाइस तक पहुंच खो देते हैं, तो आप अपने खाते में साइन इन करने के लिए इनमें से एक का उपयोग कर सकते हैं। प्रत्येक कोड केवल एक बार उपयोग किया जा सकता है।</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">बैकअप कोड</string>
     <string name="add_two_step_verification">दो-चरणीय सत्यापन जोड़ें</string>
     <string name="change_password">पासवर्ड बदलें</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">पासवर्ड जोड़ें</string>
     <string name="passkeys">पासकी</string>
     <string name="rename">नाम बदलें</string>
     <string name="created">बनाया गया: %1$s</string>
     <string name="last_used">अंतिम उपयोग: %1$s</string>
+    <string name="last_used_badge">पिछली बार उपयोग किया गया</string>
     <string name="add_a_passkey">एक पासकी जोड़ें</string>
     <string name="account">खाता</string>
     <string name="delete_account">खाता हटाएं</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">डाउनलोड में सहेजा गया: %1$s</string>
     <string name="failed_to_save_file">फ़ाइल सहेजने में विफल: %1$s</string>
     <string name="close">बंद करें</string>
+    <string name="show_password">पासवर्ड दिखाएं</string>
+    <string name="hide_password">पासवर्ड छिपाएं</string>
     <string name="type_delete_to_continue">जारी रखने के लिए \"DELETE\" टाइप करें</string>
     <string name="are_you_sure_you_want_to_delete_your_account">क्या आप वाकई अपना खाता हटाना चाहते हैं? यह क्रिया स्थायी और अपरिवर्तनीय है।</string>
     <string name="email_addresses">ईमेल पते</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">उपयोगकर्ता अवतार</string>
     <string name="open_user_profile">उपयोगकर्ता प्रोफ़ाइल खोलें</string>
     <string name="secured_by">द्वारा सुरक्षित</string>
+    <string name="development_mode">डेवलपमेंट मोड</string>
     <string name="i_agree_to_the">मैं सहमत हूं</string>
     <string name="terms_of_service">सेवा की शर्तें</string>
     <string name="privacy_policy">गोपनीयता नीति</string>
     <string name="and_connector">और</string>
+    <string name="set_up_two_step_verification">दो-चरणीय सत्यापन सेट करें</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">सुरक्षा की एक अतिरिक्त परत के साथ अपने खाते की सुरक्षा के लिए अपनी पसंदीदा विधि चुनें।</string>
+    <string name="continue_with_biometrics">बायोमेट्रिक्स के साथ जारी रखें</string>
+    <string name="sign_in_with_biometrics">बायोमेट्रिक्स से साइन इन करें</string>
+    <string name="biometric_sign_in">बायोमेट्रिक साइन-इन</string>
+    <string name="enable_biometric_sign_in">बायोमेट्रिक साइन-इन सक्षम करें</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">%1$s तक तेज़ पहुंच के लिए बायोमेट्रिक साइन-इन सक्षम करें</string>
+    <string name="enable_biometric_sign_in_for_faster_access">तेज़ पहुंच के लिए बायोमेट्रिक साइन-इन सक्षम करें</string>
+    <string name="allow">अनुमति दें</string>
+    <string name="not_now">अभी नहीं</string>
+    <string name="app_uses_biometrics_to_sign_you_in">%1$s आपको साइन इन करने के लिए बायोमेट्रिक्स का उपयोग करता है।</string>
+    <string name="use_biometrics_to_sign_in">साइन इन करने के लिए बायोमेट्रिक्स का उपयोग करें।</string>
+    <string name="enroll_this_device">इस डिवाइस को पंजीकृत करें</string>
     <string name="choose_an_organization">एक संगठन चुनें</string>
     <string name="choose_an_account">एक खाता चुनें</string>
     <string name="select_the_account_with_which_you_wish_to_continue">वह खाता चुनें जिससे आप जारी रखना चाहते हैं।</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">संगठन का नाम</string>
     <string name="slug">स्लग</string>
     <string name="upload_logo">लोगो अपलोड करें</string>
+    <string name="change_logo">लोगो बदलें</string>
+    <string name="choose_file">फ़ाइल चुनें</string>
+    <string name="photo_library">फ़ोटो लाइब्रेरी</string>
     <string name="remove_logo">लोगो हटाएं</string>
+    <string name="remove_current_logo">वर्तमान लोगो हटाएं</string>
     <string name="recommended_logo_size">अनुशंसित आकार 1:1, 10MB तक।</string>
     <string name="invite">आमंत्रित करें</string>
     <string name="invite_new_members">नए सदस्यों को आमंत्रित करें</string>

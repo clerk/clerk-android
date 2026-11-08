@@ -28,12 +28,13 @@
     <string name="get_help">Λήψη βοήθειας</string>
     <string name="if_you_have_trouble_signing_into_your_account">Εάν αντιμετωπίζετε προβλήματα σύνδεσης στον λογαριασμό σας, στείλτε μας email και θα συνεργαστούμε μαζί σας για να αποκαταστήσουμε την πρόσβαση το συντομότερο δυνατό.</string>
     <string name="email_support">Υποστήριξη email</string>
-    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="open_email_app">Άνοιγμα εφαρμογής email</string>
     <string name="no_email_clients_installed_on_device">Δεν έχουν εγκατασταθεί προγράμματα email στη συσκευή.</string>
     <string name="set_new_password">Ορισμός νέου κωδικού πρόσβασης</string>
     <string name="reset_password">Επαναφορά κωδικού πρόσβασης</string>
     <string name="confirm_password">Επιβεβαίωση κωδικού πρόσβασης</string>
     <string name="passwords_dont_match">Οι κωδικοί πρόσβασης δεν ταιριάζουν</string>
+    <string name="account_requires_new_password_before_continue">Ο λογαριασμός σας απαιτεί νέο κωδικό πρόσβασης για να μπορέσετε να συνεχίσετε</string>
     <string name="new_password">Νέος κωδικός πρόσβασης</string>
     <string name="sign_out_of_all_other_devices">Αποσύνδεση από όλες τις άλλες συσκευές</string>
     <string name="back">Πίσω</string>
@@ -88,6 +89,7 @@
     <string name="last_name">Επώνυμο</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Αντιμετωπίζετε προβλήματα; Μπορείτε να χρησιμοποιήσετε οποιαδήποτε από αυτές τις μεθόδους για σύνδεση.</string>
     <string name="two_step_verification">Επαλήθευση δύο βημάτων</string>
+    <string name="signing_in_from_new_device">Συνδέεστε από νέα συσκευή. Ζητάμε επαλήθευση για να διατηρήσουμε τον λογαριασμό σας ασφαλή.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">Κατά τη σύνδεση, θα χρειαστεί να εισάγετε έναν κωδικό επαλήθευσης που αποστέλλεται σε αυτόν τον αριθμό τηλεφώνου ως επιπλέον βήμα.\n\nΑποθηκεύστε αυτούς τους κωδικούς αντιγράφου ασφαλείας και φυλάξτε τους κάπου ασφαλή. Εάν χάσετε την πρόσβαση στη συσκευή επαλήθευσης σας, μπορείτε να χρησιμοποιήσετε τους κωδικούς αντιγράφου ασφαλείας για σύνδεση.</string>
     <string name="two_step_verification_is_now_enabled">Η επαλήθευση δύο βημάτων είναι τώρα ενεργοποιημένη. Κατά τη σύνδεση, θα χρειαστεί να εισάγετε έναν κωδικό επαλήθευσης από αυτήν την εφαρμογή επαλήθευσης ως επιπλέον βήμα.\n\nΑποθηκεύστε αυτούς τους κωδικούς αντιγράφου ασφαλείας και φυλάξτε τους κάπου ασφαλή. Εάν χάσετε την πρόσβαση στη συσκευή επαλήθευσης σας, μπορείτε να χρησιμοποιήσετε τους κωδικούς αντιγράφου ασφαλείας για σύνδεση.</string>
     <string name="backup_codes_are_now_enabled">Οι κωδικοί αντιγράφου ασφαλείας είναι τώρα ενεργοποιημένοι. Μπορείτε να χρησιμοποιήσετε έναν από αυτούς για σύνδεση στον λογαριασμό σας, εάν χάσετε την πρόσβαση στη συσκευή επαλήθευσης σας. Κάθε κωδικός μπορεί να χρησιμοποιηθεί μόνο μία φορά.</string>
@@ -133,12 +135,12 @@
     <string name="backup_codes">Κωδικοί αντιγράφου ασφαλείας</string>
     <string name="add_two_step_verification">Προσθήκη επαλήθευσης δύο βημάτων</string>
     <string name="change_password">Αλλαγή κωδικού πρόσβασης</string>
-    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Προσθήκη κωδικού πρόσβασης</string>
     <string name="passkeys">Κλειδιά πρόσβασης</string>
     <string name="rename">Μετονομασία</string>
     <string name="created">Δημιουργήθηκε: %1$s</string>
     <string name="last_used">Τελευταία χρήση: %1$s</string>
+    <string name="last_used_badge">Τελευταία χρήση</string>
     <string name="add_a_passkey">Προσθήκη κλειδιού πρόσβασης</string>
     <string name="account">Λογαριασμός</string>
     <string name="delete_account">Διαγραφή λογαριασμού</string>
@@ -168,6 +170,8 @@
     <string name="saved_to_downloads">Αποθηκεύτηκε στις Λήψεις: %1$s</string>
     <string name="failed_to_save_file">Αποτυχία αποθήκευσης αρχείου: %1$s</string>
     <string name="close">Κλείσιμο</string>
+    <string name="show_password">Εμφάνιση κωδικού πρόσβασης</string>
+    <string name="hide_password">Απόκρυψη κωδικού πρόσβασης</string>
     <string name="type_delete_to_continue">Πληκτρολογήστε \"DELETE\" για να συνεχίσετε</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Είστε βέβαιοι ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια είναι μόνιμη και μη αναστρέψιμη.</string>
     <string name="email_addresses">Διευθύνσεις email</string>
@@ -179,10 +183,24 @@
     <string name="user_avatar">Avatar χρήστη</string>
     <string name="open_user_profile">Άνοιγμα προφίλ χρήστη</string>
     <string name="secured_by">Ασφαλίζεται από</string>
+    <string name="development_mode">Λειτουργία ανάπτυξης</string>
     <string name="i_agree_to_the">Συμφωνώ με τους</string>
     <string name="terms_of_service">Όρους Χρήσης</string>
     <string name="privacy_policy">Πολιτική Απορρήτου</string>
     <string name="and_connector">και την</string>
+    <string name="set_up_two_step_verification">Ρύθμιση επαλήθευσης δύο βημάτων</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Επιλέξτε τη μέθοδο που προτιμάτε για να προστατεύσετε τον λογαριασμό σας με ένα επιπλέον επίπεδο ασφάλειας.</string>
+    <string name="continue_with_biometrics">Συνέχεια με βιομετρικά στοιχεία</string>
+    <string name="sign_in_with_biometrics">Σύνδεση με βιομετρικά στοιχεία</string>
+    <string name="biometric_sign_in">Βιομετρική σύνδεση</string>
+    <string name="enable_biometric_sign_in">Ενεργοποίηση βιομετρικής σύνδεσης</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to">Ενεργοποιήστε τη βιομετρική σύνδεση για ταχύτερη πρόσβαση στο %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access">Ενεργοποιήστε τη βιομετρική σύνδεση για ταχύτερη πρόσβαση</string>
+    <string name="allow">Να επιτρέπεται</string>
+    <string name="not_now">Όχι τώρα</string>
+    <string name="app_uses_biometrics_to_sign_you_in">Το %1$s χρησιμοποιεί βιομετρικά στοιχεία για να σας συνδέσει.</string>
+    <string name="use_biometrics_to_sign_in">Χρησιμοποιήστε βιομετρικά στοιχεία για να συνδεθείτε.</string>
+    <string name="enroll_this_device">Καταχώριση αυτής της συσκευής</string>
     <string name="choose_an_organization">Επιλέξτε οργανισμό</string>
     <string name="choose_an_account">Επιλέξτε λογαριασμό</string>
     <string name="select_the_account_with_which_you_wish_to_continue">Επιλέξτε τον λογαριασμό με τον οποίο θέλετε να συνεχίσετε.</string>
@@ -194,7 +212,11 @@
     <string name="organization_name">Όνομα οργανισμού</string>
     <string name="slug">Συντόμευση URL</string>
     <string name="upload_logo">Μεταφόρτωση λογότυπου</string>
+    <string name="change_logo">Αλλαγή λογότυπου</string>
+    <string name="choose_file">Επιλογή αρχείου</string>
+    <string name="photo_library">Βιβλιοθήκη φωτογραφιών</string>
     <string name="remove_logo">Αφαίρεση λογότυπου</string>
+    <string name="remove_current_logo">Αφαίρεση τρέχοντος λογότυπου</string>
     <string name="recommended_logo_size">Προτεινόμενο μέγεθος 1:1, έως 10 MB.</string>
     <string name="invite">Πρόσκληση</string>
     <string name="invite_new_members">Πρόσκληση νέων μελών</string>
