@@ -17,6 +17,8 @@ android {
     applicationId = "com.clerk.e2e"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.targetSdk.get().toInt()
+    versionCode = 1
+    versionName = "1.0"
 
     val clerkPublishableKey = project.findProperty(e2eKey) as String?
     val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_e2e"

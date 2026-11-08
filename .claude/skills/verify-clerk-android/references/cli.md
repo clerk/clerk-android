@@ -74,7 +74,7 @@ A dry run of `down` prints `dryRun: true`, `wouldRelease`, `wouldDelete`, `would
 | `LEASE_LOST` | The leased emulator or the remote session is gone |
 | `BUILD_FAILED` | `./gradlew :e2e:assembleDebug` failed. The message has the last 15 lines of its output. With the remote backend, also that GitHub does not have HEAD, that the session could not build the commit, or that the uncommitted changes to the app sources do not apply to it, change a file outside the app sources, or are larger than 16 MiB. A session on `main` refuses uncommitted changes |
 | `KEYS_MISSING` | No Platform API credential works on this machine, or `AI_GATEWAY_API_KEY_FILE` names a file that is missing, empty, or readable by other users |
-| `INSTANCE_MISCONFIGURED` | The Clerk instance does not show the settings a test needs, or a `host.useSettings` change that Clerk refused or the instance never showed |
+| `INSTANCE_MISCONFIGURED` | The Clerk instance does not show the settings a test needs, or a `host.useSettings` or `host.useMinimumAppVersion` change that Clerk refused or the instance never showed |
 | `NOT_TEST_IDENTITY` | Reserved. No command raises it. A run whose `app.log` names a user that the run did not create fails `attach` with `EVIDENCE_UNSAFE` |
 | `NO_SPECS` | The selection matched no spec, or no selected spec ran |
 | `E2E_CRASHED` | e2e exited without a readable report. Read `e2e.log` in the run directory |
