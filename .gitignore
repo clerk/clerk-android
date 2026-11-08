@@ -33,3 +33,6 @@ local.properties
 e2e-tests/node_modules/
 e2e-tests/specs/explored/
 .verify/
+
+# Claude Code local settings
+.claude/settings.local.json
