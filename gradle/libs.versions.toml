@@ -12,7 +12,7 @@ androidxTest = "1.7.0"
 # or sortDependencies, run ./gradlew downloadToolJars to pin the pre-commit hook's jars.
 detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
-dokka = "2.2.0"
+dokka = "2.3.0"
 firebase-appDistrubution = "5.3.1"
 googleGms = "4.5.0"
 ktor = "3.6.1"
