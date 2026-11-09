@@ -89,6 +89,7 @@ private fun SignUpCodeViewImpl(
     modifier = modifier,
     title = title,
     hasLogo = false,
+    topBarTitle = stringResource(R.string.sign_up),
     identifier = field.value.formattedAsPhoneNumberIfPossible,
     identifierEditable = identifierEditable,
     onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,

@@ -122,6 +122,7 @@ private fun SignUpCompleteProfileImpl(
     onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     onBackPressed = { authState.navigateBack() },
     hasLogo = false,
+    topBarTitle = stringResource(R.string.sign_up),
   ) {
     Column(
       modifier = Modifier.fillMaxWidth(),
