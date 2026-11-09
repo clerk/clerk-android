@@ -139,6 +139,7 @@
     <string name="skip">Пропустить</string>
     <string name="profile_details">Данные профиля</string>
     <string name="complete_your_profile">Заполните профиль</string>
+    <string name="clerk_sign_up">Зарегистрироваться</string>
     <string name="done">Готово</string>
     <string name="next">Далее</string>
     <string name="first_name">Имя</string>
