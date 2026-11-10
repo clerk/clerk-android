@@ -88,6 +88,7 @@ private fun SignUpCollectFieldViewImpl(
     title = collectFieldHelper.title(collectField),
     subtitle = collectFieldHelper.subtitle(collectField),
     hasLogo = false,
+    topBarTitle = stringResource(R.string.clerk_sign_up),
     snackbarHostState = snackbarHostState,
     onBackPressed = { authState.navigateBack() },
   ) {
