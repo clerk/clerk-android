@@ -7,12 +7,13 @@ e2e-tests/bin/control-clerk-android doctor [--backend auto|local|remote] [--runn
 e2e-tests/bin/control-clerk-android up [--backend auto|local|remote] [--runner <label>] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android run <feature | feature/spec | path.e2e.ts>... | --all [--backend auto|local|remote] [--runner <label>] [--grep <regex>] [--retries <n>] [--max-failures <n>] [--github-report] [--no-video] [--wait <seconds>]
 e2e-tests/bin/control-clerk-android screen [--png]
-e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label>... | --video [--before <run-id>]
+e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --screenshot <label> [--screenshot <label>]... [--before <run-id> [--new-screen <label>]...]
+e2e-tests/bin/control-clerk-android attach <run-id> --pr <n> --video [--before <run-id>]
 e2e-tests/bin/control-clerk-android down [--stale] [--dry-run]
 e2e-tests/bin/control-clerk-android settings [<leaf prefix>...]
 ```
 
-`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both. `SKILL.md` has the choice under Evidence.
+`attach` takes `--screenshot` or `--video`, and fails with a usage error with neither, or with both. With `--before`, `--new-screen <label>` adds a screenshot of a screen the base branch does not have, with no before. `SKILL.md` has the choice under Evidence.
 
 `settings` prints the live config of this worktree's application, one leaf per line, limited to the prefixes it names. It reads it from Clerk's Platform API and needs no device. [instances.md](instances.md#see-the-settings) has its output.
 
