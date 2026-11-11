@@ -34,6 +34,7 @@ Preconditions:
 | `Can't update? Get help` | `UpdateRequiredView.kt`, when `supportEmail` is not null | A support email on the instance. The Platform API config has no leaf for it, so a spec cannot set one |
 | The screen with no store button | `UpdateRequiredView.kt`, `status.updateUrl?.let` | A minimum with no update URL. Clerk requires one (`validateNativeAppMinimum` in clerk_go), so only a local patch reaches it |
 | An app's own screen instead of Clerk's | `withUpdateRequiredViewDisabled()` | A call to it in the test app, and a home that shows `appVersionSupportStatus` |
+| The debug warning that the update screen can't show | `UpdateRequiredViewLauncher.kt`, `warnOnceAppHasMinimum` | A debuggable app that has a minimum and doesn't include `com.clerk:clerk-android-ui`. The `:e2e` host includes it, so only a local patch that removes it reaches the warning. It's a log line with no UI |
 
 ## Gotchas
 
