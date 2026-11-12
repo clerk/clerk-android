@@ -249,7 +249,7 @@ private fun signedInTrailingContent(
   session: Session?,
   onClick: () -> Unit,
 ): (@Composable () -> Unit)? {
-  if (user == null || !shouldShowSignedInUserButton(showSignedInUserButton, user, session)) {
+  if (user == null || !shouldShowSignedInUserButton(showSignedInUserButton, session?.status)) {
     return null
   }
   return { AuthSignedInAvatarButton(imageUrl = user.imageUrl, onClick = onClick) }
