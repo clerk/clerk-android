@@ -48,6 +48,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.clerk.api.Clerk
+import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.ui.R
@@ -110,6 +111,7 @@ internal fun ClerkThemedAuthScaffold(
       ?: signedInTrailingContent(
         showSignedInUserButton = showSignedInUserButton,
         user = user,
+        session = session,
         onClick = { showSignedInAccountSheet = true },
       )
   val scaffoldConfig =
@@ -244,9 +246,10 @@ private fun AuthIdentifierView(identifier: String, editable: Boolean, onClick: (
 private fun signedInTrailingContent(
   showSignedInUserButton: Boolean,
   user: User?,
+  session: Session?,
   onClick: () -> Unit,
 ): (@Composable () -> Unit)? {
-  if (!showSignedInUserButton || user == null) {
+  if (user == null || !shouldShowSignedInUserButton(showSignedInUserButton, user, session)) {
     return null
   }
   return { AuthSignedInAvatarButton(imageUrl = user.imageUrl, onClick = onClick) }
