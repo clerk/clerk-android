@@ -274,6 +274,7 @@ public final class com/clerk/api/auth/Auth {
 	public static synthetic fun getToken$default (Lcom/clerk/api/auth/Auth;Lcom/clerk/api/session/GetTokenOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun handle (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun handleMagicLinkDeepLink (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun prepareSessionTransfer (Ljava/lang/String;Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun revokeSession (Lcom/clerk/api/session/Session;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setActive (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun setActive$default (Lcom/clerk/api/auth/Auth;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -4941,6 +4942,21 @@ public final class com/clerk/api/session/SessionVerificationConvenienceExtension
 
 public final class com/clerk/api/session/SessionVerificationExtensionsKt {
 	public static final fun startVerification (Lcom/clerk/api/session/Session;Lcom/clerk/api/session/SessionVerification$Level;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/clerk/api/sessiontransfer/SessionTransfer {
+	public static final field $stable I
+	public final fun getExpiresAt ()J
+	public final fun getUrl ()Landroid/net/Uri;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clerk/api/sessiontransfer/SessionTransferPresentation : java/lang/Enum {
+	public static final field BROWSER Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;
+	public static final field WEB_VIEW Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;
+	public static fun values ()[Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;
 }
 
 public final class com/clerk/api/signin/SignIn {

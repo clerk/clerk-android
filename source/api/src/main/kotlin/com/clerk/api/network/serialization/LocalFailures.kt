@@ -34,4 +34,6 @@ internal object LocalFailureCodes {
   const val MISSING_RESOURCE_DATA = "missing_resource_data"
 
   const val REDIRECT_NOT_PREPARED = "redirect_not_prepared"
+
+  const val SIGNED_OUT = "signed_out"
 }

@@ -36,6 +36,9 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
+import com.clerk.api.sessiontransfer.SessionTransfer
+import com.clerk.api.sessiontransfer.SessionTransferPresentation
+import com.clerk.api.sessiontransfer.SessionTransferService
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
@@ -216,6 +219,28 @@ public class Auth internal constructor() {
         )
     }
   }
+
+  /**
+   * Prepares a URL that signs the current user in on the web and then lands on [destination].
+   *
+   * Prepare the transfer right before opening it. The URL works once and expires 60 seconds after
+   * it is created. Never log or store it.
+   *
+   * An app that opens the URL in a browser itself must set `Intent.EXTRA_REFERRER` to
+   * `Uri.parse("android-app://" + packageName)` on the intent. Otherwise the transfer fails and the
+   * browser lands on [destination] with `__clerk_error_code=cross_site_request`.
+   *
+   * @param destination The web URL to land on after the user is signed in. It must belong to one of
+   *   the instance's allowed domains.
+   * @param presentation Where the app opens the URL.
+   * @return The prepared [SessionTransfer], or a failure. The failure has the code `signed_out`
+   *   when there is no active session.
+   */
+  public suspend fun prepareSessionTransfer(
+    destination: String,
+    presentation: SessionTransferPresentation,
+  ): ClerkResult<SessionTransfer, ClerkErrorResponse> =
+    SessionTransferService.prepare(destination = destination, presentation = presentation)
 
   /**
    * Signs in with password authentication.
