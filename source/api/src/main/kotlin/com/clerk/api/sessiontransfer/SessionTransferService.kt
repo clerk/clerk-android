@@ -23,13 +23,28 @@ internal object SessionTransferService {
     destination: String,
     presentation: SessionTransferPresentation,
   ): ClerkResult<SessionTransfer, ClerkErrorResponse> {
-    val sessionId =
-      Clerk.activeSession?.id
-        ?: return localFailure(
+    val sessionId = Clerk.activeSession?.id
+    return when {
+      !isWebUrl(destination) ->
+        localFailure(
+          code = LocalFailureCodes.INVALID_ARGUMENTS,
+          longMessage = "A session transfer destination must be an absolute http or https URL.",
+        )
+      sessionId == null ->
+        localFailure(
           code = LocalFailureCodes.SIGNED_OUT,
           longMessage = "A session transfer requires an active session.",
         )
-    return when (
+      else -> create(sessionId, destination, presentation)
+    }
+  }
+
+  private suspend fun create(
+    sessionId: String,
+    destination: String,
+    presentation: SessionTransferPresentation,
+  ): ClerkResult<SessionTransfer, ClerkErrorResponse> =
+    when (
       val result =
         ClerkApi.session.createSessionTransfer(
           sessionId = sessionId,
@@ -44,7 +59,6 @@ internal object SessionTransferService {
             IllegalStateException("Session transfer creation returned an invalid response.")
           )
     }
-  }
 
   suspend fun openInBrowser(
     destination: String,
@@ -84,6 +98,13 @@ internal fun sessionTransferBrowserIntent(url: Uri, packageName: String): Intent
     // URL, so an app that claims the transfer URL's host through App Links is never offered it.
     selector = Intent(Intent.ACTION_VIEW, "https://".toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
   }
+
+private fun isWebUrl(value: String): Boolean {
+  val uri = value.toUri()
+  val scheme = uri.scheme
+  return (scheme.equals("http", ignoreCase = true) || scheme.equals("https", ignoreCase = true)) &&
+    !uri.host.isNullOrBlank()
+}
 
 internal fun SessionTransferResource.toSessionTransfer(): SessionTransfer? {
   if (objectType != SESSION_TRANSFER_OBJECT) return null

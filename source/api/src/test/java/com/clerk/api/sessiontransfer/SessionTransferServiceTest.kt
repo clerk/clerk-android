@@ -141,6 +141,34 @@ class SessionTransferServiceTest {
   }
 
   @Test
+  fun prepareRejectsADestinationThatIsNotAnAbsoluteWebUrlAndSkipsTheNetwork() = runBlocking {
+    listOf(
+        "myapp://disputes/new",
+        "/disputes/new",
+        "example.com/disputes/new",
+        "https:///disputes/new",
+        "https:example.com",
+        "",
+      )
+      .forEach { destination ->
+        assertLocalFailure(destination, LocalFailureCodes.INVALID_ARGUMENTS)
+      }
+  }
+
+  @Test
+  fun prepareAcceptsAnHttpDestination() = runBlocking {
+    stubCreate(ClerkResult.success(resource()))
+
+    val result =
+      SessionTransferService.prepare(
+        "http://localhost:3000/disputes/new",
+        SessionTransferPresentation.BROWSER,
+      )
+
+    assertTrue(result is ClerkResult.Success)
+  }
+
+  @Test
   fun toStringOmitsTheUrl() = runBlocking {
     stubCreate(ClerkResult.success(resource()))
 
