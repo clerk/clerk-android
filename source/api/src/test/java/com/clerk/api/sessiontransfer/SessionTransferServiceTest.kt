@@ -169,6 +169,14 @@ class SessionTransferServiceTest {
   }
 
   @Test
+  fun resourceToStringOmitsTheUrl() {
+    val description = resource().toString()
+
+    assertFalse(description.contains(TRANSFER_URL))
+    assertFalse(description.contains("token="))
+  }
+
+  @Test
   fun toStringOmitsTheUrl() = runBlocking {
     stubCreate(ClerkResult.success(resource()))
 

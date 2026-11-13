@@ -112,9 +112,9 @@ private fun isWebUrl(value: String): Boolean {
 
 internal fun SessionTransferResource.toSessionTransfer(): SessionTransfer? {
   if (objectType != SESSION_TRANSFER_OBJECT) return null
-  return runCatching { url.toUri() }
-    .getOrNull()
-    ?.takeIf { uri ->
+  return url
+    .toUri()
+    .takeIf { uri ->
       uri.isHierarchical &&
         !uri.host.isNullOrBlank() &&
         uri.userInfo == null &&

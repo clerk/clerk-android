@@ -8,4 +8,7 @@ internal data class SessionTransferResource(
   @SerialName("object") val objectType: String,
   val url: String,
   @SerialName("expires_at") val expiresAt: Long,
-)
+) {
+  override fun toString(): String =
+    "SessionTransferResource(objectType=$objectType, url=██, expiresAt=$expiresAt)"
+}
