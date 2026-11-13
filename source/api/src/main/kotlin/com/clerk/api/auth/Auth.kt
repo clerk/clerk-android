@@ -233,10 +233,15 @@ public class Auth internal constructor() {
    * packageName)` on the intent. Otherwise the transfer fails and the browser lands on
    * [destination] with `__clerk_error_code=cross_site_request`.
    *
+   * [destination] must be an absolute `http` or `https` URL. Every instance except a development
+   * instance requires `https`. A production instance also requires the host to be on one of the
+   * instance's domains.
+   *
    * @param destination The web URL to land on after the user is signed in.
    * @param presentation Where the app opens the URL.
-   * @return The prepared [SessionTransfer], or a failure. The failure has the code `signed_out`
-   *   when there is no active session.
+   * @return The prepared [SessionTransfer], or a failure. The failure has the code
+   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, and
+   *   `signed_out` when there is no active session, which includes a pending session.
    */
   public suspend fun prepareSessionTransfer(
     destination: String,
@@ -247,10 +252,19 @@ public class Auth internal constructor() {
   /**
    * Signs the current user in on the web and opens [destination] in the user's default browser.
    *
+   * [destination] must be an absolute `http` or `https` URL. Every instance except a development
+   * instance requires `https`. A production instance also requires the host to be on one of the
+   * instance's domains.
+   *
+   * Success means the browser was asked to open the URL, not that the user was signed in. When the
+   * sign-in is refused, the browser still lands on [destination], with the query parameters
+   * `__clerk_status=session_transfer_failed` and `__clerk_error_code`. Check for them on the page.
+   *
    * @param destination The web URL to land on after the user is signed in.
    * @return Success once the browser is asked to open the URL, or a failure. The failure has the
-   *   code `signed_out` when there is no active session and `browser_unavailable` when no app can
-   *   open the URL.
+   *   code `invalid_arguments` when [destination] is not an absolute `http` or `https` URL,
+   *   `signed_out` when there is no active session, which includes a pending session, and
+   *   `browser_unavailable` when no browser can open the URL.
    */
   public suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> =
     SessionTransferService.openInBrowser(destination = destination)
@@ -258,13 +272,29 @@ public class Auth internal constructor() {
   /**
    * Signs the current user in on the web and loads [destination] in [webView].
    *
-   * The sign-in page runs a script, so [webView] needs `settings.javaScriptEnabled = true`. This
-   * method does not change the WebView's settings.
+   * Set up [webView] before you call this method, because it does not change the WebView:
+   * - Set `settings.javaScriptEnabled = true`. The sign-in page runs a script.
+   * - Set a `WebViewClient` with `setWebViewClient`. Without one, the WebView hands the redirect
+   *   that ends the sign-in to the system browser, and [destination] opens outside the app.
+   *
+   * [destination] must be an absolute `http` or `https` URL. Every instance except a development
+   * instance requires `https`. A production instance also requires the host to be on one of the
+   * instance's domains.
+   *
+   * Success means [webView] started loading the URL, not that the user was signed in. When the
+   * sign-in is refused, [webView] still lands on [destination], with the query parameters
+   * `__clerk_status=session_transfer_failed` and `__clerk_error_code`. Check for them in the
+   * `WebViewClient` or on the page.
+   *
+   * The WebView keeps its cookies after the native user signs out. Clear them with
+   * `CookieManager.getInstance().removeAllCookies` when the user signs out or switches accounts.
+   * Otherwise the next sign-in is refused and the page can show the previous user.
    *
    * @param webView The WebView that loads the URL.
    * @param destination The web URL to land on after the user is signed in.
    * @return Success once [webView] starts loading the URL, or a failure. The failure has the code
-   *   `signed_out` when there is no active session.
+   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, and
+   *   `signed_out` when there is no active session, which includes a pending session.
    */
   public suspend fun loadInWebView(
     webView: WebView,
