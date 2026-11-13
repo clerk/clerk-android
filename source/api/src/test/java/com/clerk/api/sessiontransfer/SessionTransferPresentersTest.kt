@@ -33,6 +33,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -125,6 +126,18 @@ class SessionTransferPresentersTest {
 
     val failure = result as ClerkResult.Failure
     assertEquals(LocalFailureCodes.BROWSER_UNAVAILABLE, failure.error?.errors?.single()?.code)
+  }
+
+  @Test
+  fun openInBrowserReportsALaunchTheSystemRefusesAsAnUnknownFailure() = runBlocking {
+    val refusal = SecurityException("Permission Denial")
+    every { context.startActivity(any()) } throws refusal
+
+    val result = SessionTransferService.openInBrowser(DESTINATION)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertSame(refusal, failure.throwable)
   }
 
   @Test

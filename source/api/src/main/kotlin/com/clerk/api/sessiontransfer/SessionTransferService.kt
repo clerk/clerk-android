@@ -75,6 +75,8 @@ internal object SessionTransferService {
             code = LocalFailureCodes.BROWSER_UNAVAILABLE,
             longMessage = "No browser is available to open the session transfer.",
           )
+        } catch (e: RuntimeException) {
+          ClerkResult.unknownFailure(e)
         }
       }
     }
