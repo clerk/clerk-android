@@ -1,6 +1,5 @@
 package com.clerk.api.auth
 
-import android.content.Context
 import android.net.Uri
 import android.webkit.WebView
 import com.clerk.api.Clerk
@@ -248,19 +247,13 @@ public class Auth internal constructor() {
   /**
    * Signs the current user in on the web and opens [destination] in the user's default browser.
    *
-   * The browser opens in a new task, so [context] can be any [Context].
-   *
    * @param destination The web URL to land on after the user is signed in.
-   * @param context The context that starts the browser.
    * @return Success once the browser is asked to open the URL, or a failure. The failure has the
    *   code `signed_out` when there is no active session and `browser_unavailable` when no app can
    *   open the URL.
    */
-  public suspend fun openInBrowser(
-    destination: String,
-    context: Context,
-  ): ClerkResult<Unit, ClerkErrorResponse> =
-    SessionTransferService.openInBrowser(destination = destination, context = context)
+  public suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> =
+    SessionTransferService.openInBrowser(destination = destination)
 
   /**
    * Signs the current user in on the web and loads [destination] in [webView].

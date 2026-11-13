@@ -21,6 +21,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -50,6 +51,7 @@ class SessionTransferPresentersTest {
     Dispatchers.setMain(UnconfinedTestDispatcher())
     mockkObject(Clerk)
     every { Clerk.activeSession } returns mockk<Session> { every { id } returns SESSION_ID }
+    every { Clerk.applicationContext } returns WeakReference(context)
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns sessionApi
     coEvery { sessionApi.createSessionTransfer(any(), any(), any(), any()) } returns
@@ -102,7 +104,7 @@ class SessionTransferPresentersTest {
     val intent = slot<Intent>()
     every { context.startActivity(capture(intent)) } returns Unit
 
-    val result = SessionTransferService.openInBrowser(DESTINATION, context)
+    val result = SessionTransferService.openInBrowser(DESTINATION)
 
     assertTrue(result is ClerkResult.Success)
     assertEquals(Uri.parse(TRANSFER_URL), intent.captured.data)
@@ -119,17 +121,28 @@ class SessionTransferPresentersTest {
   fun openInBrowserFailsWhenNoBrowserIsInstalled() = runBlocking {
     every { context.startActivity(any()) } throws ActivityNotFoundException()
 
-    val result = SessionTransferService.openInBrowser(DESTINATION, context)
+    val result = SessionTransferService.openInBrowser(DESTINATION)
 
     val failure = result as ClerkResult.Failure
     assertEquals(LocalFailureCodes.BROWSER_UNAVAILABLE, failure.error?.errors?.single()?.code)
   }
 
   @Test
+  fun openInBrowserFailsBeforeAnyRequestWhenClerkIsNotInitialized() = runBlocking {
+    every { Clerk.applicationContext } returns null
+
+    val result = SessionTransferService.openInBrowser(DESTINATION)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    coVerify(exactly = 0) { sessionApi.createSessionTransfer(any(), any(), any(), any()) }
+  }
+
+  @Test
   fun openInBrowserSkipsTheBrowserWhenPreparationFails() = runBlocking {
     every { Clerk.activeSession } returns null
 
-    val result = SessionTransferService.openInBrowser(DESTINATION, context)
+    val result = SessionTransferService.openInBrowser(DESTINATION)
 
     val failure = result as ClerkResult.Failure
     assertEquals(LocalFailureCodes.SIGNED_OUT, failure.error?.errors?.single()?.code)

@@ -275,7 +275,7 @@ public final class com/clerk/api/auth/Auth {
 	public final fun handle (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun handleMagicLinkDeepLink (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun loadInWebView (Landroid/webkit/WebView;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun openInBrowser (Ljava/lang/String;Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun openInBrowser (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun prepareSessionTransfer (Ljava/lang/String;Lcom/clerk/api/sessiontransfer/SessionTransferPresentation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun revokeSession (Lcom/clerk/api/session/Session;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun setActive (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

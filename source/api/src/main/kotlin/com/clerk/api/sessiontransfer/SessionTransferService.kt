@@ -1,7 +1,6 @@
 package com.clerk.api.sessiontransfer
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.WebView
@@ -60,11 +59,13 @@ internal object SessionTransferService {
           )
     }
 
-  suspend fun openInBrowser(
-    destination: String,
-    context: Context,
-  ): ClerkResult<Unit, ClerkErrorResponse> =
-    prepare(destination, SessionTransferPresentation.BROWSER).suspendingFlatMap { transfer ->
+  suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> {
+    val context =
+      Clerk.applicationContext?.get()
+        ?: return ClerkResult.unknownFailure(
+          IllegalStateException("Clerk must be initialized before opening a session transfer.")
+        )
+    return prepare(destination, SessionTransferPresentation.BROWSER).suspendingFlatMap { transfer ->
       withContext(Dispatchers.Main) {
         try {
           context.startActivity(sessionTransferBrowserIntent(transfer.url, context.packageName))
@@ -77,6 +78,7 @@ internal object SessionTransferService {
         }
       }
     }
+  }
 
   suspend fun loadInWebView(
     webView: WebView,
