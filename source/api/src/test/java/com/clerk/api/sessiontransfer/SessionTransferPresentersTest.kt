@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -68,7 +69,7 @@ class SessionTransferPresentersTest {
   }
 
   @Test
-  fun browserIntentOpensTheUrlInAnyBrowserWithTheAppAsReferrer() {
+  fun browserIntentOpensTheUrlInABrowserWithTheAppAsReferrer() {
     val url = Uri.parse(TRANSFER_URL)
 
     val intent = sessionTransferBrowserIntent(url, PACKAGE_NAME)
@@ -82,8 +83,18 @@ class SessionTransferPresentersTest {
     )
     assertFalse(intent.hasExtra(Intent.EXTRA_REFERRER_NAME))
     assertTrue(intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
-    assertNull(intent.`package`)
-    assertNull(intent.component)
+  }
+
+  @Test
+  fun browserIntentResolvesOnlyAgainstBrowsers() {
+    val selector = sessionTransferBrowserIntent(Uri.parse(TRANSFER_URL), PACKAGE_NAME).selector
+
+    assertNotNull(selector)
+    assertEquals(Intent.ACTION_VIEW, selector?.action)
+    assertEquals(Uri.parse("https://"), selector?.data)
+    assertEquals(setOf(Intent.CATEGORY_BROWSABLE), selector?.categories)
+    assertNull(selector?.`package`)
+    assertNull(selector?.component)
   }
 
   @Test

@@ -80,6 +80,9 @@ internal fun sessionTransferBrowserIntent(url: Uri, packageName: String): Intent
     // `android-app://<package>` Referer that FAPI requires only when the intent names the app.
     putExtra(Intent.EXTRA_REFERRER, "android-app://$packageName".toUri())
     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    // Android resolves the intent against the selector, and only a browser handles a bare https
+    // URL, so an app that claims the transfer URL's host through App Links is never offered it.
+    selector = Intent(Intent.ACTION_VIEW, "https://".toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
   }
 
 internal fun SessionTransferResource.toSessionTransfer(): SessionTransfer? {
