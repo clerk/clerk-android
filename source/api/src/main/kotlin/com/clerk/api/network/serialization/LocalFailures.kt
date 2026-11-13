@@ -29,6 +29,8 @@ internal fun localFailure(
   )
 
 internal object LocalFailureCodes {
+  const val BROWSER_UNAVAILABLE = "browser_unavailable"
+
   const val INVALID_ARGUMENTS = "invalid_arguments"
 
   const val MISSING_RESOURCE_DATA = "missing_resource_data"

@@ -1,6 +1,8 @@
 package com.clerk.api.auth
 
+import android.content.Context
 import android.net.Uri
+import android.webkit.WebView
 import com.clerk.api.Clerk
 import com.clerk.api.auth.builders.CodeChannel
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
@@ -226,12 +228,13 @@ public class Auth internal constructor() {
    * Prepare the transfer right before opening it. The URL works once and expires 60 seconds after
    * it is created. Never log or store it.
    *
-   * An app that opens the URL in a browser itself must set `Intent.EXTRA_REFERRER` to
-   * `Uri.parse("android-app://" + packageName)` on the intent. Otherwise the transfer fails and the
-   * browser lands on [destination] with `__clerk_error_code=cross_site_request`.
+   * Most apps should call [openInBrowser] or [loadInWebView], which prepare the transfer and open
+   * it in one step. Use this method only to open the URL some other way. An app that opens the URL
+   * in a browser itself must set `Intent.EXTRA_REFERRER` to `Uri.parse("android-app://" +
+   * packageName)` on the intent. Otherwise the transfer fails and the browser lands on
+   * [destination] with `__clerk_error_code=cross_site_request`.
    *
-   * @param destination The web URL to land on after the user is signed in. It must belong to one of
-   *   the instance's allowed domains.
+   * @param destination The web URL to land on after the user is signed in.
    * @param presentation Where the app opens the URL.
    * @return The prepared [SessionTransfer], or a failure. The failure has the code `signed_out`
    *   when there is no active session.
@@ -241,6 +244,40 @@ public class Auth internal constructor() {
     presentation: SessionTransferPresentation,
   ): ClerkResult<SessionTransfer, ClerkErrorResponse> =
     SessionTransferService.prepare(destination = destination, presentation = presentation)
+
+  /**
+   * Signs the current user in on the web and opens [destination] in the user's default browser.
+   *
+   * The browser opens in a new task, so [context] can be any [Context].
+   *
+   * @param destination The web URL to land on after the user is signed in.
+   * @param context The context that starts the browser.
+   * @return Success once the browser is asked to open the URL, or a failure. The failure has the
+   *   code `signed_out` when there is no active session and `browser_unavailable` when no app can
+   *   open the URL.
+   */
+  public suspend fun openInBrowser(
+    destination: String,
+    context: Context,
+  ): ClerkResult<Unit, ClerkErrorResponse> =
+    SessionTransferService.openInBrowser(destination = destination, context = context)
+
+  /**
+   * Signs the current user in on the web and loads [destination] in [webView].
+   *
+   * The sign-in page runs a script, so [webView] needs `settings.javaScriptEnabled = true`. This
+   * method does not change the WebView's settings.
+   *
+   * @param webView The WebView that loads the URL.
+   * @param destination The web URL to land on after the user is signed in.
+   * @return Success once [webView] starts loading the URL, or a failure. The failure has the code
+   *   `signed_out` when there is no active session.
+   */
+  public suspend fun loadInWebView(
+    webView: WebView,
+    destination: String,
+  ): ClerkResult<Unit, ClerkErrorResponse> =
+    SessionTransferService.loadInWebView(webView = webView, destination = destination)
 
   /**
    * Signs in with password authentication.
