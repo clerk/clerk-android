@@ -24,7 +24,7 @@ internal object SessionTransferService {
     presentation: SessionTransferPresentation,
   ): ClerkResult<SessionTransfer, ClerkErrorResponse> {
     val sessionId =
-      Clerk.session?.id
+      Clerk.activeSession?.id
         ?: return localFailure(
           code = LocalFailureCodes.SIGNED_OUT,
           longMessage = "A session transfer requires an active session.",

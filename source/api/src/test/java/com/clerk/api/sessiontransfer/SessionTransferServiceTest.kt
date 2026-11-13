@@ -33,7 +33,7 @@ class SessionTransferServiceTest {
   @Before
   fun setup() {
     mockkObject(Clerk)
-    every { Clerk.session } returns mockk<Session> { every { id } returns SESSION_ID }
+    every { Clerk.activeSession } returns mockk<Session> { every { id } returns SESSION_ID }
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns sessionApi
   }
@@ -123,14 +123,21 @@ class SessionTransferServiceTest {
 
   @Test
   fun prepareFailsWithoutAnActiveSessionAndSkipsTheNetwork() = runBlocking {
-    every { Clerk.session } returns null
+    every { Clerk.activeSession } returns null
 
-    val result = SessionTransferService.prepare(DESTINATION, SessionTransferPresentation.BROWSER)
+    assertLocalFailure(DESTINATION, LocalFailureCodes.SIGNED_OUT)
+  }
 
-    val failure = result as ClerkResult.Failure
-    assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
-    assertEquals(LocalFailureCodes.SIGNED_OUT, failure.error?.errors?.single()?.code)
-    coVerify(exactly = 0) { sessionApi.createSessionTransfer(any(), any(), any(), any()) }
+  @Test
+  fun prepareTreatsAPendingSessionAsSignedOutAndSkipsTheNetwork() = runBlocking {
+    every { Clerk.session } returns
+      mockk<Session> {
+        every { id } returns SESSION_ID
+        every { status } returns Session.SessionStatus.PENDING
+      }
+    every { Clerk.activeSession } returns null
+
+    assertLocalFailure(DESTINATION, LocalFailureCodes.SIGNED_OUT)
   }
 
   @Test
@@ -146,6 +153,15 @@ class SessionTransferServiceTest {
     assertFalse(description.contains(TRANSFER_URL))
     assertFalse(description.contains("token="))
     assertTrue(description.contains(EXPIRES_AT.toString()))
+  }
+
+  private suspend fun assertLocalFailure(destination: String, code: String) {
+    val result = SessionTransferService.prepare(destination, SessionTransferPresentation.BROWSER)
+
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+    assertEquals(code, failure.error?.errors?.single()?.code)
+    coVerify(exactly = 0) { sessionApi.createSessionTransfer(any(), any(), any(), any()) }
   }
 
   private suspend fun assertInvalidResponse(resource: SessionTransferResource) {

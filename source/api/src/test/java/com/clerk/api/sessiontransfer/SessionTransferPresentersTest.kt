@@ -49,7 +49,7 @@ class SessionTransferPresentersTest {
   fun setup() {
     Dispatchers.setMain(UnconfinedTestDispatcher())
     mockkObject(Clerk)
-    every { Clerk.session } returns mockk<Session> { every { id } returns SESSION_ID }
+    every { Clerk.activeSession } returns mockk<Session> { every { id } returns SESSION_ID }
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns sessionApi
     coEvery { sessionApi.createSessionTransfer(any(), any(), any(), any()) } returns
@@ -127,7 +127,7 @@ class SessionTransferPresentersTest {
 
   @Test
   fun openInBrowserSkipsTheBrowserWhenPreparationFails() = runBlocking {
-    every { Clerk.session } returns null
+    every { Clerk.activeSession } returns null
 
     val result = SessionTransferService.openInBrowser(DESTINATION, context)
 
@@ -151,7 +151,7 @@ class SessionTransferPresentersTest {
 
   @Test
   fun loadInWebViewSkipsLoadingWhenPreparationFails() = runBlocking {
-    every { Clerk.session } returns null
+    every { Clerk.activeSession } returns null
     val webView = mockk<WebView>(relaxed = true)
 
     val result = SessionTransferService.loadInWebView(webView, DESTINATION)
