@@ -70,6 +70,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTest" }
 coil = "io.coil-kt.coil3:coil-compose:3.5.0"
 coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.5.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -96,6 +97,7 @@ material3 = { module = "androidx.compose.material3:material3", version.ref = "ma
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 mockk = "io.mockk:mockk:1.14.12"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+nimbus-jose-jwt = "com.nimbusds:nimbus-jose-jwt:10.10"
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver3", version.ref = "okhttp" }
