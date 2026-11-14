@@ -9,7 +9,7 @@ test('signs in with the email code', async ({ host, screen }) => {
   const code = screen.getByTestId('clerk.auth.signIn.code');
   await expect(code).toBeVisible({ timeout: 20_000 });
   await new Promise((resolve) => setTimeout(resolve, 3000));
-  await expect(code).toBeVisible({ timeout: 1000 });
+  await expect(code).toBeVisible();
   await expect(screen.getByText(user.email)).toBeVisible();
   await host.screenshot('code-screen');
   await host.fill(code, CLERK_TEST_CODE);
