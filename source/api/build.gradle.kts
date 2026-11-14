@@ -14,6 +14,7 @@ android {
     minSdk = libs.versions.minSdk.get().toInt()
     buildConfigField("String", "SDK_VERSION", "\"${property("CLERK_API_VERSION")}\"")
     consumerProguardFiles("consumer-rules.pro")
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
@@ -118,6 +119,12 @@ dependencies {
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.okhttp.tls)
   testImplementation(libs.robolectric)
+
+  androidTestImplementation(platform(libs.compose.bom))
+  androidTestImplementation("androidx.test:runner:${libs.versions.androidxTest.get()}")
+  androidTestImplementation(libs.androidx.compose.runtime)
+  androidTestImplementation(libs.junit)
+  androidTestImplementation(libs.kotlin.test)
 
   dokkaPlugin(libs.versioning.plugin)
 }
