@@ -33,6 +33,10 @@ internal class JvmDeviceKey private constructor(private val keyPair: KeyPair) : 
         JvmDeviceKey(storedKeyPair ?: generateKeyPair().also { storedKeyPair = it })
       }
 
+    fun deleteStored() {
+      synchronized(lock) { storedKeyPair = null }
+    }
+
     private fun generateKeyPair(): KeyPair =
       KeyPairGenerator.getInstance("EC")
         .apply { initialize(ECGenParameterSpec("secp256r1")) }

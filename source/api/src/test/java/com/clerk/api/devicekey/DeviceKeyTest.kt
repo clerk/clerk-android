@@ -11,7 +11,9 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
 import java.security.spec.ECPoint
 import java.security.spec.ECPublicKeySpec
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
@@ -60,6 +62,38 @@ class DeviceKeyTest {
     val state = DeviceKeyHolder { throw failure }.state()
 
     assertSame(failure, assertIs<DeviceKeyState.Unavailable>(state).cause)
+  }
+
+  @Test
+  fun `a factory that throws something other than a Keystore failure leaves the key unavailable for the process`() {
+    var loads = 0
+    val failure = IllegalStateException("vendor Keystore bug")
+    val holder = DeviceKeyHolder {
+      loads += 1
+      throw failure
+    }
+
+    val first = holder.state()
+    val second = holder.state()
+
+    assertSame(failure, assertIs<DeviceKeyState.Unavailable>(first).cause)
+    assertSame(first, second)
+    assertEquals(1, loads)
+  }
+
+  @Test
+  fun `a cancelled or crashed load records nothing, so the next call loads again`() {
+    for (failure in listOf(CancellationException("Clerk reset"), StackOverflowError())) {
+      var loads = 0
+      val holder = DeviceKeyHolder {
+        loads += 1
+        if (loads == 1) throw failure else JvmDeviceKey.getOrCreate()
+      }
+
+      assertSame(failure, assertFails { holder.state() })
+      assertIs<DeviceKeyState.Ready>(holder.state())
+      assertEquals(2, loads)
+    }
   }
 
   @Test

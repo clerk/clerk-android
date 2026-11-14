@@ -40,11 +40,22 @@ internal sealed interface DeviceKeyState {
 
 internal object DeviceKeyFactory {
   fun create(context: Context): DeviceKey =
-    if (Build.FINGERPRINT.contains("robolectric", ignoreCase = true)) {
+    if (isRobolectric()) {
       JvmDeviceKey.getOrCreate()
     } else {
       AndroidKeystoreDeviceKey.getOrCreate(context)
     }
+
+  fun delete(context: Context) {
+    if (isRobolectric()) {
+      JvmDeviceKey.deleteStored()
+    } else {
+      AndroidDeviceKeyStore(context).delete()
+    }
+  }
+
+  private fun isRobolectric(): Boolean =
+    Build.FINGERPRINT.contains("robolectric", ignoreCase = true)
 }
 
 internal fun derSignature(privateKey: PrivateKey, data: ByteArray): ByteArray =
