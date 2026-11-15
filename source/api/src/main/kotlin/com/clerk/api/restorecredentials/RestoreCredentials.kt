@@ -172,6 +172,19 @@ public object RestoreCredentials {
     }
   }
 
+  /**
+   * Clears the restore credential after one session signed out, unless sessions remain and the
+   * device key belongs to a user other than [signedOutUserId].
+   */
+  internal suspend fun clearSilentlyAfterSessionSignOut(signedOutUserId: String?) {
+    val sessionsRemain = Clerk.clientOrNull?.sessions.orEmpty().isNotEmpty()
+    if (sessionsRemain && RestoreCredentialStore.read().deviceKeyUserId != signedOutUserId) {
+      ClerkLogger.d("Keeping the restore credential: it belongs to a user who is still signed in.")
+      return
+    }
+    clearSilently()
+  }
+
   internal fun onSignInCompleted(signIn: SignIn) {
     val createdSessionId = signIn.createdSessionId ?: return
     if (RestoreCredentialStore.read().pendingSignInId != signIn.id) return
