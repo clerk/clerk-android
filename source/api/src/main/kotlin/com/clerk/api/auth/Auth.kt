@@ -23,6 +23,7 @@ import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.client.withoutSession
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
@@ -882,17 +883,7 @@ public class Auth internal constructor() {
   }
 
   private fun removeSessionLocally(sessionId: String) {
-    Clerk.mutateClient { client ->
-      val remainingSessions = client.sessions.filterNot { it.id == sessionId }
-      val lastActiveSessionId =
-        if (client.lastActiveSessionId == sessionId) {
-          remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
-            ?: remainingSessions.firstOrNull()?.id
-        } else {
-          client.lastActiveSessionId
-        }
-      client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
-    }
+    Clerk.mutateClient { client -> client.withoutSession(sessionId) }
   }
 
   private suspend fun refreshClientAfterSessionMutation(

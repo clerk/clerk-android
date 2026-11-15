@@ -60,3 +60,15 @@ public data class Client(
       ClerkApi.client.getSkippingClientId()
   }
 }
+
+internal fun Client.withoutSession(sessionId: String): Client {
+  val remainingSessions = sessions.filterNot { it.id == sessionId }
+  val nextActiveSessionId =
+    if (lastActiveSessionId == sessionId) {
+      remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+        ?: remainingSessions.firstOrNull()?.id
+    } else {
+      lastActiveSessionId
+    }
+  return copy(sessions = remainingSessions, lastActiveSessionId = nextActiveSessionId)
+}
