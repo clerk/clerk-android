@@ -50,6 +50,12 @@ internal sealed class CredentialFlowException(
       userMessage = "Finish creating your account to continue.",
     )
 
+  internal class GoogleOneTapNotConfigured :
+    CredentialFlowException(
+      message = "Google One Tap has no client id. Set one in the Clerk dashboard.",
+      userMessage = "Google sign-in is not available right now. Try another sign-in method.",
+    )
+
   internal class ProviderUnavailable :
     CredentialFlowException(
       message = "Credential Manager is not available for this flow.",
