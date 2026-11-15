@@ -5,6 +5,7 @@ import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.serialization.decodeFailureSummary
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import kotlinx.serialization.SerialName
@@ -40,7 +41,7 @@ internal data class CachedClerkState(
       val cachedState = cachedJson?.let {
         runCatching { ClerkApi.json.decodeFromString(serializer(), it) }
           .onFailure { error ->
-            ClerkLogger.w("Failed to decode cached Clerk state: ${error.message}")
+            ClerkLogger.w("Failed to decode cached Clerk state: ${error.decodeFailureSummary()}")
           }
           .getOrNull()
       }

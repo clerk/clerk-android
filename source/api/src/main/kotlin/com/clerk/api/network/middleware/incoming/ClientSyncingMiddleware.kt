@@ -9,6 +9,7 @@ import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.decodeFailureSummary
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -93,7 +94,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           }
           authEvents.forEach(Clerk.auth::send)
         } catch (e: SerializationException) {
-          ClerkLogger.e("Error deserializing client: ${e.message}")
+          ClerkLogger.e("Error deserializing client: ${e.decodeFailureSummary()}")
         } catch (e: IOException) {
           ClerkLogger.e("IO error while processing response: ${e.message}")
         } catch (e: IllegalArgumentException) {
