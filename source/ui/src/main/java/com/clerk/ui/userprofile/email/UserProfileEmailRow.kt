@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -51,7 +52,7 @@ internal fun UserProfileEmailRow(
 
   if (isInteractive && viewModel != null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ReportEmailRowError(state, onError)
+    ReportEmailRowError(state, onErrorShown = viewModel::clearError, onError = onError)
   }
 
   Row(
@@ -125,11 +126,18 @@ private fun EmailRowActions(
 }
 
 @Composable
-internal fun ReportEmailRowError(state: EmailViewModel.State, onError: (String) -> Unit) {
+internal fun ReportEmailRowError(
+  state: EmailViewModel.State,
+  onErrorShown: () -> Unit = {},
+  onError: (String) -> Unit,
+) {
   val errorMessage = (state as? EmailViewModel.State.Failure)?.message
+  val currentOnError by rememberUpdatedState(onError)
+  val currentOnErrorShown by rememberUpdatedState(onErrorShown)
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
-      onError(errorMessage)
+      currentOnError(errorMessage)
+      currentOnErrorShown()
     }
   }
 }

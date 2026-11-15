@@ -14,6 +14,7 @@ import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class UserProfilePasskeyViewModel : ViewModel() {
@@ -48,6 +49,10 @@ internal class UserProfilePasskeyViewModel : ViewModel() {
           }
       }
     }
+  }
+
+  fun clearError() {
+    _state.update { state -> if (state is State.Error) State.Idle else state }
   }
 
   sealed interface State {

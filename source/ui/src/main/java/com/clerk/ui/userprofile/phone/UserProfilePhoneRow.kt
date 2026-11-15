@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -52,7 +53,7 @@ internal fun UserProfilePhoneRow(
   val isPreview = LocalInspectionMode.current
   if (isInteractive && viewModel != null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ReportPhoneRowError(state, onError)
+    ReportPhoneRowError(state, onErrorShown = viewModel::clearError, onError = onError)
   }
 
   Row(
@@ -111,12 +112,16 @@ internal fun UserProfilePhoneRow(
 @Composable
 private fun ReportPhoneRowError(
   state: UserProfileAddPhoneViewModel.State,
+  onErrorShown: () -> Unit,
   onError: (String) -> Unit,
 ) {
   val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
+  val currentOnError by rememberUpdatedState(onError)
+  val currentOnErrorShown by rememberUpdatedState(onErrorShown)
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
-      onError(errorMessage)
+      currentOnError(errorMessage)
+      currentOnErrorShown()
     }
   }
 }

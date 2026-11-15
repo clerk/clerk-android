@@ -97,6 +97,26 @@ class EmailViewModelTest {
   }
 
   @Test
+  fun clearError_afterFailure_returnsToIdleSoTheNextFailureIsEmitted() = runTest {
+    val email = mockk<EmailAddress>()
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "remove")))
+    coEvery { email.delete() } returns ClerkResult.Failure(error)
+
+    val viewModel = EmailViewModel()
+    viewModel.state.test {
+      assertEquals(EmailViewModel.State.Idle, awaitItem())
+      viewModel.remove(email)
+      assertEquals(EmailViewModel.State.Loading, awaitItem())
+      assertEquals(EmailViewModel.State.Failure("remove"), awaitItem())
+      viewModel.clearError()
+      assertEquals(EmailViewModel.State.Idle, awaitItem())
+      viewModel.remove(email)
+      assertEquals(EmailViewModel.State.Loading, awaitItem())
+      assertEquals(EmailViewModel.State.Failure("remove"), awaitItem())
+    }
+  }
+
+  @Test
   fun remove_failure_emitsFailureState() = runTest {
     val email = mockk<EmailAddress>()
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "remove")))

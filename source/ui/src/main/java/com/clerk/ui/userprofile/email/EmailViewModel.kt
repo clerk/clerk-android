@@ -14,6 +14,7 @@ import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private const val EMAIL_IMMUTABLE_MESSAGE =
@@ -52,6 +53,10 @@ internal class EmailViewModel : ViewModel() {
         .onFailure { _state.value = State.Failure(it.errorMessage) }
         .onSuccess { _state.value = State.Remove.Success }
     }
+  }
+
+  fun clearError() {
+    _state.update { state -> if (state is State.Failure) State.Idle else state }
   }
 
   sealed interface State {
