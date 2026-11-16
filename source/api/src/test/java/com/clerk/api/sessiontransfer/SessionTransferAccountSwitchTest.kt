@@ -6,6 +6,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.sessiontransfer.SessionTransferResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -22,9 +23,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -112,6 +115,40 @@ class SessionTransferAccountSwitchTest {
     verify(exactly = 0) { webView.loadUrl(any<String>()) }
     assertTrue(result is ClerkResult.Failure)
   }
+
+  @Test
+  fun browserDoesNotOpenATransferQueuedBeforeTheAccountSwitch() = runBlocking {
+    val result = switchedWhileQueuedResult {
+      SessionTransferService.openInBrowser("https://example.invalid/")
+    }
+    verify(exactly = 0) { context.startActivity(any()) }
+    assertEquals("session_changed", result.failureCode())
+  }
+
+  @Test
+  fun webViewDoesNotLoadATransferQueuedBeforeTheAccountSwitch() = runBlocking {
+    val result = switchedWhileQueuedResult {
+      SessionTransferService.loadInWebView(webView, "https://example.invalid/")
+    }
+    verify(exactly = 0) { webView.loadUrl(any<String>()) }
+    assertEquals("session_changed", result.failureCode())
+  }
+
+  private suspend fun <T> switchedWhileQueuedResult(action: suspend () -> T): T = coroutineScope {
+    val main = StandardTestDispatcher()
+    Dispatchers.setMain(main)
+    val pending = async { action() }
+    entered.await()
+    release.complete(Unit)
+    yield()
+    assertEquals("sess_account_a", Clerk.activeSession?.id)
+    Clerk.updateClient(client.copy(lastActiveSessionId = "sess_account_b"))
+    main.scheduler.advanceUntilIdle()
+    pending.await()
+  }
+
+  private fun ClerkResult<*, ClerkErrorResponse>.failureCode(): String? =
+    (this as? ClerkResult.Failure)?.error?.errors?.firstOrNull()?.code
 
   private suspend fun <T> switchedResult(action: suspend () -> T): T = coroutineScope {
     assertEquals("sess_account_a", Clerk.activeSession?.id)

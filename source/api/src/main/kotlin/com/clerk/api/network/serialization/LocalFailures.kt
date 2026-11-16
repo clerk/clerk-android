@@ -37,5 +37,7 @@ internal object LocalFailureCodes {
 
   const val REDIRECT_NOT_PREPARED = "redirect_not_prepared"
 
+  const val SESSION_CHANGED = "session_changed"
+
   const val SIGNED_OUT = "signed_out"
 }

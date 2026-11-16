@@ -14,6 +14,7 @@ internal constructor(
   public val url: Uri,
   /** When [url] stops working, in milliseconds since the Unix epoch. */
   public val expiresAt: Long,
+  internal val sessionId: String,
 ) {
   /** Describes this transfer without its URL. */
   override fun toString(): String = "SessionTransfer(url=██, expiresAt=$expiresAt)"

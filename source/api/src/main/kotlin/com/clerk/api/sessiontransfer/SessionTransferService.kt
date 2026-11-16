@@ -12,7 +12,6 @@ import com.clerk.api.network.model.sessiontransfer.SessionTransferResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.LocalFailureCodes
 import com.clerk.api.network.serialization.localFailure
-import com.clerk.api.network.serialization.map
 import com.clerk.api.network.serialization.suspendingFlatMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -53,11 +52,21 @@ internal object SessionTransferService {
     ) {
       is ClerkResult.Failure -> result
       is ClerkResult.Success ->
-        result.value.toSessionTransfer()?.let { ClerkResult.success(it) }
-          ?: ClerkResult.unknownFailure(
-            IllegalStateException("Session transfer creation returned an invalid response.")
-          )
+        if (Clerk.activeSession?.id != sessionId) {
+          sessionChanged()
+        } else {
+          result.value.toSessionTransfer(sessionId)?.let { ClerkResult.success(it) }
+            ?: ClerkResult.unknownFailure(
+              IllegalStateException("Session transfer creation returned an invalid response.")
+            )
+        }
     }
+
+  private fun sessionChanged(): ClerkResult.Failure<ClerkErrorResponse> =
+    localFailure(
+      code = LocalFailureCodes.SESSION_CHANGED,
+      longMessage = "The active session changed before the session transfer was ready.",
+    )
 
   suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> {
     val context =
@@ -67,6 +76,7 @@ internal object SessionTransferService {
         )
     return prepare(destination, SessionTransferPresentation.BROWSER).suspendingFlatMap { transfer ->
       withContext(Dispatchers.Main) {
+        if (Clerk.activeSession?.id != transfer.sessionId) return@withContext sessionChanged()
         try {
           context.startActivity(sessionTransferBrowserIntent(transfer.url, context.packageName))
           ClerkResult.success(Unit)
@@ -86,8 +96,12 @@ internal object SessionTransferService {
     webView: WebView,
     destination: String,
   ): ClerkResult<Unit, ClerkErrorResponse> =
-    prepare(destination, SessionTransferPresentation.WEB_VIEW).map { transfer ->
-      withContext(Dispatchers.Main) { webView.loadUrl(transfer.url.toString()) }
+    prepare(destination, SessionTransferPresentation.WEB_VIEW).suspendingFlatMap { transfer ->
+      withContext(Dispatchers.Main) {
+        if (Clerk.activeSession?.id != transfer.sessionId) return@withContext sessionChanged()
+        webView.loadUrl(transfer.url.toString())
+        ClerkResult.success(Unit)
+      }
     }
 }
 
@@ -110,7 +124,7 @@ private fun isWebUrl(value: String): Boolean {
     !uri.host.isNullOrBlank()
 }
 
-internal fun SessionTransferResource.toSessionTransfer(): SessionTransfer? {
+internal fun SessionTransferResource.toSessionTransfer(sessionId: String): SessionTransfer? {
   if (objectType != SESSION_TRANSFER_OBJECT) return null
   return url
     .toUri()
@@ -120,7 +134,7 @@ internal fun SessionTransferResource.toSessionTransfer(): SessionTransfer? {
         uri.userInfo == null &&
         uri.scheme.equals("https", ignoreCase = true)
     }
-    ?.let { uri -> SessionTransfer(url = uri, expiresAt = expiresAt) }
+    ?.let { uri -> SessionTransfer(url = uri, expiresAt = expiresAt, sessionId = sessionId) }
 }
 
 private const val SESSION_TRANSFER_OBJECT = "session_transfer"

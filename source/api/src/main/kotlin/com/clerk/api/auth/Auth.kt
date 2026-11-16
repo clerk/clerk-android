@@ -240,8 +240,9 @@ public class Auth internal constructor() {
    * @param destination The web URL to land on after the user is signed in.
    * @param presentation Where the app opens the URL.
    * @return The prepared [SessionTransfer], or a failure. The failure has the code
-   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, and
-   *   `signed_out` when there is no active session, which includes a pending session.
+   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, `signed_out`
+   *   when there is no active session, which includes a pending session, and `session_changed` when
+   *   the active session changes before the transfer is ready.
    */
   public suspend fun prepareSessionTransfer(
     destination: String,
@@ -263,7 +264,8 @@ public class Auth internal constructor() {
    * @param destination The web URL to land on after the user is signed in.
    * @return Success once the browser is asked to open the URL, or a failure. The failure has the
    *   code `invalid_arguments` when [destination] is not an absolute `http` or `https` URL,
-   *   `signed_out` when there is no active session, which includes a pending session, and
+   *   `signed_out` when there is no active session, which includes a pending session,
+   *   `session_changed` when the active session changes before the browser opens the URL, and
    *   `browser_unavailable` when no browser can open the URL.
    */
   public suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> =
@@ -293,8 +295,9 @@ public class Auth internal constructor() {
    * @param webView The WebView that loads the URL.
    * @param destination The web URL to land on after the user is signed in.
    * @return Success once [webView] starts loading the URL, or a failure. The failure has the code
-   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, and
-   *   `signed_out` when there is no active session, which includes a pending session.
+   *   `invalid_arguments` when [destination] is not an absolute `http` or `https` URL, `signed_out`
+   *   when there is no active session, which includes a pending session, and `session_changed` when
+   *   the active session changes before [webView] loads the URL.
    */
   public suspend fun loadInWebView(
     webView: WebView,
