@@ -20,6 +20,7 @@ internal object ApiPaths {
       internal const val ATTEMPT_FIRST_FACTOR = "${VERIFY}/attempt_first_factor"
       internal const val PREPARE_SECOND_FACTOR = "${VERIFY}/prepare_second_factor"
       internal const val ATTEMPT_SECOND_FACTOR = "${VERIFY}/attempt_second_factor"
+      internal const val SESSION_TRANSFERS = "${WITH_ID}/session_transfers"
     }
 
     internal object SignIn {

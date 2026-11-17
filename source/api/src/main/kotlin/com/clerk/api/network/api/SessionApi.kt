@@ -4,8 +4,10 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.SensitiveRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.sessiontransfer.SessionTransferResource
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -83,6 +85,15 @@ internal interface SessionApi {
     @Path(ApiParams.ID) sessionId: String,
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SessionVerification, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.SESSION_TRANSFERS)
+  suspend fun createSessionTransfer(
+    @Path(ApiParams.ID) sessionId: String,
+    @Field("redirect_url") redirectUrl: String,
+    @Field("presentation_mode") presentationMode: String,
+    @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
+  ): ClerkResult<SessionTransferResource, ClerkErrorResponse>
 
   /**
    * Revokes a specific session.
