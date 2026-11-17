@@ -28,11 +28,7 @@ internal object SessionTransferService {
           code = LocalFailureCodes.INVALID_ARGUMENTS,
           longMessage = "A session transfer destination must be an absolute http or https URL.",
         )
-      sessionId == null ->
-        localFailure(
-          code = LocalFailureCodes.SIGNED_OUT,
-          longMessage = "A session transfer requires an active session.",
-        )
+      sessionId == null -> signedOut()
       else -> create(sessionId, destination, presentation)
     }
   }
@@ -52,20 +48,28 @@ internal object SessionTransferService {
     ) {
       is ClerkResult.Failure -> result
       is ClerkResult.Success ->
-        if (Clerk.activeSession?.id != sessionId) {
-          sessionChanged()
-        } else {
-          result.value.toSessionTransfer(sessionId)?.let { ClerkResult.success(it) }
-            ?: ClerkResult.unknownFailure(
-              IllegalStateException("Session transfer creation returned an invalid response.")
-            )
-        }
+        staleSessionFailure(sessionId)
+          ?: result.value.toSessionTransfer(sessionId)?.let { ClerkResult.success(it) }
+          ?: ClerkResult.unknownFailure(
+            IllegalStateException("Session transfer creation returned an invalid response.")
+          )
     }
 
-  private fun sessionChanged(): ClerkResult.Failure<ClerkErrorResponse> =
+  private fun staleSessionFailure(sessionId: String): ClerkResult.Failure<ClerkErrorResponse>? =
+    when (Clerk.activeSession?.id) {
+      sessionId -> null
+      null -> signedOut()
+      else ->
+        localFailure(
+          code = LocalFailureCodes.SESSION_CHANGED,
+          longMessage = "The active session changed before the session transfer was ready.",
+        )
+    }
+
+  private fun signedOut(): ClerkResult.Failure<ClerkErrorResponse> =
     localFailure(
-      code = LocalFailureCodes.SESSION_CHANGED,
-      longMessage = "The active session changed before the session transfer was ready.",
+      code = LocalFailureCodes.SIGNED_OUT,
+      longMessage = "A session transfer requires an active session.",
     )
 
   suspend fun openInBrowser(destination: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -76,7 +80,9 @@ internal object SessionTransferService {
         )
     return prepare(destination, SessionTransferPresentation.BROWSER).suspendingFlatMap { transfer ->
       withContext(Dispatchers.Main) {
-        if (Clerk.activeSession?.id != transfer.sessionId) return@withContext sessionChanged()
+        staleSessionFailure(transfer.sessionId)?.let {
+          return@withContext it
+        }
         try {
           context.startActivity(sessionTransferBrowserIntent(transfer.url, context.packageName))
           ClerkResult.success(Unit)
@@ -98,7 +104,9 @@ internal object SessionTransferService {
   ): ClerkResult<Unit, ClerkErrorResponse> =
     prepare(destination, SessionTransferPresentation.WEB_VIEW).suspendingFlatMap { transfer ->
       withContext(Dispatchers.Main) {
-        if (Clerk.activeSession?.id != transfer.sessionId) return@withContext sessionChanged()
+        staleSessionFailure(transfer.sessionId)?.let {
+          return@withContext it
+        }
         webView.loadUrl(transfer.url.toString())
         ClerkResult.success(Unit)
       }

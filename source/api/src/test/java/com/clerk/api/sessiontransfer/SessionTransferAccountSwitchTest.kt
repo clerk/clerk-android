@@ -134,6 +134,40 @@ class SessionTransferAccountSwitchTest {
     assertEquals("session_changed", result.failureCode())
   }
 
+  @Test
+  fun prepareReportsSignedOutWhenTheUserSignsOutDuringTheRequest() = runBlocking {
+    val result = coroutineScope {
+      val pending = async {
+        SessionTransferService.prepare(
+          "https://example.invalid/",
+          SessionTransferPresentation.BROWSER,
+        )
+      }
+      entered.await()
+      Clerk.updateClient(Client())
+      release.complete(Unit)
+      pending.await()
+    }
+    assertEquals("signed_out", result.failureCode())
+  }
+
+  @Test
+  fun browserReportsSignedOutWhenTheUserSignsOutBeforeItOpens() = runBlocking {
+    val result = coroutineScope {
+      val main = StandardTestDispatcher()
+      Dispatchers.setMain(main)
+      val pending = async { SessionTransferService.openInBrowser("https://example.invalid/") }
+      entered.await()
+      release.complete(Unit)
+      yield()
+      Clerk.updateClient(Client())
+      main.scheduler.advanceUntilIdle()
+      pending.await()
+    }
+    verify(exactly = 0) { context.startActivity(any()) }
+    assertEquals("signed_out", result.failureCode())
+  }
+
   private suspend fun <T> switchedWhileQueuedResult(action: suspend () -> T): T = coroutineScope {
     val main = StandardTestDispatcher()
     Dispatchers.setMain(main)
