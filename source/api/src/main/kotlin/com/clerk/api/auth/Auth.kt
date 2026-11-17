@@ -285,8 +285,10 @@ public class Auth internal constructor() {
    *
    * Success means [webView] started loading the URL, not that the user was signed in. When the
    * sign-in is refused, [webView] still lands on [destination], with the query parameters
-   * `__clerk_status=session_transfer_failed` and `__clerk_error_code`. Check for them in the
-   * `WebViewClient` or on the page.
+   * `__clerk_status=session_transfer_failed` and `__clerk_error_code`. Check for them in
+   * `WebViewClient.shouldOverrideUrlLoading`, which sees every redirect, or on the page.
+   * `onPageFinished` misses them when [destination] redirects again, for example to its own sign-in
+   * page.
    *
    * The WebView keeps its cookies after the native user signs out. Clear them with
    * `CookieManager.getInstance().removeAllCookies` when the user signs out or switches accounts.
