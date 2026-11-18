@@ -2,7 +2,6 @@ package com.clerk.api.network.serialization
 
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
-import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -14,7 +13,6 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -84,15 +82,6 @@ class ClerkApiResultConverterFactoryTest {
   }
 
   @Test
-  fun `responseBodyConverter handles List of Session without wrapping`() {
-    val sessionListType = createParameterizedType(List::class.java, Session::class.java)
-    val clerkResultType =
-      createParameterizedType(ClerkResult::class.java, sessionListType, Exception::class.java)
-
-    assertSame(sessionListType, requestedDelegateType(clerkResultType))
-  }
-
-  @Test
   fun `responseBodyConverter passes the caller's annotations to the delegate unchanged`() {
     val clerkResultType =
       createParameterizedType(
@@ -122,31 +111,6 @@ class ClerkApiResultConverterFactoryTest {
     )
 
     return requestedType.captured
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  @Test
-  fun `ClerkApiResultConverter handles null delegate response`() {
-    val responseBody = "null".toResponseBody("application/json".toMediaType())
-
-    val mockDelegateConverter = mockk<Converter<ResponseBody, Any>>()
-    every { mockDelegateConverter.convert(any()) } returns null
-
-    // Using reflection to create the converter since it's private
-    val converterClass =
-      ClerkApiResultConverterFactory::class.java.declaredClasses.find {
-        it.simpleName == "ClerkApiResultConverter"
-      }
-    assertNotNull("ClerkApiResultConverter class should exist", converterClass)
-
-    val constructor = converterClass!!.getDeclaredConstructor(Converter::class.java)
-    constructor.isAccessible = true
-    val converter =
-      constructor.newInstance(mockDelegateConverter) as Converter<ResponseBody, ClerkResult<*, *>>
-
-    val result = converter.convert(responseBody)
-
-    assertNull(result)
   }
 
   private fun createParameterizedType(

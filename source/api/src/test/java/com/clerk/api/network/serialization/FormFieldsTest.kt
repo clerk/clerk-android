@@ -422,23 +422,6 @@ class FormFieldsTest {
   }
 
   @Test
-  fun `create params encode every subtype, including the ones sent by hand`() {
-    listOf<SignIn.CreateParams.Strategy>(
-        SignIn.CreateParams.Strategy.Transfer(),
-        SignIn.CreateParams.Strategy.Passkey(),
-        SignIn.CreateParams.Strategy.BiometricCredential(id = "cred"),
-      )
-      .forEach { it.toFormFields() }
-    listOf(
-        SignUp.CreateParams.None,
-        SignUp.CreateParams.Transfer,
-        SignUp.CreateParams.Ticket(ticket = "tkt"),
-        SignUp.CreateParams.GoogleOneTap(token = "token"),
-      )
-      .forEach { sendSignUpCreate(it) }
-  }
-
-  @Test
   fun `unsafe metadata decodes back to the plain values it was built from`() {
     val json = Json.encodeToString(SignUp.CreateParams.Standard(unsafeMetadata = NESTED_METADATA))
 

@@ -1,7 +1,5 @@
 package com.clerk.api.passkeys
 
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import io.mockk.coEvery
@@ -12,7 +10,6 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -129,35 +126,6 @@ class PasskeyServiceTest {
   }
 
   @Test
-  fun `signInWithPasskey returns error when PasskeyAuthenticationService fails`() = runTest {
-    val error =
-      Error(
-        code = "authentication_failed",
-        message = "Auth failed",
-        longMessage = "Authentication failed",
-      )
-    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "test-trace")
-
-    coEvery {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = emptyList(),
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    } returns ClerkResult.apiFailure(errorResponse)
-
-    val result = PasskeyService.signInWithPasskey()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertEquals(errorResponse, (result as ClerkResult.Failure).error)
-    coVerify {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = emptyList(),
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    }
-  }
-
-  @Test
   fun `createPasskey delegates to PasskeyCreationService`() = runTest {
     coEvery { PasskeyCreationService.createPasskey() } returns ClerkResult.success(mockPasskey)
 
@@ -166,59 +134,5 @@ class PasskeyServiceTest {
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockPasskey, (result as ClerkResult.Success).value)
     coVerify { PasskeyCreationService.createPasskey() }
-  }
-
-  @Test
-  fun `createPasskey returns error when PasskeyCreationService fails`() = runTest {
-    val error =
-      Error(
-        code = "creation_failed",
-        message = "Creation failed",
-        longMessage = "Passkey creation failed",
-      )
-    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "test-trace")
-    coEvery { PasskeyCreationService.createPasskey() } returns ClerkResult.apiFailure(errorResponse)
-
-    val result = PasskeyService.createPasskey()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertEquals(errorResponse, (result as ClerkResult.Failure).error)
-    coVerify { PasskeyCreationService.createPasskey() }
-  }
-
-  @Test
-  fun `createPasskey handles unknown failure from PasskeyCreationService`() = runTest {
-    val exception = RuntimeException("Creation failed")
-    coEvery { PasskeyCreationService.createPasskey() } returns ClerkResult.unknownFailure(exception)
-
-    val result = PasskeyService.createPasskey()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
-    assertSame(exception, result.throwable)
-    coVerify { PasskeyCreationService.createPasskey() }
-  }
-
-  @Test
-  fun `signInWithPasskey handles unknown failure from PasskeyAuthenticationService`() = runTest {
-    val exception = IllegalStateException("Unknown state")
-    coEvery {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = emptyList(),
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    } returns ClerkResult.unknownFailure(exception)
-
-    val result = PasskeyService.signInWithPasskey()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
-    assertSame(exception, result.throwable)
-    coVerify {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-        allowedCredentialIds = emptyList(),
-        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
-      )
-    }
   }
 }

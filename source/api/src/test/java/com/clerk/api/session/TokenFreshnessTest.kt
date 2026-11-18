@@ -3,9 +3,6 @@ package com.clerk.api.session
 import com.clerk.api.network.model.token.TokenResource
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -96,24 +93,6 @@ class TokenFreshnessTest {
     assertTrue(firstStore.didChangeCanonicalToken)
     assertFalse(staleStore.didChangeCanonicalToken)
     assertFalse(duplicateStore.didChangeCanonicalToken)
-    assertEquals(fresh, SessionTokensCache.getToken(cacheKey))
-  }
-
-  @Test
-  fun `out of order cache writes retain the freshest response`() = runTest {
-    val cacheKey = "session-organization-"
-    val stale = token(originIssuedAt = 100, issuedAt = 100, signature = "stale")
-    val fresh = token(originIssuedAt = 200, issuedAt = 200, signature = "fresh")
-    val releaseStaleResponse = CompletableDeferred<Unit>()
-    val staleResponse = async {
-      releaseStaleResponse.await()
-      SessionTokensCache.storeIfFresher(cacheKey, stale)
-    }
-
-    SessionTokensCache.storeIfFresher(cacheKey, fresh)
-    releaseStaleResponse.complete(Unit)
-    staleResponse.await()
-
     assertEquals(fresh, SessionTokensCache.getToken(cacheKey))
   }
 

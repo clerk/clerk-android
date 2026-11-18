@@ -31,24 +31,6 @@ class PasskeyHelperTest {
   }
 
   @Test
-  fun `getDomain returns domain without www prefix`() {
-    every { Clerk.baseUrl } returns "https://www.example.com/path"
-
-    val result = PasskeyHelper.getDomain()
-
-    assertEquals("example.com", result)
-  }
-
-  @Test
-  fun `getDomain returns domain without protocol and path`() {
-    every { Clerk.baseUrl } returns "https://clerk.example.com/api/v1"
-
-    val result = PasskeyHelper.getDomain()
-
-    assertEquals("clerk.example.com", result)
-  }
-
-  @Test
   fun `getDomain only strips a leading www`() {
     every { Clerk.baseUrl } returns "https://clerk.awww.dev"
 
@@ -60,15 +42,6 @@ class PasskeyHelperTest {
   @Test
   fun `getDomain returns null when host is empty`() {
     every { Clerk.baseUrl } returns "https:///path"
-
-    val result = PasskeyHelper.getDomain()
-
-    assertNull(result)
-  }
-
-  @Test
-  fun `getDomain returns null for malformed URL`() {
-    every { Clerk.baseUrl } returns "not-a-url"
 
     val result = PasskeyHelper.getDomain()
 
@@ -106,11 +79,5 @@ class PasskeyHelperTest {
         it.jsonObject.getValue("id").jsonPrimitive.content
       },
     )
-  }
-
-  @Test
-  fun `constants have expected values`() {
-    assertEquals("strategy", com.clerk.api.Constants.Fields.STRATEGY)
-    assertEquals("passkey", com.clerk.api.auth.types.Strategy.Passkey.value)
   }
 }

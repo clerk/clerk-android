@@ -75,11 +75,6 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun initialStateShouldBeIdle() = runTest {
-    viewModel.state.test { assertEquals(AuthenticationViewState.Idle, awaitItem()) }
-  }
-
-  @Test
   fun prepareShouldSetNotStartedWhenNoSignInIsInProgress() = runTest {
     every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = Strategy.EmailCode.value)

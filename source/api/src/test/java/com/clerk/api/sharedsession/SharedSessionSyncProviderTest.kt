@@ -1,5 +1,6 @@
 package com.clerk.api.sharedsession
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -59,16 +60,20 @@ class SharedSessionSyncProviderTest {
   }
 
   @Test
-  fun `enabled provider exposes read-only snapshot`() {
+  fun `enabled provider rejects writes and keeps serving the snapshot`() {
     SharedSessionSyncProvider.setEnabled(context, true)
-    val providers = discoveredProviders()
-    val expectedAuthority = expectedAuthority()
-    val provider = providers.firstOrNull { it.providerInfo.authority == expectedAuthority }
-
-    assertNotNull(provider)
-    assertTrue(provider!!.providerInfo.exported)
-
     StorageHelper.saveValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT, "snapshot-json")
+    val snapshotUri = SharedSessionSyncContract.snapshotUri(expectedAuthority())
+
+    assertThrows(UnsupportedOperationException::class.java) {
+      context.contentResolver.insert(snapshotUri, ContentValues())
+    }
+    assertThrows(UnsupportedOperationException::class.java) {
+      context.contentResolver.update(snapshotUri, ContentValues(), null, null)
+    }
+    assertThrows(UnsupportedOperationException::class.java) {
+      context.contentResolver.delete(snapshotUri, null, null)
+    }
 
     assertEquals("snapshot-json", querySnapshot())
   }

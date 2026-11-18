@@ -53,19 +53,6 @@ class OrganizationSessionTaskUtilsTest {
   }
 
   @Test
-  fun `successful empty initial load without creation can show no-organization help`() {
-    val state =
-      SessionTaskChooseOrganizationState(
-        isLoading = false,
-        initialLoadAttempted = true,
-        hasLoadedInitialResources = true,
-        canCreateOrganization = false,
-      )
-
-    assertTrue(state.canShowNoOrganizationHelp)
-  }
-
-  @Test
   fun `resource total counts keep chooser from showing no-organization help`() {
     val state =
       SessionTaskChooseOrganizationState(

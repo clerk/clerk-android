@@ -278,9 +278,11 @@ class NetworkConnectivityMonitorTest {
   }
 
   @Test
-  fun `resetForTesting resets all state`() {
+  fun `isCurrentlyConnected is true when unmonitored and keeps the last observed state after stop`() {
     val mockContext = mockk<Context>(relaxed = true)
     val mockAppContext = mockk<Context>(relaxed = true)
+
+    assertTrue(NetworkConnectivityMonitor.isCurrentlyConnected())
 
     every { mockContext.applicationContext } returns mockAppContext
     every { mockAppContext.getSystemService(Context.CONNECTIVITY_SERVICE) } returns
@@ -288,15 +290,9 @@ class NetworkConnectivityMonitorTest {
     every { mockConnectivityManager.activeNetwork } returns null
 
     NetworkConnectivityMonitor.configure(mockContext)
-    assertFalse("Should be disconnected", NetworkConnectivityMonitor.isConnected.value)
+    NetworkConnectivityMonitor.stop()
 
-    NetworkConnectivityMonitor.resetForTesting()
-
-    assertTrue("isConnected should be reset to true", NetworkConnectivityMonitor.isConnected.value)
-    assertTrue(
-      "isCurrentlyConnected should return true",
-      NetworkConnectivityMonitor.isCurrentlyConnected(),
-    )
+    assertFalse(NetworkConnectivityMonitor.isCurrentlyConnected())
   }
 
   @Test

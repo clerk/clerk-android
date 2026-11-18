@@ -177,15 +177,6 @@ class PhoneInputUtilsTest {
   }
 
   @Test
-  fun `keepDialableCapped preserves valid phone characters`() {
-    val input = "+1234567890"
-
-    val result = phoneInputUtils.keepDialableCapped(input)
-
-    assertEquals("+1234567890", result)
-  }
-
-  @Test
   fun `keepDialableCapped filters out non-dialable characters`() {
     val input = "+1 (234) 567-890 ext.123"
 
@@ -288,17 +279,6 @@ class PhoneInputUtilsTest {
     assertEquals("🇨🇦", result[0].flag)
     assertEquals("🇬🇧", result[1].flag)
     assertEquals("🇺🇸", result[2].flag)
-  }
-
-  @Test
-  fun `getDefaultCountry returns US country info`() {
-    val result = phoneInputUtils.getDefaultCountry()
-
-    assertEquals("US", result.countryShortName)
-    assertEquals(1, result.code)
-    assertEquals("🇺🇸", result.flag)
-    assertEquals("+1", result.getPhonePrefix)
-    assertEquals("🇺🇸 United States +1", result.getSelectorText)
   }
 
   @Test

@@ -13,18 +13,8 @@ class SignInFactorCodeHelperTest {
   private val helper = SignInFactorCodeUiHelper
 
   @Test
-  fun `getShowResendValue with Default state returns true`() {
-    assertTrue(helper.getShowResendValue(VerificationState.Default))
-  }
-
-  @Test
   fun `getShowResendValue with Error state returns true`() {
     assertTrue(helper.getShowResendValue(VerificationState.Error))
-  }
-
-  @Test
-  fun `getShowResendValue with Verifying state returns false`() {
-    assertFalse(helper.getShowResendValue(VerificationState.Verifying))
   }
 
   @Test

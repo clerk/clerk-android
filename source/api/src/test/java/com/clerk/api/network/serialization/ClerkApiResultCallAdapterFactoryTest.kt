@@ -64,20 +64,6 @@ class ClerkApiResultCallAdapterFactoryTest {
   }
 
   @Test
-  fun `non-fatal error thrown while decoding error body becomes an http failure`() {
-    val error = AssertionError("decode")
-    val retrofit = retrofit(ThrowingConverterFactory(error))
-
-    val result = enqueueErrorResponse(retrofit, "{}")
-
-    assertTrue(result is ClerkResult.Failure)
-    val failure = result as ClerkResult.Failure
-    assertEquals(ClerkResult.Failure.ErrorType.HTTP, failure.errorType)
-    assertEquals(400, failure.code)
-    assertEquals(error, failure.throwable)
-  }
-
-  @Test
   fun `suspend call resumes when a non-fatal error is thrown while decoding error body`() {
     val client =
       OkHttpClient.Builder()

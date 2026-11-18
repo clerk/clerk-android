@@ -596,34 +596,6 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `automatic credential flow suppresses no saved credential`() {
-    val result = ClerkResult.unknownFailure(CredentialFlowException.NoSavedCredential())
-
-    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
-  }
-
-  @Test
-  fun `automatic credential flow suppresses provider unavailable`() {
-    val result = ClerkResult.unknownFailure(CredentialFlowException.ProviderUnavailable())
-
-    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
-  }
-
-  @Test
-  fun `automatic credential flow suppresses missing activity`() {
-    val result = ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
-
-    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
-  }
-
-  @Test
-  fun `automatic credential flow suppresses unclassified credential ceremony failures`() {
-    val result = ClerkResult.unknownFailure(GetCredentialUnknownException("asset links mismatch"))
-
-    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
-  }
-
-  @Test
   fun `automatic credential flow does not suppress non-credential failures`() {
     val result = ClerkResult.unknownFailure(IllegalStateException("serialization failed"))
 

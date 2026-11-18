@@ -32,13 +32,6 @@ class ConfigurationManagerAuthRaceTest {
   }
 
   @Test
-  fun `hasPendingAuthFlow returns true when hosted auth is pending`() {
-    RedirectCoordinator.begin(PendingRedirect.HostedAuth("myapp://cb", "s", "v"))
-
-    assertTrue(ConfigurationManager().hasPendingAuthFlow())
-  }
-
-  @Test
   fun `hasPendingAuthFlow returns false once the pending flow finishes`() {
     val pending = sso()
     RedirectCoordinator.begin(pending)

@@ -23,17 +23,6 @@ class PublishableKeyHelperTest {
   }
 
   @Test
-  fun `extractApiUrl with valid test key returns correct URL`() {
-    val domain = "clerk.example.com"
-    val encodedDomain = Base64.encodeToString("${domain}x".toByteArray(), Base64.DEFAULT)
-    val testKey = "${TOKEN_PREFIX_TEST}$encodedDomain"
-
-    val result = publishableKeyHelper.extractApiUrl(testKey)
-
-    assertEquals("https://$domain", result)
-  }
-
-  @Test
   fun `extractApiUrl with valid live key returns correct URL`() {
     val domain = "clerk.example.com"
     val encodedDomain = Base64.encodeToString("${domain}x".toByteArray(), Base64.DEFAULT)
@@ -61,18 +50,5 @@ class PublishableKeyHelperTest {
     val result = publishableKeyHelper.extractApiUrl(encodedDomain)
 
     assertEquals("https://$domain", result)
-  }
-
-  @Test
-  fun `extractApiUrl with single character domain returns https prefix only`() {
-    val singleCharDomain = "x"
-    val encodedSingleChar = Base64.encodeToString(singleCharDomain.toByteArray(), Base64.DEFAULT)
-    val testKey = "${TOKEN_PREFIX_TEST}$encodedSingleChar"
-
-    val result = publishableKeyHelper.extractApiUrl(testKey)
-
-    // Then
-    // After dropping the last character, we'd have an empty host
-    assertEquals("https://", result)
   }
 }

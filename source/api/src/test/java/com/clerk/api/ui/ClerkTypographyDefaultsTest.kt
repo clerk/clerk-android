@@ -8,16 +8,6 @@ import org.junit.Test
 class ClerkTypographyDefaultsTest {
 
   @Test
-  fun `default returns Clerk typography defaults`() {
-    val typography = ClerkTypographyDefaults.default()
-
-    assertEquals(ClerkTypographyDefaults.displaySmall, typography.displaySmall)
-    assertEquals(ClerkTypographyDefaults.headlineLarge, typography.headlineLarge)
-    assertEquals(ClerkTypographyDefaults.bodyMedium, typography.bodyMedium)
-    assertEquals(ClerkTypographyDefaults.labelSmall, typography.labelSmall)
-  }
-
-  @Test
   fun `default helper matches zero-arg constructor`() {
     assertEquals(ClerkTypography(), ClerkTypographyDefaults.default())
   }

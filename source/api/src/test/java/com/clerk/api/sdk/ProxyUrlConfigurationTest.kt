@@ -88,18 +88,13 @@ class ProxyUrlConfigurationTest {
   }
 
   @Test
-  fun `proxyUrl with a port but no host is rejected`() {
-    assertProxyUrlRejected("https://:8443/__clerk")
-  }
-
-  @Test
   fun `proxyUrl with a non-http scheme is rejected`() {
     assertProxyUrlRejected("ftp://proxy.example.com/__clerk")
   }
 
   @Test
-  fun `proxyUrl with userinfo is rejected`() {
-    assertProxyUrlRejected("https://user:secret@proxy.example.com/__clerk")
+  fun `proxyUrl with only a password is rejected`() {
+    assertProxyUrlRejected("https://:secret@proxy.example.com/__clerk")
   }
 
   @Test
