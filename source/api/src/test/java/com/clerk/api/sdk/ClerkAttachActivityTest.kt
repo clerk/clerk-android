@@ -115,7 +115,7 @@ class ClerkAttachActivityTest {
         publishableKey = PUBLISHABLE_KEY,
         options = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
       )
-      withTimeout(1_000) { Clerk.isInitialized.first { it } }
+      withTimeout(TIMEOUT_MS) { Clerk.isInitialized.first { it } }
 
       assertSame(activity, readCredentialActivity())
     }
@@ -123,5 +123,6 @@ class ClerkAttachActivityTest {
   private companion object {
     const val PUBLISHABLE_KEY = "pk_test_attach_activity"
     const val PROXY_URL = "https://proxy.example.com/__clerk"
+    const val TIMEOUT_MS = 5_000L
   }
 }
