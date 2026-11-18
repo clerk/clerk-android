@@ -9,6 +9,7 @@ public final class com/clerk/api/Clerk {
 	public final fun attachActivity (Landroid/app/Activity;)V
 	public final fun clearDeviceToken (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun deleteDeviceKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deviceBindingProof (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getActiveSession ()Lcom/clerk/api/session/Session;
 	public final fun getActiveUser ()Lcom/clerk/api/user/User;
 	public final fun getAppVersionSupportResets ()Lkotlinx/coroutines/flow/StateFlow;
@@ -91,6 +92,7 @@ public final class com/clerk/api/Clerk {
 	public final fun isUsernameImmutable ()Z
 	public final fun markAuthFlowComplete ()V
 	public final fun markAuthFlowPending ()V
+	public final fun recordServerDate (Ljava/lang/String;)V
 	public final fun refreshClient (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun registerAuthFlow ()Lcom/clerk/api/AuthFlowRegistration;
 	public final fun reinitialize ()Z
@@ -128,6 +130,7 @@ public final class com/clerk/api/ClerkConfigurationOptions {
 	public fun toString ()Ljava/lang/String;
 	public final fun withCustomHeaders (Ljava/util/Map;)Lcom/clerk/api/ClerkConfigurationOptions;
 	public final fun withForegroundRefreshDisabled ()Lcom/clerk/api/ClerkConfigurationOptions;
+	public final fun withHostSignsRequests ()Lcom/clerk/api/ClerkConfigurationOptions;
 	public final fun withUpdateRequiredViewDisabled ()Lcom/clerk/api/ClerkConfigurationOptions;
 }
 

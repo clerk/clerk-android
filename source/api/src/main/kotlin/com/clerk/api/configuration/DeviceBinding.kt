@@ -231,7 +231,8 @@ internal class DeviceBindingState(
 internal fun signingOptOut(options: ClerkConfigurationOptions?): DeviceBinding.Reason? =
   when {
     options?.sharedSessionSync != null -> DeviceBinding.Reason.SHARED_SESSION_SYNC
-    options?.isFrameworkHost == true -> DeviceBinding.Reason.FRAMEWORK_HOST
+    options?.isFrameworkHost == true && !options.hostSignsRequests ->
+      DeviceBinding.Reason.FRAMEWORK_HOST
     else -> null
   }
 

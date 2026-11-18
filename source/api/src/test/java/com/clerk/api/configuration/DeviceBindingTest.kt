@@ -1,6 +1,7 @@
 package com.clerk.api.configuration
 
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.FrameworkIntegrationApi
 import com.clerk.api.SharedSessionSyncConfig
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.JvmDeviceKey
@@ -74,6 +75,29 @@ class DeviceBindingTest {
 
       assertEquals(DeviceBinding.Reason.FRAMEWORK_HOST, signingOptOut(options))
     }
+  }
+
+  @Test
+  @OptIn(FrameworkIntegrationApi::class)
+  fun `a framework host that signs its own requests opts in`() {
+    val options =
+      ClerkConfigurationOptions()
+        .withCustomHeaders(mapOf("x-clerk-host-sdk" to "expo"))
+        .withHostSignsRequests()
+        .withUpdateRequiredViewDisabled()
+
+    assertNull(signingOptOut(options))
+  }
+
+  @Test
+  @OptIn(FrameworkIntegrationApi::class)
+  fun `shared session sync stays unbound even when the host signs`() {
+    val options =
+      ClerkConfigurationOptions(sharedSessionSync = SharedSessionSyncConfig.enabled)
+        .withCustomHeaders(mapOf("x-clerk-host-sdk" to "expo"))
+        .withHostSignsRequests()
+
+    assertEquals(DeviceBinding.Reason.SHARED_SESSION_SYNC, signingOptOut(options))
   }
 
   @Test
