@@ -428,6 +428,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       ClerkLogger.w("The session can no longer issue tokens. Removing it from the local client.")
       removeSession(context.session.id)
       Clerk.removeInvalidatedSession(context.session.id)
+      removeSession(context.session.id)
     }
   }
 
