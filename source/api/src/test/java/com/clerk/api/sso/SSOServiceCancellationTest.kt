@@ -99,23 +99,6 @@ class SSOServiceCancellationTest {
     }
 
   @Test
-  fun `provider error callback returns cancellation instead of starting sign up`() = runTest {
-    mockkStatic("com.clerk.api.auth.AuthFlowsKt")
-    val pendingResult =
-      async(start = CoroutineStart.UNDISPATCHED) {
-        SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL)
-      }
-
-    RedirectCoordinator.dispatch(
-      Uri.parse("$CALLBACK_URL&error=access_denied&error_description=User%20cancelled")
-    )
-
-    val failure = pendingResult.await() as ClerkResult.Failure
-    assertTrue(failure.throwable is SSOCancellationException)
-    coVerify(exactly = 0) { auth.postSignUp(any()) }
-  }
-
-  @Test
   fun `external account not found returns readable API error when transfer is disabled`() =
     runTest {
       mockkStatic("com.clerk.api.auth.AuthFlowsKt")

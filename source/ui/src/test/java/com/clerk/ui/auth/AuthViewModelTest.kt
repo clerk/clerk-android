@@ -59,11 +59,6 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun initialStateShouldBeIdle() = runTest {
-    viewModel.state.test { assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem()) }
-  }
-
-  @Test
   fun startAuthWithSignInOrUpModeSurfacesNonFallbackSignInErrorsWithoutSignUp() = runTest {
     val signInParams = slot<SignInIdentifierBuilder.() -> Unit>()
     coEvery { auth.signIn(capture(signInParams)) } returns

@@ -54,6 +54,10 @@ internal class EmailViewModel : ViewModel() {
     }
   }
 
+  fun clearError(reported: State.Failure) {
+    _state.compareAndSet(reported, State.Idle)
+  }
+
   sealed interface State {
     data object Idle : State
 

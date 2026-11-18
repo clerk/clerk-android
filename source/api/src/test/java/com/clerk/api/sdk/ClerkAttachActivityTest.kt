@@ -4,15 +4,28 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import com.clerk.api.Clerk
-import io.mockk.every
+import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
+import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.storage.StorageHelper
+import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /**
  * Verifies the activity-tracking guarantees that callers rely on for Credential Manager flows
@@ -23,12 +36,18 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class ClerkAttachActivityTest {
 
+  @Before
+  fun setUp() {
+    StorageHelper.initialize(RuntimeEnvironment.getApplication())
+    Clerk.reset()
+  }
+
   @After
   fun tearDown() {
-    val field = Clerk::class.java.getDeclaredField("currentActivity")
-    field.isAccessible = true
-    field.set(Clerk, null)
+    Clerk.reset()
     unmockkAll()
+    StorageHelper.reset(RuntimeEnvironment.getApplication())
+    NetworkConnectivityMonitor.resetForTesting()
   }
 
   @Test
@@ -80,36 +99,30 @@ class ClerkAttachActivityTest {
     return method.invoke(Clerk) as Activity?
   }
 
-  /**
-   * Smoke test for the [Context]-walk inside [Clerk.initialize]. We exercise the helper directly
-   * rather than going through `initialize()` (which would spin up the configuration manager); the
-   * helper's contract is the load-bearing piece for the seeding guarantee.
-   */
   @Test
-  fun `Context findActivityOrNull walks ContextWrapper chain`() {
-    val activity = mockk<Activity>(relaxed = true)
-    val outer: Context = object : ContextWrapper(activity) {}
+  fun `initialize seeds credentialActivity from an Activity wrapped in a ContextWrapper`() =
+    runBlocking {
+      val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+      val wrapper: Context = object : ContextWrapper(activity) {}
+      mockkObject(Client.Companion)
+      mockkObject(Environment.Companion)
+      coEvery { Client.get() } returns ClerkResult.success(Client())
+      coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client())
+      coEvery { Environment.get() } returns ClerkResult.success(mockk<Environment>(relaxed = true))
 
-    val helper =
-      Clerk::class.java.getDeclaredMethod("findActivityOrNull", Context::class.java).apply {
-        isAccessible = true
-      }
+      Clerk.initialize(
+        context = wrapper,
+        publishableKey = PUBLISHABLE_KEY,
+        options = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
+      )
+      withTimeout(TIMEOUT_MS) { Clerk.isInitialized.first { it } }
 
-    val found = helper.invoke(Clerk, outer) as Activity?
-    assertSame(activity, found)
-  }
+      assertSame(activity, readCredentialActivity())
+    }
 
-  @Test
-  fun `Context findActivityOrNull returns null when no Activity in chain`() {
-    val plain = mockk<Context>(relaxed = true)
-    every { plain.applicationContext } returns plain
-
-    val helper =
-      Clerk::class.java.getDeclaredMethod("findActivityOrNull", Context::class.java).apply {
-        isAccessible = true
-      }
-
-    val found = helper.invoke(Clerk, plain) as Activity?
-    assertNull(found)
+  private companion object {
+    const val PUBLISHABLE_KEY = "pk_test_attach_activity"
+    const val PROXY_URL = "https://proxy.example.com/__clerk"
+    const val TIMEOUT_MS = 5_000L
   }
 }

@@ -384,18 +384,12 @@ class SessionAuthorizationTest {
     assertEquals(listOf("dashboard", "support-chat", "billing"), user)
   }
 
-  @Test(expected = IllegalArgumentException::class)
-  fun `splitByScope throws when claim element is missing a colon`() {
-    SessionAuthorization.splitByScope("reservations,dashboard")
-  }
-
   @Test
-  fun `unscoped feature matches merged user and org ids`() {
-    val session =
-      session(orgId = "org_123", orgRole = "org:admin", features = "o:reservations,u:dashboard")
-    assertTrue(session.checkAuthorization(feature = "reservations"))
-    assertTrue(session.checkAuthorization(feature = "dashboard"))
-    assertFalse(session.checkAuthorization(feature = "missing"))
+  fun `feature check fails closed when a features claim element is missing a colon`() {
+    val session = session(features = "reservations,o:sso")
+
+    assertFalse(session.checkAuthorization(feature = "reservations"))
+    assertFalse(session.checkAuthorization(feature = "sso"))
   }
 
   @Test

@@ -77,6 +77,48 @@ class UserProfilePasskeyViewModelTest {
   }
 
   @Test
+  fun clearError_afterFailure_returnsToIdleSoTheNextFailureIsEmitted() = runTest {
+    val passkey = mockk<Passkey>()
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
+    coEvery { passkey.delete() } returns ClerkResult.Failure(error)
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.deletePasskey(passkey)
+      assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
+      assertEquals(UserProfilePasskeyViewModel.State.Error("bad"), awaitItem())
+      viewModel.clearError(UserProfilePasskeyViewModel.State.Error("bad"))
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.deletePasskey(passkey)
+      assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
+      assertEquals(UserProfilePasskeyViewModel.State.Error("bad"), awaitItem())
+    }
+  }
+
+  @Test
+  fun clearError_withAStaleFailure_keepsTheNewerOne() = runTest {
+    val passkey = mockk<Passkey>()
+    coEvery { passkey.delete() } returns
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "first")))) andThen
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "second"))))
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.deletePasskey(passkey)
+      assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
+      assertEquals(UserProfilePasskeyViewModel.State.Error("first"), awaitItem())
+      viewModel.deletePasskey(passkey)
+      assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
+      assertEquals(UserProfilePasskeyViewModel.State.Error("second"), awaitItem())
+      viewModel.clearError(UserProfilePasskeyViewModel.State.Error("first"))
+      expectNoEvents()
+    }
+    assertEquals(UserProfilePasskeyViewModel.State.Error("second"), viewModel.state.value)
+  }
+
+  @Test
   fun createPasskey_success_goesFromIdleStraightToSuccess() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user

@@ -1,7 +1,6 @@
 package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiParams
-import com.clerk.api.network.ApiPaths
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,18 +12,18 @@ import retrofit2.http.Query
 class OrganizationApiTest {
 
   @Test
-  fun `revokeOrganizationInvitation uses invitation revoke route`() {
+  fun `revokeOrganizationInvitation posts to the invitation revoke path`() {
     val post =
       requireNotNull(method("revokeOrganizationInvitation").getAnnotation(POST::class.java))
 
-    assertEquals(ApiPaths.Organization.Invitations.REVOKE, post.value)
+    assertEquals("organizations/{organization_id}/invitations/{invitation_id}/revoke", post.value)
   }
 
   @Test
-  fun `getMembershipRequests uses membership requests route`() {
+  fun `getMembershipRequests gets the membership requests path`() {
     val get = requireNotNull(method("getMembershipRequests").getAnnotation(GET::class.java))
 
-    assertEquals(ApiPaths.Organization.MembershipRequests.BASE, get.value)
+    assertEquals("organizations/{organization_id}/membership_requests", get.value)
   }
 
   @Test

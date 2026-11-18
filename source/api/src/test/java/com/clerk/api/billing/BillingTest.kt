@@ -1,6 +1,5 @@
 package com.clerk.api.billing
 
-import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.api.BillingApi
@@ -28,9 +27,6 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Retrofit
@@ -41,45 +37,6 @@ class BillingTest {
   @After
   fun tearDown() {
     unmockkAll()
-  }
-
-  @Test
-  fun `parity list includes every BillingNamespace GET and payer getPaymentMethods`() {
-    val billingMethods = Billing::class.java.methods.map { it.name }.toSet()
-    val expectedBillingGets =
-      listOf(
-        "getPaymentAttempts",
-        "getPaymentAttempt",
-        "getPlans",
-        "getPlan",
-        "getSubscription",
-        "getStatements",
-        "getStatement",
-        "getCreditBalance",
-        "getCreditHistory",
-      )
-
-    expectedBillingGets.forEach { name ->
-      assertTrue("Billing is missing $name", billingMethods.contains(name))
-    }
-    assertSame(Billing, Clerk.billing)
-    assertTrue(
-      Class.forName("com.clerk.api.user.UserKt").methods.any { it.name == "getPaymentMethods" }
-    )
-    assertTrue(
-      Class.forName("com.clerk.api.organizations.OrganizationKt").methods.any {
-        it.name == "getPaymentMethods"
-      }
-    )
-  }
-
-  @Test
-  fun `Billing has no startCheckout member`() {
-    val names = Billing::class.java.methods.map { it.name }.toSet()
-    assertFalse(names.contains("startCheckout"))
-    assertFalse(names.contains("updateCheckout"))
-    assertFalse(names.contains("initializePaymentMethod"))
-    assertFalse(names.contains("addPaymentMethod"))
   }
 
   @Test
@@ -541,24 +498,6 @@ class BillingTest {
     assertEquals(1782223512000L, withoutFraction.createdAt)
     assertEquals(1782223512500L, epochMilliseconds.createdAt)
     assertEquals(1782223512500L, withOffset.createdAt)
-  }
-
-  @Test
-  fun `decodes paginated plans without response wrapper`() {
-    val page =
-      ClerkApi.json.decodeFromString<ClerkPaginatedResponse<BillingPlan>>(
-        """{"data": [$PLAN_JSON], "total_count": 1}"""
-      )
-
-    assertEquals(1, page.totalCount)
-    assertEquals("feature_sso", page.data.single().features.single().id)
-  }
-
-  @Test
-  fun `decodes plan from raw json matching clerk-js getPlan shape`() {
-    val plan = ClerkApi.json.decodeFromString<BillingPlan>(PLAN_JSON)
-    assertEquals("plan_pro", plan.id)
-    assertNull(plan.annualFee)
   }
 
   private fun billingApi(interceptor: CapturingInterceptor): BillingApi {

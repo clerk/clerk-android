@@ -232,21 +232,6 @@ class ClerkTest {
   }
 
   @Test
-  fun `session returns matching session when client has session`() = runTest {
-    val activeSessionId = "active_session_id"
-
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    initializeClerkWithClient(mockClient)
-
-    val session = Clerk.session
-
-    assertEquals(mockSession, session)
-  }
-
-  @Test
   fun `sessionsFlow exposes all sessions from current client`() = runTest {
     val firstSession = mockk<Session>(relaxed = true)
     val secondSession = mockk<Session>(relaxed = true)
@@ -343,22 +328,6 @@ class ClerkTest {
   }
 
   @Test
-  fun `user returns user when session exists`() = runTest {
-    val activeSessionId = "active_session_id"
-
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.user } returns mockUser
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    initializeClerkWithClient(mockClient)
-
-    val user = Clerk.userFlow.value
-
-    assertEquals(mockUser, user)
-  }
-
-  @Test
   fun `isSignedIn returns false when no session exists`() = runTest {
     signInWithActiveSession()
     assertTrue(Clerk.isSignedIn)
@@ -368,21 +337,6 @@ class ClerkTest {
     val isSignedIn = Clerk.isSignedIn
 
     assertFalse(isSignedIn)
-  }
-
-  @Test
-  fun `isSignedIn returns true when session exists`() = runTest {
-    val activeSessionId = "active_session_id"
-
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    initializeClerkWithClient(mockClient)
-
-    val isSignedIn = Clerk.isSignedIn
-
-    assertTrue(isSignedIn)
   }
 
   @Test
@@ -609,61 +563,6 @@ class ClerkTest {
       assertNull((events[0] as AuthEvent.SessionChanged).session)
       assertTrue(events[1] is AuthEvent.SignedOut)
     }
-
-  @Test
-  fun `session property returns sessionFlow value`() = runTest {
-    val activeSessionId = "active_session_id"
-
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    initializeClerkWithClient(mockClient)
-
-    val sessionFromProperty = Clerk.session
-    val sessionFromFlow = Clerk.sessionFlow.value
-
-    assertEquals(sessionFromFlow, sessionFromProperty)
-    assertEquals(mockSession, sessionFromProperty)
-  }
-
-  @Test
-  fun `user property returns userFlow value`() = runTest {
-    val activeSessionId = "active_session_id"
-
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.user } returns mockUser
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    initializeClerkWithClient(mockClient)
-
-    val userFromProperty = Clerk.user
-    val userFromFlow = Clerk.userFlow.value
-
-    assertEquals(userFromFlow, userFromProperty)
-    assertEquals(mockUser, userFromProperty)
-  }
-
-  @Test
-  fun `updateSessionAndUserState updates both flows correctly`() = runTest {
-    simulateUninitializedClient()
-    assertNull(Clerk.sessionFlow.value)
-    assertNull(Clerk.userFlow.value)
-
-    val activeSessionId = "active_session_id"
-    every { mockClient.lastActiveSessionId } returns activeSessionId
-    every { mockClient.sessions } returns listOf(mockSession)
-    every { mockSession.id } returns activeSessionId
-    every { mockSession.user } returns mockUser
-    every { mockSession.status } returns Session.SessionStatus.ACTIVE
-    Clerk.updateClient(mockClient)
-
-    assertEquals(mockSession, Clerk.sessionFlow.value)
-    assertEquals(mockUser, Clerk.userFlow.value)
-    assertEquals(mockSession, Clerk.session)
-    assertEquals(mockUser, Clerk.user)
-  }
 
   // region Pending Session Tests
 

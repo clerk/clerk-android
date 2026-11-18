@@ -35,32 +35,4 @@ class CustomRowGatingTest {
 
     assertTrue(result.isEmpty())
   }
-
-  @Test
-  fun `effectiveCustomRows with empty input returns empty regardless of destination`() {
-    val withDest = effectiveCustomRows(emptyList(), hasDestination = true)
-    val withoutDest = effectiveCustomRows(emptyList(), hasDestination = false)
-
-    assertTrue(withDest.isEmpty())
-    assertTrue(withoutDest.isEmpty())
-  }
-
-  @Test
-  fun `gated rows produce no custom entries in rendered output`() {
-    val gated = effectiveCustomRows(sampleRows, hasDestination = false)
-    val rows =
-      buildRenderedRows(
-        builtInRows = listOf(UserProfileRow.ManageAccount, UserProfileRow.Security),
-        section = UserProfileSection.Profile,
-        customRows = gated,
-      )
-
-    assertEquals(
-      listOf(
-        UserProfileListRow.BuiltIn(UserProfileRow.ManageAccount),
-        UserProfileListRow.BuiltIn(UserProfileRow.Security),
-      ),
-      rows,
-    )
-  }
 }

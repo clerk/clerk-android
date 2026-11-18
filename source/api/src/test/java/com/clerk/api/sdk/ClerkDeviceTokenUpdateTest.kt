@@ -439,17 +439,33 @@ class ClerkDeviceTokenUpdateTest {
   }
 
   @Test
-  fun `setDeviceToken fences in-flight client responses only when the token changes`() {
-    configureClerkForDeviceTokenUpdate()
-    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_old")
-    val initialFence = deviceTokenFenceGeneration()
+  fun `setDeviceToken discards an in-flight client response when the token changes`() {
+    val firstToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
+    val rotatedToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r2")
+    val releaseRefresh = startRefreshInFlight(firstToken)
 
-    Clerk.setDeviceToken(token = "device_token_stale", expected = "device_token_other")
-    Clerk.setDeviceToken(token = "device_token_old", expected = "device_token_old")
-    assertEquals(initialFence, deviceTokenFenceGeneration())
+    assertTrue(Clerk.setDeviceToken(token = rotatedToken, expected = firstToken))
+    releaseRefresh.complete(Unit)
+    awaitConfigurationScopeIdle()
 
-    Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_old")
-    assertEquals(initialFence + 1, deviceTokenFenceGeneration())
+    assertEquals("client_followup", Clerk.client.id)
+    assertEquals(rotatedToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    coVerify(exactly = 2) { Client.getSkippingClientId() }
+  }
+
+  @Test
+  fun `setDeviceToken applies an in-flight client response when the token is unchanged`() {
+    val firstToken = deviceTokenJwt(clientId = "client_b", rotatingToken = "r1")
+    val releaseRefresh = startRefreshInFlight(firstToken)
+
+    assertFalse(Clerk.setDeviceToken(token = "device_token_other", expected = "device_token_stale"))
+    assertTrue(Clerk.setDeviceToken(token = firstToken, expected = firstToken))
+    releaseRefresh.complete(Unit)
+    awaitConfigurationScopeIdle()
+
+    assertEquals("client_stale", Clerk.client.id)
+    assertEquals(firstToken, StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    coVerify(exactly = 1) { Client.getSkippingClientId() }
   }
 
   @Test
@@ -512,17 +528,37 @@ class ClerkDeviceTokenUpdateTest {
     )
 
   /** Stubs a refresh that returns [client] once the returned signal is completed. */
-  private fun stubGatedRefresh(client: Client): CompletableDeferred<Unit> {
+  private fun stubGatedRefresh(
+    client: Client,
+    followUp: Client = client,
+  ): CompletableDeferred<Unit> {
     val release = CompletableDeferred<Unit>()
+    val refreshes = AtomicInteger()
     coEvery { Client.getSkippingClientId() } coAnswers
       {
-        release.await()
-        ClerkResult.success(client)
+        if (refreshes.getAndIncrement() == 0) {
+          release.await()
+          ClerkResult.success(client)
+        } else {
+          ClerkResult.success(followUp)
+        }
       }
     coEvery { Client.get() } returns
       ClerkResult.unknownFailure(IllegalStateException("Client.get() should not be called"))
     coEvery { Environment.get() } returns ClerkResult.success(testEnvironment())
     return release
+  }
+
+  private fun startRefreshInFlight(firstToken: String): CompletableDeferred<Unit> {
+    configureClerkForDeviceTokenUpdate()
+    Clerk.updateClient(Client(id = "client_a"))
+    val oldToken = deviceTokenJwt(clientId = "client_a", rotatingToken = "r1")
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, oldToken)
+    val releaseRefresh =
+      stubGatedRefresh(Client(id = "client_stale"), followUp = Client(id = "client_followup"))
+    assertTrue(Clerk.setDeviceToken(token = firstToken, expected = oldToken))
+    coVerify(timeout = ASYNC_TIMEOUT_MS) { Client.getSkippingClientId() }
+    return releaseRefresh
   }
 
   private fun stubRefreshFailure() {

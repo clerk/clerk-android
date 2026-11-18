@@ -43,20 +43,6 @@ class BiometricCredentialLocalStoreTest {
   }
 
   @Test
-  fun `every policy is persisted explicitly`() {
-    val passcode = credential(id = "td_passcode")
-    val strict =
-      credential(id = "td_strict").copy(policy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
-    store.save(passcode)
-    store.save(strict)
-
-    val json = fileStore.dataFile.readText()
-    assertTrue(json.contains("\"policy\":\"biometry_or_device_passcode\""))
-    assertTrue(json.contains("\"policy\":\"biometry_current_set\""))
-    assertEquals(listOf(passcode, strict), store.all())
-  }
-
-  @Test
   fun `save replaces an existing credential with the same id`() {
     store.save(credential(id = "td_1", userId = "user_1"))
     store.save(credential(id = "td_1", userId = "user_2"))

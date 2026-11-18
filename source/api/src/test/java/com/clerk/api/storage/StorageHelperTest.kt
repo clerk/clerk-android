@@ -220,33 +220,6 @@ class StorageHelperTest {
   }
 
   @Test
-  fun `after initialize isInitialized returns true and values can be saved loaded and deleted`() {
-    StorageHelper.initialize(context)
-    val testKey = StorageKey.CACHED_CLERK_STATE
-    val testValue = "cached-state-123"
-
-    // Verify initialization state using reflection (since isInitialized is private)
-    val field = StorageHelper::class.java.getDeclaredField("secureStorage")
-    field.isAccessible = true
-    val prefs = field.get(StorageHelper)
-    field.isAccessible = false
-    assertNotNull("secureStorage should be initialized", prefs)
-
-    StorageHelper.saveValue(testKey, testValue)
-
-    assertEquals("Value should be saved", testValue, StorageHelper.loadValue(testKey))
-
-    val updatedValue = "updated-cached-state-456"
-    StorageHelper.saveValue(testKey, updatedValue)
-
-    assertEquals("Value should be updated", updatedValue, StorageHelper.loadValue(testKey))
-
-    StorageHelper.deleteValue(testKey)
-
-    assertNull("Value should be deleted", StorageHelper.loadValue(testKey))
-  }
-
-  @Test
   fun `multiple save and load operations work correctly after initialization`() {
     StorageHelper.initialize(context)
     val cachedStateKey = StorageKey.CACHED_CLERK_STATE

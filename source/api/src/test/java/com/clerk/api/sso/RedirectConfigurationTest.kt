@@ -14,13 +14,6 @@ class RedirectConfigurationTest {
   }
 
   @Test
-  fun defaultRedirectUrl_usesCallbackHost() {
-    Clerk.applicationId = "com.example.app"
-
-    assertEquals("clerk://com.example.app.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)
-  }
-
-  @Test
   fun redirectUrlsReflectTheCurrentApplicationId() {
     Clerk.applicationId = "com.example.first"
     assertEquals("clerk://com.example.first.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)

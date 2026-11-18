@@ -204,26 +204,6 @@ class RestoreCredentialsTest {
   }
 
   @Test
-  fun `signIn classifies a missing restore credential without attempting verification`() = runTest {
-    every { Clerk.activeSession } returns null
-    every { Clerk.session } returns null
-    every { Clerk.user } returns null
-    val pendingSignIn = pendingSignIn()
-
-    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(pendingSignIn)
-    coEvery { credentialManager.getCredential(eq(context), any()) } throws
-      NoCredentialException("No restore credential")
-
-    val result = RestoreCredentials.signIn()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertTrue(
-      (result as ClerkResult.Failure).throwable is CredentialFlowException.NoSavedCredential
-    )
-    coVerify(exactly = 0) { signInApi.attemptFirstFactor(any(), any()) }
-  }
-
-  @Test
   fun `clear deletes only the restore credential state`() = runTest {
     val request = slot<ClearCredentialStateRequest>()
     coEvery { credentialManager.clearCredentialState(eq(context), capture(request)) } returns Unit

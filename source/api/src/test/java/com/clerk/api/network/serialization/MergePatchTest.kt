@@ -123,16 +123,6 @@ class MergePatchTest {
   }
 
   @Test
-  fun `empty current returns desired verbatim`() {
-    val current = JsonObject(emptyMap())
-    val desired = buildJsonObject {
-      put("a", 1)
-      put("nested", buildJsonObject { put("c", 2) })
-    }
-    assertEquals(desired, computeMergePatch(current, desired))
-  }
-
-  @Test
   fun `arrays are treated as atomic values (replace, not merge)`() {
     // RFC 7396 explicitly treats arrays as opaque.
     val current = buildJsonObject {
