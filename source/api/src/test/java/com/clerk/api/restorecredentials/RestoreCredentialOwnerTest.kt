@@ -126,14 +126,14 @@ class RestoreCredentialOwnerTest {
     }
 
   @Test
-  fun `a platform credential request that fails restores the previous owner`() = runTest {
+  fun `a platform credential request that fails leaves the owner unknown`() = runTest {
     coEvery { credentialManager.createCredential(eq(context), any()) } throws
       CreateCredentialUnknownException("failed")
 
     val result = RestoreCredentials.createIfMissing()
 
     assertTrue(result is ClerkResult.Failure)
-    assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
+    assertNull(RestoreCredentialStore.read().deviceKeyUserId)
   }
 
   @Test

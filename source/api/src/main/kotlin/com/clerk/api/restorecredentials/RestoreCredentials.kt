@@ -264,14 +264,11 @@ public object RestoreCredentials {
       )
     }
     var progress = CreationProgress.NONE
-    val forgetUser = { cancelled: Boolean ->
+    val forgetUser = {
       RestoreCredentialStore.update {
         when (progress) {
           CreationProgress.NONE -> it.copy(deviceKeyUserId = previousOwnerId)
-          CreationProgress.CREDENTIAL_REQUESTED ->
-            if (cancelled) it.copy(deviceKeyUserId = null)
-            else it.copy(deviceKeyUserId = previousOwnerId)
-          CreationProgress.CREDENTIAL_REPLACED -> it.copy(deviceKeyUserId = null)
+          CreationProgress.CREDENTIAL_REQUESTED -> it.copy(deviceKeyUserId = null)
           CreationProgress.VERIFIED -> it
         }
       }
@@ -280,25 +277,24 @@ public object RestoreCredentials {
       try {
         createForSignedInUser(isCloudBackupEnabled) { progress = it }
       } catch (e: CancellationException) {
-        forgetUser(true)
+        forgetUser()
         throw e
       }
-    if (result is ClerkResult.Failure) forgetUser(false)
+    if (result is ClerkResult.Failure) forgetUser()
     return result
   }
 
   /**
    * How far a creation got before it stopped. The owner is recorded as unknown while a creation is
    * pending, so a process death leaves nothing attributed to a user whose key may not exist, and
-   * the previous owner is restored only when nothing was replaced. Credential Manager can finish a
-   * request whose caller was cancelled, and the platform credential is replaced before the server
-   * verifies it, so a rollback after the request started cannot assume the previous owner's key
-   * still exists.
+   * the previous owner is restored only when the platform request was never issued. Credential
+   * Manager can finish a request whose caller was cancelled, and can report a failure after the
+   * provider replaced the credential, so once the request is issued the previous owner's key may be
+   * gone whatever the outcome.
    */
   private enum class CreationProgress {
     NONE,
     CREDENTIAL_REQUESTED,
-    CREDENTIAL_REPLACED,
     VERIFIED,
   }
 
@@ -338,7 +334,6 @@ public object RestoreCredentials {
             ClerkLogger.e("Restore credential creation failed: ${e.message}")
             return ClerkResult.unknownFailure(e)
           }
-        onProgress(CreationProgress.CREDENTIAL_REPLACED)
 
         when (
           val verificationResult =
