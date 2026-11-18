@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.account
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +29,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -177,6 +179,7 @@ private fun AvatarHeaderView(
       Spacers.Vertical.Spacer8()
       ClerkButton(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
+        paddingValues = PaddingValues(horizontal = dp12),
         text = stringResource(R.string.edit_profile),
         onClick = onClickEdit,
         isEnabled = true,
