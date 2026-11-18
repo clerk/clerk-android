@@ -7,12 +7,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class DecodeFailureSummaryTest {
 
   private val token = "eyJhbGciOiJSUzI1NiJ9.c2Vzc2lvbl9zZWNyZXQ.signature"
+  private val locatorImitation = "at path: \$$token JSON input:"
 
   private fun clientJsonWithExpireAt(expireAt: String): String =
     """
@@ -31,6 +31,18 @@ class DecodeFailureSummaryTest {
     """
       .trimIndent()
 
+  private fun failureOf(decode: () -> Client): Throwable =
+    runCatching(decode).exceptionOrNull() ?: error("The client decoded")
+
+  private fun assertSummaryIsTheClassAlone(failure: Throwable) {
+    val summary = failure.decodeFailureSummary()
+
+    assertEquals(failure::class.simpleName, summary)
+    assertFalse(summary.contains(token))
+    assertFalse(summary.contains("eyJ"))
+    assertFalse(summary.contains("$"))
+  }
+
   @Test
   fun `summary is the exception class and drops the message`() {
     val exception =
@@ -46,33 +58,18 @@ class DecodeFailureSummaryTest {
   @Test
   fun `a string decode failure on a field that imitates the locator leaks nothing`() {
     val failure =
-      runCatching {
-          ClerkApi.json.decodeFromString<Client>(
-            clientJsonWithExpireAt("at path: \$$token JSON input:")
-          )
-        }
-        .exceptionOrNull()
+      failureOf { ClerkApi.json.decodeFromString(clientJsonWithExpireAt(locatorImitation)) }
 
-    assertNotNull(failure)
-    val summary = failure!!.decodeFailureSummary()
-    assertEquals(failure::class.simpleName, summary)
-    assertFalse(summary.contains(token))
-    assertFalse(summary.contains("eyJ"))
-    assertFalse(summary.contains("$"))
+    assertSummaryIsTheClassAlone(failure)
   }
 
   @Test
   fun `a tree decode failure on a field that imitates the locator leaks nothing`() {
-    val element = Json.parseToJsonElement(clientJsonWithExpireAt("at path: \$$token JSON input:"))
-    val failure =
-      runCatching { ClerkApi.json.decodeFromJsonElement<Client>(element) }.exceptionOrNull()
+    val element = Json.parseToJsonElement(clientJsonWithExpireAt(locatorImitation))
 
-    assertNotNull(failure)
-    val summary = failure!!.decodeFailureSummary()
-    assertEquals(failure::class.simpleName, summary)
-    assertFalse(summary.contains(token))
-    assertFalse(summary.contains("eyJ"))
-    assertFalse(summary.contains("$"))
+    val failure = failureOf { ClerkApi.json.decodeFromJsonElement(element) }
+
+    assertSummaryIsTheClassAlone(failure)
   }
 
   @Test
