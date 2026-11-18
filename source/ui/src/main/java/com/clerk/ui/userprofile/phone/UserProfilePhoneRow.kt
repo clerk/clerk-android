@@ -112,16 +112,17 @@ internal fun UserProfilePhoneRow(
 @Composable
 private fun ReportPhoneRowError(
   state: UserProfileAddPhoneViewModel.State,
-  onErrorShown: () -> Unit,
+  onErrorShown: (UserProfileAddPhoneViewModel.State.Error) -> Unit,
   onError: (String) -> Unit,
 ) {
-  val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
+  val error = state as? UserProfileAddPhoneViewModel.State.Error
   val currentOnError by rememberUpdatedState(onError)
   val currentOnErrorShown by rememberUpdatedState(onErrorShown)
-  LaunchedEffect(errorMessage) {
-    if (errorMessage != null) {
+  LaunchedEffect(error) {
+    val errorMessage = error?.message
+    if (error != null && errorMessage != null) {
       currentOnError(errorMessage)
-      currentOnErrorShown()
+      currentOnErrorShown(error)
     }
   }
 }

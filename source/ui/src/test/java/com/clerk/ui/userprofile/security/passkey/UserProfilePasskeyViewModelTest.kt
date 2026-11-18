@@ -88,7 +88,7 @@ class UserProfilePasskeyViewModelTest {
       viewModel.deletePasskey(passkey)
       assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
       assertEquals(UserProfilePasskeyViewModel.State.Error("bad"), awaitItem())
-      viewModel.clearError()
+      viewModel.clearError(UserProfilePasskeyViewModel.State.Error("bad"))
       assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.deletePasskey(passkey)
       assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
@@ -97,19 +97,25 @@ class UserProfilePasskeyViewModelTest {
   }
 
   @Test
-  fun clearError_withoutFailure_keepsTheCurrentState() = runTest {
+  fun clearError_withAStaleFailure_keepsTheNewerOne() = runTest {
     val passkey = mockk<Passkey>()
-    coEvery { passkey.delete() } returns ClerkResult.success(mockk<DeletedObject>())
+    coEvery { passkey.delete() } returns
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "first")))) andThen
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "second"))))
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
       assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
       viewModel.deletePasskey(passkey)
       assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
-      assertEquals(UserProfilePasskeyViewModel.State.Success, awaitItem())
-      viewModel.clearError()
+      assertEquals(UserProfilePasskeyViewModel.State.Error("first"), awaitItem())
+      viewModel.deletePasskey(passkey)
+      assertEquals(UserProfilePasskeyViewModel.State.Loading, awaitItem())
+      assertEquals(UserProfilePasskeyViewModel.State.Error("second"), awaitItem())
+      viewModel.clearError(UserProfilePasskeyViewModel.State.Error("first"))
       expectNoEvents()
     }
+    assertEquals(UserProfilePasskeyViewModel.State.Error("second"), viewModel.state.value)
   }
 
   @Test

@@ -128,16 +128,16 @@ private fun EmailRowActions(
 @Composable
 internal fun ReportEmailRowError(
   state: EmailViewModel.State,
-  onErrorShown: () -> Unit = {},
+  onErrorShown: (EmailViewModel.State.Failure) -> Unit = {},
   onError: (String) -> Unit,
 ) {
-  val errorMessage = (state as? EmailViewModel.State.Failure)?.message
+  val failure = state as? EmailViewModel.State.Failure
   val currentOnError by rememberUpdatedState(onError)
   val currentOnErrorShown by rememberUpdatedState(onErrorShown)
-  LaunchedEffect(errorMessage) {
-    if (errorMessage != null) {
-      currentOnError(errorMessage)
-      currentOnErrorShown()
+  LaunchedEffect(failure) {
+    if (failure != null) {
+      currentOnError(failure.message)
+      currentOnErrorShown(failure)
     }
   }
 }

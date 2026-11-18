@@ -108,7 +108,7 @@ class EmailViewModelTest {
       viewModel.remove(email)
       assertEquals(EmailViewModel.State.Loading, awaitItem())
       assertEquals(EmailViewModel.State.Failure("remove"), awaitItem())
-      viewModel.clearError()
+      viewModel.clearError(EmailViewModel.State.Failure("remove"))
       assertEquals(EmailViewModel.State.Idle, awaitItem())
       viewModel.remove(email)
       assertEquals(EmailViewModel.State.Loading, awaitItem())

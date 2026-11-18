@@ -14,7 +14,6 @@ import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class UserProfileAddPhoneViewModel : ViewModel() {
@@ -69,8 +68,8 @@ internal class UserProfileAddPhoneViewModel : ViewModel() {
     _state.value = State.Idle
   }
 
-  fun clearError() {
-    _state.update { state -> if (state is State.Error) State.Idle else state }
+  fun clearError(reported: State.Error) {
+    _state.compareAndSet(reported, State.Idle)
   }
 
   sealed interface State {

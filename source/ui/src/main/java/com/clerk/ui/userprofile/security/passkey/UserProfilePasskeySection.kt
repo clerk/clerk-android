@@ -45,13 +45,13 @@ private fun UserProfilePasskeySectionImpl(
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
-  val errorMessage = (state as? UserProfilePasskeyViewModel.State.Error)?.message
+  val error = state as? UserProfilePasskeyViewModel.State.Error
   val currentOnError by rememberUpdatedState(onError)
 
-  LaunchedEffect(errorMessage) {
-    if (errorMessage != null) {
-      currentOnError(errorMessage)
-      viewModel.clearError()
+  LaunchedEffect(error) {
+    if (error != null) {
+      currentOnError(error.message)
+      viewModel.clearError(error)
     }
   }
 
