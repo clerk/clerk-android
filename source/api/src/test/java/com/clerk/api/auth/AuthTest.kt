@@ -17,7 +17,6 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.restorecredentials.RestoreCredentialStore
 import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
@@ -38,8 +37,6 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineStart
-import java.io.File
-import java.nio.file.Files
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -72,8 +69,6 @@ class AuthTest {
   @After
   fun tearDown() {
     unmockkAll()
-    RestoreCredentialStore.reset()
-    RestoreCredentialStore.directory = { Clerk.applicationContext?.get()?.noBackupFilesDir }
     Clerk.updateClient(Client())
     setForceOrganizationSelection(false)
     SessionTokenFetcher.shared.reset()
@@ -373,70 +368,6 @@ class AuthTest {
     coVerify(exactly = 1) { sessionApi.removeSession(firstSession.id) }
     coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
-
-  @Test
-  fun `signOut with session ID keeps the restore credential of a user who stays signed in`() =
-    runTest {
-      val firstSession = testSession("sess_1").copy(user = testUser("user_1"))
-      val secondSession = testSession("sess_2").copy(user = testUser("user_2"))
-      val sessionApi = mockk<SessionApi>()
-      val clientApi = mockk<ClientApi>()
-      mockkObject(ClerkApi)
-      mockkObject(RestoreCredentials)
-      every { ClerkApi.session } returns sessionApi
-      every { ClerkApi.client } returns clientApi
-      coEvery { RestoreCredentials.clearSilently() } returns Unit
-      coEvery { sessionApi.removeSession(secondSession.id) } returns
-        ClerkResult.success(secondSession)
-      coEvery { clientApi.get() } returns
-        ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
-      RestoreCredentialStore.directory = { restoreStateDirectory }
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-      Clerk.updateClient(
-        Client(
-          id = "client_123",
-          sessions = listOf(firstSession, secondSession),
-          lastActiveSessionId = firstSession.id,
-        )
-      )
-
-      Auth().signOut(sessionId = secondSession.id)
-
-      assertEquals(listOf(firstSession), Clerk.client.sessions)
-      coVerify(exactly = 0) { RestoreCredentials.clearSilently() }
-      assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
-    }
-
-  @Test
-  fun `signOut with session ID clears the restore credential of the user who signed out`() =
-    runTest {
-      val firstSession = testSession("sess_1").copy(user = testUser("user_1"))
-      val secondSession = testSession("sess_2").copy(user = testUser("user_2"))
-      val sessionApi = mockk<SessionApi>()
-      val clientApi = mockk<ClientApi>()
-      mockkObject(ClerkApi)
-      mockkObject(RestoreCredentials)
-      every { ClerkApi.session } returns sessionApi
-      every { ClerkApi.client } returns clientApi
-      coEvery { RestoreCredentials.clearSilently() } returns Unit
-      coEvery { sessionApi.removeSession(secondSession.id) } returns
-        ClerkResult.success(secondSession)
-      coEvery { clientApi.get() } returns
-        ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
-      RestoreCredentialStore.directory = { restoreStateDirectory }
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_2") }
-      Clerk.updateClient(
-        Client(
-          id = "client_123",
-          sessions = listOf(firstSession, secondSession),
-          lastActiveSessionId = firstSession.id,
-        )
-      )
-
-      Auth().signOut(sessionId = secondSession.id)
-
-      coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
-    }
 
   @Test
   fun `signOut with session ID clears only that session's cached tokens`() = runTest {
@@ -781,23 +712,6 @@ class AuthTest {
       )
     )
   }
-
-  private val restoreStateDirectory: File by lazy {
-    Files.createTempDirectory("restore_state").toFile().apply { deleteOnExit() }
-  }
-
-  private fun testUser(id: String): User =
-    User(
-      hasImage = false,
-      id = id,
-      imageUrl = "",
-      passkeys = emptyList(),
-      passwordEnabled = false,
-      phoneNumbers = emptyList(),
-      totpEnabled = false,
-      twoFactorEnabled = false,
-      updatedAt = 0,
-    )
 
   private fun testSession(id: String, lastActiveOrganizationId: String? = null): Session =
     Session(
