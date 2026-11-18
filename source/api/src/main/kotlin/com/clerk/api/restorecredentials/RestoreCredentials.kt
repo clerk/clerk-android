@@ -174,16 +174,16 @@ public object RestoreCredentials {
 
   /**
    * Clears the restore credential after one session signed out, unless sessions remain and the
-   * device key is recorded as belonging to a user other than [signedOutUserId]. An unknown owner is
-   * cleared as before. A creation still in flight is cancelled first, so one that verified for the
-   * signed-out user cannot finish after the decision.
+   * device key is recorded as belonging to a known user other than [signedOutUserId]. An unknown
+   * owner or an unknown signed-out user is cleared as before. A creation still in flight is
+   * cancelled first, so one that verified for the signed-out user cannot finish after the decision.
    */
   internal suspend fun clearSilentlyAfterSessionSignOut(signedOutUserId: String?) {
     creation?.cancelForSignOut()
     val anotherUserOwnsDeviceKey = creationMutex.withLock {
       val ownerId = RestoreCredentialStore.read().deviceKeyUserId
       val sessionsRemain = Clerk.clientOrNull?.sessions.orEmpty().isNotEmpty()
-      sessionsRemain && ownerId != null && ownerId != signedOutUserId
+      sessionsRemain && ownerId != null && signedOutUserId != null && ownerId != signedOutUserId
     }
     if (anotherUserOwnsDeviceKey) {
       ClerkLogger.d("Keeping the restore credential: it belongs to a user who is still signed in.")
@@ -251,12 +251,19 @@ public object RestoreCredentials {
         IllegalStateException("Restore credential state could not be saved.")
       )
     }
+    var progress = CreationProgress.NONE
     val forgetUser = {
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = state.deviceKeyUserId) }
+      RestoreCredentialStore.update {
+        when (progress) {
+          CreationProgress.NONE -> it.copy(deviceKeyUserId = state.deviceKeyUserId)
+          CreationProgress.CREDENTIAL_REPLACED -> it.copy(deviceKeyUserId = null)
+          CreationProgress.VERIFIED -> it
+        }
+      }
     }
     val result =
       try {
-        createForSignedInUser(isCloudBackupEnabled = true)
+        createForSignedInUser(isCloudBackupEnabled = true) { progress = it }
       } catch (e: CancellationException) {
         forgetUser()
         throw e
@@ -265,8 +272,19 @@ public object RestoreCredentials {
     return result
   }
 
+  /**
+   * How far a creation got before it stopped. The platform credential is replaced before the
+   * server verifies it, so a rollback after that point cannot restore the previous owner's key.
+   */
+  private enum class CreationProgress {
+    NONE,
+    CREDENTIAL_REPLACED,
+    VERIFIED,
+  }
+
   private suspend fun createForSignedInUser(
-    isCloudBackupEnabled: Boolean
+    isCloudBackupEnabled: Boolean,
+    onProgress: (CreationProgress) -> Unit = {},
   ): ClerkResult<Unit, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
     val userId = signedInUserId() ?: return signedOutCreationFailure()
@@ -299,6 +317,7 @@ public object RestoreCredentials {
             ClerkLogger.e("Restore credential creation failed: ${e.message}")
             return ClerkResult.unknownFailure(e)
           }
+        onProgress(CreationProgress.CREDENTIAL_REPLACED)
 
         when (
           val verificationResult =
@@ -315,6 +334,7 @@ public object RestoreCredentials {
                 createdPasskey = RestorePasskey(userId = userId, passkeyId = passkeyId),
               )
             }
+            onProgress(CreationProgress.VERIFIED)
             nameRestorePasskey(passkeyId)
             previousPasskey?.let { deleteReplacedPasskey(it, userId) }
             ClerkResult.success(Unit)

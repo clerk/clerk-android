@@ -604,6 +604,46 @@ class RestoreCredentialsTest {
       GetCredentialResponse(restoreCredential)
   }
 
+  @Test
+  fun `cancellation while naming the passkey keeps the verified user as the owner`() = runTest {
+    signedInAs("user_2")
+    RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+    stubSuccessfulCreate()
+    coEvery { userApi.updatePasskey(any(), any(), any()) } throws CancellationException("cancelled")
+
+    assertCancels { RestoreCredentials.createIfMissing() }
+
+    assertEquals("user_2", RestoreCredentialStore.read().deviceKeyUserId)
+  }
+
+  @Test
+  fun `cancellation after the platform credential was replaced leaves the owner unknown`() =
+    runTest {
+      signedInAs("user_2")
+      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+      stubSuccessfulCreate()
+      coEvery { userApi.attemptPasskeyVerification(any(), any(), any(), any()) } throws
+        CancellationException("cancelled")
+
+      assertCancels { RestoreCredentials.createIfMissing() }
+
+      assertNull(RestoreCredentialStore.read().deviceKeyUserId)
+    }
+
+  @Test
+  fun `cancellation before the platform credential was replaced restores the previous owner`() =
+    runTest {
+      signedInAs("user_2")
+      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+      stubSuccessfulCreate()
+      coEvery { credentialManager.createCredential(eq(context), any()) } throws
+        CancellationException("cancelled")
+
+      assertCancels { RestoreCredentials.createIfMissing() }
+
+      assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
+    }
+
   private fun stubSuccessfulCreate() {
     coEvery { userApi.createPasskey(any()) } returnsMany
       listOf(
