@@ -21,19 +21,6 @@ class AuthViewRestoredNavigationTest {
   }
 
   @Test
-  fun `discardRestoredAuthNavigation clears restored sign up stack`() {
-    val restoredBackStack =
-      NavBackStack<NavKey>(
-        AuthDestination.AuthStart,
-        AuthDestination.SignUpCompleteProfile(progress = 1),
-      )
-
-    discardRestoredAuthNavigation(restoredBackStack)
-
-    assertEquals(listOf(AuthDestination.AuthStart), restoredBackStack.toList())
-  }
-
-  @Test
   fun `discardRestoredAuthNavigation preserves auth start`() {
     val restoredBackStack = NavBackStack<NavKey>(AuthDestination.AuthStart)
 

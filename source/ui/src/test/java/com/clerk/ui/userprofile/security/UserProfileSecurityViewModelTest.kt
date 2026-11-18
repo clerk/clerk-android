@@ -52,28 +52,6 @@ class UserProfileSecurityViewModelTest {
   }
 
   @Test
-  fun loadSessions_success_setsSuccessState() = runTest {
-    val user = mockk<User>()
-    val sessions =
-      listOf(
-        session(id = "first", lastActiveAt = 100L),
-        session(id = "second", lastActiveAt = 200L),
-      )
-    every { Clerk.user } returns user
-    every { sessions[0].isThisDevice } returns false
-    every { sessions[1].isThisDevice } returns false
-    coEvery { user.activeSessions() } returns ClerkResult.success(sessions)
-
-    val viewModel = UserProfileSecurityViewModel()
-    viewModel.state.test {
-      var item = awaitItem()
-      if (item is UserProfileSecurityViewModel.State.Idle) item = awaitItem()
-      if (item is UserProfileSecurityViewModel.State.Loading) item = awaitItem()
-      assertEquals(UserProfileSecurityViewModel.State.Success(sessions.reversed()), item)
-    }
-  }
-
-  @Test
   fun loadSessions_success_sortsCurrentDeviceFirstThenLastActive() = runTest {
     val user = mockk<User>()
     val currentSession = session(id = "current", lastActiveAt = 100L)

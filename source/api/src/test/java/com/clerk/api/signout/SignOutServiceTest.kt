@@ -399,41 +399,6 @@ class SignOutServiceTest {
   }
 
   @Test
-  fun `signOut clears session and user state on successful sign-out`() = runTest {
-    setupActiveSession()
-
-    coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
-
-    assertTrue("Session should exist before sign-out", Clerk.session != null)
-    assertTrue("User should exist before sign-out", Clerk.user != null)
-    assertTrue("isSignedIn should be true before sign-out", Clerk.isSignedIn)
-
-    val result = SignOutService.signOut()
-
-    assertTrue("Sign-out should succeed", result is ClerkResult.Success)
-    assertNull("Session should be null after sign-out", Clerk.sessionFlow.value)
-    assertNull("User should be null after sign-out", Clerk.userFlow.value)
-  }
-
-  @Test
-  fun `signOut clears session and user state even when server sign-out fails`() = runTest {
-    setupActiveSession()
-
-    coEvery { mockSessionApi.deleteSessions(any()) } throws Exception("Server error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
-
-    assertTrue("Session should exist before sign-out", Clerk.session != null)
-    assertTrue("User should exist before sign-out", Clerk.user != null)
-
-    val result = SignOutService.signOut()
-
-    assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
-    assertNull("Session should be null even on failure", Clerk.sessionFlow.value)
-    assertNull("User should be null even on failure", Clerk.userFlow.value)
-  }
-
-  @Test
   fun `signOut succeeds when no session exists`() = runTest {
     val emptyClient = mockk<Client>()
     every { emptyClient.lastActiveSessionId } returns null

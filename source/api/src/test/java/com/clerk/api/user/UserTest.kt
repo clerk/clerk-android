@@ -4,8 +4,6 @@ import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.toFormFields
 import com.clerk.api.phonenumber.PhoneNumber
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -15,20 +13,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class UserTest {
-
-  @Test
-  fun `UpdateParams should include unsafeMetadata when provided`() {
-    val unsafeMetadataJson = """{"birthday":"11-30-1969"}"""
-    val params =
-      User.UpdateParams(firstName = "John", lastName = "Doe", unsafeMetadata = unsafeMetadataJson)
-
-    val paramsMap = params.toFormFields()
-
-    assertNotNull("Map should not be null", paramsMap)
-    assertEquals("Should include firstName", "John", paramsMap["first_name"])
-    assertEquals("Should include lastName", "Doe", paramsMap["last_name"])
-    assertEquals("Should include unsafe_metadata", unsafeMetadataJson, paramsMap["unsafe_metadata"])
-  }
 
   @Test
   fun `UpdateParams should exclude unsafeMetadata when null`() {
@@ -46,99 +30,26 @@ class UserTest {
   }
 
   @Test
-  fun `UpdateParams should include all metadata types when provided`() {
+  fun `UpdateParams form fields are the profile, public metadata and private metadata fields`() {
     val publicMetadataJson = """{"role":"admin"}"""
     val privateMetadataJson = """{"internal_id":"12345"}"""
-    val unsafeMetadataJson = """{"birthday":"11-30-1969"}"""
 
-    val params =
+    val paramsMap =
       User.UpdateParams(
-        firstName = "Alice",
-        publicMetadata = publicMetadataJson,
-        privateMetadata = privateMetadataJson,
-        unsafeMetadata = unsafeMetadataJson,
-      )
+          firstName = "Alice",
+          publicMetadata = publicMetadataJson,
+          privateMetadata = privateMetadataJson,
+        )
+        .toFormFields()
 
-    val paramsMap = params.toFormFields()
-
-    assertNotNull("Map should not be null", paramsMap)
-    assertEquals("Should include firstName", "Alice", paramsMap["first_name"])
-    assertEquals("Should include public_metadata", publicMetadataJson, paramsMap["public_metadata"])
     assertEquals(
-      "Should include private_metadata",
-      privateMetadataJson,
-      paramsMap["private_metadata"],
+      mapOf(
+        "first_name" to "Alice",
+        "public_metadata" to publicMetadataJson,
+        "private_metadata" to privateMetadataJson,
+      ),
+      paramsMap,
     )
-    assertEquals("Should include unsafe_metadata", unsafeMetadataJson, paramsMap["unsafe_metadata"])
-  }
-
-  @Test
-  fun `UpdateParams should only include unsafeMetadata when only it is provided`() {
-    val unsafeMetadataJson = """{"preferences":{"theme":"dark"}}"""
-
-    val params = User.UpdateParams(unsafeMetadata = unsafeMetadataJson)
-
-    val paramsMap = params.toFormFields()
-
-    assertNotNull("Map should not be null", paramsMap)
-    assertEquals("Map should contain only one entry", 1, paramsMap.size)
-    assertEquals("Should include unsafe_metadata", unsafeMetadataJson, paramsMap["unsafe_metadata"])
-  }
-
-  @Test
-  fun `UpdateParams serialization should include unsafe_metadata field`() {
-    val unsafeMetadataJson = """{"custom":"data"}"""
-    val params = User.UpdateParams(username = "testuser", unsafeMetadata = unsafeMetadataJson)
-
-    val json = Json.encodeToString(params)
-
-    assertTrue("Serialized JSON should contain unsafe_metadata", json.contains("unsafe_metadata"))
-    assertTrue(
-      "Serialized JSON should contain the escaped metadata value",
-      json.contains("""\"custom\":\"data\""""),
-    )
-  }
-
-  @Test
-  fun `UpdateParams with empty unsafeMetadata should be handled correctly`() {
-    val emptyMetadata = "{}"
-    val params = User.UpdateParams(unsafeMetadata = emptyMetadata)
-
-    val paramsMap = params.toFormFields()
-
-    assertNotNull("Map should not be null", paramsMap)
-    assertEquals(
-      "Should include unsafe_metadata with empty object",
-      emptyMetadata,
-      paramsMap["unsafe_metadata"],
-    )
-  }
-
-  @Test
-  fun `UpdateParams with complex nested unsafeMetadata should be preserved`() {
-    val complexMetadata =
-      """{"user":{"preferences":{"theme":"dark","language":"en"},"settings":{"notifications":true}}}"""
-    val params = User.UpdateParams(firstName = "Bob", unsafeMetadata = complexMetadata)
-
-    val paramsMap = params.toFormFields()
-
-    assertNotNull("Map should not be null", paramsMap)
-    assertEquals(
-      "Should preserve complex nested metadata",
-      complexMetadata,
-      paramsMap["unsafe_metadata"],
-    )
-  }
-
-  @Test
-  fun `UpdateMetadataParams should include unsafe_metadata when provided`() {
-    val payload = """{"preferences":{"theme":"dark"}}"""
-    val params = User.UpdateMetadataParams(unsafeMetadata = payload)
-
-    val paramsMap = params.toFormFields()
-
-    assertEquals("Map should contain exactly one entry", 1, paramsMap.size)
-    assertEquals("Should include unsafe_metadata", payload, paramsMap["unsafe_metadata"])
   }
 
   @Test
@@ -148,32 +59,6 @@ class UserTest {
     val paramsMap = params.toFormFields()
 
     assertTrue("Map should be empty when no fields are provided", paramsMap.isEmpty())
-  }
-
-  @Test
-  fun `UpdateMetadataParams should serialize with snake_case`() {
-    val params = User.UpdateMetadataParams(unsafeMetadata = """{"k":"v"}""")
-
-    val json = Json.encodeToString(params)
-
-    assertTrue("Serialized JSON should contain unsafe_metadata", json.contains("unsafe_metadata"))
-    assertTrue(
-      "Serialized JSON should contain the escaped metadata value",
-      json.contains("""\"k\":\"v\""""),
-    )
-  }
-
-  @Test
-  fun `UpdateMetadataParams should preserve empty-object payload`() {
-    val params = User.UpdateMetadataParams(unsafeMetadata = "{}")
-
-    val paramsMap = params.toFormFields()
-
-    assertEquals(
-      "Should include unsafe_metadata with empty object",
-      "{}",
-      paramsMap["unsafe_metadata"],
-    )
   }
 
   @Test

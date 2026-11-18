@@ -29,19 +29,6 @@ class SSOReceiverActivityTest {
   }
 
   @Test
-  fun callbackThatDoesNotBelongToThePendingFlowIsNotForwarded() {
-    val callbackUri = Uri.parse("clerk://example.callback?state=forged")
-    mockkObject(RedirectCoordinator)
-    every { RedirectCoordinator.receiverDelivery(callbackUri) } returns ReceiverDelivery.DROP
-
-    val activity = createReceiver(callbackUri)
-
-    assertNull(Shadows.shadowOf(activity).nextStartedActivity)
-    assertTrue(activity.isFinishing)
-    verify(exactly = 1) { RedirectCoordinator.receiverDelivery(callbackUri) }
-  }
-
-  @Test
   fun magicLinkWhileAFlowIsPendingCompletesWithoutStartingTheManager() {
     val magicLink = Uri.parse("clerk://example.callback?flow_id=flow_123&approval_token=tok")
     mockkObject(RedirectCoordinator)

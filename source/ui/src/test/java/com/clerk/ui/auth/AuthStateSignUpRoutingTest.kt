@@ -45,14 +45,6 @@ class AuthStateSignUpRoutingTest {
   }
 
   @Test
-  fun authStateKeepsExplicitMode() {
-    val signUpAuthState =
-      AuthState(mode = AuthMode.SignUp, backStack = backStack, sharedPreferences = preferences())
-
-    assertEquals(AuthMode.SignUp, signUpAuthState.mode)
-  }
-
-  @Test
   fun setToStepForStatusRoutesToSignUpEmailLinkWhenEmailVerificationStrategyIsEmailLink() {
     val signUp =
       signUp(

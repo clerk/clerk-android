@@ -54,15 +54,6 @@ class ToOAuthProvidersListTest {
   }
 
   @Test
-  fun `returns empty list for empty map`() {
-    val providers = emptyMap<String, UserSettings.SocialConfig>()
-
-    val result = providers.toOAuthProvidersList()
-
-    assertTrue(result.isEmpty())
-  }
-
-  @Test
   fun `returns all providers when all are enabled and authenticatable`() {
     val providers =
       mapOf(

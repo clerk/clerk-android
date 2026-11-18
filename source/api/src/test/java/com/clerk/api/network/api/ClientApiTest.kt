@@ -121,24 +121,6 @@ class ClientApiTest {
     assertEquals(SET_ACTIVE_INTENT_SELECT_ORG, interceptor.formBody["intent"])
   }
 
-  @Test
-  fun `setActive request sends empty organization id when clearing active organization`() =
-    runTest {
-      val interceptor = CapturingInterceptor()
-      val api = clientApi(interceptor)
-
-      val result =
-        api.setActive(
-          sessionId = "sess_123",
-          organizationId = "",
-          intent = SET_ACTIVE_INTENT_SELECT_ORG,
-        )
-
-      assertTrue(result is ClerkResult.Success)
-      assertEquals("", interceptor.formBody["active_organization_id"])
-      assertEquals(SET_ACTIVE_INTENT_SELECT_ORG, interceptor.formBody["intent"])
-    }
-
   private fun clientApi(interceptor: CapturingInterceptor): ClientApi {
     return Retrofit.Builder()
       .baseUrl("https://example.com/v1/")

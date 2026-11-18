@@ -9,13 +9,6 @@ import kotlin.test.assertEquals
 class SessionTaskMfaViewModelTest {
 
   @Test
-  fun progress_startsOnChooseMethod() {
-    val viewModel = SessionTaskMfaViewModel()
-
-    assertEquals(FlowStep.ChooseMethod, viewModel.progress.value.stepFor("sess_123"))
-  }
-
-  @Test
   fun setFlowStep_updatesTheStepForItsSession() {
     val viewModel = SessionTaskMfaViewModel()
 

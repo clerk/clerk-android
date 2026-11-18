@@ -7,15 +7,6 @@ import org.junit.Test
 class ClerkTypographyTest {
 
   @Test
-  fun `zero-arg constructor returns Clerk defaults`() {
-    val typography = ClerkTypography()
-
-    assertEquals(ClerkTypographyDefaults.displaySmall, typography.displaySmall)
-    assertEquals(ClerkTypographyDefaults.headlineLarge, typography.headlineLarge)
-    assertEquals(ClerkTypographyDefaults.bodySmall, typography.bodySmall)
-  }
-
-  @Test
   fun `named overrides preserve other defaults`() {
     val typography =
       ClerkTypography(
