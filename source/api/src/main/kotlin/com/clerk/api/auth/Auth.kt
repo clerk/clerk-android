@@ -759,16 +759,18 @@ public class Auth internal constructor() {
   public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     return reportingFailures {
       if (sessionId != null) {
+        val signedOutUserId =
+          Clerk.clientOrNull?.sessions?.firstOrNull { it.id == sessionId }?.user?.id
         val result =
           try {
             ClerkApi.session.removeSession(sessionId)
           } catch (e: CancellationException) {
-            signOutSessionLocally(sessionId)
+            signOutSessionLocally(sessionId, signedOutUserId)
             throw e
           }
         when (result) {
           is ClerkResult.Success -> {
-            signOutSessionLocally(sessionId)
+            signOutSessionLocally(sessionId, signedOutUserId)
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
@@ -780,10 +782,8 @@ public class Auth internal constructor() {
     }
   }
 
-  private suspend fun signOutSessionLocally(sessionId: String) {
+  private suspend fun signOutSessionLocally(sessionId: String, signedOutUserId: String?) {
     withContext(NonCancellable) {
-      val signedOutUserId =
-        Clerk.clientOrNull?.sessions?.firstOrNull { it.id == sessionId }?.user?.id
       SessionTokenFetcher.shared.removeSession(sessionId)
       removeSessionLocally(sessionId)
       SessionTokenFetcher.shared.removeSession(sessionId)

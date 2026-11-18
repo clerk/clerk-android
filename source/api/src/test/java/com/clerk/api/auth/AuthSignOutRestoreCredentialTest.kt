@@ -90,7 +90,54 @@ class AuthSignOutRestoreCredentialTest {
       coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
     }
 
-  private fun stubSignOut(removedSession: Session) {
+  @Test
+  fun `signOut with session ID clears the credential of a user whose session the response drops`() =
+    runTest {
+      val firstSession = testSession("sess_1", userId = "user_1")
+      val secondSession = testSession("sess_2", userId = "user_2")
+      stubSignOut(secondSession) {
+        Clerk.updateClient(
+          Client(
+            id = "client_123",
+            sessions = listOf(firstSession),
+            lastActiveSessionId = firstSession.id,
+          )
+        )
+      }
+      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_2") }
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(firstSession, secondSession),
+          lastActiveSessionId = firstSession.id,
+        )
+      )
+
+      Auth().signOut(sessionId = secondSession.id)
+
+      coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
+    }
+
+  @Test
+  fun `signOut with session ID clears a restore credential whose owner is unknown`() = runTest {
+    val firstSession = testSession("sess_1", userId = "user_1")
+    val secondSession = testSession("sess_2", userId = "user_2")
+    stubSignOut(secondSession)
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+
+    Auth().signOut(sessionId = secondSession.id)
+
+    assertEquals(listOf(firstSession), Clerk.client.sessions)
+    coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
+  }
+
+  private fun stubSignOut(removedSession: Session, onRemove: () -> Unit = {}) {
     val sessionApi = mockk<SessionApi>()
     val clientApi = mockk<ClientApi>()
     mockkObject(ClerkApi)
@@ -98,8 +145,11 @@ class AuthSignOutRestoreCredentialTest {
     every { ClerkApi.session } returns sessionApi
     every { ClerkApi.client } returns clientApi
     coEvery { RestoreCredentials.clearSilently() } returns Unit
-    coEvery { sessionApi.removeSession(removedSession.id) } returns
-      ClerkResult.success(removedSession)
+    coEvery { sessionApi.removeSession(removedSession.id) } coAnswers
+      {
+        onRemove()
+        ClerkResult.success(removedSession)
+      }
     coEvery { clientApi.get() } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
   }
