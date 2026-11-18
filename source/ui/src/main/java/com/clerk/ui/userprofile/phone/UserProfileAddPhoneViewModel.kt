@@ -68,6 +68,10 @@ internal class UserProfileAddPhoneViewModel : ViewModel() {
     _state.value = State.Idle
   }
 
+  fun clearError(reported: State.Error) {
+    _state.compareAndSet(reported, State.Idle)
+  }
+
   sealed interface State {
     data object Idle : State
 

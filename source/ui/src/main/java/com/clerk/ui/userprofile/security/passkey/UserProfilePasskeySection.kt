@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -44,10 +45,14 @@ private fun UserProfilePasskeySectionImpl(
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
-  val errorMessage = (state as? UserProfilePasskeyViewModel.State.Error)?.message
+  val error = state as? UserProfilePasskeyViewModel.State.Error
+  val currentOnError by rememberUpdatedState(onError)
 
-  if (state is UserProfilePasskeyViewModel.State.Error) {
-    LaunchedEffect(Unit) { onError(errorMessage) }
+  LaunchedEffect(error) {
+    if (error != null) {
+      currentOnError(error.message)
+      viewModel.clearError(error)
+    }
   }
 
   ClerkMaterialTheme {

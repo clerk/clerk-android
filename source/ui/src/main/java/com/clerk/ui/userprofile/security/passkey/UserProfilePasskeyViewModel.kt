@@ -50,6 +50,10 @@ internal class UserProfilePasskeyViewModel : ViewModel() {
     }
   }
 
+  fun clearError(reported: State.Error) {
+    _state.compareAndSet(reported, State.Idle)
+  }
+
   sealed interface State {
     data object Idle : State
 
