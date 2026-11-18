@@ -1261,8 +1261,8 @@ public object Clerk {
   }
 
   /**
-   * Drops a session the server no longer issues tokens for from the local client, so a later
-   * local mutation or a cold start from the cache cannot publish it as signed in again.
+   * Drops a session the server no longer issues tokens for from the local client, so a later local
+   * mutation or a cold start from the cache cannot publish it as signed in again.
    */
   internal fun removeInvalidatedSession(sessionId: String) {
     if (!mutateClient { client -> client.withoutSession(sessionId) }) {
