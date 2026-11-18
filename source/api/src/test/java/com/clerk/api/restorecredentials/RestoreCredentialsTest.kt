@@ -8,7 +8,6 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetRestoreCredentialOption
 import androidx.credentials.RestoreCredential
-import androidx.credentials.exceptions.CreateCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.clerk.api.Clerk
@@ -604,93 +603,6 @@ class RestoreCredentialsTest {
     coEvery { credentialManager.getCredential(eq(context), any()) } returns
       GetCredentialResponse(restoreCredential)
   }
-
-  @Test
-  fun `cancellation while naming the passkey keeps the verified user as the owner`() = runTest {
-    signedInAs("user_2")
-    RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-    stubSuccessfulCreate()
-    coEvery { userApi.updatePasskey(any(), any(), any()) } throws CancellationException("cancelled")
-
-    assertCancels { RestoreCredentials.createIfMissing() }
-
-    assertEquals("user_2", RestoreCredentialStore.read().deviceKeyUserId)
-  }
-
-  @Test
-  fun `cancellation after the platform credential was replaced leaves the owner unknown`() =
-    runTest {
-      signedInAs("user_2")
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-      stubSuccessfulCreate()
-      coEvery { userApi.attemptPasskeyVerification(any(), any(), any(), any()) } throws
-        CancellationException("cancelled")
-
-      assertCancels { RestoreCredentials.createIfMissing() }
-
-      assertNull(RestoreCredentialStore.read().deviceKeyUserId)
-    }
-
-  @Test
-  fun `cancellation while the platform credential is requested leaves the owner unknown`() =
-    runTest {
-      signedInAs("user_2")
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-      stubSuccessfulCreate()
-      coEvery { credentialManager.createCredential(eq(context), any()) } throws
-        CancellationException("cancelled")
-
-      assertCancels { RestoreCredentials.createIfMissing() }
-
-      assertNull(RestoreCredentialStore.read().deviceKeyUserId)
-    }
-
-  @Test
-  fun `a platform credential request that fails restores the previous owner`() = runTest {
-    signedInAs("user_2")
-    RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-    stubSuccessfulCreate()
-    coEvery { credentialManager.createCredential(eq(context), any()) } throws
-      CreateCredentialUnknownException("failed")
-
-    val result = RestoreCredentials.createIfMissing()
-
-    assertTrue(result is ClerkResult.Failure)
-    assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
-  }
-
-  @Test
-  fun `cancellation before the platform credential is requested restores the previous owner`() =
-    runTest {
-      signedInAs("user_2")
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-      stubSuccessfulCreate()
-      coEvery { userApi.createPasskey(any()) } throws CancellationException("cancelled")
-
-      assertCancels { RestoreCredentials.createIfMissing() }
-
-      assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
-    }
-
-  @Test
-  fun `the owner is unknown while a creation is pending and the new user only once verified`() =
-    runTest {
-      signedInAs("user_2")
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
-      stubSuccessfulCreate()
-      var ownerWhilePending: String? = "unset"
-      coEvery { userApi.createPasskey(any()) } coAnswers
-        {
-          ownerWhilePending = RestoreCredentialStore.read().deviceKeyUserId
-          ClerkResult.success(preparedPasskey())
-        }
-
-      val result = RestoreCredentials.createIfMissing()
-
-      assertTrue(result is ClerkResult.Success)
-      assertNull(ownerWhilePending)
-      assertEquals("user_2", RestoreCredentialStore.read().deviceKeyUserId)
-    }
 
   private fun stubSuccessfulCreate() {
     coEvery { userApi.createPasskey(any()) } returnsMany

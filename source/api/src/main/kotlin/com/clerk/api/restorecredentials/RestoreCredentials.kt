@@ -75,7 +75,7 @@ public object RestoreCredentials {
   public suspend fun create(
     isCloudBackupEnabled: Boolean = true
   ): ClerkResult<Unit, ClerkErrorResponse> = singleFlight {
-    createForSignedInUser(isCloudBackupEnabled)
+    createRecordingOwner(isCloudBackupEnabled)
   }
 
   /**
@@ -242,10 +242,22 @@ public object RestoreCredentials {
       ClerkLogger.d("Skipping restore credential creation: this device already has one.")
       return ClerkResult.success(Unit)
     }
+    return createRecordingOwner(isCloudBackupEnabled = true)
+  }
+
+  /**
+   * Creates the restore credential with the owner recorded as unknown until the server verifies it,
+   * so a process death mid-creation leaves nothing attributed to a user whose key may not exist,
+   * and restores the previous owner only when nothing of theirs can have been replaced.
+   */
+  private suspend fun createRecordingOwner(
+    isCloudBackupEnabled: Boolean
+  ): ClerkResult<Unit, ClerkErrorResponse> {
+    val previousOwnerId = RestoreCredentialStore.read().deviceKeyUserId
     if (!RestoreCredentialStore.update { it.copy(deviceKeyUserId = null) }) {
       ClerkLogger.w(
-        "Skipping restore credential creation: this device cannot record it, so every sign-in " +
-          "would create another passkey."
+        "Skipping restore credential creation: this device cannot record who owns it, so a " +
+          "sign-out could not tell whether to keep it."
       )
       return ClerkResult.unknownFailure(
         IllegalStateException("Restore credential state could not be saved.")
@@ -255,10 +267,10 @@ public object RestoreCredentials {
     val forgetUser = { cancelled: Boolean ->
       RestoreCredentialStore.update {
         when (progress) {
-          CreationProgress.NONE -> it.copy(deviceKeyUserId = state.deviceKeyUserId)
+          CreationProgress.NONE -> it.copy(deviceKeyUserId = previousOwnerId)
           CreationProgress.CREDENTIAL_REQUESTED ->
             if (cancelled) it.copy(deviceKeyUserId = null)
-            else it.copy(deviceKeyUserId = state.deviceKeyUserId)
+            else it.copy(deviceKeyUserId = previousOwnerId)
           CreationProgress.CREDENTIAL_REPLACED -> it.copy(deviceKeyUserId = null)
           CreationProgress.VERIFIED -> it
         }
@@ -266,7 +278,7 @@ public object RestoreCredentials {
     }
     val result =
       try {
-        createForSignedInUser(isCloudBackupEnabled = true) { progress = it }
+        createForSignedInUser(isCloudBackupEnabled) { progress = it }
       } catch (e: CancellationException) {
         forgetUser(true)
         throw e
