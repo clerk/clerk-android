@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetRestoreCredentialOption
 import androidx.credentials.RestoreCredential
+import androidx.credentials.exceptions.CreateCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.clerk.api.Clerk
@@ -631,13 +632,40 @@ class RestoreCredentialsTest {
     }
 
   @Test
-  fun `cancellation before the platform credential was replaced restores the previous owner`() =
+  fun `cancellation while the platform credential is requested leaves the owner unknown`() =
     runTest {
       signedInAs("user_2")
       RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
       stubSuccessfulCreate()
       coEvery { credentialManager.createCredential(eq(context), any()) } throws
         CancellationException("cancelled")
+
+      assertCancels { RestoreCredentials.createIfMissing() }
+
+      assertNull(RestoreCredentialStore.read().deviceKeyUserId)
+    }
+
+  @Test
+  fun `a platform credential request that fails restores the previous owner`() = runTest {
+    signedInAs("user_2")
+    RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+    stubSuccessfulCreate()
+    coEvery { credentialManager.createCredential(eq(context), any()) } throws
+      CreateCredentialUnknownException("failed")
+
+    val result = RestoreCredentials.createIfMissing()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
+  }
+
+  @Test
+  fun `cancellation before the platform credential is requested restores the previous owner`() =
+    runTest {
+      signedInAs("user_2")
+      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+      stubSuccessfulCreate()
+      coEvery { userApi.createPasskey(any()) } throws CancellationException("cancelled")
 
       assertCancels { RestoreCredentials.createIfMissing() }
 

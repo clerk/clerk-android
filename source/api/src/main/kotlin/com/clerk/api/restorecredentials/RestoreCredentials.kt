@@ -252,10 +252,13 @@ public object RestoreCredentials {
       )
     }
     var progress = CreationProgress.NONE
-    val forgetUser = {
+    val forgetUser = { cancelled: Boolean ->
       RestoreCredentialStore.update {
         when (progress) {
           CreationProgress.NONE -> it.copy(deviceKeyUserId = state.deviceKeyUserId)
+          CreationProgress.CREDENTIAL_REQUESTED ->
+            if (cancelled) it.copy(deviceKeyUserId = null)
+            else it.copy(deviceKeyUserId = state.deviceKeyUserId)
           CreationProgress.CREDENTIAL_REPLACED -> it.copy(deviceKeyUserId = null)
           CreationProgress.VERIFIED -> it
         }
@@ -265,19 +268,21 @@ public object RestoreCredentials {
       try {
         createForSignedInUser(isCloudBackupEnabled = true) { progress = it }
       } catch (e: CancellationException) {
-        forgetUser()
+        forgetUser(true)
         throw e
       }
-    if (result is ClerkResult.Failure) forgetUser()
+    if (result is ClerkResult.Failure) forgetUser(false)
     return result
   }
 
   /**
-   * How far a creation got before it stopped. The platform credential is replaced before the
-   * server verifies it, so a rollback after that point cannot restore the previous owner's key.
+   * How far a creation got before it stopped. Credential Manager can finish a request whose
+   * caller was cancelled, and the platform credential is replaced before the server verifies it,
+   * so a rollback after the request started cannot assume the previous owner's key still exists.
    */
   private enum class CreationProgress {
     NONE,
+    CREDENTIAL_REQUESTED,
     CREDENTIAL_REPLACED,
     VERIFIED,
   }
@@ -305,6 +310,7 @@ public object RestoreCredentials {
               IllegalStateException("Restore credential registration did not return a challenge.")
             )
 
+        onProgress(CreationProgress.CREDENTIAL_REQUESTED)
         val response =
           try {
             createCredentialWithCloudFallback(context, nonce, isCloudBackupEnabled)
