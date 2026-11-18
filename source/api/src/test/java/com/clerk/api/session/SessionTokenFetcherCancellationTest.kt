@@ -49,7 +49,7 @@ class SessionTokenFetcherCancellationTest {
 
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
-    every { Clerk.clearSessionAndUserState() } returns Unit
+    every { Clerk.removeInvalidatedSession(any()) } returns Unit
 
     SessionTokensCache.clear()
     mockkObject(SessionTokensCache)

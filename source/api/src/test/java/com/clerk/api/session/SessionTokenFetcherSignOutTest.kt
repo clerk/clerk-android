@@ -56,7 +56,7 @@ class SessionTokenFetcherSignOutTest {
 
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
-    every { Clerk.clearSessionAndUserState() } returns Unit
+    every { Clerk.removeInvalidatedSession(any()) } returns Unit
     every { Clerk.environment } returns null
     every { Clerk.clientFlow } returns MutableStateFlow(null)
 
@@ -200,7 +200,7 @@ class SessionTokenFetcherSignOutTest {
     val error = Error(code = "session_revoked", message = "Session revoked")
     val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
     var fencedWhileClearing = false
-    every { Clerk.clearSessionAndUserState() } answers
+    every { Clerk.removeInvalidatedSession("session_123") } answers
       {
         val fence = Thread { sessionTokenFetcher.fenceSignedOutSessions(listOf("session_123")) }
         fence.isDaemon = true
@@ -216,7 +216,7 @@ class SessionTokenFetcherSignOutTest {
     val result = sessionTokenFetcher.getToken(mockSession)
 
     assertNull(result)
-    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+    verify(exactly = 1) { Clerk.removeInvalidatedSession("session_123") }
     assertTrue(fencedWhileClearing)
   }
 }

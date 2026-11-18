@@ -49,7 +49,7 @@ class SessionTokenFetcherFailureTest {
 
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
-    every { Clerk.clearSessionAndUserState() } returns Unit
+    every { Clerk.removeInvalidatedSession(any()) } returns Unit
     every { Clerk.environment } returns null
     every { Clerk.clientFlow } returns MutableStateFlow(null)
 
