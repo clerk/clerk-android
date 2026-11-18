@@ -57,8 +57,9 @@ class DecodeFailureSummaryTest {
 
   @Test
   fun `a string decode failure on a field that imitates the locator leaks nothing`() {
-    val failure =
-      failureOf { ClerkApi.json.decodeFromString(clientJsonWithExpireAt(locatorImitation)) }
+    val failure = failureOf {
+      ClerkApi.json.decodeFromString(clientJsonWithExpireAt(locatorImitation))
+    }
 
     assertSummaryIsTheClassAlone(failure)
   }
