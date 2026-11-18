@@ -55,7 +55,7 @@ class ClientSyncingMiddlewareDecodeFailureLogTest {
           "sessions": [{
             "id": "sess_123",
             "status": "active",
-            "expire_at": "not-a-number",
+            "expire_at": "at path: ${'$'}$jwt JSON input:",
             "last_active_at": 1000,
             "created_at": 1000,
             "updated_at": 1000,
@@ -86,6 +86,8 @@ class ClientSyncingMiddlewareDecodeFailureLogTest {
       ShadowLog.getLogs().filter { it.msg.contains("Error deserializing client") }
     assertEquals(1, decodeFailures.size)
     assertFalse(decodeFailures.single().msg.contains(jwt))
+    assertFalse(decodeFailures.single().msg.contains("eyJ"))
+    assertFalse(decodeFailures.single().msg.contains("$"))
     assertFalse(decodeFailures.single().msg.contains("jwt"))
     assertEquals(emptyList<Session>(), Clerk.sessionsFlow.value)
   }
