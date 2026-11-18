@@ -1343,6 +1343,8 @@ public object Clerk {
   // endregion
 }
 
+internal const val HOST_SDK_HEADER = "x-clerk-host-sdk"
+
 /**
  * Data class for enabling extra functionality on the Clerk SDK.
  *
@@ -1385,7 +1387,15 @@ public data class ClerkConfigurationOptions(
   val autoRefreshOnForeground: Boolean
     get() = _autoRefreshOnForeground
 
-  /** Returns a copy of these options with additional outgoing request headers configured. */
+  internal val isFrameworkHost: Boolean
+    get() = _customHeaders.keys.any { it.equals(HOST_SDK_HEADER, ignoreCase = true) }
+
+  /**
+   * Returns a copy of these options with additional outgoing request headers configured.
+   *
+   * A host SDK that names itself in an `x-clerk-host-sdk` header shares the client token with a
+   * runtime of its own, so this SDK does not bind that client to the device key.
+   */
   public fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._customHeaders = customHeaders.toMap() }
 

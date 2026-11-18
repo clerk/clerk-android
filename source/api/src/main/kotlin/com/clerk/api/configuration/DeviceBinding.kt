@@ -1,6 +1,7 @@
 package com.clerk.api.configuration
 
 import com.auth0.android.jwt.JWT
+import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.devicekey.DeviceKeyHolder
 import com.clerk.api.devicekey.DeviceKeyState
 import com.clerk.api.log.ClerkLogger
@@ -26,6 +27,7 @@ internal sealed interface DeviceBinding {
 
   enum class Reason {
     SHARED_SESSION_SYNC,
+    FRAMEWORK_HOST,
     KEY_UNAVAILABLE,
     TIMEOUT,
   }
@@ -82,6 +84,7 @@ private fun transientGap(binding: DeviceBinding, signFailure: SignFailure?): Pro
     is DeviceBinding.NotSigning ->
       when (binding.reason) {
         DeviceBinding.Reason.SHARED_SESSION_SYNC,
+        DeviceBinding.Reason.FRAMEWORK_HOST,
         DeviceBinding.Reason.KEY_UNAVAILABLE -> null
         DeviceBinding.Reason.TIMEOUT -> ProofDecision.Reason.KEY_NOT_READY
       }
@@ -225,16 +228,21 @@ internal class DeviceBindingState(
   }
 }
 
+internal fun signingOptOut(options: ClerkConfigurationOptions?): DeviceBinding.Reason? =
+  when {
+    options?.sharedSessionSync != null -> DeviceBinding.Reason.SHARED_SESSION_SYNC
+    options?.isFrameworkHost == true -> DeviceBinding.Reason.FRAMEWORK_HOST
+    else -> null
+  }
+
 internal fun CoroutineScope.resolveDeviceBinding(
-  sharedSessionSync: Boolean,
+  optOut: DeviceBinding.Reason?,
   holder: DeviceKeyHolder,
   ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): DeviceBindingState {
-  if (sharedSessionSync) {
+  if (optOut != null) {
     return DeviceBindingState(
-      CompletableDeferred(
-        logged(DeviceBinding.NotSigning(DeviceBinding.Reason.SHARED_SESSION_SYNC))
-      ),
+      CompletableDeferred(logged(DeviceBinding.NotSigning(optOut))),
       ioDispatcher = ioDispatcher,
     )
   }

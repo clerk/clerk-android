@@ -1,6 +1,7 @@
 package com.clerk.api.configuration
 
 import com.clerk.api.configuration.DeviceBinding.NotSigning
+import com.clerk.api.configuration.DeviceBinding.Reason.FRAMEWORK_HOST
 import com.clerk.api.configuration.DeviceBinding.Reason.KEY_UNAVAILABLE
 import com.clerk.api.configuration.DeviceBinding.Reason.SHARED_SESSION_SYNC
 import com.clerk.api.configuration.DeviceBinding.Reason.TIMEOUT
@@ -39,6 +40,8 @@ class ProofDecisionTest {
       Row(tokenHasCnf = true, signing, SignFailure.TIMEOUT, FailRequest(KEY_NOT_READY)),
       Row(tokenHasCnf = false, NotSigning(SHARED_SESSION_SYNC), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = true, NotSigning(SHARED_SESSION_SYNC), signFailure = null, SendUnsigned),
+      Row(tokenHasCnf = false, NotSigning(FRAMEWORK_HOST), signFailure = null, SendUnsigned),
+      Row(tokenHasCnf = true, NotSigning(FRAMEWORK_HOST), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = false, NotSigning(KEY_UNAVAILABLE), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = true, NotSigning(KEY_UNAVAILABLE), signFailure = null, SendUnsigned),
       Row(tokenHasCnf = false, NotSigning(TIMEOUT), signFailure = null, SendUnsigned),

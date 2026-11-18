@@ -244,10 +244,7 @@ internal class ConfigurationManager(
     val deviceKeyHolder = DeviceKeyHolder { DeviceKeyFactory.create(context.applicationContext) }
     this.deviceKeyHolder = deviceKeyHolder
     val deviceBinding =
-      scope.resolveDeviceBinding(
-        sharedSessionSync = options?.sharedSessionSync != null,
-        holder = deviceKeyHolder,
-      )
+      scope.resolveDeviceBinding(optOut = signingOptOut(options), holder = deviceKeyHolder)
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
