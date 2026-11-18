@@ -276,9 +276,9 @@ public object RestoreCredentials {
   }
 
   /**
-   * How far a creation got before it stopped. Credential Manager can finish a request whose
-   * caller was cancelled, and the platform credential is replaced before the server verifies it,
-   * so a rollback after the request started cannot assume the previous owner's key still exists.
+   * How far a creation got before it stopped. Credential Manager can finish a request whose caller
+   * was cancelled, and the platform credential is replaced before the server verifies it, so a
+   * rollback after the request started cannot assume the previous owner's key still exists.
    */
   private enum class CreationProgress {
     NONE,
