@@ -191,23 +191,22 @@ class RestoreCredentialOwnerTest {
     }
 
   @Test
-  fun `signing out during create after the platform credential was replaced clears it`() =
-    runTest {
-      every { Clerk.clientOrNull } returns Client(id = "client_1", sessions = listOf(session))
-      coEvery { userApi.attemptPasskeyVerification(any(), any(), any(), any()) } coAnswers
-        {
-          awaitCancellation()
-        }
-      coEvery { credentialManager.clearCredentialState(eq(context), any()) } returns Unit
+  fun `signing out during create after the platform credential was replaced clears it`() = runTest {
+    every { Clerk.clientOrNull } returns Client(id = "client_1", sessions = listOf(session))
+    coEvery { userApi.attemptPasskeyVerification(any(), any(), any(), any()) } coAnswers
+      {
+        awaitCancellation()
+      }
+    coEvery { credentialManager.clearCredentialState(eq(context), any()) } returns Unit
 
-      val creation = async { RestoreCredentials.create() }
-      runCurrent()
-      RestoreCredentials.clearSilentlyAfterSessionSignOut("user_2")
+    val creation = async { RestoreCredentials.create() }
+    runCurrent()
+    RestoreCredentials.clearSilentlyAfterSessionSignOut("user_2")
 
-      assertTrue(creation.await() is ClerkResult.Failure)
-      assertNull(RestoreCredentialStore.read().deviceKeyUserId)
-      coVerify(exactly = 1) { credentialManager.clearCredentialState(eq(context), any()) }
-    }
+    assertTrue(creation.await() is ClerkResult.Failure)
+    assertNull(RestoreCredentialStore.read().deviceKeyUserId)
+    coVerify(exactly = 1) { credentialManager.clearCredentialState(eq(context), any()) }
+  }
 
   @Test
   fun `signing out during create before the platform credential is requested keeps the owner's`() =
