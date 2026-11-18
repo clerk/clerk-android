@@ -14,6 +14,7 @@ import com.clerk.api.signup.verifyCode
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignUp
+import com.clerk.ui.auth.reportFailedCodeAttempt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -56,10 +57,7 @@ internal class SignUpCodeViewModel : ViewModel() {
             _verificationState.value = VerificationUiState.Verified
             _state.value = AuthenticationViewState.Success.SignUp(it)
           }
-          .onFailure {
-            _verificationState.value = VerificationUiState.Error(it.errorMessage)
-            _state.value = AuthenticationViewState.Error(it.errorMessage)
-          }
+          .onFailure { reportFailedCodeAttempt(it, _verificationState, _state) }
       }
     }
   }

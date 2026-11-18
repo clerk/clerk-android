@@ -3,12 +3,15 @@ package com.clerk.ui.signin.code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.auth.types.Strategy
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignIn
+import com.clerk.ui.auth.reportFailedCodeAttempt
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,9 +98,8 @@ internal class SignInFactorCodeViewModel(
         _verificationUiState.value = VerificationUiState.Verified
         _state.value = AuthenticationViewState.Success.SignIn(signIn)
       }
-      val onErrorCallback = { message: String? ->
-        _verificationUiState.value = VerificationUiState.Error(message)
-        _state.value = AuthenticationViewState.Error(message)
+      val onErrorCallback = { failure: ClerkResult.Failure<ClerkErrorResponse> ->
+        reportFailedCodeAttempt(failure, _verificationUiState, _state)
       }
 
       viewModelScope.launch(workDispatcher) {

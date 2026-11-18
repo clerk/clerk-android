@@ -6,8 +6,11 @@ import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.types.Strategy
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
@@ -273,33 +276,63 @@ class SignInFactorCodeViewModelTest {
     }
   }
 
-  @Test
-  fun attemptShouldSetErrorStateWhenHandlerCallsOnErrorCallback() = runTest {
-    val factor = Factor(strategy = Strategy.EmailCode.value)
-    val code = "123456"
-
+  private fun failEmailCodeAttemptWith(error: Error) {
     coEvery {
       mockAttemptHandler.attemptEmailCode(
         inProgressSignIn = mockSignIn,
-        code = code,
+        code = any(),
         isSecondFactor = false,
         onSuccessCallback = any(),
         onErrorCallback = any(),
       )
     } coAnswers
       {
-        val onError = args[4] as suspend (String?) -> Unit
-        onError("error")
+        val onError = args[4] as suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit
+        onError(ClerkResult.apiFailure(ClerkErrorResponse(errors = listOf(error))))
       }
+  }
+
+  @Test
+  fun incorrectCodeMarksTheCodeFieldAndShowsNoSnackbar() = runTest {
+    failEmailCodeAttemptWith(Error(longMessage = "Incorrect code", code = "form_code_incorrect"))
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.attempt(factor, isSecondFactor = false, code)
+      viewModel.attempt(
+        Factor(strategy = Strategy.EmailCode.value),
+        isSecondFactor = false,
+        "123456",
+      )
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
-      assertEquals(AuthenticationViewState.Error("error"), awaitItem())
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
     }
+    assertEquals(VerificationUiState.IncorrectCode, viewModel.verificationUiState.value)
+  }
+
+  @Test
+  fun anyOtherFailureShowsTheApiMessageInTheSnackbarAndLeavesTheCodeFieldClean() = runTest {
+    failEmailCodeAttemptWith(
+      Error(longMessage = "Too many requests, try again later", code = "too_many_requests")
+    )
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.attempt(
+        Factor(strategy = Strategy.EmailCode.value),
+        isSecondFactor = false,
+        "123456",
+      )
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(
+        AuthenticationViewState.Error("Too many requests, try again later"),
+        awaitItem(),
+      )
+    }
+    assertEquals(VerificationUiState.Idle, viewModel.verificationUiState.value)
   }
 
   @Test
