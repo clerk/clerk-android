@@ -180,12 +180,11 @@ public object RestoreCredentials {
    */
   internal suspend fun clearSilentlyAfterSessionSignOut(signedOutUserId: String?) {
     creation?.cancelForSignOut()
-    val anotherUserOwnsDeviceKey =
-      creationMutex.withLock {
-        val ownerId = RestoreCredentialStore.read().deviceKeyUserId
-        val sessionsRemain = Clerk.clientOrNull?.sessions.orEmpty().isNotEmpty()
-        sessionsRemain && ownerId != null && ownerId != signedOutUserId
-      }
+    val anotherUserOwnsDeviceKey = creationMutex.withLock {
+      val ownerId = RestoreCredentialStore.read().deviceKeyUserId
+      val sessionsRemain = Clerk.clientOrNull?.sessions.orEmpty().isNotEmpty()
+      sessionsRemain && ownerId != null && ownerId != signedOutUserId
+    }
     if (anotherUserOwnsDeviceKey) {
       ClerkLogger.d("Keeping the restore credential: it belongs to a user who is still signed in.")
       return
