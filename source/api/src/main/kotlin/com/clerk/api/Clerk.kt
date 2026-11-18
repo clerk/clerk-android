@@ -1432,7 +1432,11 @@ public data class ClerkConfigurationOptions(
 
   private var _hostSignsRequests: Boolean = false
 
-  internal val hostSignsRequests: Boolean
+  /**
+   * Whether a framework host's own runtime signs its Frontend API requests with
+   * [Clerk.deviceBindingProof]. Set it with [withHostSignsRequests]. Defaults to `false`.
+   */
+  val hostSignsRequests: Boolean
     get() = _hostSignsRequests
 
   /**
