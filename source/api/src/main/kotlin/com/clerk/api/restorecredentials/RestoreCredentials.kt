@@ -242,7 +242,7 @@ public object RestoreCredentials {
       ClerkLogger.d("Skipping restore credential creation: this device already has one.")
       return ClerkResult.success(Unit)
     }
-    if (!RestoreCredentialStore.update { it.copy(deviceKeyUserId = userId) }) {
+    if (!RestoreCredentialStore.update { it.copy(deviceKeyUserId = null) }) {
       ClerkLogger.w(
         "Skipping restore credential creation: this device cannot record it, so every sign-in " +
           "would create another passkey."
@@ -276,9 +276,12 @@ public object RestoreCredentials {
   }
 
   /**
-   * How far a creation got before it stopped. Credential Manager can finish a request whose caller
-   * was cancelled, and the platform credential is replaced before the server verifies it, so a
-   * rollback after the request started cannot assume the previous owner's key still exists.
+   * How far a creation got before it stopped. The owner is recorded as unknown while a creation is
+   * pending, so a process death leaves nothing attributed to a user whose key may not exist, and
+   * the previous owner is restored only when nothing was replaced. Credential Manager can finish a
+   * request whose caller was cancelled, and the platform credential is replaced before the server
+   * verifies it, so a rollback after the request started cannot assume the previous owner's key
+   * still exists.
    */
   private enum class CreationProgress {
     NONE,

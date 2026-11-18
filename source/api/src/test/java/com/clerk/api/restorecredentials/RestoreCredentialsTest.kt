@@ -672,6 +672,26 @@ class RestoreCredentialsTest {
       assertEquals("user_1", RestoreCredentialStore.read().deviceKeyUserId)
     }
 
+  @Test
+  fun `the owner is unknown while a creation is pending and the new user only once verified`() =
+    runTest {
+      signedInAs("user_2")
+      RestoreCredentialStore.update { it.copy(deviceKeyUserId = "user_1") }
+      stubSuccessfulCreate()
+      var ownerWhilePending: String? = "unset"
+      coEvery { userApi.createPasskey(any()) } coAnswers
+        {
+          ownerWhilePending = RestoreCredentialStore.read().deviceKeyUserId
+          ClerkResult.success(preparedPasskey())
+        }
+
+      val result = RestoreCredentials.createIfMissing()
+
+      assertTrue(result is ClerkResult.Success)
+      assertNull(ownerWhilePending)
+      assertEquals("user_2", RestoreCredentialStore.read().deviceKeyUserId)
+    }
+
   private fun stubSuccessfulCreate() {
     coEvery { userApi.createPasskey(any()) } returnsMany
       listOf(
