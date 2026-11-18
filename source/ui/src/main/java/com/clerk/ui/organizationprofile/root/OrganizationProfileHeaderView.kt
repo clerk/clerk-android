@@ -1,6 +1,7 @@
 package com.clerk.ui.organizationprofile.root
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.HorizontalDivider
@@ -19,6 +20,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -57,6 +59,7 @@ internal fun OrganizationProfileHeaderView(
       Spacers.Vertical.Spacer8()
       ClerkButton(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
+        paddingValues = PaddingValues(horizontal = dp16),
         text = stringResource(R.string.update_profile),
         onClick = onUpdateProfile,
         isEnabled = true,
