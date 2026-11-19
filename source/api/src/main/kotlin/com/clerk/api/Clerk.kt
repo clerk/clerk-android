@@ -25,7 +25,6 @@ import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
-import com.clerk.api.network.model.client.withoutSession
 import com.clerk.api.network.model.environment.CommerceSettings
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
@@ -1261,11 +1260,12 @@ public object Clerk {
   }
 
   /**
-   * Drops a session the server no longer issues tokens for from the local client, so a later local
-   * mutation or a cold start from the cache cannot publish it as signed in again.
+   * Drops a session the server no longer issues tokens for from the local client, and keeps it out
+   * of every client committed afterwards, so neither a local mutation, a cold start from the cache,
+   * nor a client response the server produced before the revocation can publish it again.
    */
   internal fun removeInvalidatedSession(sessionId: String) {
-    if (!mutateClient { client -> client.withoutSession(sessionId) }) {
+    if (!stateStore.removeInvalidatedSession(sessionId)) {
       clearSessionAndUserState()
     }
   }

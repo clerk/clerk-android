@@ -49,6 +49,60 @@ class InvalidatedSessionRemovalTest {
     assertEquals(listOf("sess_456"), Clerk.client.sessions.map { it.id })
   }
 
+  @Test
+  fun `a client response the server produced before the revocation does not restore the session`() {
+    Clerk.updateClient(clientWithSession("sess_123"))
+    val inFlightOrder = Clerk.stateStore.observeResponse(serverDateMillis = 5_000)
+
+    Clerk.removeInvalidatedSession("sess_123")
+    Clerk.applyClientResponse(clientWithSession("sess_123"), inFlightOrder)
+
+    assertNull(Clerk.session)
+    assertEquals(emptyList<Session>(), Clerk.client.sessions)
+  }
+
+  @Test
+  fun `a revoked session stays out of responses from the same second and responses without a date`() {
+    Clerk.updateClient(clientWithSession("sess_123"))
+
+    Clerk.removeInvalidatedSession("sess_123")
+    Clerk.applyClientResponse(
+      clientWithSession("sess_123"),
+      Clerk.stateStore.observeResponse(serverDateMillis = 5_000),
+    )
+    Clerk.applyClientResponse(clientWithSession("sess_123"), order = null)
+
+    assertNull(Clerk.session)
+    assertEquals(emptyList<Session>(), Clerk.sessionsFlow.value)
+  }
+
+  @Test
+  fun `a later client response still publishes the sessions the server did not revoke`() {
+    Clerk.updateClient(clientWithSession("sess_123"))
+
+    Clerk.removeInvalidatedSession("sess_123")
+    Clerk.applyClientResponse(
+      clientWithSession("sess_123").let { client ->
+        client.copy(sessions = client.sessions + session("sess_789"))
+      },
+      Clerk.stateStore.observeResponse(serverDateMillis = 6_000),
+    )
+
+    assertEquals("sess_789", Clerk.session?.id)
+    assertEquals(listOf("sess_789"), Clerk.client.sessions.map { it.id })
+  }
+
+  @Test
+  fun `a full reset forgets revoked sessions`() {
+    Clerk.updateClient(clientWithSession("sess_123"))
+    Clerk.removeInvalidatedSession("sess_123")
+
+    Clerk.stateStore.reset()
+    Clerk.updateClient(clientWithSession("sess_123"))
+
+    assertEquals("sess_123", Clerk.session?.id)
+  }
+
   private fun clientWithSession(sessionId: String): Client =
     Client(
       id = "client_123",
