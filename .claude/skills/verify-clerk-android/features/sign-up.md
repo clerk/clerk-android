@@ -27,6 +27,12 @@ Preconditions:
 - **Sign up with a phone number.** Run `e2e-tests/bin/control-clerk-android run sign-up/phone`. It taps `clerk.auth.start.identifierSwitcher`, fills `clerk.auth.start.phoneNumber` with the ten digits of the number, and taps `clerk.auth.start.continue`. It fills `clerk.auth.signUp.emailAddress` with the email and `clerk.auth.signUp.password` with the run password, and taps `clerk.auth.signUp.continue` after each. It expects `Check your email` with the email on the code screen, and fills `clerk.auth.signUp.code` with `CLERK_TEST_CODE`. Screenshot `signup-phone-email-code`. It expects `Check your phone` with the number as Clerk formats it, fills the code again, and waits for the home to show `Signed in as` the email with a user ID. Screenshots `signup-phone-code` and `signed-up-with-phone`.
 - **Proof.** Both specs pass. `run.json` lists the email under `identities` with the id of the user the form created.
 
+## States a spec cannot reach
+
+| State | Where the app decides | What it takes |
+| --- | --- | --- |
+| The email link step | `auth/AuthRouting.kt`, when `signUp.isEmailLinkVerificationSupported` is true | The email link, which the standard instance turns off. A spec turns it on with `host.useSettings({ config: { 'auth_email.verification_strategies': ['email_code', 'email_link'] } })`, as `references/instances.md` lists. No committed spec does |
+
 ## Gotchas
 
 - Android asks for the password before the code.
