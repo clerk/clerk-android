@@ -3,6 +3,7 @@ package com.clerk.api.sso
 import android.app.Activity
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
+import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.serialization.ClerkResult
@@ -68,6 +69,13 @@ class GoogleCredentialManagerImplTest {
           is CredentialFlowException.GoogleOneTapNotConfigured
       )
     }
+
+  @Test
+  fun `a One Tap sign-in without a client id falls back to the browser OAuth flow`() = runTest {
+    val result = GoogleSignInService(credentialManager).signInWithGoogle()
+
+    assertTrue((result as ClerkResult.Failure).shouldFallbackToOAuthFromGoogleOneTap)
+  }
 
   @Test
   fun `signUpWithGoogle returns a failure instead of throwing when One Tap is not configured`() =

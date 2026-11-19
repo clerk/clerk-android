@@ -118,7 +118,9 @@ public val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCreden
   get() = throwable is CredentialFlowException || throwable is GetCredentialException
 
 public val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
-  get() = throwable is CredentialFlowException.NoGoogleAccount
+  get() =
+    throwable is CredentialFlowException.NoGoogleAccount ||
+      throwable is CredentialFlowException.GoogleOneTapNotConfigured
 
 public val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
   get() = credentialFlowUiMessage ?: errorMessage
