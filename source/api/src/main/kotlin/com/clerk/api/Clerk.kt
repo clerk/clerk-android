@@ -1259,6 +1259,17 @@ public object Clerk {
     stateStore.clearSessionState()
   }
 
+  /**
+   * Drops a session the server no longer issues tokens for from the local client, and keeps it out
+   * of every client committed afterwards, so neither a local mutation, a cold start from the cache,
+   * nor a client response the server produced before the revocation can publish it again.
+   */
+  internal fun removeInvalidatedSession(sessionId: String) {
+    if (!stateStore.removeInvalidatedSession(sessionId)) {
+      clearSessionAndUserState()
+    }
+  }
+
   @Synchronized
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public fun registerAuthFlow(): AuthFlowRegistration? {
