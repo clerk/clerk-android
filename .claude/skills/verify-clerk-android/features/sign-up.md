@@ -27,11 +27,17 @@ Preconditions:
 - **Sign up with a phone number.** Run `e2e-tests/bin/control-clerk-android run sign-up/phone`. It taps `clerk.auth.start.identifierSwitcher`, fills `clerk.auth.start.phoneNumber` with the ten digits of the number, and taps `clerk.auth.start.continue`. It fills `clerk.auth.signUp.emailAddress` with the email and `clerk.auth.signUp.password` with the run password, and taps `clerk.auth.signUp.continue` after each. It expects `Check your email` with the email on the code screen, and fills `clerk.auth.signUp.code` with `CLERK_TEST_CODE`. Screenshot `signup-phone-email-code`. It expects `Check your phone` with the number as Clerk formats it, fills the code again, and waits for the home to show `Signed in as` the email with a user ID. Screenshots `signup-phone-code` and `signed-up-with-phone`.
 - **Proof.** Both specs pass. `run.json` lists the email under `identities` with the id of the user the form created.
 
+## States a spec cannot reach
+
+| State | Where the app decides | What it takes |
+| --- | --- | --- |
+| The email link step | `auth/AuthRouting.kt`, when `signUp.isEmailLinkVerificationSupported` is true | The email link, which the standard instance turns off. A spec turns it on with `host.useSettings({ config: { 'auth_email.verification_strategies': ['email_code', 'email_link'] } })`, as `references/instances.md` lists. No committed spec does |
+
 ## Gotchas
 
 - Android asks for the password before the code.
 - A phone sign-up collects everything before it verifies anything: the email, then the password. It then verifies the email before the phone.
 - Both code screens use `clerk.auth.signUp.code`. Their titles tell them apart, `Check your email` and `Check your phone`, and neither title has a test tag, so those checks use text.
-- Every step after the start screen shows `Sign up` in its top bar, above the step's own title, and that top bar title has no test tag. Tell the steps apart by their fields or their own titles, not by `Sign up`.
+- The steps that collect a field, such as the password, the code steps, and the complete-profile step, show `Sign up` in their top bar, above the step's own title, and that top bar title has no test tag. The email link step, which the standard instance does not reach, has no `Sign up` in its top bar. Tell the steps apart by their fields or their own titles, not by `Sign up`.
 - The phone code screen shows the number formatted, `+1 201-555-01xx`. `asShownByClerk(phone)` in `specs/phone.ts` gives that text.
 - The password field withholds its value from the screen tree. `host.fill` types the password once and cannot confirm that it landed, so assert on what the form does next.
