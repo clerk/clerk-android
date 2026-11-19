@@ -50,6 +50,12 @@ internal sealed class CredentialFlowException(
       userMessage = "Finish creating your account to continue.",
     )
 
+  internal class GoogleOneTapNotConfigured :
+    CredentialFlowException(
+      message = "Google One Tap has no client id. Set one in the Clerk dashboard.",
+      userMessage = "Google sign-in is not available right now. Try another sign-in method.",
+    )
+
   internal class ProviderUnavailable :
     CredentialFlowException(
       message = "Credential Manager is not available for this flow.",
@@ -112,7 +118,9 @@ public val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCreden
   get() = throwable is CredentialFlowException || throwable is GetCredentialException
 
 public val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
-  get() = throwable is CredentialFlowException.NoGoogleAccount
+  get() =
+    throwable is CredentialFlowException.NoGoogleAccount ||
+      throwable is CredentialFlowException.GoogleOneTapNotConfigured
 
 public val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
   get() = credentialFlowUiMessage ?: errorMessage
