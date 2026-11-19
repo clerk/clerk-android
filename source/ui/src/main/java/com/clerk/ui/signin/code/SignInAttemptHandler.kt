@@ -1,7 +1,8 @@
 package com.clerk.ui.signin.code
 
 import com.clerk.api.auth.types.MfaType
-import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -15,14 +16,14 @@ internal class SignInAttemptHandler {
     inProgressSignIn: SignIn,
     code: String,
     onSuccessCallback: suspend (SignIn) -> Unit,
-    onErrorCallback: suspend (String?) -> Unit,
+    onErrorCallback: suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit,
   ) {
     inProgressSignIn
       .verifyMfaCode(code = code, type = MfaType.TOTP)
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting TOTP code: $it")
-        onErrorCallback(it.errorMessage)
+        onErrorCallback(it)
       }
   }
 
@@ -30,14 +31,14 @@ internal class SignInAttemptHandler {
     inProgressSignIn: SignIn,
     code: String,
     onSuccessCallback: suspend (SignIn) -> Unit,
-    onErrorCallback: suspend (String?) -> Unit,
+    onErrorCallback: suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit,
   ) {
     inProgressSignIn
       .attemptFirstFactor(SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code))
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting reset password phone code: $it")
-        onErrorCallback(it.errorMessage)
+        onErrorCallback(it)
       }
   }
 
@@ -45,14 +46,14 @@ internal class SignInAttemptHandler {
     inProgressSignIn: SignIn,
     code: String,
     onSuccessCallback: suspend (SignIn) -> Unit,
-    onErrorCallback: suspend (String?) -> Unit,
+    onErrorCallback: suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit,
   ) {
     inProgressSignIn
       .attemptFirstFactor(SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code))
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting reset password email code: $it")
-        onErrorCallback(it.errorMessage)
+        onErrorCallback(it)
       }
   }
 
@@ -61,7 +62,7 @@ internal class SignInAttemptHandler {
     code: String,
     isSecondFactor: Boolean,
     onSuccessCallback: suspend (SignIn) -> Unit,
-    onErrorCallback: suspend (String?) -> Unit,
+    onErrorCallback: suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit,
   ) {
     if (isSecondFactor) {
       inProgressSignIn
@@ -69,7 +70,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting phone code as second factor: $it")
-          onErrorCallback(it.errorMessage)
+          onErrorCallback(it)
         }
     } else {
       inProgressSignIn
@@ -77,7 +78,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting phone code: $it")
-          onErrorCallback(it.errorMessage)
+          onErrorCallback(it)
         }
     }
   }
@@ -87,7 +88,7 @@ internal class SignInAttemptHandler {
     code: String,
     isSecondFactor: Boolean,
     onSuccessCallback: suspend (SignIn) -> Unit,
-    onErrorCallback: suspend (String?) -> Unit,
+    onErrorCallback: suspend (ClerkResult.Failure<ClerkErrorResponse>) -> Unit,
   ) {
     if (isSecondFactor) {
       inProgressSignIn
@@ -95,7 +96,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting email code as second factor: $it")
-          onErrorCallback(it.errorMessage)
+          onErrorCallback(it)
         }
     } else {
       inProgressSignIn
@@ -103,7 +104,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting email code: $it")
-          onErrorCallback(it.errorMessage)
+          onErrorCallback(it)
         }
     }
   }

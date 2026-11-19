@@ -151,7 +151,7 @@ private fun handleCodeTextChange(
   factor: Factor,
   isSecondFactor: Boolean,
 ) {
-  if (verificationTextState is VerificationUiState.Error) {
+  if (verificationTextState is VerificationUiState.IncorrectCode) {
     viewModel.resetState()
     viewModel.resetVerificationState()
   }
