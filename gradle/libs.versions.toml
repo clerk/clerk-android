@@ -104,6 +104,7 @@ processPhoenix = "com.jakewharton:process-phoenix:3.0.0"
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+snakeyaml-engine = "org.snakeyaml:snakeyaml-engine:3.2"
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
