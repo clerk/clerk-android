@@ -32,6 +32,6 @@ Preconditions:
 - Android asks for the password before the code.
 - A phone sign-up collects everything before it verifies anything: the email, then the password. It then verifies the email before the phone.
 - Both code screens use `clerk.auth.signUp.code`. Their titles tell them apart, `Check your email` and `Check your phone`, and neither title has a test tag, so those checks use text.
-- Every step after the start screen shows `Sign up` in its top bar, above the step's own title, and that top bar title has no test tag. Tell the steps apart by their fields or their own titles, not by `Sign up`.
+- The steps that collect a field, such as the password, the code steps, and the complete-profile step, show `Sign up` in their top bar, above the step's own title, and that top bar title has no test tag. The email link step, which the standard instance does not reach, has no `Sign up` in its top bar. Tell the steps apart by their fields or their own titles, not by `Sign up`.
 - The phone code screen shows the number formatted, `+1 201-555-01xx`. `asShownByClerk(phone)` in `specs/phone.ts` gives that text.
 - The password field withholds its value from the screen tree. `host.fill` types the password once and cannot confirm that it landed, so assert on what the form does next.
