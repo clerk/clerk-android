@@ -60,7 +60,7 @@ private fun UserProfileVerifyBottomSheetContentImpl(
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
       snackbarHostState.showSnackbar(errorMessage)
-      viewModel.clearError()
+      viewModel.clearError(errorMessage)
     }
   }
 
@@ -80,28 +80,7 @@ private fun UserProfileVerifyBottomSheetContentImpl(
     }
   }
 
-  Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
-    VerifyCodeColumn(
-      mode = mode,
-      viewModel = viewModel,
-      verificationTextState = verificationTextState,
-      onDismiss = onDismiss,
-    )
-    ClerkErrorSnackbar(
-      snackbarHostState = snackbarHostState,
-      modifier = Modifier.padding(horizontal = dp16),
-    )
-  }
-}
-
-@Composable
-private fun VerifyCodeColumn(
-  mode: VerifyBottomSheetMode,
-  viewModel: UserProfileVerifyViewModel,
-  verificationTextState: UserProfileVerifyViewModel.VerificationTextState,
-  onDismiss: () -> Unit,
-) {
-  Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24)) {
+  Column(modifier = Modifier.fillMaxWidth().then(modifier).padding(bottom = dp24)) {
     BottomSheetTopBar(title = mode.title(), onClosePressed = onDismiss)
     Spacers.Vertical.Spacer12()
     Text(
@@ -125,6 +104,10 @@ private fun VerifyCodeColumn(
       onClickResend = { prepareCode(mode, viewModel) },
       showResend = mode.showResend(),
       verificationState = verificationTextState.getTextVerificationState(),
+    )
+    ClerkErrorSnackbar(
+      snackbarHostState = snackbarHostState,
+      modifier = Modifier.padding(horizontal = dp16).padding(top = dp24),
     )
   }
 }

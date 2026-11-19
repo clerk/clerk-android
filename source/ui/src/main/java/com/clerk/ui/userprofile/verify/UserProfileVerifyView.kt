@@ -68,7 +68,7 @@ private fun UserProfileVerifyViewImpl(
     modifier = modifier,
     title = mode.title(),
     errorMessage = errorMessage,
-    onErrorShown = viewModel::clearError,
+    onErrorShown = { viewModel.clearError(errorMessage) },
     onBackPressed = { userProfileState.navigateBack() },
     hasBackButton = mode.hasBackButton(),
     content = {

@@ -66,10 +66,8 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     _state.value = AuthState.Idle
   }
 
-  fun clearError() {
-    if (_state.value is AuthState.Error) {
-      _state.value = AuthState.Idle
-    }
+  fun clearError(shownError: String?) {
+    _state.compareAndSet(AuthState.Error(shownError), AuthState.Idle)
   }
 
   fun attemptPhoneNumber(phoneNumber: PhoneNumber, code: String) {

@@ -166,9 +166,25 @@ class UserProfileVerifyViewModelTest {
       assertEquals(AuthState.Idle, awaitItem())
       viewModel.attemptEmailAddress(email, "123456")
       assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
-      viewModel.clearError()
+      viewModel.clearError(RATE_LIMITED_MESSAGE)
       assertEquals(AuthState.Idle, awaitItem())
     }
+  }
+
+  @Test
+  fun clearError_forAnEarlierError_keepsTheNewerError() = runTest {
+    val email = mockk<EmailAddress>()
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      viewModel.clearError("An earlier error")
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
   }
 
   @Test
