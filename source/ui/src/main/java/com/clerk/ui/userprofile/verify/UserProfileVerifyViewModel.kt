@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -13,6 +15,7 @@ import com.clerk.api.phonenumber.attemptVerification
 import com.clerk.api.phonenumber.prepareVerification
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.core.error.isIncorrectCode
 import com.clerk.ui.core.log.ClerkLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +57,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       emailAddress
         .attemptVerification(code)
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
-        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+        .onFailure { reportFailedAttempt(it) }
     }
   }
 
@@ -63,13 +66,19 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     _state.value = AuthState.Idle
   }
 
+  fun clearError() {
+    if (_state.value is AuthState.Error) {
+      _state.value = AuthState.Idle
+    }
+  }
+
   fun attemptPhoneNumber(phoneNumber: PhoneNumber, code: String) {
     _verificationTextState.value = VerificationTextState.Verifying
     viewModelScope.launch(Dispatchers.IO) {
       phoneNumber
         .attemptVerification(code)
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
-        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+        .onFailure { reportFailedAttempt(it) }
     }
   }
 
@@ -77,7 +86,8 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     _verificationTextState.value = VerificationTextState.Verifying
     guardUser(
       userDoesNotExist = {
-        _verificationTextState.value = VerificationTextState.Error("User does not exist")
+        _state.value = AuthState.Error("User does not exist")
+        _verificationTextState.value = VerificationTextState.Default
       }
     ) { user ->
       viewModelScope.launch(Dispatchers.IO) {
@@ -88,9 +98,19 @@ internal class UserProfileVerifyViewModel : ViewModel() {
           }
           .onFailure {
             ClerkLog.e("Error attempting TOTP verification ${it.errorMessage}")
-            _verificationTextState.value = VerificationTextState.Error(it.errorMessage)
+            reportFailedAttempt(it)
           }
       }
+    }
+  }
+
+  private fun reportFailedAttempt(failure: ClerkResult.Failure<ClerkErrorResponse>) {
+    if (failure.isIncorrectCode) {
+      _state.value = AuthState.Idle
+      _verificationTextState.value = VerificationTextState.IncorrectCode
+    } else {
+      _state.value = AuthState.Error(failure.errorMessage)
+      _verificationTextState.value = VerificationTextState.Default
     }
   }
 
@@ -101,7 +121,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
 
     data class Verified(val backupCodes: List<String>? = null) : VerificationTextState
 
-    data class Error(val error: String?) : VerificationTextState
+    data object IncorrectCode : VerificationTextState
   }
 
   sealed interface AuthState {

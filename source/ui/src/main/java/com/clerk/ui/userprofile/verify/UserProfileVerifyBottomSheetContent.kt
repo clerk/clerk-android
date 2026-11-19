@@ -3,11 +3,13 @@ package com.clerk.ui.userprofile.verify
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -16,7 +18,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
@@ -50,6 +54,15 @@ private fun UserProfileVerifyBottomSheetContentImpl(
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
+  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
+  val snackbarHostState = remember { SnackbarHostState() }
+
+  LaunchedEffect(errorMessage) {
+    if (errorMessage != null) {
+      snackbarHostState.showSnackbar(errorMessage)
+      viewModel.clearError()
+    }
+  }
 
   LaunchedEffect(mode) {
     viewModel.resetState()
@@ -67,7 +80,28 @@ private fun UserProfileVerifyBottomSheetContentImpl(
     }
   }
 
-  Column(modifier = Modifier.fillMaxWidth().then(modifier).padding(bottom = dp24)) {
+  Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
+    VerifyCodeColumn(
+      mode = mode,
+      viewModel = viewModel,
+      verificationTextState = verificationTextState,
+      onDismiss = onDismiss,
+    )
+    ClerkErrorSnackbar(
+      snackbarHostState = snackbarHostState,
+      modifier = Modifier.padding(horizontal = dp16),
+    )
+  }
+}
+
+@Composable
+private fun VerifyCodeColumn(
+  mode: VerifyBottomSheetMode,
+  viewModel: UserProfileVerifyViewModel,
+  verificationTextState: UserProfileVerifyViewModel.VerificationTextState,
+  onDismiss: () -> Unit,
+) {
+  Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24)) {
     BottomSheetTopBar(title = mode.title(), onClosePressed = onDismiss)
     Spacers.Vertical.Spacer12()
     Text(
@@ -99,7 +133,7 @@ private fun UserProfileVerifyViewModel.VerificationTextState.getTextVerification
   CodeVerificationState {
   return when (this) {
     UserProfileVerifyViewModel.VerificationTextState.Default -> CodeVerificationState.Default
-    is UserProfileVerifyViewModel.VerificationTextState.Error -> CodeVerificationState.Error
+    UserProfileVerifyViewModel.VerificationTextState.IncorrectCode -> CodeVerificationState.Error
     is UserProfileVerifyViewModel.VerificationTextState.Verified -> CodeVerificationState.Success
     UserProfileVerifyViewModel.VerificationTextState.Verifying -> CodeVerificationState.Verifying
   }
