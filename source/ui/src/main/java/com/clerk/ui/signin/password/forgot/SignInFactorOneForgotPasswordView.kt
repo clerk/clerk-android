@@ -98,28 +98,18 @@ private fun SignInFactorOneForgotPasswordViewImpl(
 
   LaunchedEffect(state, defaultErrorMessage) {
     when (val s = state) {
-      is ResetPasswordViewState.Error -> {
+      is ResetPasswordViewState.Error ->
         snackbarHostState.showSnackbar(s.message ?: defaultErrorMessage)
-        viewModel.resetState()
-      }
-      ResetPasswordViewState.NotStarted -> {
-        authState.clearBackStack()
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.ResetFactor -> {
+      ResetPasswordViewState.NotStarted -> authState.clearBackStack()
+      is ResetPasswordViewState.ResetFactor ->
         authState.navigateTo(AuthDestination.SignInFactorOne(factor = s.factor))
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.Success.SignIn -> {
+      is ResetPasswordViewState.Success.SignIn ->
         authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.Success.SignUp -> {
+      is ResetPasswordViewState.Success.SignUp ->
         authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
-        viewModel.resetState()
-      }
-      else -> {}
+      else -> return@LaunchedEffect
     }
+    viewModel.resetState()
   }
 
   ClerkThemedAuthScaffold(
