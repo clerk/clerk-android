@@ -40,6 +40,10 @@ kotlin { explicitApi() }
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
+  systemProperty(
+    "updateContractBaseline",
+    providers.gradleProperty("updateContractBaseline").isPresent.toString(),
+  )
 }
 
 dokka {
@@ -118,6 +122,7 @@ dependencies {
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.okhttp.tls)
   testImplementation(libs.robolectric)
+  testImplementation(libs.snakeyaml.engine)
 
   dokkaPlugin(libs.versioning.plugin)
 }
