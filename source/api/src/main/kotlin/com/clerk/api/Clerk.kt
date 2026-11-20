@@ -23,6 +23,7 @@ import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
@@ -955,14 +956,20 @@ public object Clerk {
    * Refreshes the current client and updates Clerk's reactive auth state.
    *
    * If another client update (for example a sign-in completing) landed while the request was in
-   * flight, that newer state is kept and the fetched client is discarded. On success the returned
-   * client is always the one [client] holds when this function returns.
+   * flight, or the device token changed (for example after a sign-out or account switch), that
+   * newer state is kept and the fetched client is discarded. On success the returned client is
+   * always the one [client] holds when this function returns.
    */
   public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+    val manualClientSyncRequest = ManualClientSyncRequest()
     val updateCountAtStart = clientUpdateCount
-    return when (val result = Client.get()) {
+    return when (
+      val result = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
+    ) {
       is ClerkResult.Success -> {
-        updateClientIfUnchangedSince(updateCountAtStart, result)
+        manualClientSyncRequest.runIfResponseCurrent {
+          updateClientIfUnchangedSince(updateCountAtStart, result)
+        }
         ClerkResult.success(client).withTags(result.tags)
       }
       is ClerkResult.Failure -> result
