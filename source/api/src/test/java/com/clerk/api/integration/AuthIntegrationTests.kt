@@ -9,6 +9,7 @@ import com.clerk.api.signup.sendCode
 import com.clerk.api.signup.verifyCode
 import com.clerk.api.user.delete
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,6 +52,7 @@ class AuthIntegrationTests {
           },
         )
       didCreateSignUp = true
+      assertNotNull("a new sign-up carries its abandon deadline", signUp.abandonedAt)
 
       val afterEmailSend = assertSuccess("sendEmailCode", signUp.sendCode { email = testEmail })
       val afterEmailVerify =
