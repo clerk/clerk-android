@@ -17,9 +17,11 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -86,6 +88,29 @@ class SetPasswordViewModelTest {
       advanceUntilIdle()
 
       assertEquals(AuthenticationViewState.Error(LONG_MESSAGE), viewModel.state.value)
+    }
+
+  @Test
+  fun `leaving the password screen discards a delayed reset response`() =
+    runTest(testDispatcher) {
+      val signIn = signIn(canResetPassword = true)
+      every { auth.currentSignIn } returns signIn
+      val response = CompletableDeferred<ClerkResult.Failure<ClerkErrorResponse>>()
+      coEvery { signIn.verifyWithPassword(PASSWORD) } coAnswers { response.await() }
+
+      val viewModel = SetPasswordViewModel(ioDispatcher = testDispatcher)
+      viewModel.submitPassword(PASSWORD)
+      runCurrent()
+      assertEquals(AuthenticationViewState.Loading, viewModel.state.value)
+
+      viewModel.leavePasswordScreen()
+      response.complete(failure("password_reset_required"))
+      advanceUntilIdle()
+      assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
+
+      viewModel.submitPassword(PASSWORD)
+      advanceUntilIdle()
+      assertEquals(AuthenticationViewState.PasswordResetRequired, viewModel.state.value)
     }
 
   private fun signIn(canResetPassword: Boolean): SignIn {

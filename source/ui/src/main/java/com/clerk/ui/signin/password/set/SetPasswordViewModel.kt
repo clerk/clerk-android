@@ -14,6 +14,7 @@ import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -25,25 +26,33 @@ internal class SetPasswordViewModel(
   private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
+  private var submission: Job? = null
+
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   fun submitPassword(password: String) =
     guardSignIn(state = _state) { signIn ->
       _state.value = AuthenticationViewState.Loading
-      viewModelScope.launch(ioDispatcher) {
-        signIn
-          .verifyWithPassword(password)
-          .onSuccess {
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Success.SignIn(it)
+      submission =
+        viewModelScope.launch(ioDispatcher) {
+          signIn
+            .verifyWithPassword(password)
+            .onSuccess {
+              withContext(Dispatchers.Main) {
+                _state.value = AuthenticationViewState.Success.SignIn(it)
+              }
             }
-          }
-          .onFailure {
-            withContext(Dispatchers.Main) { _state.value = stateAfterFailure(it, signIn) }
-          }
-      }
+            .onFailure {
+              withContext(Dispatchers.Main) { _state.value = stateAfterFailure(it, signIn) }
+            }
+        }
     }
+
+  fun leavePasswordScreen() {
+    submission?.cancel()
+    resetState()
+  }
 
   fun resetState() {
     _state.value = AuthenticationViewState.Idle

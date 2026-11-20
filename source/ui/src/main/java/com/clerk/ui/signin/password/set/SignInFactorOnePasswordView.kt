@@ -103,10 +103,16 @@ private fun SignInFactorOnePasswordViewImpl(
   }
 
   ClerkThemedAuthScaffold(
-    onBackPressed = { authState.navigateBack() },
+    onBackPressed = {
+      viewModel.leavePasswordScreen()
+      authState.navigateBack()
+    },
     snackbarHostState = snackbarHostState,
     identifier = factor.safeIdentifier,
-    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
+    onClickIdentifier = {
+      viewModel.leavePasswordScreen()
+      authState.navigateToAuthStartForIdentifierEdit()
+    },
     modifier = modifier,
     title = stringResource(R.string.enter_password),
     subtitle = stringResource(R.string.enter_the_password_associated_with_your_account),
@@ -130,7 +136,7 @@ private fun SignInFactorOnePasswordViewImpl(
         ),
     )
     Spacer(Modifier.height(dp24))
-    Footer(authState, factor)
+    Footer(authState, factor, viewModel::leavePasswordScreen)
   }
 }
 
@@ -154,16 +160,20 @@ private fun PasswordInput(password: String, onValueChange: (String) -> Unit, onS
 }
 
 @Composable
-private fun Footer(authState: AuthState, factor: Factor) {
+private fun Footer(authState: AuthState, factor: Factor, leavePasswordScreen: () -> Unit) {
   val windowInfo = LocalWindowInfo.current
   val density = LocalDensity.current
   val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
   val isCompact = widthDp < 360.dp
-  val onUseAnotherMethod = { authState.navigateToAlternativeMethods(factor) }
+  val onUseAnotherMethod = {
+    leavePasswordScreen()
+    authState.navigateToAlternativeMethods(factor)
+  }
   val onForgotPassword = {
+    leavePasswordScreen()
     Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
       authState.navigateTo(AuthDestination.SignInForgotPassword)
-    } ?: onUseAnotherMethod()
+    } ?: authState.navigateToAlternativeMethods(factor)
   }
   if (isCompact) {
     Column(
