@@ -61,7 +61,9 @@ internal object SignOutService {
     // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
     // sign-out when the host remounts AuthView within the same process/activity lifecycle.
     runCatching {
-      val clientResult = Clerk.fetchAndApplyClient { Client.getSkippingClientId() }
+      val clientResult = Clerk.fetchAndApplyClient {
+        ClerkApi.client.getSkippingClientId(manualClientSyncRequest = it)
+      }
       if (clientResult is ClerkResult.Failure) {
         ClerkLogger.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
       }

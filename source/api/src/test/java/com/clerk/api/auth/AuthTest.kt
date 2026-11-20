@@ -7,6 +7,7 @@ import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -349,7 +350,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -381,7 +382,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -420,7 +421,7 @@ class AuthTest {
         restoreCredentialCleared = true
       }
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -476,7 +477,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -505,7 +506,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession.copy(lastActiveOrganizationId = null))
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -562,7 +563,7 @@ class AuthTest {
       every { ClerkApi.client } returns clientApi
       coEvery { clientApi.setActive(otherSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
         ClerkResult.success(otherSession)
-      coEvery { clientApi.get() } returns
+      coEvery { clientApi.get(any()) } returns
         ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
       Clerk.updateClient(
         Client(
@@ -598,7 +599,7 @@ class AuthTest {
           Clerk.updateClient(Client(id = "client_123"))
           ClerkResult.success(dehydratedSecondSession)
         }
-      coEvery { clientApi.get() } returns
+      coEvery { clientApi.get(any()) } returns
         ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
       Clerk.updateClient(
         Client(
@@ -626,7 +627,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession.copy(lastActiveOrganizationId = null))
-    coEvery { clientApi.get() } returns ClerkResult.success(Client(id = "client_123"))
+    coEvery { clientApi.get(any()) } returns ClerkResult.success(Client(id = "client_123"))
     Clerk.updateClient(
       Client(
         id = "client_123",
@@ -656,7 +657,7 @@ class AuthTest {
         ClerkResult.success(secondSession)
       // Read replica returns a fully-hydrated client but with the previous
       // lastActiveSessionId — read-after-write lag.
-      coEvery { clientApi.get() } returns
+      coEvery { clientApi.get(any()) } returns
         ClerkResult.success(
           Client(
             id = "client_123",
@@ -711,6 +712,41 @@ class AuthTest {
         organizationSettings = OrganizationSettings(forceOrganizationSelection = enabled),
       )
     )
+  }
+
+  @Test
+  fun `signOut with session ID does not apply a refresh whose device token went stale`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val sessionApi = mockk<SessionApi>()
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    mockkObject(RestoreCredentials)
+    every { ClerkApi.session } returns sessionApi
+    every { ClerkApi.client } returns clientApi
+    coEvery { RestoreCredentials.clearSilently() } returns Unit
+    coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
+    coEvery { clientApi.get(any()) } coAnswers
+      {
+        arg<ManualClientSyncRequest?>(0)
+          ?.recordResponse(
+            requestDeviceToken = "device_token_before_switch",
+            responseDeviceToken = "device_token_before_switch",
+          )
+        ClerkResult.success(Client(id = "client_fetched_with_old_token"))
+      }
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+
+    Auth().signOut(sessionId = firstSession.id)
+
+    assertEquals("client_123", Clerk.client.id)
+    assertEquals(listOf(secondSession), Clerk.client.sessions)
   }
 
   private fun testSession(id: String, lastActiveOrganizationId: String? = null): Session =

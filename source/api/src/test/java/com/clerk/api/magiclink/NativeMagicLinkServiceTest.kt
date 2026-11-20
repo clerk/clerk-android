@@ -9,6 +9,7 @@ import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.MagicLinkApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -144,7 +145,11 @@ class NativeMagicLinkServiceTest {
       ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
     coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
     coEvery { auth.setActive("sess_123", null) } returns ClerkResult.success(activatedSession)
-    coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
+    coEvery { clientApi.get(any()) } coAnswers
+      {
+        firstArg<ManualClientSyncRequest?>()?.recordResponse(null, null)
+        ClerkResult.success(refreshedClient)
+      }
 
     val startResult = NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
     assertTrue(startResult is ClerkResult.Success)
@@ -302,7 +307,7 @@ class NativeMagicLinkServiceTest {
       coEvery { magicLinkApi.complete(any()) } returns
         ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
       coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(mfaSignIn)
-      coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
+      coEvery { clientApi.get(any()) } returns ClerkResult.success(refreshedClient)
 
       val startResult = NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
       assertTrue(startResult is ClerkResult.Success)
@@ -320,7 +325,7 @@ class NativeMagicLinkServiceTest {
 
       coVerify(exactly = 1) { auth.signInWithTicket("ticket_123") }
       coVerify(exactly = 0) { auth.setActive(any(), any()) }
-      coVerify(exactly = 0) { clientApi.get() }
+      coVerify(exactly = 0) { clientApi.get(any()) }
     }
 
   @Test
@@ -369,7 +374,7 @@ class NativeMagicLinkServiceTest {
       coVerify(exactly = 0) { auth.signUpWithTicket(any()) }
       coVerify(exactly = 0) { auth.signInWithTicket(any()) }
       coVerify(exactly = 0) { auth.setActive(any(), any()) }
-      coVerify(exactly = 0) { clientApi.get() }
+      coVerify(exactly = 0) { clientApi.get(any()) }
       verify(exactly = 1) { auth.send(AuthEvent.SignUpCompleted(completedSignUp)) }
       val prepareFields = slot<Map<String, String>>()
       val completeFields = slot<Map<String, String>>()
@@ -621,7 +626,7 @@ class NativeMagicLinkServiceTest {
       ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
     coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
     coEvery { auth.setActive("sess_unactivated", null) } returns ClerkResult.apiFailure(apiError)
-    coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
+    coEvery { clientApi.get(any()) } returns ClerkResult.success(refreshedClient)
 
     val startResult = NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
     assertTrue(startResult is ClerkResult.Success)

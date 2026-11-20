@@ -1140,11 +1140,16 @@ public object Clerk {
     )
 
   internal suspend fun <E : Any> fetchAndApplyClient(
-    fetch: suspend () -> ClerkResult<Client, E>
+    fetch: suspend (ManualClientSyncRequest) -> ClerkResult<Client, E>
   ): ClerkResult<Client, E> {
+    val manualClientSyncRequest = ManualClientSyncRequest()
     val updateCountAtStart = clientUpdateCount
-    val result = fetch()
-    if (result is ClerkResult.Success) updateClientIfUnchangedSince(updateCountAtStart, result)
+    val result = fetch(manualClientSyncRequest)
+    if (result is ClerkResult.Success) {
+      manualClientSyncRequest.runIfResponseCurrent {
+        updateClientIfUnchangedSince(updateCountAtStart, result)
+      }
+    }
     return result
   }
 
