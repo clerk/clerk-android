@@ -64,12 +64,15 @@ internal fun SignInFactorOneForgotPasswordView(
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val socialProviders = Clerk.socialProviders
-    val alternativeFactors = Clerk.auth.currentSignIn?.alternativeFirstFactors()
+    val alternativeFactors =
+      Clerk.auth.currentSignIn?.alternativeFirstFactors().orEmpty().filterNot {
+        reason == PasswordResetReason.PasswordResetRequired && it.strategyType == Strategy.Password
+      }
     SignInFactorOneForgotPasswordViewImpl(
       reason = reason,
       socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
       modifier = modifier,
-      alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
+      alternativeFactors = alternativeFactors.toImmutableList(),
       onClickFactor = onClickFactor,
       onAuthComplete = onAuthComplete,
     )
