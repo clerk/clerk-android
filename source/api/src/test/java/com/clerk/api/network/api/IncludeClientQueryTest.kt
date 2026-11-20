@@ -1,23 +1,67 @@
 package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiParams
-import com.clerk.api.network.serialization.ClerkResult
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
+import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.Query
 
 class IncludeClientQueryTest {
 
   @Test
-  fun `GETs that need the client declare the include client query`() {
-    assertTrue(SignInApi::class.java.method("fetchSignIn").hasQuery(ApiParams.INCLUDE_CLIENT))
-    assertTrue(SignUpApi::class.java.method("fetchSignUp").hasQuery(ApiParams.INCLUDE_CLIENT))
-    assertTrue(UserApi::class.java.method("getUser").hasQuery(ApiParams.INCLUDE_CLIENT))
+  fun `fetchSignIn sends include client once`() = runTest {
+    val interceptor = CapturingInterceptor()
+
+    api<SignInApi>(interceptor).fetchSignIn(id = "sia_1")
+
+    assertEquals("/v1/client/sign_ins/sia_1", interceptor.path)
+    assertEquals(listOf("true"), interceptor.values("_include_client"))
+  }
+
+  @Test
+  fun `fetchSignIn with a rotating token nonce keeps the nonce and sends include client`() =
+    runTest {
+      val interceptor = CapturingInterceptor()
+
+      api<SignInApi>(interceptor).fetchSignIn(id = "sia_1", rotatingTokenNonce = "nonce")
+
+      assertEquals(listOf("nonce"), interceptor.values("rotating_token_nonce"))
+      assertEquals(listOf("true"), interceptor.values("_include_client"))
+    }
+
+  @Test
+  fun `fetchSignUp with a rotating token nonce keeps the nonce and sends include client`() =
+    runTest {
+      val interceptor = CapturingInterceptor()
+
+      api<SignUpApi>(interceptor).fetchSignUp(id = "sua_1", rotatingTokenNonce = "nonce")
+
+      assertEquals("/v1/client/sign_ups/sua_1", interceptor.path)
+      assertEquals(listOf("nonce"), interceptor.values("rotating_token_nonce"))
+      assertEquals(listOf("true"), interceptor.values("_include_client"))
+    }
+
+  @Test
+  fun `getUser keeps the session id and sends include client`() = runTest {
+    val interceptor = CapturingInterceptor()
+
+    api<UserApi>(interceptor).getUser(sessionId = "sess_1")
+
+    assertEquals("/v1/me", interceptor.path)
+    assertEquals(listOf("sess_1"), interceptor.values(ApiParams.CLERK_SESSION_ID))
+    assertEquals(listOf("true"), interceptor.values("_include_client"))
   }
 
   @Test
@@ -27,62 +71,45 @@ class IncludeClientQueryTest {
       .methods
       .filter { it.name == "get" || it.name == "getSkippingClientId" }
       .forEach {
-        assertFalse(it.hasQuery(ApiParams.INCLUDE_CLIENT), "${it.name} asks for the client")
+        assertFalse(it.hasQuery("_include_client"), "${it.name} asks for the client")
       }
   }
 
-  @Test
-  fun `fetchSignIn asks for the client by default, with or without a rotating token nonce`() =
-    runTest {
-      val api = mockk<SignInApi>()
-      coEvery { api.fetchSignIn(any(), any(), any()) } returns
-        ClerkResult.unknownFailure(Exception())
-
-      api.fetchSignIn(id = "sia_1")
-      api.fetchSignIn(id = "sia_1", rotatingTokenNonce = "nonce")
-
-      coVerify(exactly = 1) {
-        api.fetchSignIn(id = "sia_1", rotatingTokenNonce = null, includeClient = true)
-      }
-      coVerify(exactly = 1) {
-        api.fetchSignIn(id = "sia_1", rotatingTokenNonce = "nonce", includeClient = true)
-      }
-    }
-
-  @Test
-  fun `fetchSignUp asks for the client by default, with or without a rotating token nonce`() =
-    runTest {
-      val api = mockk<SignUpApi>()
-      coEvery { api.fetchSignUp(any(), any(), any()) } returns
-        ClerkResult.unknownFailure(Exception())
-
-      api.fetchSignUp(id = "sua_1")
-      api.fetchSignUp(id = "sua_1", rotatingTokenNonce = "nonce")
-
-      coVerify(exactly = 1) {
-        api.fetchSignUp(id = "sua_1", rotatingTokenNonce = null, includeClient = true)
-      }
-      coVerify(exactly = 1) {
-        api.fetchSignUp(id = "sua_1", rotatingTokenNonce = "nonce", includeClient = true)
-      }
-    }
-
-  @Test
-  fun `getUser asks for the client by default`() = runTest {
-    val api = mockk<UserApi>()
-    coEvery { api.getUser(any(), any()) } returns ClerkResult.unknownFailure(Exception())
-
-    api.getUser(sessionId = "sess_1")
-
-    coVerify(exactly = 1) { api.getUser(sessionId = "sess_1", includeClient = true) }
-  }
-
-  private fun Class<*>.method(name: String): java.lang.reflect.Method = methods.single {
-    it.name == name
-  }
+  private inline fun <reified T> api(interceptor: CapturingInterceptor): T =
+    Retrofit.Builder()
+      .baseUrl("https://example.com/v1/")
+      .client(OkHttpClient.Builder().addInterceptor(interceptor).build())
+      .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
+      .addConverterFactory(ClerkApiResultConverterFactory)
+      .addConverterFactory(
+        ClerkApi.json.asConverterFactory("application/json; charset=utf-8".toMediaType())
+      )
+      .build()
+      .create(T::class.java)
 
   private fun java.lang.reflect.Method.hasQuery(value: String): Boolean =
     parameterAnnotations.any { annotations ->
       annotations.filterIsInstance<Query>().any { it.value == value }
     }
+
+  private class CapturingInterceptor : Interceptor {
+    lateinit var path: String
+    private lateinit var url: okhttp3.HttpUrl
+
+    fun values(name: String): List<String?> = url.queryParameterValues(name)
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+      val request = chain.request()
+      url = request.url
+      path = request.url.encodedPath
+
+      return Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body("{}".toResponseBody("application/json".toMediaType()))
+        .build()
+    }
+  }
 }
