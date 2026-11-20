@@ -44,6 +44,8 @@
     <string name="an_error_occurred">エラーが発生しました</string>
     <string name="reset_your_password">パスワードをリセット</string>
     <string name="or_sign_in_with_another_method">または、別の方法でサインイン</string>
+    <string name="password_reset_required">パスワードのリセットが必要です</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">パスワードを再度使用するには、リセットする必要があります。</string>
     <string name="email_code_to">%1$s にメールコード</string>
     <string name="send_sms_code_to">%1$s にSMSコードを送信</string>
     <string name="send_email_to">%1$s にメールを送信</string>

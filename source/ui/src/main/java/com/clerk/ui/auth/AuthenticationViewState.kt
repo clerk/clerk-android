@@ -31,6 +31,8 @@ internal sealed interface AuthenticationViewState {
   }
 
   data class Error(val message: String?) : AuthenticationViewState
+
+  data object PasswordResetRequired : AuthenticationViewState
 }
 
 internal val ClerkResult.Failure<*>.isSSOCancellation: Boolean

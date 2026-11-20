@@ -44,6 +44,8 @@
     <string name="an_error_occurred">Παρουσιάστηκε σφάλμα</string>
     <string name="reset_your_password">Επαναφορά του κωδικού πρόσβασης σας</string>
     <string name="or_sign_in_with_another_method">Ή, συνδεθείτε με άλλη μέθοδο</string>
+    <string name="password_reset_required">Απαιτείται επαναφορά κωδικού πρόσβασης</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Πρέπει να επαναφέρετε τον κωδικό πρόσβασής σας για να μπορέσετε να τον χρησιμοποιήσετε ξανά.</string>
     <string name="email_code_to">Κωδικός email στο %1$s</string>
     <string name="send_sms_code_to">Αποστολή κωδικού SMS στο %1$s</string>
     <string name="send_email_to">Αποστολή email στο %1$s</string>

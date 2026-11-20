@@ -50,11 +50,13 @@ import kotlinx.collections.immutable.toImmutableList
  * A view that allows the user to initiate the forgot password flow. It also presents alternative
  * sign-in methods like social providers or other factors.
  *
+ * @param reason Why the user is resetting their password, which sets the title and subtitle.
  * @param modifier The [Modifier] to be applied to the view.
  * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
  */
 @Composable
 internal fun SignInFactorOneForgotPasswordView(
+  reason: PasswordResetReason,
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -64,6 +66,7 @@ internal fun SignInFactorOneForgotPasswordView(
     val socialProviders = Clerk.socialProviders
     val alternativeFactors = Clerk.auth.currentSignIn?.alternativeFirstFactors()
     SignInFactorOneForgotPasswordViewImpl(
+      reason = reason,
       socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
       modifier = modifier,
       alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
@@ -75,6 +78,7 @@ internal fun SignInFactorOneForgotPasswordView(
 
 @Composable
 private fun SignInFactorOneForgotPasswordViewImpl(
+  reason: PasswordResetReason,
   alternativeFactors: ImmutableList<Factor>,
   socialProviders: ImmutableList<OAuthProvider>,
   onClickFactor: (Factor) -> Unit,
@@ -119,7 +123,8 @@ private fun SignInFactorOneForgotPasswordViewImpl(
     modifier = modifier,
     onBackPressed = authState::navigateBack,
     hasLogo = false,
-    title = stringResource(R.string.forgot_password),
+    title = reason.title(),
+    subtitle = reason.subtitle(),
   ) {
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
@@ -139,6 +144,26 @@ private fun SignInFactorOneForgotPasswordViewImpl(
     AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)
   }
 }
+
+internal enum class PasswordResetReason {
+  ForgotPassword,
+  PasswordResetRequired,
+}
+
+@Composable
+private fun PasswordResetReason.title(): String =
+  when (this) {
+    PasswordResetReason.ForgotPassword -> stringResource(R.string.forgot_password)
+    PasswordResetReason.PasswordResetRequired -> stringResource(R.string.password_reset_required)
+  }
+
+@Composable
+private fun PasswordResetReason.subtitle(): String? =
+  when (this) {
+    PasswordResetReason.ForgotPassword -> null
+    PasswordResetReason.PasswordResetRequired ->
+      stringResource(R.string.you_need_to_reset_your_password_before_you_can_use_it_again)
+  }
 
 @Composable
 internal fun AlternativeFactorList(
@@ -183,6 +208,7 @@ private fun Preview() {
   PreviewAuthStateProvider {
     ClerkThemeOverrideProvider(ClerkTheme(colors = DefaultColors.clerk)) {
       SignInFactorOneForgotPasswordViewImpl(
+        reason = PasswordResetReason.ForgotPassword,
         socialProviders =
           persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
         alternativeFactors =

@@ -101,6 +101,8 @@
     <string name="an_error_occurred">An error occurred</string>
     <string name="reset_your_password">Reset your password</string>
     <string name="or_sign_in_with_another_method">Or, sign in with another method</string>
+    <string name="password_reset_required">Password reset required</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">You need to reset your password before you can use it again.</string>
     <string name="email_code_to">Email code to %1$s</string>
     <string name="send_sms_code_to">Send SMS code to %1$s</string>
     <string name="send_email_to">Send email to %1$s</string>

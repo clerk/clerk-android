@@ -45,6 +45,7 @@ import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
 import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
+import com.clerk.ui.signin.password.forgot.PasswordResetReason
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
 import com.clerk.ui.signin.password.reset.SessionTaskResetPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
@@ -371,6 +372,14 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     }
     entry<AuthDestination.SignInForgotPassword> {
       SignInFactorOneForgotPasswordView(
+        reason = PasswordResetReason.ForgotPassword,
+        onClickFactor = { navigateToForgotPasswordFactor(backStack, it) },
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInPasswordResetRequired> {
+      SignInFactorOneForgotPasswordView(
+        reason = PasswordResetReason.PasswordResetRequired,
         onClickFactor = { navigateToForgotPasswordFactor(backStack, it) },
         onAuthComplete = options.onAuthComplete,
       )
@@ -447,6 +456,8 @@ internal object AuthDestination {
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
 
   @Serializable data object SignInForgotPassword : NavKey
+
+  @Serializable data object SignInPasswordResetRequired : NavKey
 
   @Serializable data object SignInSetNewPassword : NavKey
 

@@ -44,6 +44,8 @@
     <string name="an_error_occurred">एक त्रुटि हुई</string>
     <string name="reset_your_password">अपना पासवर्ड रीसेट करें</string>
     <string name="or_sign_in_with_another_method">या, दूसरी विधि से साइन इन करें</string>
+    <string name="password_reset_required">पासवर्ड रीसेट करना आवश्यक है</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">इसे दोबारा उपयोग करने से पहले आपको अपना पासवर्ड रीसेट करना होगा।</string>
     <string name="email_code_to">%1$s को ईमेल कोड</string>
     <string name="send_sms_code_to">%1$s को SMS कोड भेजें</string>
     <string name="send_email_to">%1$s को ईमेल भेजें</string>

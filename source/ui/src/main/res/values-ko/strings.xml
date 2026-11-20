@@ -44,6 +44,8 @@
     <string name="an_error_occurred">오류가 발생했습니다</string>
     <string name="reset_your_password">비밀번호 재설정</string>
     <string name="or_sign_in_with_another_method">또는 다른 방법으로 로그인</string>
+    <string name="password_reset_required">비밀번호 재설정 필요</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">비밀번호를 다시 사용하려면 먼저 재설정해야 합니다.</string>
     <string name="email_code_to">%1$s(으)로 이메일 코드</string>
     <string name="send_sms_code_to">%1$s(으)로 SMS 코드 보내기</string>
     <string name="send_email_to">%1$s(으)로 이메일 보내기</string>

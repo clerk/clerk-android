@@ -100,6 +100,8 @@
     <string name="an_error_occurred">Bir hata oluştu</string>
     <string name="reset_your_password">Şifrenizi sıfırlayın</string>
     <string name="or_sign_in_with_another_method">Veya başka bir yöntemle giriş yapın</string>
+    <string name="password_reset_required">Şifre sıfırlama gerekli</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Şifrenizi tekrar kullanabilmek için sıfırlamanız gerekiyor.</string>
     <string name="email_code_to">%1$s adresine e-postayla kod gönder</string>
     <string name="send_sms_code_to">%1$s numarasına SMS kodu gönder</string>
     <string name="send_email_to">%1$s adresine e-posta gönder</string>

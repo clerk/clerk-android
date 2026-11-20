@@ -100,6 +100,8 @@
     <string name="an_error_occurred">Сталася помилка</string>
     <string name="reset_your_password">Скиньте пароль</string>
     <string name="or_sign_in_with_another_method">Або увійдіть іншим способом</string>
+    <string name="password_reset_required">Потрібно скинути пароль</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Вам потрібно скинути пароль, перш ніж ви зможете знову ним користуватися.</string>
     <string name="email_code_to">Надіслати код електронною поштою на %1$s</string>
     <string name="send_sms_code_to">Надіслати SMS-код на %1$s</string>
     <string name="send_email_to">Надіслати лист на %1$s</string>

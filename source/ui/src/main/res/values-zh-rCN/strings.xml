@@ -44,6 +44,8 @@
     <string name="an_error_occurred">发生错误</string>
     <string name="reset_your_password">重置您的密码</string>
     <string name="or_sign_in_with_another_method">或者，使用其他方法登录</string>
+    <string name="password_reset_required">需要重置密码</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">您需要先重置密码，然后才能再次使用。</string>
     <string name="email_code_to">向 %1$s 发送电子邮件验证码</string>
     <string name="send_sms_code_to">向 %1$s 发送短信验证码</string>
     <string name="send_email_to">向 %1$s 发送电子邮件</string>

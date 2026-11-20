@@ -100,6 +100,8 @@
     <string name="an_error_occurred">Wystąpił błąd</string>
     <string name="reset_your_password">Zresetuj hasło</string>
     <string name="or_sign_in_with_another_method">Lub zaloguj się inną metodą</string>
+    <string name="password_reset_required">Wymagane zresetowanie hasła</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Aby ponownie używać hasła, musisz je zresetować.</string>
     <string name="email_code_to">Kod e-mail do %1$s</string>
     <string name="send_sms_code_to">Wyślij kod SMS do %1$s</string>
     <string name="send_email_to">Wyślij e-mail do %1$s</string>

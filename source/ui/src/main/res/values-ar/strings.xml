@@ -44,6 +44,8 @@
     <string name="an_error_occurred">حدث خطأ</string>
     <string name="reset_your_password">إعادة تعيين كلمة المرور الخاصة بك</string>
     <string name="or_sign_in_with_another_method">أو، سجل الدخول بطريقة أخرى</string>
+    <string name="password_reset_required">يلزم إعادة تعيين كلمة المرور</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">يجب عليك إعادة تعيين كلمة المرور قبل أن تتمكن من استخدامها مرة أخرى.</string>
     <string name="email_code_to">رمز البريد الإلكتروني إلى %1$s</string>
     <string name="send_sms_code_to">إرسال رمز الرسائل النصية إلى %1$s</string>
     <string name="send_email_to">إرسال بريد إلكتروني إلى %1$s</string>

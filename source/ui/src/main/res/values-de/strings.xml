@@ -44,6 +44,8 @@
     <string name="an_error_occurred">Ein Fehler ist aufgetreten</string>
     <string name="reset_your_password">Setzen Sie Ihr Passwort zurück</string>
     <string name="or_sign_in_with_another_method">Oder melden Sie sich mit einer anderen Methode an</string>
+    <string name="password_reset_required">Zurücksetzen des Passworts erforderlich</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Sie müssen Ihr Passwort zurücksetzen, bevor Sie es wieder verwenden können.</string>
     <string name="email_code_to">E-Mail-Code an %1$s</string>
     <string name="send_sms_code_to">SMS-Code an %1$s senden</string>
     <string name="send_email_to">E-Mail an %1$s senden</string>

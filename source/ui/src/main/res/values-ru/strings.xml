@@ -100,6 +100,8 @@
     <string name="an_error_occurred">Произошла ошибка</string>
     <string name="reset_your_password">Сбросьте пароль</string>
     <string name="or_sign_in_with_another_method">Или войдите другим способом</string>
+    <string name="password_reset_required">Требуется сброс пароля</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Вам нужно сбросить пароль, прежде чем вы сможете снова его использовать.</string>
     <string name="email_code_to">Код по электронной почте на %1$s</string>
     <string name="send_sms_code_to">Отправить SMS-код на %1$s</string>
     <string name="send_email_to">Отправить письмо на %1$s</string>

@@ -44,6 +44,8 @@
     <string name="an_error_occurred">Une erreur s\'est produite</string>
     <string name="reset_your_password">Réinitialiser votre mot de passe</string>
     <string name="or_sign_in_with_another_method">Ou, connectez-vous avec une autre méthode</string>
+    <string name="password_reset_required">Réinitialisation du mot de passe requise</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Vous devez réinitialiser votre mot de passe avant de pouvoir l\'utiliser à nouveau.</string>
     <string name="email_code_to">Code e-mail à %1$s</string>
     <string name="send_sms_code_to">Envoyer le code SMS à %1$s</string>
     <string name="send_email_to">Envoyer un e-mail à %1$s</string>

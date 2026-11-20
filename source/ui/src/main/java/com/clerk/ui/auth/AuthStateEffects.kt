@@ -26,6 +26,10 @@ internal fun AuthStateEffects(
         onReset()
       }
       AuthenticationViewState.NotStarted -> authState.clearBackStack()
+      AuthenticationViewState.PasswordResetRequired -> {
+        authState.navigateTo(AuthDestination.SignInPasswordResetRequired)
+        onReset()
+      }
       is AuthenticationViewState.Success.SignIn -> {
         authState.setToStepForStatus(state.signIn, onAuthComplete = onAuthComplete)
         onReset()

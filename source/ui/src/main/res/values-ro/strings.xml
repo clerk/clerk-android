@@ -100,6 +100,8 @@
     <string name="an_error_occurred">A apărut o eroare</string>
     <string name="reset_your_password">Resetează parola</string>
     <string name="or_sign_in_with_another_method">Sau autentifică-te cu altă metodă</string>
+    <string name="password_reset_required">Este necesară resetarea parolei</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Trebuie să îți resetezi parola înainte de a o putea folosi din nou.</string>
     <string name="email_code_to">Cod email către %1$s</string>
     <string name="send_sms_code_to">Trimite cod SMS către %1$s</string>
     <string name="send_email_to">Trimite email către %1$s</string>

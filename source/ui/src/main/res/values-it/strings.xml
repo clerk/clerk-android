@@ -44,6 +44,8 @@
     <string name="an_error_occurred">Si è verificato un errore</string>
     <string name="reset_your_password">Reimposta la tua password</string>
     <string name="or_sign_in_with_another_method">Oppure, accedi con un altro metodo</string>
+    <string name="password_reset_required">Reimpostazione della password richiesta</string>
+    <string name="you_need_to_reset_your_password_before_you_can_use_it_again">Devi reimpostare la password prima di poterla usare di nuovo.</string>
     <string name="email_code_to">Codice email a %1$s</string>
     <string name="send_sms_code_to">Invia codice SMS a %1$s</string>
     <string name="send_email_to">Invia email a %1$s</string>
