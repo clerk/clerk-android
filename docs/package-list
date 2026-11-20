@@ -36,6 +36,7 @@ com.clerk.api.passkeys
 com.clerk.api.phonenumber
 com.clerk.api.restorecredentials
 com.clerk.api.session
+com.clerk.api.sessiontransfer
 com.clerk.api.signin
 com.clerk.api.signup
 com.clerk.api.sso
