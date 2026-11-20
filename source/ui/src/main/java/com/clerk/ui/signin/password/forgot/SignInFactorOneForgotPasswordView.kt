@@ -134,17 +134,22 @@ private fun SignInFactorOneForgotPasswordViewImpl(
       text = stringResource(R.string.reset_your_password),
       onClick = { viewModel.resetPassword() },
     )
-    Spacers.Vertical.Spacer24()
-    TextDivider(text = stringResource(R.string.or_sign_in_with_another_method))
-    Spacers.Vertical.Spacer24()
-    if (Clerk.socialProviders.isNotEmpty()) {
-      ClerkSocialRow(
-        providers = socialProviders,
-        onClick = { viewModel.signInWithProvider(it, authState.mode.transferable) },
-      )
+    if (
+      socialProviders.isNotEmpty() ||
+        alternativeFactors.any { textIconHelper.actionText(it, context) != null }
+    ) {
       Spacers.Vertical.Spacer24()
+      TextDivider(text = stringResource(R.string.or_sign_in_with_another_method))
+      Spacers.Vertical.Spacer24()
+      if (socialProviders.isNotEmpty()) {
+        ClerkSocialRow(
+          providers = socialProviders,
+          onClick = { viewModel.signInWithProvider(it, authState.mode.transferable) },
+        )
+        Spacers.Vertical.Spacer24()
+      }
+      AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)
     }
-    AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)
   }
 }
 
