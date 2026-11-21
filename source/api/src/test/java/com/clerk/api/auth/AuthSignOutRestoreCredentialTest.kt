@@ -150,7 +150,7 @@ class AuthSignOutRestoreCredentialTest {
         onRemove()
         ClerkResult.success(removedSession)
       }
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
   }
 

@@ -9,6 +9,8 @@ import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
 import io.mockk.every
 import io.mockk.mockkObject
@@ -26,6 +28,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
@@ -36,6 +39,8 @@ class OrganizationReloadTest {
 
   @Before
   fun setup() {
+    StorageHelper.resetToUninitializedForTesting()
+    StorageHelper.initialize(RuntimeEnvironment.getApplication())
     val httpClient =
       OkHttpClient.Builder()
         .addInterceptor(ClientSyncingMiddleware(ClerkApi.json))
@@ -68,6 +73,7 @@ class OrganizationReloadTest {
   fun tearDown() {
     Clerk.stateStore.reset()
     unmockkAll()
+    StorageHelper.reset(RuntimeEnvironment.getApplication())
   }
 
   @Test
@@ -93,6 +99,21 @@ class OrganizationReloadTest {
       val result = stale.reload()
 
       assertEquals("Fresh", (result as ClerkResult.Success).value.name)
+      assertEquals("Stale", Clerk.organization?.name)
+    }
+
+  @Test
+  fun `reload does not apply a client from a response whose device token went stale in flight`() =
+    runTest {
+      val stale = organization(name = "Stale")
+      Clerk.updateClient(clientWith(stale))
+      fetchedClient = clientWith(organization(name = "Fresh"))
+      whileFetchIsInFlight = {
+        StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_after_switch")
+      }
+
+      stale.reload()
+
       assertEquals("Stale", Clerk.organization?.name)
     }
 
