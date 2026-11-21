@@ -40,7 +40,8 @@ import retrofit2.http.Query
 internal interface UserApi {
   @GET(ApiPaths.User.BASE)
   suspend fun getUser(
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+    @Query(ApiParams.INCLUDE_CLIENT) includeClient: Boolean = true,
   ): ClerkResult<User, ClerkErrorResponse>
 
   @PATCH(ApiPaths.User.BASE)
