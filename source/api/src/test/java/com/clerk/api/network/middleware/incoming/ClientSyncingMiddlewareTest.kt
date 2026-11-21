@@ -3,6 +3,7 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
@@ -14,6 +15,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.take
@@ -54,7 +56,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept emits SignUpCompleted when sign up response is complete`() = runTest {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
 
     val request =
       Request.Builder()
@@ -114,7 +117,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept holds registered auth flow before syncing completed sign in client`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val registration = requireNotNull(Clerk.registerAuthFlow())
     try {
       val request =
@@ -148,7 +152,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept holds registered auth flow before syncing completed sign up client`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val registration = requireNotNull(Clerk.registerAuthFlow())
     try {
       val request =
@@ -182,7 +187,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept clears Clerk client when response client is explicit null`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val session = testSession("sess_123")
     Clerk.updateClient(
       Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
@@ -220,7 +226,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept does not clear Clerk client when null client piggyback accompanies response`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val session = testSession("sess_123")
     val client =
       Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
@@ -264,7 +271,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept syncs piggybacked client from hosted auth creation`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     Clerk.updateClient(Client(id = "client_original"))
 
     val request =
@@ -306,7 +314,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept does not sync piggybacked client when request no longer owns the flow`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val originalClient = Client(id = "client_original")
     Clerk.updateClient(originalClient)
 
@@ -350,7 +359,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept preserves response body when piggybacked client fails to decode`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val originalClient = Client(id = "client_original")
     Clerk.updateClient(originalClient)
 
@@ -393,7 +403,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept leaves manually synced client response unapplied`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val originalClient = Client(id = "client_original")
     Clerk.updateClient(originalClient)
     mockkObject(Clerk)
@@ -443,7 +454,8 @@ class ClientSyncingMiddlewareTest {
 
   @Test
   fun `intercept hydrates direct client response with server date`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val request = Request.Builder().url("https://api.clerk.com/v1/client").build()
     val response =
       Response.Builder()
@@ -548,7 +560,8 @@ class ClientSyncingMiddlewareTest {
       every { chain.request() } returns authorizedRequest
       every { chain.proceed(authorizedRequest) } returns response
 
-      ClientSyncingMiddleware(json = ClerkApi.json).intercept(chain)
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
+        .intercept(chain)
 
       return Clerk.clientFlow.value?.id
     } finally {

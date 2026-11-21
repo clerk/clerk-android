@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Clock
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -263,7 +265,9 @@ class DeviceTokenDecryptCountTest {
 
   private fun client(responseToken: (requestToken: String?) -> String?): OkHttpClient =
     OkHttpClient.Builder()
-      .addInterceptor(ClientSyncingMiddleware(json = ClerkApi.json))
+      .addInterceptor(
+        ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
+      )
       .addInterceptor(VersioningUserAgentMiddleware())
       .addInterceptor(DeviceTokenSavingMiddleware())
       .addInterceptor(TerminalInterceptor(responseToken))

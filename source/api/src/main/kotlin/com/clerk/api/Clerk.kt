@@ -1092,6 +1092,20 @@ public object Clerk {
   public fun setDeviceToken(token: String?, expected: String?): Boolean =
     configurationManager.setDeviceToken(deviceToken = token, expectedDeviceToken = expected)
 
+  /**
+   * Deletes this device's signing key from the Android Keystore, whatever state the key is in.
+   *
+   * If this runtime signs requests, the next request signs with a new key, so FAPI rejects a device
+   * token bound to the old key and the user is signed out. A runtime that does not sign, because
+   * shared session sync is on or the key was unavailable at [initialize], keeps not signing until
+   * the next [initialize]. Intended for debug tools that test how the SDK recovers from a lost key.
+   *
+   * @return true if the stored key is gone; false if Clerk is not initialized or the Keystore
+   *   refused the delete.
+   */
+  @FrameworkIntegrationApi
+  public suspend fun deleteDeviceKey(): Boolean = configurationManager.deleteDeviceKey()
+
   // endregion
 
   // region Internal Methods
@@ -1236,6 +1250,10 @@ public object Clerk {
     configurationManager.fenceClientResponsesAfterSharedDeviceTokenChange()
   }
 
+  internal fun dropDeviceToken(deviceToken: String) {
+    configurationManager.setDeviceToken(deviceToken = null, expectedDeviceToken = deviceToken)
+  }
+
   internal fun isClientResponseCurrent(
     requestDeviceToken: String?,
     responseDeviceToken: String?,
@@ -1336,6 +1354,8 @@ public object Clerk {
   // endregion
 }
 
+internal const val HOST_SDK_HEADER = "x-clerk-host-sdk"
+
 /**
  * Data class for enabling extra functionality on the Clerk SDK.
  *
@@ -1378,7 +1398,15 @@ public data class ClerkConfigurationOptions(
   val autoRefreshOnForeground: Boolean
     get() = _autoRefreshOnForeground
 
-  /** Returns a copy of these options with additional outgoing request headers configured. */
+  internal val isFrameworkHost: Boolean
+    get() = _customHeaders.keys.any { it.equals(HOST_SDK_HEADER, ignoreCase = true) }
+
+  /**
+   * Returns a copy of these options with additional outgoing request headers configured.
+   *
+   * A host SDK that names itself in an `x-clerk-host-sdk` header shares the client token with a
+   * runtime of its own, so this SDK does not bind that client to the device key.
+   */
   public fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._customHeaders = customHeaders.toMap() }
 
