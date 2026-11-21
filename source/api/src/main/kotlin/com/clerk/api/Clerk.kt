@@ -960,21 +960,11 @@ public object Clerk {
    * newer state is kept and the fetched client is discarded. On success the returned client is
    * always the one [client] holds when this function returns.
    */
-  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
-    val manualClientSyncRequest = ManualClientSyncRequest()
-    val updateCountAtStart = clientUpdateCount
-    return when (
-      val result = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
-    ) {
-      is ClerkResult.Success -> {
-        manualClientSyncRequest.runIfResponseCurrent {
-          updateClientIfUnchangedSince(updateCountAtStart, result)
-        }
-        ClerkResult.success(client).withTags(result.tags)
-      }
+  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> =
+    when (val result = fetchAndApplyClient { ClerkApi.client.get(manualClientSyncRequest = it) }) {
+      is ClerkResult.Success -> ClerkResult.success(client).withTags(result.tags)
       is ClerkResult.Failure -> result
     }
-  }
 
   /**
    * Reloads Clerk authentication state persisted by a same-signed sibling app.
