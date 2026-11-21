@@ -21,6 +21,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -105,6 +106,20 @@ class ClerkRefreshClientTest {
 
       assertEquals("client_baseline", Clerk.client.id)
       assertEquals("client_baseline", (result as ClerkResult.Success).value.id)
+    }
+
+  @Test
+  fun `refreshClient fails when it discards a stale response before Clerk has a client`() =
+    runTest {
+      mockkObject(Clerk)
+      every { Clerk.clientOrNull } returns null
+      whileFetchIsInFlight = {
+        StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_after_switch")
+      }
+
+      val result = Clerk.refreshClient()
+
+      assertTrue(result is ClerkResult.Failure)
     }
 
   private companion object {

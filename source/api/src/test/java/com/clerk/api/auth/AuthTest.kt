@@ -627,7 +627,11 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession.copy(lastActiveOrganizationId = null))
-    coEvery { clientApi.get(any()) } returns ClerkResult.success(Client(id = "client_123"))
+    coEvery { clientApi.get(any()) } coAnswers
+      {
+        firstArg<ManualClientSyncRequest?>()?.recordResponse(null, null)
+        ClerkResult.success(Client(id = "client_123", lastAuthenticationStrategy = "oauth_google"))
+      }
     Clerk.updateClient(
       Client(
         id = "client_123",
@@ -643,6 +647,7 @@ class AuthTest {
     assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
     assertEquals(secondSession, Clerk.sessionFlow.value)
     assertEquals("org_2", Clerk.sessionFlow.value?.lastActiveOrganizationId)
+    assertEquals("oauth_google", Clerk.client.lastAuthenticationStrategy)
   }
 
   @Test
@@ -657,14 +662,18 @@ class AuthTest {
         ClerkResult.success(secondSession)
       // Read replica returns a fully-hydrated client but with the previous
       // lastActiveSessionId — read-after-write lag.
-      coEvery { clientApi.get(any()) } returns
-        ClerkResult.success(
-          Client(
-            id = "client_123",
-            sessions = listOf(firstSession, secondSession),
-            lastActiveSessionId = firstSession.id,
+      coEvery { clientApi.get(any()) } coAnswers
+        {
+          firstArg<ManualClientSyncRequest?>()?.recordResponse(null, null)
+          ClerkResult.success(
+            Client(
+              id = "client_123",
+              sessions = listOf(firstSession, secondSession),
+              lastActiveSessionId = firstSession.id,
+              lastAuthenticationStrategy = "oauth_google",
+            )
           )
-        )
+        }
       Clerk.updateClient(
         Client(
           id = "client_123",
@@ -679,6 +688,7 @@ class AuthTest {
       assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
       assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
       assertEquals(secondSession, Clerk.sessionFlow.value)
+      assertEquals("oauth_google", Clerk.client.lastAuthenticationStrategy)
     }
 
   private fun setForceOrganizationSelection(enabled: Boolean) {

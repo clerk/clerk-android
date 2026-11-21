@@ -958,11 +958,16 @@ public object Clerk {
    * If another client update (for example a sign-in completing) landed while the request was in
    * flight, or the device token changed (for example after a sign-out or account switch), that
    * newer state is kept and the fetched client is discarded. On success the returned client is
-   * always the one [client] holds when this function returns.
+   * always the one [client] holds when this function returns. If the fetched client is discarded
+   * before Clerk holds any client, the result is a failure.
    */
   public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> =
     when (val result = fetchAndApplyClient { ClerkApi.client.get(manualClientSyncRequest = it) }) {
-      is ClerkResult.Success -> ClerkResult.success(client).withTags(result.tags)
+      is ClerkResult.Success ->
+        clientOrNull?.let { ClerkResult.success(it).withTags(result.tags) }
+          ?: ClerkResult.unknownFailure(
+            IllegalStateException("Client refresh was discarded before Clerk had a client")
+          )
       is ClerkResult.Failure -> result
     }
 
