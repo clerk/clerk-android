@@ -40,10 +40,19 @@ kotlin { explicitApi() }
 tasks.withType<Test>().configureEach {
   // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
   jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
-  systemProperty(
-    "updateContractBaseline",
-    providers.gradleProperty("updateContractBaseline").isPresent.toString(),
-  )
+  val updateContractBaseline =
+    providers
+      .gradleProperty("updateContractBaseline")
+      .map { it.isEmpty() || it.toBoolean() }
+      .getOrElse(false)
+  systemProperty("updateContractBaseline", updateContractBaseline.toString())
+  inputs
+    .files("api/api.api")
+    .withPropertyName("apiDump")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  if (updateContractBaseline) {
+    doNotTrackState("updateContractBaseline rewrites the baseline, which is not a declared output")
+  }
 }
 
 dokka {

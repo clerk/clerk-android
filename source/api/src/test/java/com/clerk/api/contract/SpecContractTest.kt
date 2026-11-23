@@ -2,9 +2,11 @@ package com.clerk.api.contract
 
 import com.clerk.api.Constants
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
+import com.clerk.api.session.Session
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -17,9 +19,15 @@ class SpecContractTest {
 
   @Test
   fun `every mapped model matches the spec except for baseline lines`() {
+    val contexts = ContractMappings.mapped.groupingBy { it.model }.eachCount()
     val actual =
       ContractMappings.mapped
-        .flatMap { ContractDiff.findings(it.serializer.descriptor, spec.properties(it.schema)) }
+        .flatMap { mapping ->
+          val descriptor = mapping.serializer.descriptor
+          val name = ContractDiff.modelName(descriptor)
+          val model = if (contexts.getValue(mapping.model) > 1) "$name@${mapping.schema}" else name
+          ContractDiff.findings(descriptor, spec.properties(mapping.schema), model)
+        }
         .map { it.line }
         .toSortedSet()
     if (System.getProperty("updateContractBaseline") == "true") {
@@ -55,24 +63,30 @@ class SpecContractTest {
   }
 
   @Test
+  fun `the pinned spec is the upstream document for its date`() {
+    assertEquals(
+      SpecSchemas.UPSTREAM_SHA256[spec.apiVersion],
+      spec.sha256,
+      "${SpecSchemas.RESOURCE} must be a byte copy of fapi/${spec.apiVersion}.yml from " +
+        "clerk/openapi-specs, with its SHA-256 in SpecSchemas.UPSTREAM_SHA256",
+    )
+  }
+
+  @Test
   fun `every serializable class in the public API is mapped or explains why not`() {
     assertTrue(API_DUMP.isFile, "Missing ${API_DUMP.absolutePath}")
     val dump = API_DUMP.readText()
-    val serializable =
-      Regex("public final synthetic class (\\S+)" + Regex.escape("\$\$serializer"))
-        .findAll(dump)
-        .map { it.groupValues[1] }
+    val serializable = generatedSerializers(dump) + serializerEntryPoints(dump)
+    val mappedModels = ContractMappings.mapped.map { it.model }.distinct()
+    val mapped = mappedModels.map { dumpName(it.java) }
+    val unmapped = ContractMappings.unmapped.map { dumpName(it.model.java) }
+    val checkedAsProperty =
+      ContractMappings.mapped
+        .flatMap { ContractDiff.checkedEnumClasses(it.serializer.descriptor) }
+        .map(::dumpName)
         .toSet()
-    val mapped =
-      ContractMappings.mapped.map { mapping ->
-        val serialName = mapping.serializer.descriptor.serialName
-        val type = ContractDiff.jvmClass(serialName)
-        requireNotNull(type) { "No class for serial name $serialName" }
-        type.name.replace('.', '/')
-      }
-    val unmapped = ContractMappings.unmapped.map { it.model.java.name.replace('.', '/') }
 
-    val uncovered = serializable - mapped.toSet() - unmapped.toSet()
+    val uncovered = serializable - mapped.toSet() - unmapped.toSet() - checkedAsProperty
     assertTrue(
       uncovered.isEmpty(),
       "Add these classes to ContractMappings.mapped, or to unmapped with a reason: $uncovered",
@@ -95,6 +109,113 @@ class SpecContractTest {
     assertTrue(both.isEmpty(), "Classes both mapped and unmapped: $both")
     val duplicates = (mapped + unmapped).groupingBy { it }.eachCount().filterValues { it > 1 }
     assertTrue(duplicates.isEmpty(), "Classes listed more than once: ${duplicates.keys}")
+    val repeatedPairs =
+      ContractMappings.mapped
+        .groupingBy { it.model to it.schema }
+        .eachCount()
+        .filterValues { it > 1 }
+    assertTrue(repeatedPairs.isEmpty(), "Mappings listed more than once: ${repeatedPairs.keys}")
+  }
+
+  @Test
+  fun `diff reports a scalar the model decodes as a narrower type than the spec`() {
+    val findings =
+      diff(
+        mapOf(
+          "id" to required(scalar = SpecScalar("string", null)),
+          "count" to required(scalar = SpecScalar("integer", "int64")),
+          "nick_name" to optional(scalar = SpecScalar("boolean", null)),
+          "color" to optional(scalar = SpecScalar("string", null)),
+        )
+      )
+
+    assertEquals(
+      listOf(
+        "contract.Probe|type-differs|count=integer/int64 vs INT",
+        "contract.Probe|type-differs|nick_name=boolean vs STRING",
+      ),
+      findings.filter { "type-differs" in it },
+    )
+  }
+
+  @Test
+  fun `a session model that reads expire_at as an Int fails the contract`() {
+    val session = spec.properties("Client.Session-2")
+    val narrowed =
+      ContractDiff.findings(NarrowSession.serializer().descriptor, session).map { it.line }
+    val real = ContractDiff.findings(Session.serializer().descriptor, session).map { it.line }
+
+    assertTrue("contract.NarrowSession|type-differs|expire_at=integer/int64 vs INT" in narrowed)
+    assertFalse(real.any { "type-differs|expire_at" in it })
+  }
+
+  @Test
+  fun `schemas keep required names from members that declare no properties`() {
+    val schemas =
+      inlineSpec(
+        """
+        Base:
+          type: object
+          properties:
+            id: { type: string }
+            created_at: { type: integer }
+        Composed:
+          allOf:
+            - ${'$'}ref: '#/components/schemas/Base'
+            - required: [created_at]
+        """
+      )
+
+    assertTrue(schemas.properties("Composed").getValue("created_at").required)
+    assertFalse(schemas.properties("Composed").getValue("id").required)
+    val saml = spec.properties("Stubs.SAMLConnection.SAMLAccount")
+    assertFalse(saml.getValue("domain").required, "anyOf requires domain or domains, not both")
+    assertTrue(saml.getValue("id").required)
+  }
+
+  @Test
+  fun `schemas intersect enums across allOf and unite them across oneOf`() {
+    val schemas =
+      inlineSpec(
+        """
+        Base:
+          type: object
+          properties:
+            status: { type: string, enum: [active, pending] }
+            kind: { type: string }
+        Narrowed:
+          allOf:
+            - ${'$'}ref: '#/components/schemas/Base'
+            - type: object
+              properties:
+                status: { type: string, enum: [active] }
+                kind: { type: string, enum: [a] }
+          properties:
+            status: { type: string, enum: [active, revoked] }
+        Disjoint:
+          allOf:
+            - ${'$'}ref: '#/components/schemas/Base'
+            - type: object
+              properties:
+                status: { type: string, enum: [revoked] }
+        Either:
+          oneOf:
+            - ${'$'}ref: '#/components/schemas/Base'
+            - type: object
+              properties:
+                status: { type: string, enum: [revoked] }
+        """
+      )
+
+    val narrowed = schemas.properties("Narrowed")
+    assertEquals(setOf("active"), narrowed.getValue("status").enumValues)
+    assertEquals(setOf("a"), narrowed.getValue("kind").enumValues)
+    assertEquals(emptySet(), schemas.properties("Disjoint").getValue("status").enumValues)
+    assertEquals(
+      setOf("active", "pending", "revoked"),
+      schemas.properties("Either").getValue("status").enumValues,
+    )
+    assertNull(schemas.properties("Base").getValue("kind").enumValues)
   }
 
   @Test
@@ -165,8 +286,7 @@ class SpecContractTest {
       "status unions the enums of every verification schema",
     )
     val strategy = verification.getValue("strategy")
-    assertEquals(
-      emptySet(),
+    assertNull(
       strategy.enumValues,
       "Stubs.Verification.Oauth allows any oauth_ strategy, so the union of strategies is open",
     )
@@ -188,17 +308,48 @@ class SpecContractTest {
   private fun diff(spec: Map<String, SpecProperty>): List<String> =
     ContractDiff.findings(Probe.serializer().descriptor, spec).map { it.line }
 
-  private fun required(nullable: Boolean = false, enumValues: Set<String> = emptySet()) =
-    SpecProperty(nullable = nullable, required = true, enumValues = enumValues)
+  private fun required(
+    nullable: Boolean = false,
+    enumValues: Set<String>? = null,
+    scalar: SpecScalar? = null,
+  ) = SpecProperty(nullable = nullable, required = true, enumValues = enumValues, scalar = scalar)
 
-  private fun optional(nullable: Boolean = false, enumValues: Set<String> = emptySet()) =
-    SpecProperty(nullable = nullable, required = false, enumValues = enumValues)
+  private fun optional(
+    nullable: Boolean = false,
+    enumValues: Set<String>? = null,
+    scalar: SpecScalar? = null,
+  ) = SpecProperty(nullable = nullable, required = false, enumValues = enumValues, scalar = scalar)
+
+  private fun inlineSpec(schemas: String): SpecSchemas =
+    SpecSchemas.parse(
+      ("components:\n  schemas:\n" + schemas.trimIndent().prependIndent("    ")).toByteArray(),
+      apiVersion = "inline",
+    )
+
+  private fun generatedSerializers(dump: String): Set<String> =
+    Regex("public final synthetic class (\\S+)" + Regex.escape("\$\$serializer"))
+      .findAll(dump)
+      .map { it.groupValues[1] }
+      .toSet()
+
+  private fun serializerEntryPoints(dump: String): Set<String> =
+    Regex(
+        "public (?:[a-z]+ )*class (\\S+?)(?:\\\$Companion)? [^\\n]*\\{\\n(?:\\t[^\\n]*\\n)*?" +
+          Regex.escape("\tpublic final fun serializer ()Lkotlinx/serialization/KSerializer;")
+      )
+      .findAll(dump)
+      .map { it.groupValues[1] }
+      .toSet()
+
+  private fun dumpName(type: Class<*>): String = type.name.replace('.', '/')
 
   private companion object {
     val BASELINE = File("src/test/resources/fapi/contract-baseline.txt")
     val API_DUMP = File("api/api.api")
   }
 }
+
+@Serializable internal data class NarrowSession(val id: String, val expireAt: Int)
 
 @Serializable
 internal data class Probe(

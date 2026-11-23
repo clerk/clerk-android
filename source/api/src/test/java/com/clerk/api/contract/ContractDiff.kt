@@ -14,6 +14,7 @@ internal enum class FindingKind(val label: String) {
   MISSING_IN_SPEC("missing-in-spec"),
   REQUIRED_ONLY_IN_SDK("required-only-in-sdk"),
   ENUM_VALUE_MISSING_IN_SDK("enum-value-missing-in-sdk"),
+  TYPE_DIFFERS("type-differs"),
 }
 
 internal data class Finding(
@@ -29,9 +30,15 @@ internal data class Finding(
 @OptIn(ExperimentalSerializationApi::class)
 internal object ContractDiff {
   private const val OBJECT_KEY = "object"
+  private val FRACTIONAL = setOf(PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE)
+  private val WIDE_INTEGRAL = setOf(PrimitiveKind.LONG)
+  private val INTEGRAL = setOf(PrimitiveKind.INT, PrimitiveKind.LONG) + FRACTIONAL
 
-  fun findings(descriptor: SerialDescriptor, spec: Map<String, SpecProperty>): List<Finding> {
-    val model = modelName(descriptor)
+  fun findings(
+    descriptor: SerialDescriptor,
+    spec: Map<String, SpecProperty>,
+    model: String = modelName(descriptor),
+  ): List<Finding> {
     val elements =
       (0 until descriptor.elementsCount)
         .associateBy { jsonKey(descriptor, it) }
@@ -82,14 +89,39 @@ internal object ContractDiff {
     val required =
       if (decodeCanFail) listOf(Finding(model, FindingKind.REQUIRED_ONLY_IN_SDK, key))
       else emptyList()
-    val known = enumValues(itemOf(element))
+    val item = itemOf(element)
+    val known = enumValues(item)
     val enumGaps =
       if (known == null) emptyList()
       else
-        (property.enumValues - known).map {
+        (property.enumValues.orEmpty() - known).map {
           Finding(model, FindingKind.ENUM_VALUE_MISSING_IN_SDK, key, it)
         }
-    return required + enumGaps
+    val typeGap =
+      property.scalar
+        ?.takeUnless { decodes(it, item.kind) }
+        ?.let { Finding(model, FindingKind.TYPE_DIFFERS, key, "$it vs ${item.kind}") }
+    return required + enumGaps + listOfNotNull(typeGap)
+  }
+
+  fun checkedEnumClasses(descriptor: SerialDescriptor): Set<Class<*>> =
+    (0 until descriptor.elementsCount)
+      .map { itemOf(descriptor.getElementDescriptor(it)) }
+      .filter { enumValues(it) != null }
+      .mapNotNull { jvmClass(it.serialName) }
+      .toSet()
+
+  private fun decodes(scalar: SpecScalar, kind: SerialKind): Boolean {
+    val accepted =
+      when (scalar.type) {
+        "string" -> setOf(PrimitiveKind.STRING, PrimitiveKind.CHAR, SerialKind.ENUM)
+        "boolean" -> setOf(PrimitiveKind.BOOLEAN)
+        "number" -> FRACTIONAL
+        "integer" -> if (scalar.format == "int64") WIDE_INTEGRAL + FRACTIONAL else INTEGRAL
+        else -> null
+      }
+    val scalarKind = kind is PrimitiveKind || kind == SerialKind.ENUM
+    return accepted == null || !scalarKind || kind in accepted
   }
 
   private fun itemOf(element: SerialDescriptor): SerialDescriptor =

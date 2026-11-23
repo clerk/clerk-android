@@ -1,5 +1,6 @@
 package com.clerk.api.contract
 
+import com.clerk.api.auth.types.Strategy
 import com.clerk.api.billing.BillingAppliedDiscount
 import com.clerk.api.billing.BillingCreditBalance
 import com.clerk.api.billing.BillingCreditLedger
@@ -31,8 +32,11 @@ import com.clerk.api.billing.BillingSubscriptionItemSeats
 import com.clerk.api.billing.BillingSubscriptionNextPayment
 import com.clerk.api.billing.BillingTotals
 import com.clerk.api.billing.Feature
+import com.clerk.api.billing.ForPayerType
+import com.clerk.api.biometriccredential.BiometricCredential
 import com.clerk.api.biometriccredential.BiometricCredentialChallenge
 import com.clerk.api.biometriccredential.BiometricCredentialPayload
+import com.clerk.api.biometriccredential.BiometricCredentialPolicy
 import com.clerk.api.biometriccredential.BiometricCredentialValidation
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
@@ -63,6 +67,7 @@ import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.OrganizationSuggestion
+import com.clerk.api.organizations.OrganizationSystemPermission
 import com.clerk.api.organizations.Permission
 import com.clerk.api.organizations.PublicOrganizationData
 import com.clerk.api.organizations.Role
@@ -76,26 +81,38 @@ import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.SignInPayload
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
+import com.clerk.api.sso.ResultType
 import com.clerk.api.user.User
 import kotlin.reflect.KClass
 import kotlinx.serialization.KSerializer
 
-internal data class ContractMapping(val serializer: KSerializer<*>, val schema: SchemaRef)
+internal data class ContractMapping(
+  val model: KClass<*>,
+  val serializer: KSerializer<*>,
+  val schema: SchemaRef,
+)
 
 internal data class UnmappedModel(val model: KClass<*>, val reason: String)
 
 internal object ContractMappings {
   private const val SIGN_IN = "Client.SignIn-2"
   private const val REQUEST = "request parameters, not a response"
+  private const val ON_DEVICE = "built on the device, not read from the API"
+  private const val OPEN_STRING =
+    "wraps a strategy string that the spec leaves open, so there is no schema or enum to compare"
   private const val INLINE_RESPONSE =
     "declared inline in the /v1/me/organization_creation_defaults response, not as a named schema"
 
-  private fun map(serializer: KSerializer<*>, schema: String) =
-    ContractMapping(serializer, SchemaRef.Named(schema))
+  private inline fun <reified T : Any> map(serializer: KSerializer<T>, schema: String) =
+    ContractMapping(T::class, serializer, SchemaRef.Named(schema))
 
-  private fun map(serializer: KSerializer<*>, schema: String, vararg path: String) =
-    ContractMapping(serializer, SchemaRef.PropertyOf(schema, *path))
+  private inline fun <reified T : Any> map(
+    serializer: KSerializer<T>,
+    schema: String,
+    vararg path: String,
+  ) = ContractMapping(T::class, serializer, SchemaRef.PropertyOf(schema, *path))
 
   val mapped: List<ContractMapping> =
     listOf(
@@ -148,6 +165,12 @@ internal object ContractMappings {
         "billing",
         "user",
       ),
+      map(
+        CommerceSettings.Billing.Payer.serializer(),
+        "Client.CommerceSettings",
+        "billing",
+        "organization",
+      ),
       map(NativeAppSettings.serializer(), "Client.NativeAppSettings"),
       map(
         NativeAppSettings.MinimumSupportedVersion.serializer(),
@@ -196,6 +219,7 @@ internal object ContractMappings {
       map(Passkey.serializer(), "Client.Passkey"),
       map(PhoneNumber.serializer(), "Client.PhoneNumber"),
       map(Session.serializer(), "Client.Session-2"),
+      map(Session.serializer(), "Client.SessionReverification", "session"),
       map(SessionActivity.serializer(), "Client.SessionActivity"),
       map(SessionTask.serializer(), "Client.SessionTask"),
       map(SessionVerification.serializer(), "Client.SessionReverification"),
@@ -207,6 +231,7 @@ internal object ContractMappings {
 
   val unmapped: List<UnmappedModel> =
     listOf(
+      UnmappedModel(Strategy::class, OPEN_STRING),
       UnmappedModel(
         BillingCreditBalance::class,
         "no matching schema: the spec has no /credits endpoint",
@@ -219,6 +244,16 @@ internal object ContractMappings {
         BillingPlanPrice::class,
         "no matching schema: the spec's BillingPlan has no available_prices",
       ),
+      UnmappedModel(ForPayerType::class, "a query parameter of billing requests, not a response"),
+      UnmappedModel(
+        BiometricCredential::class,
+        "decoded through BiometricCredentialPayload, which is mapped",
+      ),
+      UnmappedModel(
+        BiometricCredentialPolicy::class,
+        "protects the private key on the device and never reaches the API",
+      ),
+      UnmappedModel(EmailAddress.PrepareVerificationParams::class, REQUEST),
       UnmappedModel(EmailAddress.PrepareVerificationParams.EmailCode::class, REQUEST),
       UnmappedModel(EmailAddress.PrepareVerificationParams.EnterpriseSSO::class, REQUEST),
       UnmappedModel(ClerkPaginatedResponse::class, "generic list wrapper, its items are mapped"),
@@ -243,12 +278,24 @@ internal object ContractMappings {
         OrganizationCreationDefaults.Form::class,
         INLINE_RESPONSE,
       ),
+      UnmappedModel(
+        OrganizationSystemPermission::class,
+        "keys the SDK looks up in OrganizationMembership.permissions, which the spec types as " +
+          "plain strings",
+      ),
+      UnmappedModel(SignIn::class, "decoded through SignInPayload, which is mapped"),
+      UnmappedModel(
+        SignIn.CredentialType::class,
+        "picks the Credential Manager request on the device and never reaches the API",
+      ),
+      UnmappedModel(SignIn.AttemptFirstFactorParams::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.EmailCode::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.Passkey::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.Password::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.PhoneCode::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode::class, REQUEST),
       UnmappedModel(SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode::class, REQUEST),
+      UnmappedModel(SignIn.AttemptSecondFactorParams::class, REQUEST),
       UnmappedModel(SignIn.AttemptSecondFactorParams.BackupCode::class, REQUEST),
       UnmappedModel(SignIn.AttemptSecondFactorParams.EmailCode::class, REQUEST),
       UnmappedModel(SignIn.AttemptSecondFactorParams.Passkey::class, REQUEST),
@@ -256,6 +303,7 @@ internal object ContractMappings {
       UnmappedModel(SignIn.AttemptSecondFactorParams.TOTP::class, REQUEST),
       UnmappedModel(SignIn.AuthenticateWithRedirectParams.EnterpriseSSO::class, REQUEST),
       UnmappedModel(SignIn.AuthenticateWithRedirectParams.OAuth::class, REQUEST),
+      UnmappedModel(SignIn.CreateParams.Strategy::class, REQUEST),
       UnmappedModel(SignIn.CreateParams.Strategy.BiometricCredential::class, REQUEST),
       UnmappedModel(SignIn.CreateParams.Strategy.EmailCode::class, REQUEST),
       UnmappedModel(SignIn.CreateParams.Strategy.Identifier::class, REQUEST),
@@ -266,6 +314,7 @@ internal object ContractMappings {
       UnmappedModel(SignIn.CreateParams.Strategy.ResetPasswordPhoneCode::class, REQUEST),
       UnmappedModel(SignIn.CreateParams.Strategy.Ticket::class, REQUEST),
       UnmappedModel(SignIn.CreateParams.Strategy.Transfer::class, REQUEST),
+      UnmappedModel(SignIn.PrepareFirstFactorParams::class, REQUEST),
       UnmappedModel(SignIn.PrepareFirstFactorParams.EmailCode::class, REQUEST),
       UnmappedModel(SignIn.PrepareFirstFactorParams.EmailLink::class, REQUEST),
       UnmappedModel(SignIn.PrepareFirstFactorParams.EnterpriseSSO::class, REQUEST),
@@ -278,14 +327,20 @@ internal object ContractMappings {
       UnmappedModel(SignIn.ResetPasswordParams::class, REQUEST),
       UnmappedModel(SignUp.AuthenticateWithRedirectParams.EnterpriseSSO::class, REQUEST),
       UnmappedModel(SignUp.AuthenticateWithRedirectParams.OAuth::class, REQUEST),
+      UnmappedModel(SignUp.CreateParams::class, REQUEST),
       UnmappedModel(SignUp.CreateParams.GoogleOneTap::class, REQUEST),
+      UnmappedModel(SignUp.CreateParams.None::class, REQUEST),
       UnmappedModel(SignUp.CreateParams.Standard::class, REQUEST),
       UnmappedModel(SignUp.CreateParams.Ticket::class, REQUEST),
+      UnmappedModel(SignUp.CreateParams.Transfer::class, REQUEST),
+      UnmappedModel(SignUp.SignUpUpdateParams::class, REQUEST),
       UnmappedModel(SignUp.SignUpUpdateParams.Standard::class, REQUEST),
+      UnmappedModel(OAuthProvider::class, OPEN_STRING),
       UnmappedModel(
         OAuthResult::class,
         "built on the device from a sign-in or sign-up, not from the API",
       ),
+      UnmappedModel(ResultType::class, ON_DEVICE),
       UnmappedModel(User.CreateExternalAccountParams::class, REQUEST),
       UnmappedModel(User.UpdateMetadataParams::class, REQUEST),
       UnmappedModel(User.UpdateParams::class, REQUEST),

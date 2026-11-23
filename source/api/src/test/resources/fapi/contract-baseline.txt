@@ -23,9 +23,18 @@ billing.BillingPayment|missing-in-sdk|payment_id
 billing.BillingPayment|missing-in-sdk|payment_method_id
 billing.BillingPayment|missing-in-sdk|statement_id
 billing.BillingPayment|missing-in-sdk|subscription_item_id
+billing.BillingPerUnitTotalTier|type-differs|quantity=integer/int64 vs INT
+billing.BillingPerUnitTotal|type-differs|block_size=integer/int64 vs INT
 billing.BillingPlanUnitPriceTier|missing-in-spec|id
+billing.BillingPlanUnitPriceTier|type-differs|ends_after_block=integer/int64 vs INT
+billing.BillingPlanUnitPriceTier|type-differs|starts_at_block=integer/int64 vs INT
+billing.BillingPlanUnitPrice|type-differs|block_size=integer/int64 vs INT
 billing.BillingPlan|missing-in-sdk|product_id
 billing.BillingPlan|missing-in-spec|available_prices
+billing.BillingProrationCreditDetail|type-differs|cycle_days_remaining=integer/int64 vs INT
+billing.BillingProrationCreditDetail|type-differs|cycle_days_total=integer/int64 vs INT
+billing.BillingProrationDiscount|type-differs|cycle_days_passed=integer/int64 vs INT
+billing.BillingProrationDiscount|type-differs|cycle_days_total=integer/int64 vs INT
 billing.BillingStatementGroup|missing-in-spec|id
 billing.BillingStatementTotals|missing-in-sdk|base_fee
 billing.BillingStatement|missing-in-sdk|instance_id
@@ -35,6 +44,7 @@ billing.BillingSubscriptionItemCredit|missing-in-sdk|cycle_days_total
 billing.BillingSubscriptionItemCredit|missing-in-sdk|cycle_remaining_percent
 billing.BillingSubscriptionItemNextPayment|required-only-in-sdk|amount
 billing.BillingSubscriptionItemNextPayment|required-only-in-sdk|date
+billing.BillingSubscriptionItemSeats|type-differs|quantity=integer/int64 vs INT
 billing.BillingSubscriptionItem|enum-value-missing-in-sdk|status=abandoned
 billing.BillingSubscriptionItem|enum-value-missing-in-sdk|status=canceled
 billing.BillingSubscriptionItem|enum-value-missing-in-sdk|status=incomplete
@@ -190,8 +200,16 @@ organizations.UserOrganizationInvitation|required-only-in-sdk|status
 passkeys.Passkey|required-only-in-sdk|created_at
 passkeys.Passkey|required-only-in-sdk|updated_at
 phonenumber.PhoneNumber|missing-in-sdk|reserved
-session.Session|missing-in-spec|current_task
-session.Session|missing-in-spec|latest_activity
+session.Session@Client.Session-2|missing-in-spec|current_task
+session.Session@Client.Session-2|missing-in-spec|latest_activity
+session.Session@Client.SessionReverification.session|missing-in-spec|created_at
+session.Session@Client.SessionReverification.session|missing-in-spec|current_task
+session.Session@Client.SessionReverification.session|missing-in-spec|factor_verification_age
+session.Session@Client.SessionReverification.session|missing-in-spec|last_active_organization_id
+session.Session@Client.SessionReverification.session|missing-in-spec|latest_activity
+session.Session@Client.SessionReverification.session|missing-in-spec|public_user_data
+session.Session@Client.SessionReverification.session|missing-in-spec|updated_at
+session.Session@Client.SessionReverification.session|missing-in-spec|user
 signin.SignIn.UserData|missing-in-sdk|profile_image_url
 signin.SignInPayload|missing-in-sdk|abandon_at
 signin.SignInPayload|missing-in-sdk|client_trust_state

@@ -1,12 +1,18 @@
 package com.clerk.api.contract
 
+import java.security.MessageDigest
 import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
+
+internal data class SpecScalar(val type: String, val format: String?) {
+  override fun toString(): String = listOfNotNull(type, format).joinToString("/")
+}
 
 internal data class SpecProperty(
   val nullable: Boolean,
   val required: Boolean,
-  val enumValues: Set<String>,
+  val enumValues: Set<String>?,
+  val scalar: SpecScalar? = null,
 )
 
 internal sealed interface SchemaRef {
@@ -22,7 +28,11 @@ internal sealed interface SchemaRef {
 }
 
 internal class SpecSchemas
-private constructor(private val schemas: Map<String, Node>, val apiVersion: String) {
+private constructor(
+  private val schemas: Map<String, Node>,
+  val apiVersion: String,
+  val sha256: String,
+) {
 
   fun properties(schema: String): Map<String, SpecProperty> = properties(SchemaRef.Named(schema))
 
@@ -32,11 +42,13 @@ private constructor(private val schemas: Map<String, Node>, val apiVersion: Stri
         is SchemaRef.Named -> flatten(named(ref.schema), emptySet())
         is SchemaRef.PropertyOf -> flatten(propertyNode(ref), emptySet())
       }
-    requireNotNull(flat) { "$ref has no object properties in the spec" }
+    require(flat != null && flat.properties.isNotEmpty()) {
+      "$ref has no object properties in the spec"
+    }
     return flat.properties
       .filterKeys { it != "object" }
       .mapValues { (key, merged) ->
-        SpecProperty(merged.nullable, key in flat.required, merged.enumValues)
+        SpecProperty(merged.nullable, key in flat.required, merged.enumValues, merged.scalar)
       }
   }
 
@@ -72,23 +84,37 @@ private constructor(private val schemas: Map<String, Node>, val apiVersion: Stri
     }
     node.child("properties")?.let { declared ->
       builder.addDeclared(declared.entries().associate { (key, value) -> key to shape(value) })
-      builder.required += node.strings("required")
     }
+    builder.addRequired(node.strings("required"))
     return builder.build()
   }
 
-  private fun shape(node: Node): Merged = Merged(node, node.flag("nullable"), enumValues(node))
+  private fun shape(node: Node): Merged =
+    Merged(node, node.flag("nullable"), enumValues(node), scalarOf(node))
 
-  private fun enumValues(node: Node, seen: Set<String> = emptySet()): Set<String> {
+  private fun enumValues(node: Node, seen: Set<String> = emptySet()): Set<String>? {
     val name = node.refName()
     val items = node.child("items")
-    val wrapped = node.children("allOf").singleOrNull()
     return when {
-      name != null -> if (name in seen) emptySet() else enumValues(named(name), seen + name)
+      name != null -> if (name in seen) null else enumValues(named(name), seen + name)
       node.strings("enum").isNotEmpty() -> node.strings("enum").toSet()
       items != null -> enumValues(items, seen)
-      wrapped != null -> enumValues(wrapped, seen)
-      else -> emptySet()
+      else ->
+        node
+          .children("allOf")
+          .map { enumValues(it, seen) }
+          .fold(null as Set<String>?) { all, member -> intersect(all, member) }
+    }
+  }
+
+  private fun scalarOf(node: Node, seen: Set<String> = emptySet()): SpecScalar? {
+    val name = node.refName()
+    val type = node.string("type")
+    return when {
+      name != null -> if (name in seen) null else scalarOf(named(name), seen + name)
+      type == "array" -> node.child("items")?.let { scalarOf(it, seen) }
+      type != null && type in SCALAR_TYPES -> SpecScalar(type, node.string("format"))
+      else -> node.children("allOf").firstNotNullOfOrNull { scalarOf(it, seen) }
     }
   }
 
@@ -98,42 +124,76 @@ private constructor(private val schemas: Map<String, Node>, val apiVersion: Stri
     private var found = false
 
     fun addAllOfMember(flat: Flat) {
-      absorb(flat)
+      absorb(flat.properties)
       required += flat.required
     }
 
     fun addAlternatives(flats: List<Flat>) {
-      flats.forEach(::absorb)
+      val union = linkedMapOf<String, Merged>()
+      flats.forEach { flat ->
+        flat.properties.forEach { (key, value) ->
+          union[key] = union[key]?.let { eitherOf(it, value) } ?: value
+        }
+      }
+      absorb(union)
       required += flats.map { it.required }.reduce { shared, next -> shared intersect next }
     }
 
     fun addDeclared(declared: Map<String, Merged>) {
       found = true
-      properties += declared
+      declared.forEach { (key, value) ->
+        properties[key] = properties[key]?.let { bothOf(value, it) } ?: value
+      }
     }
 
-    fun build(): Flat? = if (found && properties.isNotEmpty()) Flat(properties, required) else null
-
-    private fun absorb(flat: Flat) {
+    fun addRequired(names: List<String>) {
+      if (names.isEmpty()) return
       found = true
-      flat.properties.forEach { (key, value) ->
-        properties[key] = properties[key]?.let { merge(it, value) } ?: value
+      required += names
+    }
+
+    fun build(): Flat? = if (found) Flat(properties, required) else null
+
+    private fun absorb(members: Map<String, Merged>) {
+      found = true
+      members.forEach { (key, value) ->
+        properties[key] = properties[key]?.let { bothOf(it, value) } ?: value
       }
     }
   }
 
-  private fun merge(a: Merged, b: Merged): Merged =
+  private fun bothOf(a: Merged, b: Merged): Merged =
+    Merged(
+      node = a.node,
+      nullable = a.nullable || b.nullable,
+      enumValues = intersect(a.enumValues, b.enumValues),
+      scalar = a.scalar ?: b.scalar,
+    )
+
+  private fun eitherOf(a: Merged, b: Merged): Merged =
     Merged(
       node = a.node,
       nullable = a.nullable || b.nullable,
       enumValues =
-        if (a.enumValues.isNotEmpty() && b.enumValues.isNotEmpty()) a.enumValues + b.enumValues
-        else emptySet(),
+        if (a.enumValues != null && b.enumValues != null) a.enumValues + b.enumValues else null,
+      scalar = a.scalar.takeIf { it == b.scalar },
     )
+
+  private fun intersect(a: Set<String>?, b: Set<String>?): Set<String>? =
+    when {
+      a == null -> b
+      b == null -> a
+      else -> a intersect b
+    }
 
   private class Flat(val properties: Map<String, Merged>, val required: Set<String>)
 
-  private class Merged(val node: Node, val nullable: Boolean, val enumValues: Set<String>)
+  private class Merged(
+    val node: Node,
+    val nullable: Boolean,
+    val enumValues: Set<String>?,
+    val scalar: SpecScalar?,
+  )
 
   @JvmInline
   private value class Node(val map: Map<*, *>) {
@@ -144,6 +204,8 @@ private constructor(private val schemas: Map<String, Node>, val apiVersion: Stri
 
     fun strings(key: String): List<String> =
       (map[key] as? List<*>).orEmpty().filterIsInstance<String>()
+
+    fun string(key: String): String? = map[key] as? String
 
     fun flag(key: String): Boolean = map[key] == true
 
@@ -158,21 +220,32 @@ private constructor(private val schemas: Map<String, Node>, val apiVersion: Stri
   companion object {
     const val RESOURCE = "fapi/fapi-2026-08-20.yml"
 
+    val UPSTREAM_SHA256: Map<String, String> =
+      mapOf("2026-08-20" to "4561b6cd7ef96827b173b7fc8432d56bbd7c7e023502f7df989c996ee9aac36e")
+
+    private val SCALAR_TYPES = setOf("string", "integer", "number", "boolean")
+
     fun load(): SpecSchemas {
       val stream =
         requireNotNull(SpecSchemas::class.java.classLoader?.getResourceAsStream(RESOURCE)) {
           "Test resource $RESOURCE is missing"
         }
-      val document = stream.use { Load(LoadSettings.builder().build()).loadFromInputStream(it) }
-      val schemas =
-        requireNotNull(Node(document as Map<*, *>).child("components")?.child("schemas")) {
-          "$RESOURCE has no components.schemas"
-        }
       val version =
         requireNotNull(Regex("""\d{4}-\d{2}-\d{2}""").find(RESOURCE)?.value) {
           "$RESOURCE has no date in its name"
         }
-      return SpecSchemas(schemas.entries().toMap(), version)
+      return parse(stream.use { it.readBytes() }, version)
+    }
+
+    fun parse(bytes: ByteArray, apiVersion: String): SpecSchemas {
+      val document = Load(LoadSettings.builder().build()).loadFromInputStream(bytes.inputStream())
+      val schemas =
+        requireNotNull(Node(document as Map<*, *>).child("components")?.child("schemas")) {
+          "The spec has no components.schemas"
+        }
+      val sha256 =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+      return SpecSchemas(schemas.entries().toMap(), apiVersion, sha256)
     }
   }
 }
