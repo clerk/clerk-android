@@ -215,14 +215,12 @@ signin.SignInPayload|missing-in-sdk|abandon_at
 signin.SignInPayload|missing-in-sdk|client_trust_state
 signin.SignInPayload|missing-in-sdk|sso_bypass_first_factors
 signin.SignInPayload|missing-in-sdk|timezone
-signup.SignUp|missing-in-sdk|abandon_at
 signup.SignUp|missing-in-sdk|custom_action
 signup.SignUp|missing-in-sdk|external_id
 signup.SignUp|missing-in-sdk|legal_accepted_at
 signup.SignUp|missing-in-sdk|public_metadata
 signup.SignUp|missing-in-sdk|timezone
 signup.SignUp|missing-in-sdk|web3_wallet
-signup.SignUp|missing-in-spec|abandoned_at
 user.User|missing-in-sdk|banned
 user.User|missing-in-sdk|deprovisioned
 user.User|missing-in-sdk|external_id
