@@ -176,14 +176,14 @@ public data class SignUp(
   @SerialName("created_user_id") val createdUserId: String? = null,
 
   /**
-   * The date when the sign-up was abandoned by the user.
+   * The time after which the sign-up is abandoned if the user has not completed it.
    *
-   * This timestamp is set when a sign-up process has been inactive for an extended period and is
-   * considered abandoned.
+   * The Frontend API sets this deadline on every sign-up, so it is in the future while the sign-up
+   * is in progress. To find out whether a sign-up has been abandoned, read [status].
    *
-   * @return The abandonment timestamp in milliseconds since epoch, null if not abandoned.
+   * @return The deadline in milliseconds since epoch.
    */
-  @SerialName("abandoned_at") val abandonedAt: Long? = null,
+  @SerialName("abandon_at") val abandonedAt: Long? = null,
 ) {
   /**
    * Represents the current status of the sign-up process.
