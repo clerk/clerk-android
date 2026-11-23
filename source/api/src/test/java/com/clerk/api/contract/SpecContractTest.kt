@@ -177,12 +177,16 @@ class SpecContractTest {
         mapOf(
           "id" to required(scalar = SpecScalar("string", null, array = true)),
           "colors" to optional(scalar = SpecScalar("string", null, array = true)),
-          "extra" to optional(scalar = SpecScalar("integer", "int64")),
+          "extra" to optional(scalar = SpecScalar("integer", "int64", array = true)),
+          "count" to required(scalar = SpecScalar("integer", null, array = true)),
         )
       )
 
     assertEquals(
-      listOf("contract.Probe|type-differs|id=array<string> vs STRING"),
+      listOf(
+        "contract.Probe|type-differs|count=array<integer> vs INT",
+        "contract.Probe|type-differs|id=array<string> vs STRING",
+      ),
       findings.filter { "type-differs" in it },
     )
   }

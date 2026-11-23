@@ -124,8 +124,9 @@ internal object ContractDiff {
   private fun decodes(scalar: SpecScalar, element: SerialDescriptor): Boolean {
     val kind = itemOf(element).kind
     val accepted = acceptedKinds(scalar)
-    return scalar.array == isList(element) &&
-      (accepted == null || kind in UNCONSTRAINED || kind in accepted)
+    return unwrapInline(element).kind in UNCONSTRAINED ||
+      scalar.array == isList(element) &&
+        (accepted == null || kind in UNCONSTRAINED || kind in accepted)
   }
 
   private fun acceptedKinds(scalar: SpecScalar): Set<SerialKind>? =
