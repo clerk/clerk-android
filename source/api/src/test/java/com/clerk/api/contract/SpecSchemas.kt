@@ -4,8 +4,11 @@ import java.security.MessageDigest
 import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 
-internal data class SpecScalar(val type: String, val format: String?) {
-  override fun toString(): String = listOfNotNull(type, format).joinToString("/")
+internal data class SpecScalar(val type: String, val format: String?, val array: Boolean = false) {
+  override fun toString(): String {
+    val item = listOfNotNull(type, format).joinToString("/")
+    return if (array) "array<$item>" else item
+  }
 }
 
 internal data class SpecProperty(
@@ -112,7 +115,7 @@ private constructor(
     val type = node.string("type")
     return when {
       name != null -> if (name in seen) null else scalarOf(named(name), seen + name)
-      type == "array" -> node.child("items")?.let { scalarOf(it, seen) }
+      type == "array" -> node.child("items")?.let { scalarOf(it, seen) }?.copy(array = true)
       type != null && type in SCALAR_TYPES -> SpecScalar(type, node.string("format"))
       else -> node.children("allOf").firstNotNullOfOrNull { scalarOf(it, seen) }
     }

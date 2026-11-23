@@ -3,6 +3,7 @@ package com.clerk.api.contract
 import com.clerk.api.Constants
 import com.clerk.api.network.serialization.UnknownFallbackEnumSerializer
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTask
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -12,6 +13,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import org.junit.Test
 
 class SpecContractTest {
@@ -147,6 +149,42 @@ class SpecContractTest {
 
     assertTrue("contract.NarrowSession|type-differs|expire_at=integer/int64 vs INT" in narrowed)
     assertFalse(real.any { "type-differs|expire_at" in it })
+  }
+
+  @Test
+  fun `a session model that reads a scalar as an object or an array as a scalar fails the contract`() {
+    val session = spec.properties("Client.Session-2")
+    val objectExpiry =
+      ContractDiff.findings(ObjectExpirySession.serializer().descriptor, session).map { it.line }
+    val scalarAge =
+      ContractDiff.findings(ScalarAgeSession.serializer().descriptor, session).map { it.line }
+    val real = ContractDiff.findings(Session.serializer().descriptor, session).map { it.line }
+
+    assertTrue(
+      "contract.ObjectExpirySession|type-differs|expire_at=integer/int64 vs CLASS" in objectExpiry
+    )
+    assertTrue(
+      "contract.ScalarAgeSession|type-differs|factor_verification_age=array<integer> vs INT" in
+        scalarAge
+    )
+    assertFalse(real.any { "type-differs" in it })
+  }
+
+  @Test
+  fun `diff compares array shape and accepts unconstrained JSON for any scalar`() {
+    val findings =
+      diff(
+        mapOf(
+          "id" to required(scalar = SpecScalar("string", null, array = true)),
+          "colors" to optional(scalar = SpecScalar("string", null, array = true)),
+          "extra" to optional(scalar = SpecScalar("integer", "int64")),
+        )
+      )
+
+    assertEquals(
+      listOf("contract.Probe|type-differs|id=array<string> vs STRING"),
+      findings.filter { "type-differs" in it },
+    )
   }
 
   @Test
@@ -351,6 +389,11 @@ class SpecContractTest {
 
 @Serializable internal data class NarrowSession(val id: String, val expireAt: Int)
 
+@Serializable internal data class ObjectExpirySession(val id: String, val expireAt: SessionTask)
+
+@Serializable
+internal data class ScalarAgeSession(val id: String, val factorVerificationAge: Int? = null)
+
 @Serializable
 internal data class Probe(
   val id: String,
@@ -359,6 +402,7 @@ internal data class Probe(
   val color: Color = Color.RED,
   val colors: List<Color> = emptyList(),
   val shade: Shade = Shade.UNKNOWN,
+  val extra: JsonElement? = null,
 )
 
 @Serializable

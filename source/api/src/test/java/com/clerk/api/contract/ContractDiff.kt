@@ -2,6 +2,7 @@ package com.clerk.api.contract
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -33,6 +34,12 @@ internal object ContractDiff {
   private val FRACTIONAL = setOf(PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE)
   private val WIDE_INTEGRAL = setOf(PrimitiveKind.LONG)
   private val INTEGRAL = setOf(PrimitiveKind.INT, PrimitiveKind.LONG) + FRACTIONAL
+  private val UNCONSTRAINED: Set<SerialKind> =
+    setOf(
+      SerialKind.CONTEXTUAL,
+      PolymorphicKind.OPEN,
+      PolymorphicKind.SEALED,
+    )
 
   fun findings(
     descriptor: SerialDescriptor,
@@ -99,10 +106,13 @@ internal object ContractDiff {
         }
     val typeGap =
       property.scalar
-        ?.takeUnless { decodes(it, item.kind) }
-        ?.let { Finding(model, FindingKind.TYPE_DIFFERS, key, "$it vs ${item.kind}") }
+        ?.takeUnless { decodes(it, element) }
+        ?.let { Finding(model, FindingKind.TYPE_DIFFERS, key, "$it vs ${shapeOf(element)}") }
     return required + enumGaps + listOfNotNull(typeGap)
   }
+
+  private fun shapeOf(element: SerialDescriptor): String =
+    if (isList(element)) "LIST<${itemOf(element).kind}>" else "${unwrapInline(element).kind}"
 
   fun checkedEnumClasses(descriptor: SerialDescriptor): Set<Class<*>> =
     (0 until descriptor.elementsCount)
@@ -111,21 +121,32 @@ internal object ContractDiff {
       .mapNotNull { jvmClass(it.serialName) }
       .toSet()
 
-  private fun decodes(scalar: SpecScalar, kind: SerialKind): Boolean {
-    val accepted =
-      when (scalar.type) {
-        "string" -> setOf(PrimitiveKind.STRING, PrimitiveKind.CHAR, SerialKind.ENUM)
-        "boolean" -> setOf(PrimitiveKind.BOOLEAN)
-        "number" -> FRACTIONAL
-        "integer" -> if (scalar.format == "int64") WIDE_INTEGRAL + FRACTIONAL else INTEGRAL
-        else -> null
-      }
-    val scalarKind = kind is PrimitiveKind || kind == SerialKind.ENUM
-    return accepted == null || !scalarKind || kind in accepted
+  private fun decodes(scalar: SpecScalar, element: SerialDescriptor): Boolean {
+    val kind = itemOf(element).kind
+    val accepted = acceptedKinds(scalar)
+    return scalar.array == isList(element) &&
+      (accepted == null || kind in UNCONSTRAINED || kind in accepted)
   }
 
-  private fun itemOf(element: SerialDescriptor): SerialDescriptor =
-    if (element.kind == StructureKind.LIST) element.getElementDescriptor(0) else element
+  private fun acceptedKinds(scalar: SpecScalar): Set<SerialKind>? =
+    when (scalar.type) {
+      "string" -> setOf(PrimitiveKind.STRING, PrimitiveKind.CHAR, SerialKind.ENUM)
+      "boolean" -> setOf(PrimitiveKind.BOOLEAN)
+      "number" -> FRACTIONAL
+      "integer" -> if (scalar.format == "int64") WIDE_INTEGRAL + FRACTIONAL else INTEGRAL
+      else -> null
+    }
+
+  private fun isList(element: SerialDescriptor): Boolean =
+    unwrapInline(element).kind == StructureKind.LIST
+
+  private fun itemOf(element: SerialDescriptor): SerialDescriptor {
+    val unwrapped = unwrapInline(element)
+    return if (isList(unwrapped)) unwrapInline(unwrapped.getElementDescriptor(0)) else unwrapped
+  }
+
+  private fun unwrapInline(element: SerialDescriptor): SerialDescriptor =
+    if (element.isInline) element.getElementDescriptor(0) else element
 
   private fun enumValues(element: SerialDescriptor): Set<String>? =
     when (element.kind) {
