@@ -179,6 +179,7 @@ class SpecContractTest {
           "colors" to optional(scalar = SpecScalar("string", null, array = true)),
           "extra" to optional(scalar = SpecScalar("integer", "int64", array = true)),
           "count" to required(scalar = SpecScalar("integer", null, array = true)),
+          "reading" to optional(scalar = SpecScalar("integer", null, array = true)),
         )
       )
 
@@ -186,6 +187,7 @@ class SpecContractTest {
       listOf(
         "contract.Probe|type-differs|count=array<integer> vs INT",
         "contract.Probe|type-differs|id=array<string> vs STRING",
+        "contract.Probe|type-differs|reading=array<integer> vs SEALED",
       ),
       findings.filter { "type-differs" in it },
     )
@@ -407,7 +409,12 @@ internal data class Probe(
   val colors: List<Color> = emptyList(),
   val shade: Shade = Shade.UNKNOWN,
   val extra: JsonElement? = null,
+  val reading: Reading? = null,
 )
+
+@Serializable internal sealed interface Reading
+
+@Serializable internal data class Gauge(val value: Int) : Reading
 
 @Serializable
 internal enum class Color {

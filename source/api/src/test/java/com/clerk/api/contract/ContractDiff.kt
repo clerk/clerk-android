@@ -2,7 +2,6 @@ package com.clerk.api.contract
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -34,12 +33,7 @@ internal object ContractDiff {
   private val FRACTIONAL = setOf(PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE)
   private val WIDE_INTEGRAL = setOf(PrimitiveKind.LONG)
   private val INTEGRAL = setOf(PrimitiveKind.INT, PrimitiveKind.LONG) + FRACTIONAL
-  private val UNCONSTRAINED: Set<SerialKind> =
-    setOf(
-      SerialKind.CONTEXTUAL,
-      PolymorphicKind.OPEN,
-      PolymorphicKind.SEALED,
-    )
+  private const val JSON_ELEMENT = "kotlinx.serialization.json.JsonElement"
 
   fun findings(
     descriptor: SerialDescriptor,
@@ -124,9 +118,9 @@ internal object ContractDiff {
   private fun decodes(scalar: SpecScalar, element: SerialDescriptor): Boolean {
     val kind = itemOf(element).kind
     val accepted = acceptedKinds(scalar)
-    return unwrapInline(element).kind in UNCONSTRAINED ||
+    return isUnconstrained(unwrapInline(element)) ||
       scalar.array == isList(element) &&
-        (accepted == null || kind in UNCONSTRAINED || kind in accepted)
+        (accepted == null || isUnconstrained(itemOf(element)) || kind in accepted)
   }
 
   private fun acceptedKinds(scalar: SpecScalar): Set<SerialKind>? =
@@ -137,6 +131,9 @@ internal object ContractDiff {
       "integer" -> if (scalar.format == "int64") WIDE_INTEGRAL + FRACTIONAL else INTEGRAL
       else -> null
     }
+
+  private fun isUnconstrained(element: SerialDescriptor): Boolean =
+    element.kind == SerialKind.CONTEXTUAL || element.serialName.removeSuffix("?") == JSON_ELEMENT
 
   private fun isList(element: SerialDescriptor): Boolean =
     unwrapInline(element).kind == StructureKind.LIST
