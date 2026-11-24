@@ -102,7 +102,7 @@ private fun SignUpCodeViewImpl(
       modifier = Modifier.testTag(ClerkTestTags.Auth.SignUp.code),
       verificationState = verificationTextState.verificationState(),
       onTextChange = {
-        if (verificationTextState is VerificationUiState.Error) {
+        if (verificationTextState is VerificationUiState.IncorrectCode) {
           viewModel.resetVerificationState()
         }
         if (it.length == 6) {

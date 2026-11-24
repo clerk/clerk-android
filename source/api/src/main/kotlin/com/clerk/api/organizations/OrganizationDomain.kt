@@ -88,8 +88,6 @@ public data class OrganizationDomain(
   )
 }
 
-private val organizationApi by lazy { ClerkApi.organization }
-
 /**
  * Deletes this organization domain.
  *
@@ -97,7 +95,7 @@ private val organizationApi by lazy { ClerkApi.organization }
  *   on failure
  */
 public suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
-  return organizationApi.deleteOrganizationDomain(
+  return ClerkApi.organization.deleteOrganizationDomain(
     organizationId = this.organizationId,
     domainId = this.id,
     sessionId = currentSessionId(),
@@ -114,7 +112,7 @@ public suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, Clerk
 public suspend fun OrganizationDomain.prepareAffiliationVerification(
   affiliationEmailAddress: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
-  return organizationApi.prepareAffiliationVerification(
+  return ClerkApi.organization.prepareAffiliationVerification(
     organizationId = this.organizationId,
     domainId = this.id,
     affiliationEmailAddress = affiliationEmailAddress,
@@ -136,7 +134,7 @@ public suspend fun OrganizationDomain.prepareAffiliationVerification(
 public suspend fun OrganizationDomain.attemptAffiliationVerification(
   code: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
-  return organizationApi.attemptAffiliationVerification(
+  return ClerkApi.organization.attemptAffiliationVerification(
     organizationId = this.organizationId,
     domainId = this.id,
     code = code,
@@ -148,7 +146,7 @@ public suspend fun OrganizationDomain.updateEnrollmentMode(
   enrollmentMode: String,
   deletePending: Boolean? = null,
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
-  return organizationApi.updateEnrollmentMode(
+  return ClerkApi.organization.updateEnrollmentMode(
     organizationId = this.organizationId,
     domainId = this.id,
     enrollmentMode = enrollmentMode,

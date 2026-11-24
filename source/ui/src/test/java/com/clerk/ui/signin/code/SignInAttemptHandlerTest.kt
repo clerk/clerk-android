@@ -4,6 +4,7 @@ import com.clerk.api.auth.types.MfaType
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.verifyMfaCode
@@ -84,7 +85,7 @@ class SignInAttemptHandlerTest {
       code = code,
       isSecondFactor = false,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.attemptFirstFactor(any()) }
@@ -133,7 +134,7 @@ class SignInAttemptHandlerTest {
       code = code,
       isSecondFactor = true,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.verifyMfaCode(code, MfaType.EMAIL_CODE) }
@@ -183,7 +184,7 @@ class SignInAttemptHandlerTest {
       code = code,
       isSecondFactor = false,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.attemptFirstFactor(any()) }
@@ -233,7 +234,7 @@ class SignInAttemptHandlerTest {
       code = code,
       isSecondFactor = true,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.verifyMfaCode(code, MfaType.PHONE_CODE) }
@@ -280,7 +281,7 @@ class SignInAttemptHandlerTest {
       inProgressSignIn = mockSignIn,
       code = code,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.verifyMfaCode(code, MfaType.TOTP) }
@@ -331,7 +332,7 @@ class SignInAttemptHandlerTest {
       inProgressSignIn = mockSignIn,
       code = code,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.attemptFirstFactor(any()) }
@@ -382,7 +383,7 @@ class SignInAttemptHandlerTest {
       inProgressSignIn = mockSignIn,
       code = code,
       onSuccessCallback = { successCallbackCalled = true },
-      onErrorCallback = { errorMessage = it },
+      onErrorCallback = { errorMessage = it.errorMessage },
     )
 
     coVerify { mockSignIn.attemptFirstFactor(any()) }

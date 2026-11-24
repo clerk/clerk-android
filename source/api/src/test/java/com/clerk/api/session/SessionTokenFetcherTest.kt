@@ -70,7 +70,7 @@ class SessionTokenFetcherTest {
 
     mockkObject(Clerk)
     every { Clerk.session } returns mockSession
-    every { Clerk.clearSessionAndUserState() } returns Unit
+    every { Clerk.removeInvalidatedSession(any()) } returns Unit
     isolateFromGlobalClerkState()
 
     SessionTokensCache.clear()
@@ -240,7 +240,7 @@ class SessionTokenFetcherTest {
     assertNull(result)
     coVerify { mockClerkApiService.tokens("session_123") }
     coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
-    verify(exactly = 0) { Clerk.clearSessionAndUserState() }
+    verify(exactly = 0) { Clerk.removeInvalidatedSession(any()) }
   }
 
   @Test
@@ -271,7 +271,7 @@ class SessionTokenFetcherTest {
     val logs = ShadowLog.getLogs()
     assertTrue(logs.any { it.msg.contains("The session can no longer issue tokens") })
     assertTrue(logs.none { it.msg.contains("session_123") })
-    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+    verify(exactly = 1) { Clerk.removeInvalidatedSession("session_123") }
   }
 
   @Test
@@ -287,7 +287,7 @@ class SessionTokenFetcherTest {
       val result = sessionTokenFetcher.getToken(mockSession)
 
       assertNull(result)
-      verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+      verify(exactly = 1) { Clerk.removeInvalidatedSession("session_123") }
     }
 
   @Test
@@ -303,7 +303,7 @@ class SessionTokenFetcherTest {
     val result = sessionTokenFetcher.getToken(mockSession)
 
     assertNull(result)
-    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+    verify(exactly = 1) { Clerk.removeInvalidatedSession("session_123") }
   }
 
   @Test
@@ -319,7 +319,7 @@ class SessionTokenFetcherTest {
       val result = sessionTokenFetcher.getToken(mockSession)
 
       assertNull(result)
-      verify(exactly = 0) { Clerk.clearSessionAndUserState() }
+      verify(exactly = 0) { Clerk.removeInvalidatedSession(any()) }
     }
 
   @Test

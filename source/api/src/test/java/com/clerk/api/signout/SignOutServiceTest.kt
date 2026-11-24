@@ -143,7 +143,8 @@ class SignOutServiceTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
@@ -162,7 +163,8 @@ class SignOutServiceTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
     coEvery { mockSessionApi.deleteSessions(any()) } throws Exception("Network error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
 
@@ -188,7 +190,8 @@ class SignOutServiceTest {
           ClerkErrorResponse(errors = listOf(Error(message = "Signed out", code = "unauthorized"))),
       )
     coEvery { mockSessionApi.deleteSessions(any()) } returns serverFailure
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     val result = SignOutService.signOut()
 
@@ -200,7 +203,8 @@ class SignOutServiceTest {
     setupActiveSession()
     val exception = IOException("Network error")
     coEvery { mockSessionApi.deleteSessions(any()) } throws exception
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     val result = SignOutService.signOut()
 
@@ -213,7 +217,8 @@ class SignOutServiceTest {
     mockkObject(RestoreCredentials)
     coEvery { RestoreCredentials.clearSilently() } just runs
     coEvery { mockSessionApi.deleteSessions(any()) } throws Exception("Network error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     SignOutService.signOut()
 
@@ -234,7 +239,8 @@ class SignOutServiceTest {
         it.copy(deviceKeyUserId = "user_1", createdPasskey = createdPasskey)
       }
       coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-      coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+      coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+        ClerkResult.success(Client())
 
       SignOutService.signOut()
 
@@ -249,7 +255,8 @@ class SignOutServiceTest {
     setupActiveSession()
     SessionTokensCache.setToken("test_session_id-organization-", TokenResource(jwt = "jwt"))
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     SignOutService.signOut()
 
@@ -260,7 +267,8 @@ class SignOutServiceTest {
   fun `signOut refuses tokens for a session the caller kept`() = runTest {
     setupActiveSession()
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     SignOutService.signOut()
     val result = mockSession.fetchToken()
@@ -277,7 +285,8 @@ class SignOutServiceTest {
   fun `signOut fences the held session before the client is cleared`() = runTest {
     setupActiveSession()
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
     val store = Clerk.stateStore
     val original = store.listener
     var resultAtClear: ClerkResult<TokenResource, ClerkErrorResponse>? = null
@@ -319,7 +328,8 @@ class SignOutServiceTest {
             .recordResponse(requestDeviceToken = null, responseDeviceToken = null)
           ClerkResult.success(Client())
         }
-      coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+      coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+        ClerkResult.success(Client())
 
       SignOutService.signOut()
       val result = lateSession.fetchToken()
@@ -345,7 +355,8 @@ class SignOutServiceTest {
           Clerk.updateClient(Client(sessions = listOf(lateSession)))
         }
       coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-      coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+      coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+        ClerkResult.success(Client())
 
       SignOutService.signOut()
       val result = lateSession.fetchToken()
@@ -368,7 +379,8 @@ class SignOutServiceTest {
         ClerkResult.success(Client())
       }
     coEvery { mockSessionApi.tokens(any()) } returns ClerkResult.success(TokenResource(jwt = "jwt"))
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
     mockkObject(RestoreCredentials)
     var resultDuringCleanup: ClerkResult<TokenResource, ClerkErrorResponse>? = null
     coEvery { RestoreCredentials.clearSilently() } coAnswers
@@ -391,7 +403,8 @@ class SignOutServiceTest {
     setupActiveSession()
     SessionTokensCache.setToken("test_session_id-organization-", TokenResource(jwt = "jwt"))
     coEvery { mockSessionApi.deleteSessions(any()) } throws Exception("Network error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     SignOutService.signOut()
 
@@ -412,7 +425,8 @@ class SignOutServiceTest {
     Clerk.environment = mockEnvironment
 
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     val result = SignOutService.signOut()
 
@@ -425,7 +439,8 @@ class SignOutServiceTest {
     every { Clerk.clientOrNull } returns null
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     val result = SignOutService.signOut()
 
@@ -443,8 +458,9 @@ class SignOutServiceTest {
     var deviceTokenAtRefresh: String? = "not-refreshed"
     var sessionAtRefresh: Session? = mockSession
     val refreshedClient = Client(id = "refreshed_client_id")
-    coEvery { mockClientApi.getSkippingClientId(any()) } answers
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } answers
       {
+        arg<ManualClientSyncRequest?>(1)?.recordResponse(null, null)
         deviceTokenAtRefresh = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
         sessionAtRefresh = Clerk.session
         ClerkResult.success(refreshedClient)
@@ -453,7 +469,7 @@ class SignOutServiceTest {
     val result = SignOutService.signOut()
 
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
-    coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
+    coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any(), any()) }
     assertNull("Device token should be cleared before the refresh", deviceTokenAtRefresh)
     assertNull("Session should be cleared before the refresh", sessionAtRefresh)
     assertEquals("refreshed_client_id", Clerk.client.id)
@@ -463,12 +479,12 @@ class SignOutServiceTest {
   fun `signOut tolerates client refresh failure`() = runTest {
     setupActiveSession()
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } throws Exception("Refresh failed")
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } throws Exception("Refresh failed")
 
     val result = SignOutService.signOut()
 
     assertTrue("Sign-out should still succeed", result is ClerkResult.Success)
-    coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any()) }
+    coVerify(exactly = 1) { mockClientApi.getSkippingClientId(any(), any()) }
     assertNull("Session should still be cleared", Clerk.session)
     assertNull("User should still be cleared", Clerk.user)
   }
@@ -488,7 +504,8 @@ class SignOutServiceTest {
       }
     RestoreCredentials.credentialManager = credentialManager
     coEvery { mockSessionApi.deleteSessions(any()) } coAnswers { awaitCancellation() }
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
+      ClerkResult.success(Client())
 
     var result: ClerkResult<Unit, ClerkErrorResponse>? = null
     val job = launch { result = SignOutService.signOut() }
@@ -507,7 +524,7 @@ class SignOutServiceTest {
   fun `cancelling signOut during client refresh propagates cancellation`() = runTest {
     setupActiveSession()
     coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
-    coEvery { mockClientApi.getSkippingClientId(any()) } coAnswers { awaitCancellation() }
+    coEvery { mockClientApi.getSkippingClientId(any(), any()) } coAnswers { awaitCancellation() }
 
     var result: ClerkResult<Unit, ClerkErrorResponse>? = null
     val job = launch { result = SignOutService.signOut() }

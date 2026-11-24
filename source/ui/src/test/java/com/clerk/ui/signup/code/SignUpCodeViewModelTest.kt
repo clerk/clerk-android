@@ -3,6 +3,8 @@ package com.clerk.ui.signup.code
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.types.VerificationType
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.sendEmailCode
@@ -91,5 +93,50 @@ class SignUpCodeViewModelTest {
       assertEquals(VerificationUiState.Idle, viewModel.verificationState.value)
       assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
       coVerify(exactly = 0) { signUp.verifyCode(any(), any()) }
+    }
+
+  @Test
+  fun `an incorrect code marks the code field and shows no snackbar`() =
+    runTest(testDispatcher) {
+      coEvery { signUp.verifyCode(any(), any()) } returns
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors = listOf(Error(longMessage = "Incorrect code", code = "form_code_incorrect"))
+          )
+        )
+      val viewModel = SignUpCodeViewModel()
+
+      viewModel.attempt("123456", SignUpCodeField.Email("user@example.com"))
+      advanceUntilIdle()
+
+      assertEquals(VerificationUiState.IncorrectCode, viewModel.verificationState.value)
+      assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
+    }
+
+  @Test
+  fun `any other failure shows the API message in the snackbar and leaves the code field clean`() =
+    runTest(testDispatcher) {
+      coEvery { signUp.verifyCode(any(), any()) } returns
+        ClerkResult.apiFailure(
+          ClerkErrorResponse(
+            errors =
+              listOf(
+                Error(
+                  longMessage = "Too many requests, try again later",
+                  code = "too_many_requests",
+                )
+              )
+          )
+        )
+      val viewModel = SignUpCodeViewModel()
+
+      viewModel.attempt("123456", SignUpCodeField.Email("user@example.com"))
+      advanceUntilIdle()
+
+      assertEquals(VerificationUiState.Idle, viewModel.verificationState.value)
+      assertEquals(
+        AuthenticationViewState.Error("Too many requests, try again later"),
+        viewModel.state.value,
+      )
     }
 }

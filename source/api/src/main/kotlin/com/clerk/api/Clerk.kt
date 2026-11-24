@@ -23,6 +23,7 @@ import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.incoming.responseOrder
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
@@ -955,19 +956,20 @@ public object Clerk {
    * Refreshes the current client and updates Clerk's reactive auth state.
    *
    * If another client update (for example a sign-in completing) landed while the request was in
-   * flight, that newer state is kept and the fetched client is discarded. On success the returned
-   * client is always the one [client] holds when this function returns.
+   * flight, or the device token changed (for example after a sign-out or account switch), that
+   * newer state is kept and the fetched client is discarded. On success the returned client is
+   * always the one [client] holds when this function returns. If the fetched client is discarded
+   * before Clerk holds any client, the result is a failure.
    */
-  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
-    val updateCountAtStart = clientUpdateCount
-    return when (val result = Client.get()) {
-      is ClerkResult.Success -> {
-        updateClientIfUnchangedSince(updateCountAtStart, result)
-        ClerkResult.success(client).withTags(result.tags)
-      }
+  public suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> =
+    when (val result = fetchAndApplyClient { ClerkApi.client.get(manualClientSyncRequest = it) }) {
+      is ClerkResult.Success ->
+        clientOrNull?.let { ClerkResult.success(it).withTags(result.tags) }
+          ?: ClerkResult.unknownFailure(
+            IllegalStateException("Client refresh was discarded before Clerk had a client")
+          )
       is ClerkResult.Failure -> result
     }
-  }
 
   /**
    * Reloads Clerk authentication state persisted by a same-signed sibling app.
@@ -1133,11 +1135,16 @@ public object Clerk {
     )
 
   internal suspend fun <E : Any> fetchAndApplyClient(
-    fetch: suspend () -> ClerkResult<Client, E>
+    fetch: suspend (ManualClientSyncRequest) -> ClerkResult<Client, E>
   ): ClerkResult<Client, E> {
+    val manualClientSyncRequest = ManualClientSyncRequest()
     val updateCountAtStart = clientUpdateCount
-    val result = fetch()
-    if (result is ClerkResult.Success) updateClientIfUnchangedSince(updateCountAtStart, result)
+    val result = fetch(manualClientSyncRequest)
+    if (result is ClerkResult.Success) {
+      manualClientSyncRequest.runIfResponseCurrent {
+        updateClientIfUnchangedSince(updateCountAtStart, result)
+      }
+    }
     return result
   }
 
@@ -1257,6 +1264,17 @@ public object Clerk {
 
   internal fun clearSessionAndUserState() {
     stateStore.clearSessionState()
+  }
+
+  /**
+   * Drops a session the server no longer issues tokens for from the local client, and keeps it out
+   * of every client committed afterwards, so neither a local mutation, a cold start from the cache,
+   * nor a client response the server produced before the revocation can publish it again.
+   */
+  internal fun removeInvalidatedSession(sessionId: String) {
+    if (!stateStore.removeInvalidatedSession(sessionId)) {
+      clearSessionAndUserState()
+    }
   }
 
   @Synchronized

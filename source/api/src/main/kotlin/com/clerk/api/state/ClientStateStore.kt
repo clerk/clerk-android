@@ -4,6 +4,7 @@ import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.log.ClerkLogger
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.client.withoutSession
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.supportEmailOrNull
 import com.clerk.api.session.Session
@@ -77,6 +78,7 @@ internal class ClientStateStore(
 
   private var newestAppliedOrder: ResponseOrder? = null
   private var nextArrival = 0L
+  private val invalidatedSessionIds = mutableSetOf<String>()
 
   private val _client = MutableStateFlow<Client?>(null)
   private val _sessions = MutableStateFlow<List<Session>>(emptyList())
@@ -198,6 +200,16 @@ internal class ClientStateStore(
     return true
   }
 
+  fun removeInvalidatedSession(sessionId: String): Boolean {
+    val commit =
+      synchronized(lock) {
+        invalidatedSessionIds += sessionId
+        state.clientOrEmptyAfterReset?.let(::commitLocalLocked)
+      } ?: return false
+    dispatch(commit)
+    return true
+  }
+
   fun replaceClient(client: Client, serverFetchAtMillis: Long) {
     val commit =
       synchronized(lock) {
@@ -265,6 +277,7 @@ internal class ClientStateStore(
     synchronized(lock) {
       val previousSession = _session.value
       newestAppliedOrder = null
+      invalidatedSessionIds.clear()
       state =
         State(
           clientOrEmptyAfterReset = Client(),
@@ -347,9 +360,15 @@ internal class ClientStateStore(
   // region Internals
 
   private fun localFetchAtLocked(client: Client): Long {
-    val resolved = client.withResolvedActiveSession(previousSession = _session.value)
+    val resolved =
+      client
+        .withoutInvalidatedSessionsLocked()
+        .withResolvedActiveSession(previousSession = _session.value)
     return if (state.publishedClient == resolved) state.serverFetchAtMillis ?: clock() else clock()
   }
+
+  private fun Client.withoutInvalidatedSessionsLocked(): Client =
+    invalidatedSessionIds.fold(this) { client, sessionId -> client.withoutSession(sessionId) }
 
   private fun isStaleLocked(order: ResponseOrder?): Boolean {
     val newest = newestAppliedOrder
@@ -370,7 +389,10 @@ internal class ClientStateStore(
     restoredFromCache: Boolean = false,
   ): ClientCommit {
     val previousSession = state.clientOrEmptyAfterReset?.currentSession()
-    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    val resolvedClient =
+      client
+        .withoutInvalidatedSessionsLocked()
+        .withResolvedActiveSession(previousSession = _session.value)
     state =
       state.copy(
         clientOrEmptyAfterReset = resolvedClient,

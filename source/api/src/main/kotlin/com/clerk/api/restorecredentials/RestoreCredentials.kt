@@ -75,7 +75,7 @@ public object RestoreCredentials {
   public suspend fun create(
     isCloudBackupEnabled: Boolean = true
   ): ClerkResult<Unit, ClerkErrorResponse> = singleFlight {
-    createForSignedInUser(isCloudBackupEnabled)
+    createRecordingOwner(isCloudBackupEnabled)
   }
 
   /**
@@ -172,6 +172,26 @@ public object RestoreCredentials {
     }
   }
 
+  /**
+   * Clears the restore credential after one session signed out, unless sessions remain and the
+   * device key is recorded as belonging to a known user other than [signedOutUserId]. An unknown
+   * owner or an unknown signed-out user is cleared as before. A creation still in flight is
+   * cancelled first, so one that verified for the signed-out user cannot finish after the decision.
+   */
+  internal suspend fun clearSilentlyAfterSessionSignOut(signedOutUserId: String?) {
+    creation?.cancelForSignOut()
+    val anotherUserOwnsDeviceKey = creationMutex.withLock {
+      val ownerId = RestoreCredentialStore.read().deviceKeyUserId
+      val sessionsRemain = Clerk.clientOrNull?.sessions.orEmpty().isNotEmpty()
+      sessionsRemain && ownerId != null && signedOutUserId != null && ownerId != signedOutUserId
+    }
+    if (anotherUserOwnsDeviceKey) {
+      ClerkLogger.d("Keeping the restore credential: it belongs to a user who is still signed in.")
+      return
+    }
+    clearSilently()
+  }
+
   internal fun onSignInCompleted(signIn: SignIn) {
     val createdSessionId = signIn.createdSessionId ?: return
     if (RestoreCredentialStore.read().pendingSignInId != signIn.id) return
@@ -222,21 +242,40 @@ public object RestoreCredentials {
       ClerkLogger.d("Skipping restore credential creation: this device already has one.")
       return ClerkResult.success(Unit)
     }
-    if (!RestoreCredentialStore.update { it.copy(deviceKeyUserId = userId) }) {
+    return createRecordingOwner(isCloudBackupEnabled = true)
+  }
+
+  /**
+   * Creates the restore credential with the owner recorded as unknown until the server verifies it,
+   * so a process death mid-creation leaves nothing attributed to a user whose key may not exist,
+   * and restores the previous owner only when nothing of theirs can have been replaced.
+   */
+  private suspend fun createRecordingOwner(
+    isCloudBackupEnabled: Boolean
+  ): ClerkResult<Unit, ClerkErrorResponse> {
+    val previousOwnerId = RestoreCredentialStore.read().deviceKeyUserId
+    if (!RestoreCredentialStore.update { it.copy(deviceKeyUserId = null) }) {
       ClerkLogger.w(
-        "Skipping restore credential creation: this device cannot record it, so every sign-in " +
-          "would create another passkey."
+        "Skipping restore credential creation: this device cannot record who owns it, so a " +
+          "sign-out could not tell whether to keep it."
       )
       return ClerkResult.unknownFailure(
         IllegalStateException("Restore credential state could not be saved.")
       )
     }
+    var progress = CreationProgress.NONE
     val forgetUser = {
-      RestoreCredentialStore.update { it.copy(deviceKeyUserId = state.deviceKeyUserId) }
+      RestoreCredentialStore.update {
+        when (progress) {
+          CreationProgress.NONE -> it.copy(deviceKeyUserId = previousOwnerId)
+          CreationProgress.CREDENTIAL_REQUESTED -> it.copy(deviceKeyUserId = null)
+          CreationProgress.VERIFIED -> it
+        }
+      }
     }
     val result =
       try {
-        createForSignedInUser(isCloudBackupEnabled = true)
+        createForSignedInUser(isCloudBackupEnabled) { progress = it }
       } catch (e: CancellationException) {
         forgetUser()
         throw e
@@ -245,8 +284,23 @@ public object RestoreCredentials {
     return result
   }
 
+  /**
+   * How far a creation got before it stopped. The owner is recorded as unknown while a creation is
+   * pending, so a process death leaves nothing attributed to a user whose key may not exist, and
+   * the previous owner is restored only when the platform request was never issued. Credential
+   * Manager can finish a request whose caller was cancelled, and can report a failure after the
+   * provider replaced the credential, so once the request is issued the previous owner's key may be
+   * gone whatever the outcome.
+   */
+  private enum class CreationProgress {
+    NONE,
+    CREDENTIAL_REQUESTED,
+    VERIFIED,
+  }
+
   private suspend fun createForSignedInUser(
-    isCloudBackupEnabled: Boolean
+    isCloudBackupEnabled: Boolean,
+    onProgress: (CreationProgress) -> Unit = {},
   ): ClerkResult<Unit, ClerkErrorResponse> {
     if (!isSupportedAndroidVersion) return unsupportedPlatformFailure()
     val userId = signedInUserId() ?: return signedOutCreationFailure()
@@ -267,6 +321,7 @@ public object RestoreCredentials {
               IllegalStateException("Restore credential registration did not return a challenge.")
             )
 
+        onProgress(CreationProgress.CREDENTIAL_REQUESTED)
         val response =
           try {
             createCredentialWithCloudFallback(context, nonce, isCloudBackupEnabled)
@@ -295,6 +350,7 @@ public object RestoreCredentials {
                 createdPasskey = RestorePasskey(userId = userId, passkeyId = passkeyId),
               )
             }
+            onProgress(CreationProgress.VERIFIED)
             nameRestorePasskey(passkeyId)
             previousPasskey?.let { deleteReplacedPasskey(it, userId) }
             ClerkResult.success(Unit)
