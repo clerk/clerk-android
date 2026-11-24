@@ -56,11 +56,29 @@ class SpecContractTest {
   }
 
   @Test
-  fun `the pinned spec is the version the SDK sends`() {
-    assertEquals(
-      Constants.Http.CURRENT_API_VERSION,
-      spec.apiVersion,
-      "Bump CURRENT_API_VERSION and the pinned spec in ${SpecSchemas.RESOURCE} together",
+  fun `the pinned spec is the version the SDK sends unless that version has no published spec`() {
+    val sent = Constants.Http.CURRENT_API_VERSION
+    if (sent in SpecSchemas.UNPUBLISHED_API_VERSIONS) {
+      assertTrue(
+        spec.apiVersion < sent,
+        "${SpecSchemas.RESOURCE} is newer than CURRENT_API_VERSION $sent",
+      )
+    } else {
+      assertEquals(
+        sent,
+        spec.apiVersion,
+        "Bump CURRENT_API_VERSION and the pinned spec in ${SpecSchemas.RESOURCE} together, " +
+          "or add the version to SpecSchemas.UNPUBLISHED_API_VERSIONS while clerk/openapi-specs " +
+          "has no fapi/$sent.yml",
+      )
+    }
+  }
+
+  @Test
+  fun `the pinned version is not listed as unpublished`() {
+    assertFalse(
+      spec.apiVersion in SpecSchemas.UNPUBLISHED_API_VERSIONS,
+      "Remove ${spec.apiVersion} from SpecSchemas.UNPUBLISHED_API_VERSIONS now that it is pinned",
     )
   }
 

@@ -226,6 +226,8 @@ private constructor(
     val UPSTREAM_SHA256: Map<String, String> =
       mapOf("2026-08-20" to "4561b6cd7ef96827b173b7fc8432d56bbd7c7e023502f7df989c996ee9aac36e")
 
+    val UNPUBLISHED_API_VERSIONS: Set<String> = setOf("2026-11-18")
+
     private val SCALAR_TYPES = setOf("string", "integer", "number", "boolean")
 
     fun load(): SpecSchemas {
