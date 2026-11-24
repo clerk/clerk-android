@@ -5,7 +5,6 @@ import com.clerk.api.billing.BillingPaymentMethod
 import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
-import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -166,7 +165,11 @@ public suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErr
  * This keeps [Clerk.organization] and other active organization UI in sync after profile updates.
  */
 public suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse> {
-  return when (val clientResult = Clerk.fetchAndApplyClient { Client.get() }) {
+  return when (
+    val clientResult = Clerk.fetchAndApplyClient {
+      ClerkApi.client.get(manualClientSyncRequest = it)
+    }
+  ) {
     is ClerkResult.Success -> {
       val updated =
         clientResult.value.sessions

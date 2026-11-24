@@ -22,6 +22,7 @@ import com.clerk.api.magiclink.NativeMagicLinkManager
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.client.withoutSession
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -890,20 +891,25 @@ public class Auth internal constructor() {
     activeSessionFallbackId: String? = null,
     fallbackClient: Client? = null,
   ) {
+    val manualClientSyncRequest = ManualClientSyncRequest()
     val updateCountAtStart = Clerk.clientUpdateCount
-    when (val clientResult = Client.get()) {
+    when (
+      val clientResult = ClerkApi.client.get(manualClientSyncRequest = manualClientSyncRequest)
+    ) {
       is ClerkResult.Success ->
-        Clerk.updateClientIfUnchangedSince(
-          expectedUpdateCount = updateCountAtStart,
-          fetched =
-            ClerkResult.success(
-                clientResult.value.withActiveSessionFallback(
-                  activeSessionFallbackId = activeSessionFallbackId,
-                  fallbackClient = fallbackClient,
+        manualClientSyncRequest.runIfResponseCurrent {
+          Clerk.updateClientIfUnchangedSince(
+            expectedUpdateCount = updateCountAtStart,
+            fetched =
+              ClerkResult.success(
+                  clientResult.value.withActiveSessionFallback(
+                    activeSessionFallbackId = activeSessionFallbackId,
+                    fallbackClient = fallbackClient,
+                  )
                 )
-              )
-              .withTags(clientResult.tags),
-        )
+                .withTags(clientResult.tags),
+          )
+        }
       is ClerkResult.Failure ->
         ClerkLogger.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
     }

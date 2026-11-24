@@ -49,7 +49,7 @@ class AuthStartHostedAuthTest {
     justRun { Clerk.updateClient(any()) }
     coEvery { clientApi.setActive(SESSION_ID, "org_123", any()) } returns
       ClerkResult.success(session)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.success(
         Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = SESSION_ID)
       )
