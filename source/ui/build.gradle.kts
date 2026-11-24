@@ -114,7 +114,7 @@ dependencies {
   debugImplementation(libs.androidx.ui.test.manifest)
   debugImplementation(libs.androidx.ui.tooling)
 
-  compileOnly(libs.androidx.ui.tooling.preview.android)
+  compileOnly(libs.androidx.ui.tooling.preview)
 
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.ui.test.junit4)
