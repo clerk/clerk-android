@@ -36,7 +36,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       phoneNumber
         .prepareVerification()
-        .onSuccess { _state.value = AuthState.Success }
+        .onSuccess { _state.compareAndSet(AuthState.Loading, AuthState.Success) }
         .onFailure { _state.value = AuthState.Error(it.errorMessage) }
     }
   }
@@ -46,7 +46,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       emailAddress
         .prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode())
-        .onSuccess { _state.value = AuthState.Success }
+        .onSuccess { _state.compareAndSet(AuthState.Loading, AuthState.Success) }
         .onFailure { _state.value = AuthState.Error(it.errorMessage) }
     }
   }

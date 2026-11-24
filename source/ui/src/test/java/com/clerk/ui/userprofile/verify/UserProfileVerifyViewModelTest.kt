@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.verify
 
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
@@ -10,6 +11,7 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.phonenumber.attemptVerification
+import com.clerk.api.phonenumber.prepareVerification
 import com.clerk.api.user.User
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -27,7 +29,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -79,6 +83,56 @@ class UserProfileVerifyViewModelTest {
       assertEquals(UserProfileVerifyViewModel.AuthState.Loading, awaitItem())
       assertEquals(UserProfileVerifyViewModel.AuthState.Error("fail"), awaitItem())
     }
+  }
+
+  @Test
+  fun prepareEmailAddress_successAfterAFailedAttempt_keepsTheAttemptError() = runTest {
+    val email = mockk<EmailAddress>()
+    val prepareSent = CompletableDeferred<Unit>()
+    coEvery { email.prepareVerification(any()) } coAnswers
+      {
+        prepareSent.await()
+        ClerkResult.success(mockk())
+      }
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.prepareEmailAddress(email)
+      assertEquals(AuthState.Loading, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      prepareSent.complete(Unit)
+      viewModel.awaitPendingRequests()
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
+  fun preparePhoneNumber_successAfterAFailedAttempt_keepsTheAttemptError() = runTest {
+    val phone = mockk<PhoneNumber>()
+    val prepareSent = CompletableDeferred<Unit>()
+    coEvery { phone.prepareVerification() } coAnswers
+      {
+        prepareSent.await()
+        ClerkResult.success(mockk())
+      }
+    coEvery { phone.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.preparePhoneNumber(phone)
+      assertEquals(AuthState.Loading, awaitItem())
+      viewModel.attemptPhoneNumber(phone, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      prepareSent.complete(Unit)
+      viewModel.awaitPendingRequests()
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
   }
 
   @Test
@@ -254,6 +308,10 @@ class UserProfileVerifyViewModelTest {
       assertEquals(VerificationTextState.Default, awaitItem())
     }
     assertEquals(AuthState.Error("User does not exist"), viewModel.state.value)
+  }
+
+  private suspend fun UserProfileVerifyViewModel.awaitPendingRequests() {
+    viewModelScope.coroutineContext.job.children.forEach { it.join() }
   }
 
   private companion object {
