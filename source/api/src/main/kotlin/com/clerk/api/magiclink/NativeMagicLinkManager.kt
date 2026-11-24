@@ -9,7 +9,6 @@ import com.clerk.api.log.ClerkLogger
 import com.clerk.api.log.SafeUriLog
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ClerkApi
-import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.magiclink.NativeMagicLinkPrepareRequest
@@ -326,7 +325,8 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   }
 
   private suspend fun refreshClientState() {
-    if (Clerk.fetchAndApplyClient { Client.get() } is ClerkResult.Failure) {
+    val result = Clerk.fetchAndApplyClient { ClerkApi.client.get(manualClientSyncRequest = it) }
+    if (result is ClerkResult.Failure) {
       ClerkLogger.w("event=native_magic_link_client_refresh_failure")
     }
   }
