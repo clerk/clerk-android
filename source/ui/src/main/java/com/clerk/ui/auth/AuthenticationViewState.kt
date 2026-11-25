@@ -8,6 +8,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.SSOCancellationException
+import com.clerk.ui.core.error.isIncorrectCode
 import com.clerk.ui.signin.code.VerificationState
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -55,14 +56,12 @@ internal fun VerificationUiState.verificationState(): VerificationState {
   }
 }
 
-private const val FORM_CODE_INCORRECT = "form_code_incorrect"
-
 internal fun reportFailedCodeAttempt(
   failure: ClerkResult.Failure<ClerkErrorResponse>,
   verificationState: MutableStateFlow<VerificationUiState>,
   state: MutableStateFlow<AuthenticationViewState>,
 ) {
-  if (failure.error?.errors.orEmpty().any { it.code == FORM_CODE_INCORRECT }) {
+  if (failure.isIncorrectCode) {
     verificationState.value = VerificationUiState.IncorrectCode
     state.value = AuthenticationViewState.Idle
   } else {

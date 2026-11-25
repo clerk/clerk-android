@@ -46,3 +46,4 @@ Preconditions:
 - A relaunch restores the cached environment first, and `AppVersionSupport.applyEnvironment` runs for it too. So right after the minimum is lowered, the update screen can open for a moment on the old minimum. `UpdateRequiredActivity` closes once `Clerk.isInitialized` is true and the status is supported, and `landsOn: host.app.signedIn` waits through that. Don't assert that the update screen never appears after that relaunch.
 - The subtitle names the application, which here is the `verify-throwaway-...` name. Don't assert on it.
 - The update screen replaces what the home shows, so the home's locators aren't on screen while it shows. A launch that expects it needs `landsOn`.
+- Back does not close the update screen. `UpdateRequiredActivity` handles it with `moveTaskToBack(true)`, so the app goes to the background and the launcher shows. No committed spec presses back there. A spec that does finds neither the update screen nor the home afterwards.
