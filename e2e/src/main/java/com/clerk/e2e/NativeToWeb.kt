@@ -38,6 +38,8 @@ import java.io.IOException
 import java.net.URL
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,6 +56,7 @@ private const val SIGNED_IN_USER_ID =
   "window.Clerk?.loaded ? (window.Clerk.user?.id ?? null) : false"
 private const val CLERK_NOT_LOADED = "false"
 private const val ENVIRONMENT_TIMEOUT_MS = 15_000
+private val CLERK_LOAD_TIMEOUT = 30.seconds
 private val USER_READ_INTERVAL = 200.milliseconds
 
 private sealed interface WebSession {
@@ -190,8 +193,10 @@ private suspend fun accountPortalUserPage(frontendApiUrl: String): String? =
   }
 
 private suspend fun signedInUser(webView: WebView): WebSession {
+  val deadline = TimeSource.Monotonic.markNow() + CLERK_LOAD_TIMEOUT
   var result = webView.evaluate(SIGNED_IN_USER_ID)
   while (result == CLERK_NOT_LOADED) {
+    if (deadline.hasPassedNow()) return WebSession.Failed("clerk_not_loaded")
     delay(USER_READ_INTERVAL)
     result = webView.evaluate(SIGNED_IN_USER_ID)
   }
