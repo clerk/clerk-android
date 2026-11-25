@@ -838,12 +838,14 @@ public class Auth internal constructor() {
   /**
    * Signs out all sessions or removes a specific session from the current client.
    *
-   * When Clerk confirms a sign-out of all sessions, the device keeps its client, so the next
-   * sign-in uses the same client. When that request fails, the device still signs out. It forgets
-   * the client and its device token, and this returns the failure.
+   * When [sessionId] is null or the client has at most one active session, this signs out every
+   * session on the client. When Clerk confirms that sign-out, the device keeps its client, so the
+   * next sign-in uses the same client. When that request fails, the device still signs out. It
+   * forgets the client and its device token, and this returns the failure. Only when the client has
+   * multiple active sessions does passing [sessionId] remove that session alone.
    *
-   * @param sessionId Optional session ID to sign out. If null, signs out all sessions on this
-   *   client.
+   * @param sessionId Optional session ID to sign out. If null, or if the client has at most one
+   *   active session, signs out all sessions on this client.
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure.
    *
    * ### Example usage:
@@ -854,7 +856,9 @@ public class Auth internal constructor() {
    */
   public suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     return reportingFailures {
-      if (sessionId != null) {
+      if (sessionId == null || (Clerk.clientOrNull?.activeSessions()?.size ?: 0) <= 1) {
+        SignOutService.signOut()
+      } else {
         val signedOutUserId =
           Clerk.clientOrNull?.sessions?.firstOrNull { it.id == sessionId }?.user?.id
         val result =
@@ -872,8 +876,6 @@ public class Auth internal constructor() {
           }
           is ClerkResult.Failure -> result
         }
-      } else {
-        SignOutService.signOut()
       }
     }
   }
