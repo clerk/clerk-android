@@ -24,6 +24,7 @@ enum class VerifyScreen(override val wireName: String) : HostScreen {
   Auth("auth"),
   CustomSignIn("customSignIn"),
   ResetPasswordReverification("resetPasswordReverification"),
+  NativeToWeb("nativeToWeb"),
 }
 
 data class VerifyLaunchConfig(
@@ -36,8 +37,10 @@ data class VerifyLaunchConfig(
   val signInTicket: String?,
   val debugLogging: Boolean,
 ) {
+  private val decodedPublishableKey: String? = decodePublishableKey(publishableKey)
+
   val publishableKeyFailure: VerifyFailure? =
-    if (isWellFormedPublishableKey(publishableKey)) {
+    if (decodedPublishableKey != null) {
       null
     } else {
       VerifyFailure(
@@ -45,6 +48,8 @@ data class VerifyLaunchConfig(
         message = "The publishable key is missing or is not a pk_test_ or pk_live_ key.",
       )
     }
+
+  val frontendApiUrl: String? = decodedPublishableKey?.let { "https://${it.removeSuffix("$")}" }
 
   companion object {
     fun parse(extra: (String) -> String?, fallbackPublishableKey: String): VerifyLaunchConfig {
@@ -68,25 +73,23 @@ data class VerifyLaunchConfig(
         else -> AuthMode.SignInOrUp
       }
 
-    private fun isWellFormedPublishableKey(key: String): Boolean {
-      val bytes =
-        listOf(Constants.Prefixes.TOKEN_PREFIX_TEST, Constants.Prefixes.TOKEN_PREFIX_LIVE)
-          .firstOrNull(key::startsWith)
-          ?.let(key::removePrefix)
-          ?.takeIf(String::isNotEmpty)
-          ?.let(::decodeBase64)
-      return bytes != null && isUtf8(bytes)
-    }
+    private fun decodePublishableKey(key: String): String? =
+      listOf(Constants.Prefixes.TOKEN_PREFIX_TEST, Constants.Prefixes.TOKEN_PREFIX_LIVE)
+        .firstOrNull(key::startsWith)
+        ?.let(key::removePrefix)
+        ?.takeIf(String::isNotEmpty)
+        ?.let(::decodeBase64)
+        ?.let(::decodeUtf8)
 
-    private fun isUtf8(bytes: ByteArray): Boolean =
+    private fun decodeUtf8(bytes: ByteArray): String? =
       try {
         Charsets.UTF_8.newDecoder()
           .onMalformedInput(CodingErrorAction.REPORT)
           .onUnmappableCharacter(CodingErrorAction.REPORT)
           .decode(ByteBuffer.wrap(bytes))
-        true
+          .toString()
       } catch (_: CharacterCodingException) {
-        false
+        null
       }
 
     private fun decodeBase64(value: String): ByteArray? =

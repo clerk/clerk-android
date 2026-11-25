@@ -94,6 +94,12 @@ class VerifyLaunchConfigTest {
   }
 
   @Test
+  fun `the frontend API URL is the host the key names`() {
+    assertEquals("https://example.clerk.accounts.dev", parse().frontendApiUrl)
+    assertNull(parse("verifyPublishableKey" to "pk_test_invalid").frontendApiUrl)
+  }
+
+  @Test
   fun `malformed keys report invalid_publishable_key`() {
     val keys =
       listOf(

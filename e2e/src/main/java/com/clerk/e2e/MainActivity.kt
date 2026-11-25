@@ -67,6 +67,8 @@ private fun VerifyApp(host: VerifyHost) {
     VerifyScreen.CustomSignIn -> HostSurface { CustomSignIn { host.open(VerifyScreen.Home) } }
     VerifyScreen.ResetPasswordReverification ->
       HostSurface { ResetPasswordReverification { host.open(VerifyScreen.Home) } }
+    VerifyScreen.NativeToWeb ->
+      NativeToWeb(host.config.frontendApiUrl) { host.open(VerifyScreen.Home) }
   }
 }
 
@@ -141,6 +143,7 @@ private fun SignedInHome(user: User, session: Session, open: (VerifyScreen) -> U
   TextAction("Reverify with a reset code", E2ETags.Home.RESET_PASSWORD_REVERIFICATION) {
     open(VerifyScreen.ResetPasswordReverification)
   }
+  TextAction("Native to Web SSO", E2ETags.Home.NATIVE_TO_WEB) { open(VerifyScreen.NativeToWeb) }
   TextAction("Sign out", E2ETags.Auth.SIGN_OUT) { scope.launch { Clerk.auth.signOut() } }
 }
 
@@ -161,7 +164,7 @@ internal fun TextAction(label: String, tag: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LabelledId(label: String, id: String, tag: String) {
+internal fun LabelledId(label: String, id: String, tag: String) {
   Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(label)
     Text(id, modifier = Modifier.testTag(tag))
