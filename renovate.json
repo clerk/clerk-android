@@ -34,6 +34,11 @@
       "description": "androidx.navigation 2.10 needs compileSdk 37, which lifecycle 2.10 keeps us below (see the rule above).",
       "matchPackageNames": ["androidx.navigation:**"],
       "allowedVersions": "<2.10.0"
+    },
+    {
+      "description": "ui-tooling-preview-android is compileOnly, so its version can pull the androidx.compose.ui that source/ui compiles against ahead of the one our compose-bom gives apps at runtime. On 1.13.0, the DialogProperties calls in UserButton and OrganizationSwitcher threw NoSuchMethodError. Keep it on 1.12 until compose-bom moves to ui 1.13, then drop this rule.",
+      "matchPackageNames": ["androidx.compose.ui:ui-tooling-preview-android"],
+      "allowedVersions": "<1.13.0"
     }
   ],
   "vulnerabilityAlerts": {
