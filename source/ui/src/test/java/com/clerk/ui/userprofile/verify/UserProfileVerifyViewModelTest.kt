@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.verify
 
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
@@ -8,9 +9,14 @@ import com.clerk.api.emailaddress.prepareVerification
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.phonenumber.attemptVerification
+import com.clerk.api.phonenumber.prepareVerification
 import com.clerk.api.user.User
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.userprofile.MainDispatcherRule
+import com.clerk.ui.userprofile.verify.UserProfileVerifyViewModel.AuthState
+import com.clerk.ui.userprofile.verify.UserProfileVerifyViewModel.VerificationTextState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,7 +29,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,6 +86,56 @@ class UserProfileVerifyViewModelTest {
   }
 
   @Test
+  fun prepareEmailAddress_successAfterAFailedAttempt_keepsTheAttemptError() = runTest {
+    val email = mockk<EmailAddress>()
+    val prepareSent = CompletableDeferred<Unit>()
+    coEvery { email.prepareVerification(any()) } coAnswers
+      {
+        prepareSent.await()
+        ClerkResult.success(mockk())
+      }
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.prepareEmailAddress(email)
+      assertEquals(AuthState.Loading, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      prepareSent.complete(Unit)
+      viewModel.awaitPendingRequests()
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
+  fun preparePhoneNumber_successAfterAFailedAttempt_keepsTheAttemptError() = runTest {
+    val phone = mockk<PhoneNumber>()
+    val prepareSent = CompletableDeferred<Unit>()
+    coEvery { phone.prepareVerification() } coAnswers
+      {
+        prepareSent.await()
+        ClerkResult.success(mockk())
+      }
+    coEvery { phone.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.preparePhoneNumber(phone)
+      assertEquals(AuthState.Loading, awaitItem())
+      viewModel.attemptPhoneNumber(phone, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      prepareSent.complete(Unit)
+      viewModel.awaitPendingRequests()
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
   fun attemptEmailAddress_success_updatesVerificationState() = runTest {
     val email = mockk<EmailAddress>()
     coEvery { email.attemptVerification(any()) } returns ClerkResult.success(mockk())
@@ -93,18 +151,94 @@ class UserProfileVerifyViewModelTest {
   }
 
   @Test
-  fun attemptEmailAddress_failure_updatesVerificationError() = runTest {
+  fun attemptEmailAddress_incorrectCode_marksCodeFieldWithoutAnError() = runTest {
     val email = mockk<EmailAddress>()
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
-    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(error)
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(incorrectCode)
 
     val viewModel = UserProfileVerifyViewModel()
     viewModel.verificationTextState.test {
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
       viewModel.attemptEmailAddress(email, "123456")
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Error("bad"), awaitItem())
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.IncorrectCode, awaitItem())
     }
+    assertEquals(AuthState.Idle, viewModel.state.value)
+  }
+
+  @Test
+  fun attemptEmailAddress_otherFailure_showsApiMessageAndLeavesCodeFieldClean() = runTest {
+    val email = mockk<EmailAddress>()
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.verificationTextState.test {
+      assertEquals(VerificationTextState.Default, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
+  fun attemptPhoneNumber_incorrectCode_marksCodeFieldWithoutAnError() = runTest {
+    val phone = mockk<PhoneNumber>()
+    coEvery { phone.attemptVerification(any()) } returns ClerkResult.Failure(incorrectCode)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.verificationTextState.test {
+      assertEquals(VerificationTextState.Default, awaitItem())
+      viewModel.attemptPhoneNumber(phone, "123456")
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.IncorrectCode, awaitItem())
+    }
+    assertEquals(AuthState.Idle, viewModel.state.value)
+  }
+
+  @Test
+  fun attemptPhoneNumber_otherFailure_showsApiMessageAndLeavesCodeFieldClean() = runTest {
+    val phone = mockk<PhoneNumber>()
+    coEvery { phone.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.verificationTextState.test {
+      assertEquals(VerificationTextState.Default, awaitItem())
+      viewModel.attemptPhoneNumber(phone, "123456")
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
+  fun clearError_afterOtherFailure_returnsToIdle() = runTest {
+    val email = mockk<EmailAddress>()
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      viewModel.clearError(RATE_LIMITED_MESSAGE)
+      assertEquals(AuthState.Idle, awaitItem())
+    }
+  }
+
+  @Test
+  fun clearError_forAnEarlierError_keepsTheNewerError() = runTest {
+    val email = mockk<EmailAddress>()
+    coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.state.test {
+      assertEquals(AuthState.Idle, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), awaitItem())
+      viewModel.clearError("An earlier error")
+      expectNoEvents()
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
   }
 
   @Test
@@ -131,34 +265,66 @@ class UserProfileVerifyViewModelTest {
   }
 
   @Test
-  fun attemptTotp_failure_setsError() = runTest {
+  fun attemptTotp_incorrectCode_marksCodeFieldWithoutAnError() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "oops")))
-    coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.Failure(error)
+    coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.Failure(incorrectCode)
 
     val viewModel = UserProfileVerifyViewModel()
     viewModel.verificationTextState.test {
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
       viewModel.attemptTotp("654321")
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Error("oops"), awaitItem())
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.IncorrectCode, awaitItem())
     }
+    assertEquals(AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun attemptTotp_withoutUser_setsGuardError() = runTest {
+  fun attemptTotp_otherFailure_showsApiMessageAndLeavesCodeFieldClean() = runTest {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.Failure(rateLimited)
+
+    val viewModel = UserProfileVerifyViewModel()
+    viewModel.verificationTextState.test {
+      assertEquals(VerificationTextState.Default, awaitItem())
+      viewModel.attemptTotp("654321")
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
+    }
+    assertEquals(AuthState.Error(RATE_LIMITED_MESSAGE), viewModel.state.value)
+  }
+
+  @Test
+  fun attemptTotp_withoutUser_showsErrorAndLeavesCodeFieldClean() = runTest {
     every { Clerk.user } returns null
 
     val viewModel = UserProfileVerifyViewModel()
     viewModel.verificationTextState.test {
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
       viewModel.attemptTotp("654321")
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(
-        UserProfileVerifyViewModel.VerificationTextState.Error("User does not exist"),
-        awaitItem(),
-      )
+      assertEquals(VerificationTextState.Verifying, awaitItem())
+      assertEquals(VerificationTextState.Default, awaitItem())
     }
+    assertEquals(AuthState.Error("User does not exist"), viewModel.state.value)
+  }
+
+  private suspend fun UserProfileVerifyViewModel.awaitPendingRequests() {
+    viewModelScope.coroutineContext.job.children.forEach { it.join() }
+  }
+
+  private companion object {
+    const val RATE_LIMITED_MESSAGE = "Too many requests. Please try again in a bit."
+
+    val incorrectCode =
+      ClerkErrorResponse(
+        errors = listOf(Error(code = "form_code_incorrect", longMessage = "Incorrect code"))
+      )
+
+    val rateLimited =
+      ClerkErrorResponse(
+        errors = listOf(Error(code = "too_many_requests", longMessage = RATE_LIMITED_MESSAGE))
+      )
   }
 }

@@ -68,6 +68,7 @@ private fun UserProfileVerifyViewImpl(
     modifier = modifier,
     title = mode.title(),
     errorMessage = errorMessage,
+    onErrorShown = { viewModel.clearError(errorMessage) },
     onBackPressed = { userProfileState.navigateBack() },
     hasBackButton = mode.hasBackButton(),
     content = {
@@ -101,7 +102,7 @@ private fun UserProfileVerifyViewModel.VerificationTextState.getTextVerification
   CodeVerificationState {
   return when (this) {
     UserProfileVerifyViewModel.VerificationTextState.Default -> CodeVerificationState.Default
-    is UserProfileVerifyViewModel.VerificationTextState.Error -> CodeVerificationState.Error
+    UserProfileVerifyViewModel.VerificationTextState.IncorrectCode -> CodeVerificationState.Error
     is UserProfileVerifyViewModel.VerificationTextState.Verified -> CodeVerificationState.Success
     UserProfileVerifyViewModel.VerificationTextState.Verifying -> CodeVerificationState.Verifying
   }
