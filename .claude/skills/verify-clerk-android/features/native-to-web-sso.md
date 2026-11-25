@@ -36,7 +36,7 @@ Preconditions:
 ## Gotchas
 
 - The web user ID comes from JavaScript on the page, `window.Clerk.user.id` once `window.Clerk.loaded` is true, not from the web view's accessibility tree. A change to how the Account Portal loads `window.Clerk` changes what the text shows.
-- `evaluateJavascript` does not wait for a promise, so the screen evaluates a plain expression every 200 ms, for up to 15 seconds after each page load, until `window.Clerk.loaded` is true.
+- `evaluateJavascript` does not wait for a promise, so the screen evaluates a plain expression every 200 ms after each page load until `window.Clerk.loaded` is true, so a slow Clerk load is not read as signed out.
 - The page can finish loading more than once, with redirects after the transfer, so the screen reads the user again after each load and shows the result for the latest one.
 - The screen clears every cookie and all web storage of the app's web views before the transfer, so no web session survives between tests or launches. A signed-in text always comes from this screen's transfer.
 - The screen never logs or stores the transfer URL. It works once, for about a minute, and signs the user in.

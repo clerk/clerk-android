@@ -38,8 +38,6 @@ import java.io.IOException
 import java.net.URL
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -55,7 +53,7 @@ import kotlinx.serialization.json.jsonPrimitive
 private const val SIGNED_IN_USER_ID =
   "window.Clerk?.loaded ? (window.Clerk.user?.id ?? null) : false"
 private const val CLERK_NOT_LOADED = "false"
-private val USER_READ_TIMEOUT = 15.seconds
+private const val ENVIRONMENT_TIMEOUT_MS = 15_000
 private val USER_READ_INTERVAL = 200.milliseconds
 
 private sealed interface WebSession {
@@ -170,24 +168,30 @@ private suspend fun accountPortalUserPage(frontendApiUrl: String): String? =
   withContext(Dispatchers.IO) {
     val environment =
       try {
-        URL("$frontendApiUrl/v1/environment").readText()
+        val connection = URL("$frontendApiUrl/v1/environment").openConnection()
+        connection.connectTimeout = ENVIRONMENT_TIMEOUT_MS
+        connection.readTimeout = ENVIRONMENT_TIMEOUT_MS
+        connection.getInputStream().bufferedReader().use { it.readText() }
       } catch (_: IOException) {
         return@withContext null
       }
     val homeUrl =
-      Json.parseToJsonElement(environment)
-        .jsonObject["display_config"]
-        ?.jsonObject
-        ?.get("home_url")
-        ?.jsonPrimitive
-        ?.contentOrNull ?: return@withContext null
+      try {
+        Json.parseToJsonElement(environment)
+          .jsonObject["display_config"]
+          ?.jsonObject
+          ?.get("home_url")
+          ?.jsonPrimitive
+          ?.contentOrNull
+      } catch (_: IllegalArgumentException) {
+        null
+      } ?: return@withContext null
     Uri.parse(homeUrl).buildUpon().path("/user").clearQuery().fragment(null).build().toString()
   }
 
 private suspend fun signedInUser(webView: WebView): WebSession {
-  val deadline = TimeSource.Monotonic.markNow() + USER_READ_TIMEOUT
   var result = webView.evaluate(SIGNED_IN_USER_ID)
-  while (result == CLERK_NOT_LOADED && deadline.hasNotPassedNow()) {
+  while (result == CLERK_NOT_LOADED) {
     delay(USER_READ_INTERVAL)
     result = webView.evaluate(SIGNED_IN_USER_ID)
   }
