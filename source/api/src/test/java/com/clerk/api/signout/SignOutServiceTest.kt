@@ -138,24 +138,48 @@ class SignOutServiceTest {
   }
 
   @Test
-  fun `signOut clears device token on successful server sign-out`() = runTest {
+  fun `signOut keeps the device token and the client after the server signs out`() = runTest {
     setupActiveSession()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
-
-    coEvery { mockSessionApi.deleteSessions(any()) } returns ClerkResult.success(Client())
+    coEvery { mockSessionApi.deleteSessions(any()) } coAnswers
+      {
+        firstArg<ManualClientSyncRequest>()
+          .recordResponse(requestDeviceToken = "test_device_token", responseDeviceToken = null)
+        ClerkResult.success(Client(id = "test_client_id"))
+      }
     coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns
-      ClerkResult.success(Client())
-
-    assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
+      ClerkResult.success(Client(id = "new_client_id"))
 
     val result = SignOutService.signOut()
 
     assertTrue("Sign-out should succeed", result is ClerkResult.Success)
-    assertNull("Device token should be deleted", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals("test_device_token", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+    assertEquals("test_client_id", Clerk.client.id)
     assertNull("Session should be cleared", Clerk.session)
     assertNull("User should be cleared", Clerk.user)
     assertFalse("isSignedIn should be false", Clerk.isSignedIn)
   }
+
+  @Test
+  fun `signOut drops the device token and the client when the server refuses the sign-out`() =
+    runTest {
+      setupActiveSession()
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+      coEvery { mockSessionApi.deleteSessions(any()) } returns
+        ClerkResult.httpFailure(code = 500, error = ClerkErrorResponse(errors = emptyList()))
+      coEvery { mockClientApi.getSkippingClientId(any(), any()) } answers
+        {
+          arg<ManualClientSyncRequest?>(1)?.recordResponse(null, null)
+          ClerkResult.success(Client(id = "new_client_id"))
+        }
+
+      val result = SignOutService.signOut()
+
+      assertTrue("Sign-out should return failure", result is ClerkResult.Failure)
+      assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+      assertEquals("new_client_id", Clerk.client.id)
+      assertFalse("isSignedIn should be false", Clerk.isSignedIn)
+    }
 
   @Test
   fun `signOut clears device token even when server sign-out fails`() = runTest {
