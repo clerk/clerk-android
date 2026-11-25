@@ -838,6 +838,10 @@ public class Auth internal constructor() {
   /**
    * Signs out all sessions or removes a specific session from the current client.
    *
+   * When Clerk confirms a sign-out of all sessions, the device keeps its client, so the next
+   * sign-in uses the same client. When that request fails, the device still signs out. It forgets
+   * the client and its device token, and this returns the failure.
+   *
    * @param sessionId Optional session ID to sign out. If null, signs out all sessions on this
    *   client.
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure.

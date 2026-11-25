@@ -29,6 +29,7 @@ internal object SignOutService {
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     val signedOutSessionIds = currentSessionIds().toMutableSet()
     val manualClientSyncRequest = ManualClientSyncRequest()
+    var signedOutClient: Client? = null
     var serverFailure: ClerkResult.Failure<ClerkErrorResponse>? = null
 
     try {
@@ -38,6 +39,7 @@ internal object SignOutService {
             Clerk.stateStore.applyClientResponse(result.value, result.responseOrder()) { replaced ->
               fenceReplacedSessions(replaced, signedOutSessionIds)
             }
+            signedOutClient = result.value
           }
         is ClerkResult.Failure -> serverFailure = result
       }
@@ -49,17 +51,24 @@ internal object SignOutService {
     } finally {
       withContext(NonCancellable) {
         RestoreCredentials.clearSilently()
-        StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-        Clerk.stateStore.applyClient(Client()) { replaced ->
+        if (signedOutClient == null) {
+          StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+        }
+        Clerk.stateStore.applyClient(signedOutClient ?: Client()) { replaced ->
           fenceReplacedSessions(replaced, signedOutSessionIds)
         }
         SessionTokenFetcher.shared.signOut(signedOutSessionIds)
       }
     }
 
-    // Best-effort refresh of the in-memory client while skipping current client id.
-    // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
-    // sign-out when the host remounts AuthView within the same process/activity lifecycle.
+    if (signedOutClient == null) {
+      moveToNewClient()
+    }
+
+    return serverFailure ?: ClerkResult.success(Unit)
+  }
+
+  private suspend fun moveToNewClient() {
     runCatching {
       val clientResult = Clerk.fetchAndApplyClient {
         ClerkApi.client.getSkippingClientId(manualClientSyncRequest = it)
@@ -72,8 +81,6 @@ internal object SignOutService {
         if (it is CancellationException) throw it
         ClerkLogger.w("Client refresh after sign-out failed: ${it.message}")
       }
-
-    return serverFailure ?: ClerkResult.success(Unit)
   }
 
   private fun fenceReplacedSessions(replaced: Client?, signedOutSessionIds: MutableSet<String>) {
