@@ -68,7 +68,7 @@ class AuthSetActiveTemplateTokenTest {
       listOf(ClerkResult.success(orgAToken), ClerkResult.success(orgBToken))
     coEvery { clientApi.setActive(session.id, "org_b", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(session.copy(lastActiveOrganizationId = "org_b"))
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
 
     val orgAResult = Auth().getToken(GetTokenOptions(template = "t"))

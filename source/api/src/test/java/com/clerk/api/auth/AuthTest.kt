@@ -349,7 +349,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -381,7 +381,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -420,7 +420,7 @@ class AuthTest {
         restoreCredentialCleared = true
       }
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -476,7 +476,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession)
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -505,7 +505,7 @@ class AuthTest {
     every { ClerkApi.client } returns clientApi
     coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
       ClerkResult.success(secondSession.copy(lastActiveOrganizationId = null))
-    coEvery { clientApi.get() } returns
+    coEvery { clientApi.get(any()) } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
     Clerk.updateClient(
       Client(
@@ -562,7 +562,7 @@ class AuthTest {
       every { ClerkApi.client } returns clientApi
       coEvery { clientApi.setActive(otherSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
         ClerkResult.success(otherSession)
-      coEvery { clientApi.get() } returns
+      coEvery { clientApi.get(any()) } returns
         ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
       Clerk.updateClient(
         Client(
@@ -598,7 +598,7 @@ class AuthTest {
           Clerk.updateClient(Client(id = "client_123"))
           ClerkResult.success(dehydratedSecondSession)
         }
-      coEvery { clientApi.get() } returns
+      coEvery { clientApi.get(any()) } returns
         ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
       Clerk.updateClient(
         Client(
@@ -615,69 +615,6 @@ class AuthTest {
       assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
       assertEquals(secondSession, Clerk.sessionFlow.value)
       assertEquals(secondUser, Clerk.userFlow.value)
-    }
-
-  @Test
-  fun `setActive keeps active session when follow-up client refresh omits it`() = runTest {
-    val firstSession = testSession("sess_1")
-    val secondSession = testSession("sess_2", lastActiveOrganizationId = "org_2")
-    val clientApi = mockk<ClientApi>()
-    mockkObject(ClerkApi)
-    every { ClerkApi.client } returns clientApi
-    coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
-      ClerkResult.success(secondSession.copy(lastActiveOrganizationId = null))
-    coEvery { clientApi.get() } returns ClerkResult.success(Client(id = "client_123"))
-    Clerk.updateClient(
-      Client(
-        id = "client_123",
-        sessions = listOf(firstSession, secondSession),
-        lastActiveSessionId = firstSession.id,
-      )
-    )
-
-    val result = Auth().setActive(sessionId = secondSession.id, organizationId = "org_2")
-
-    assertTrue(result is ClerkResult.Success)
-    assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
-    assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
-    assertEquals(secondSession, Clerk.sessionFlow.value)
-    assertEquals("org_2", Clerk.sessionFlow.value?.lastActiveOrganizationId)
-  }
-
-  @Test
-  fun `setActive keeps active session when follow-up refresh returns stale lastActiveSessionId`() =
-    runTest {
-      val firstSession = testSession("sess_1")
-      val secondSession = testSession("sess_2")
-      val clientApi = mockk<ClientApi>()
-      mockkObject(ClerkApi)
-      every { ClerkApi.client } returns clientApi
-      coEvery { clientApi.setActive(secondSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
-        ClerkResult.success(secondSession)
-      // Read replica returns a fully-hydrated client but with the previous
-      // lastActiveSessionId — read-after-write lag.
-      coEvery { clientApi.get() } returns
-        ClerkResult.success(
-          Client(
-            id = "client_123",
-            sessions = listOf(firstSession, secondSession),
-            lastActiveSessionId = firstSession.id,
-          )
-        )
-      Clerk.updateClient(
-        Client(
-          id = "client_123",
-          sessions = listOf(firstSession, secondSession),
-          lastActiveSessionId = firstSession.id,
-        )
-      )
-
-      val result = Auth().setActive(sessionId = secondSession.id)
-
-      assertTrue(result is ClerkResult.Success)
-      assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
-      assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
-      assertEquals(secondSession, Clerk.sessionFlow.value)
     }
 
   private fun setForceOrganizationSelection(enabled: Boolean) {

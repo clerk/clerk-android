@@ -25,6 +25,7 @@ internal interface SignUpApi {
   suspend fun fetchSignUp(
     @Path(ApiParams.ID) id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
+    @Query(ApiParams.INCLUDE_CLIENT) includeClient: Boolean = true,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
   @FormUrlEncoded
