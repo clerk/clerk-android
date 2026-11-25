@@ -22,6 +22,13 @@ internal object E2ETags {
   object Home {
     const val CUSTOM_SIGN_IN = "e2e.home.customSignIn"
     const val RESET_PASSWORD_REVERIFICATION = "e2e.home.resetPasswordReverification"
+    const val NATIVE_TO_WEB = "e2e.home.nativeToWeb"
+  }
+
+  object NativeToWeb {
+    const val WEB_USER_ID = "e2e.nativeToWeb.webUserId"
+    const val ERROR = "e2e.nativeToWeb.error"
+    const val DONE = "e2e.nativeToWeb.done"
   }
 
   object ResetPasswordReverification {
