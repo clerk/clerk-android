@@ -192,6 +192,34 @@ class AuthSignOutTest {
       coVerify(exactly = 0) { mockSessionApi.deleteSessions(any()) }
     }
 
+  @Test
+  fun `signOut with session ID removes only that session when an active and a pending session are signed in`() =
+    runTest {
+      val activeSession = testSession("sess_active")
+      val pendingSession = testSession("sess_pending", status = Session.SessionStatus.PENDING)
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(activeSession, pendingSession),
+          lastActiveSessionId = activeSession.id,
+        )
+      )
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
+      val failure =
+        ClerkResult.httpFailure(code = 500, error = ClerkErrorResponse(errors = emptyList()))
+      coEvery { mockSessionApi.deleteSessions(any()) } returns failure
+      coEvery { mockSessionApi.removeSession(pendingSession.id) } returns failure
+      coEvery { mockClientApi.getSkippingClientId(any(), any()) } returns failure
+
+      val result = Auth().signOut(sessionId = pendingSession.id)
+
+      assertSame(failure, result)
+      assertEquals("test_device_token", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+      assertEquals(listOf(activeSession, pendingSession), Clerk.client.sessions)
+      coVerify(exactly = 1) { mockSessionApi.removeSession(pendingSession.id) }
+      coVerify(exactly = 0) { mockSessionApi.deleteSessions(any()) }
+    }
+
   private fun testSession(
     id: String,
     status: Session.SessionStatus = Session.SessionStatus.ACTIVE,
