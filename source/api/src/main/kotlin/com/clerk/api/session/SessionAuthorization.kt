@@ -283,7 +283,7 @@ private fun authorizedForLevel(
   }
 }
 
-private fun resolveReverification(
+internal fun resolveReverification(
   config: ReverificationConfig
 ): Pair<SessionVerification.Level, Int>? {
   return when (config) {

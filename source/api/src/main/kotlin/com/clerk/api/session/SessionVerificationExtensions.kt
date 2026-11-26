@@ -3,6 +3,7 @@ package com.clerk.api.session
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.network.serialization.toFormFields
 
 /** Starts an in-session reverification flow. */
@@ -45,10 +46,9 @@ internal suspend fun Session.prepareFirstFactorVerification(
 internal suspend fun Session.attemptFirstFactorVerification(
   params: Session.AttemptFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptFirstFactorVerification(
-    sessionId = id,
-    params = params.toFormFields(),
-  )
+  return ClerkApi.session
+    .attemptFirstFactorVerification(sessionId = id, params = params.toFormFields())
+    .onSuccess(::invalidateTokensIfComplete)
 }
 
 internal suspend fun Session.attemptFirstFactorVerification(
@@ -106,8 +106,13 @@ internal suspend fun Session.attemptSecondFactorVerification(
 internal suspend fun Session.attemptSecondFactorVerification(
   params: Session.AttemptSecondFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptSecondFactorVerification(
-    sessionId = id,
-    params = params.toFormFields(),
-  )
+  return ClerkApi.session
+    .attemptSecondFactorVerification(sessionId = id, params = params.toFormFields())
+    .onSuccess(::invalidateTokensIfComplete)
+}
+
+private fun Session.invalidateTokensIfComplete(verification: SessionVerification) {
+  if (verification.status == SessionVerification.Status.COMPLETE) {
+    SessionTokenFetcher.shared.invalidateSession(id)
+  }
 }
