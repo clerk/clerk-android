@@ -27,16 +27,17 @@ Preconditions:
 
 | State | Where the app decides | What it takes |
 | --- | --- | --- |
-| Opening the page in the user's browser | `Auth.kt`, `openInBrowser(destination)` | The app hands the URL to a browser, so the page is in another app that the harness does not read. The host does not call it |
+| Opening the page in the user's browser | `Auth.kt`, `openInBrowser(destination)` | The app hands the URL to a browser only, with `Intent.EXTRA_REFERRER` set to `android-app://<package>`, so the page is in another app that the harness does not read. It fails with `browser_unavailable` when no browser can open the URL. The host does not call it |
 | A URL the app presents itself | `Auth.kt`, `prepareSessionTransfer(destination, presentation)` | A screen of the app's own that loads the transfer's URL. `loadInWebView` calls the same code, so the web view test covers the request, but nothing tests a caller that presents the URL itself |
 | A destination refused for its scheme or host | Clerk's checks of `destination` | A production instance, which requires `https` and a host on one of its domains. The harness creates development instances only, which allow any `http` or `https` URL |
-| A refused sign-in that lands on the destination | `NativeToWeb.kt`, `sessionTransferFailureCode`, from `__clerk_status=session_transfer_failed` | A transfer that Clerk creates and then refuses to redeem, such as an expired or used token. The spec's refusal comes before loading, from the create request |
+| A refused sign-in that lands on the destination | `NativeToWeb.kt`, `sessionTransferFailureCode`, from `__clerk_status=session_transfer_failed` | A transfer that Clerk creates and then refuses to redeem, such as an expired or used token, or a WebView that kept the cookies of a user who signed out natively (`Auth.kt`, the doc comment of `loadInWebView`). The refusal rides on the redirect to the destination, which the screen reads in `shouldOverrideUrlLoading`. The spec's refusal comes before loading, from the create request |
 | The web session ending at native sign-out | Clerk's revocation of a transferred web session when its native session ends | A web view that outlives the native session. The screen clears cookies and web storage before each transfer, and `Done` drops the web view before a sign-out |
 
 ## Gotchas
 
 - The web user ID comes from JavaScript on the page, `window.Clerk.user.id` once `window.Clerk.loaded` is true, not from the web view's accessibility tree. A change to how the Account Portal loads `window.Clerk` changes what the text shows.
 - `evaluateJavascript` does not wait for a promise, so the screen evaluates a plain expression every 200 ms after each page load until `window.Clerk.loaded` is true. After 30 seconds without it, the screen shows the `clerk_not_loaded` error instead of `Signed out on the web`.
+- `e2e.nativeToWeb.error` shows codes that do not come from Clerk's create request too (`NativeToWeb.kt`): `no_destination` when the screen could not read `home_url` from `/v1/environment`, `load_failed` for a failure with no code, `unknown` for a refusal redirect with no `__clerk_error_code`, and the SDK's own `invalid_arguments`, `signed_out`, and `session_changed` from `loadInWebView`.
 - The page can finish loading more than once, with redirects after the transfer, so the screen reads the user again after each load and shows the result for the latest one.
 - The screen clears every cookie and all web storage of the app's web views before the transfer, so no web session survives between tests or launches. A signed-in text always comes from this screen's transfer.
 - The screen never logs or stores the transfer URL. It works once, for about a minute, and signs the user in.
