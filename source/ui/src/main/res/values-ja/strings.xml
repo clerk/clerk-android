@@ -308,4 +308,15 @@
     <string name="update_app">アプリをアップデート</string>
     <string name="cant_update">アップデートできない場合</string>
     <string name="your_version">現在のバージョン</string>
+    <string name="reverification_title">本人確認が必要です</string>
+    <string name="reverification_password_subtitle">続行するには現在のパスワードを入力してください</string>
+    <string name="reverification_email_code_subtitle">続行するには、メールに送信されたコードを入力してください</string>
+    <string name="reverification_phone_code_subtitle">続行するには、電話に送信されたコードを入力してください</string>
+    <string name="reverification_totp_subtitle">続行するには、認証アプリで生成されたコードを入力してください</string>
+    <string name="reverification_alternative_methods_subtitle">問題が発生していますか？これらの方法のいずれかを使用して本人確認できます。</string>
+    <string name="reverification_get_help_subtitle">どの方法でも本人確認ができない場合は、メールでご連絡ください。できるだけ早くアクセスを復元できるよう対応いたします。</string>
+    <string name="use_your_password">パスワードを使用</string>
+    <string name="reverification_password_pwned">お使いのパスワードがデータ侵害で見つかりました。続行するには新しいパスワードを設定してください。</string>
+    <string name="reverification_password_compromised">お使いのパスワードは使用できなくなりました。続行するには新しいパスワードを設定してください。</string>
+    <string name="reverification_biometric_subtitle">生体認証を使用して続行してください</string>
 </resources>

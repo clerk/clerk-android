@@ -5,8 +5,8 @@ import com.clerk.api.auth.types.Strategy
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 
-internal class TextIconHelper {
-  fun actionText(factor: Factor, context: Context): String? {
+internal open class TextIconHelper {
+  open fun actionText(factor: Factor, context: Context): String? {
     return when (factor.strategyType) {
       Strategy.PhoneCode -> {
         val safeIdentifier = factor.safeIdentifier
@@ -43,7 +43,7 @@ internal class TextIconHelper {
     }
   }
 
-  fun iconResource(factor: Factor): Int? {
+  open fun iconResource(factor: Factor): Int? {
     return when (factor.strategyType) {
       Strategy.PhoneCode -> R.drawable.ic_sms
       Strategy.EmailCode -> R.drawable.ic_email

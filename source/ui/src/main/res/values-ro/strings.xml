@@ -308,4 +308,15 @@
     <string name="update_app">Actualizează aplicația</string>
     <string name="cant_update">Nu poți actualiza?</string>
     <string name="your_version">Versiunea ta</string>
+    <string name="reverification_title">Verificare necesară</string>
+    <string name="reverification_password_subtitle">Introdu parola actuală pentru a continua</string>
+    <string name="reverification_email_code_subtitle">Introdu codul trimis pe emailul tău pentru a continua</string>
+    <string name="reverification_phone_code_subtitle">Introdu codul trimis pe telefonul tău pentru a continua</string>
+    <string name="reverification_totp_subtitle">Introdu codul generat de aplicația de autentificare pentru a continua</string>
+    <string name="reverification_alternative_methods_subtitle">Ai probleme? Poți folosi oricare dintre aceste metode pentru a-ți verifica identitatea.</string>
+    <string name="reverification_get_help_subtitle">Dacă nu îți poți verifica identitatea cu niciuna dintre metodele tale, trimite-ne un email și vom lucra cu tine pentru a restabili accesul cât mai curând posibil.</string>
+    <string name="use_your_password">Folosește parola</string>
+    <string name="reverification_password_pwned">Parola ta a fost găsită într-o breșă de date. Setează o parolă nouă pentru a continua.</string>
+    <string name="reverification_password_compromised">Parola ta nu mai poate fi folosită. Setează o parolă nouă pentru a continua.</string>
+    <string name="reverification_biometric_subtitle">Folosește biometria pentru a continua</string>
 </resources>

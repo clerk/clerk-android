@@ -308,4 +308,15 @@
     <string name="update_app">更新应用</string>
     <string name="cant_update">无法更新？</string>
     <string name="your_version">您的版本</string>
+    <string name="reverification_title">需要验证</string>
+    <string name="reverification_password_subtitle">输入您当前的密码以继续</string>
+    <string name="reverification_email_code_subtitle">输入发送到您邮箱的验证码以继续</string>
+    <string name="reverification_phone_code_subtitle">输入发送到您手机的验证码以继续</string>
+    <string name="reverification_totp_subtitle">输入您的身份验证器应用生成的验证码以继续</string>
+    <string name="reverification_alternative_methods_subtitle">遇到问题？您可以使用以下任一方法验证您的身份。</string>
+    <string name="reverification_get_help_subtitle">如果您无法通过任何方式验证您的身份，请发送电子邮件给我们，我们将与您合作尽快恢复访问权限。</string>
+    <string name="use_your_password">使用您的密码</string>
+    <string name="reverification_password_pwned">您的密码出现在数据泄露中。请设置新密码以继续。</string>
+    <string name="reverification_password_compromised">您的密码已无法再使用。请设置新密码以继续。</string>
+    <string name="reverification_biometric_subtitle">使用生物识别以继续</string>
 </resources>

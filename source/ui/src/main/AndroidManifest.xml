@@ -7,5 +7,9 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Clerk.UpdateRequired" />
+        <activity
+            android:name="com.clerk.ui.reverification.ReverificationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Clerk.Reverification" />
     </application>
 </manifest>

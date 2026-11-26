@@ -101,4 +101,21 @@ internal object ClerkTestTags {
     const val manageOrganizationButton = "clerk.organizationSwitcher.manageOrganization"
     const val switchAccountButton = "clerk.organizationSwitcher.switchAccount"
   }
+
+  object Reverification {
+    const val closeButton = "clerk.reverification.close"
+    const val password = "clerk.reverification.password"
+    const val code = "clerk.reverification.code"
+    const val backupCode = "clerk.reverification.backupCode"
+    const val newPassword = "clerk.reverification.newPassword"
+    const val confirmPassword = "clerk.reverification.confirmPassword"
+    const val continueButton = "clerk.reverification.continue"
+    const val resetPasswordButton = "clerk.reverification.resetPassword"
+    const val useAnotherMethodButton = "clerk.reverification.useAnotherMethod"
+    const val biometricButton = "clerk.reverification.biometric"
+    const val emailSupportButton = "clerk.reverification.emailSupport"
+
+    fun alternativeMethodButton(strategy: String) =
+      "clerk.reverification.alternativeMethod.$strategy"
+  }
 }

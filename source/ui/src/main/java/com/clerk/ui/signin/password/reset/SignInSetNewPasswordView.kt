@@ -203,7 +203,7 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
 }
 
 @Composable
-private fun SignOutOfOtherDevicesRow(
+internal fun SignOutOfOtherDevicesRow(
   signOutOtherDevices: Boolean,
   onCheckChange: (Boolean) -> Unit,
 ) {

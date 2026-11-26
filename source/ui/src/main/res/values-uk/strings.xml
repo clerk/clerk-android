@@ -308,4 +308,15 @@
     <string name="update_app">Оновити застосунок</string>
     <string name="cant_update">Не вдається оновити?</string>
     <string name="your_version">Ваша версія</string>
+    <string name="reverification_title">Потрібне підтвердження</string>
+    <string name="reverification_password_subtitle">Введіть поточний пароль, щоб продовжити</string>
+    <string name="reverification_email_code_subtitle">Введіть код, надісланий на вашу електронну пошту, щоб продовжити</string>
+    <string name="reverification_phone_code_subtitle">Введіть код, надісланий на ваш телефон, щоб продовжити</string>
+    <string name="reverification_totp_subtitle">Введіть код, згенерований вашим застосунком автентифікації, щоб продовжити</string>
+    <string name="reverification_alternative_methods_subtitle">Виникли проблеми? Ви можете підтвердити свою особу будь-яким із цих методів.</string>
+    <string name="reverification_get_help_subtitle">Якщо ви не можете підтвердити свою особу жодним зі своїх методів, напишіть нам, і ми попрацюємо з вами, щоб відновити доступ якнайшвидше.</string>
+    <string name="use_your_password">Використати пароль</string>
+    <string name="reverification_password_pwned">Ваш пароль виявлено у витоку даних. Установіть новий пароль, щоб продовжити.</string>
+    <string name="reverification_password_compromised">Ваш пароль більше не можна використовувати. Установіть новий пароль, щоб продовжити.</string>
+    <string name="reverification_biometric_subtitle">Використайте біометрію, щоб продовжити</string>
 </resources>

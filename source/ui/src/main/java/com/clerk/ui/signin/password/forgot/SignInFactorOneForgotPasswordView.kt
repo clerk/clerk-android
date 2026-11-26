@@ -146,6 +146,7 @@ internal fun AlternativeFactorList(
   textIconHelper: TextIconHelper,
   context: Context,
   onClickFactor: (Factor) -> Unit,
+  testTag: (String) -> String = ClerkTestTags.Auth.SignIn::alternativeMethodButton,
 ) {
   Column(
     modifier = Modifier.fillMaxWidth(),
@@ -157,9 +158,7 @@ internal fun AlternativeFactorList(
       val iconRes = textIconHelper.iconResource(it)
 
       ClerkButton(
-        modifier =
-          Modifier.fillMaxWidth()
-            .testTag(ClerkTestTags.Auth.SignIn.alternativeMethodButton(it.strategy)),
+        modifier = Modifier.fillMaxWidth().testTag(testTag(it.strategy)),
         icons =
           ClerkButtonDefaults.icons(
             leadingIcon = iconRes,

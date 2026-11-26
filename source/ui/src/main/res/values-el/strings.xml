@@ -308,4 +308,15 @@
     <string name="update_app">Ενημέρωση εφαρμογής</string>
     <string name="cant_update">Δεν μπορείτε να κάνετε ενημέρωση;</string>
     <string name="your_version">Η έκδοσή σας</string>
+    <string name="reverification_title">Απαιτείται επαλήθευση</string>
+    <string name="reverification_password_subtitle">Εισαγάγετε τον τρέχοντα κωδικό πρόσβασής σας για να συνεχίσετε</string>
+    <string name="reverification_email_code_subtitle">Εισαγάγετε τον κωδικό που στάλθηκε στο email σας για να συνεχίσετε</string>
+    <string name="reverification_phone_code_subtitle">Εισαγάγετε τον κωδικό που στάλθηκε στο τηλέφωνό σας για να συνεχίσετε</string>
+    <string name="reverification_totp_subtitle">Εισαγάγετε τον κωδικό που δημιούργησε η εφαρμογή ελέγχου ταυτότητάς σας για να συνεχίσετε</string>
+    <string name="reverification_alternative_methods_subtitle">Αντιμετωπίζετε προβλήματα; Μπορείτε να χρησιμοποιήσετε οποιαδήποτε από αυτές τις μεθόδους για να επαληθεύσετε την ταυτότητά σας.</string>
+    <string name="reverification_get_help_subtitle">Αν δεν μπορείτε να επαληθεύσετε την ταυτότητά σας με καμία από τις μεθόδους σας, στείλτε μας email και θα συνεργαστούμε μαζί σας για την αποκατάσταση της πρόσβασης το συντομότερο δυνατό.</string>
+    <string name="use_your_password">Χρήση του κωδικού πρόσβασής σας</string>
+    <string name="reverification_password_pwned">Ο κωδικός πρόσβασής σας εντοπίστηκε σε διαρροή δεδομένων. Ορίστε νέο κωδικό πρόσβασης για να συνεχίσετε.</string>
+    <string name="reverification_password_compromised">Ο κωδικός πρόσβασής σας δεν μπορεί πλέον να χρησιμοποιηθεί. Ορίστε νέο κωδικό πρόσβασης για να συνεχίσετε.</string>
+    <string name="reverification_biometric_subtitle">Χρησιμοποιήστε βιομετρικά στοιχεία για να συνεχίσετε</string>
 </resources>

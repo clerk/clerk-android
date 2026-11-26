@@ -109,6 +109,10 @@ public object Clerk {
 
   internal var currentActivity: WeakReference<Activity>? = null
 
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val foregroundActivity: Activity?
+    get() = currentActivity?.get()
+
   private var trackedApplication: Application? = null
 
   private val activityLifecycleCallbacks =

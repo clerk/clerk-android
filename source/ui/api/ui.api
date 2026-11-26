@@ -347,6 +347,15 @@ public final class com/clerk/ui/organizationswitcher/OrganizationSwitcherKt {
 	public static final fun OrganizationSwitcher (Landroidx/compose/ui/Modifier;Lcom/clerk/api/ui/ClerkTheme;Lkotlin/jvm/functions/Function0;ZLcom/clerk/ui/organizationswitcher/OrganizationSwitcherDisplayMode;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/List;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/clerk/ui/reverification/ReverificationCancelledException : java/lang/Exception {
+	public static final field $stable I
+	public fun <init> ()V
+}
+
+public final class com/clerk/ui/reverification/ReverifyKt {
+	public static final fun reverify (Lcom/clerk/api/Clerk;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public abstract interface class com/clerk/ui/signin/code/VerificationState {
 }
 

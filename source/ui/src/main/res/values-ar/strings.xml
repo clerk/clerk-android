@@ -308,4 +308,15 @@
     <string name="update_app">تحديث التطبيق</string>
     <string name="cant_update">لا يمكنك التحديث؟</string>
     <string name="your_version">إصدارك</string>
+    <string name="reverification_title">التحقق مطلوب</string>
+    <string name="reverification_password_subtitle">أدخل كلمة المرور الحالية للمتابعة</string>
+    <string name="reverification_email_code_subtitle">أدخل الرمز المرسل إلى بريدك الإلكتروني للمتابعة</string>
+    <string name="reverification_phone_code_subtitle">أدخل الرمز المرسل إلى هاتفك للمتابعة</string>
+    <string name="reverification_totp_subtitle">أدخل الرمز الذي أنشأه تطبيق المصادقة للمتابعة</string>
+    <string name="reverification_alternative_methods_subtitle">تواجه مشاكل؟ يمكنك استخدام أي من هذه الطرق للتحقق من هويتك.</string>
+    <string name="reverification_get_help_subtitle">إذا لم تتمكن من التحقق من هويتك بأي من طرقك، أرسل لنا بريداً إلكترونياً وسنعمل معك لاستعادة الوصول في أقرب وقت ممكن.</string>
+    <string name="use_your_password">استخدام كلمة المرور الخاصة بك</string>
+    <string name="reverification_password_pwned">تم العثور على كلمة المرور الخاصة بك في عملية تسريب بيانات. عيّن كلمة مرور جديدة للمتابعة.</string>
+    <string name="reverification_password_compromised">لم يعد بالإمكان استخدام كلمة المرور الخاصة بك. عيّن كلمة مرور جديدة للمتابعة.</string>
+    <string name="reverification_biometric_subtitle">استخدم القياسات الحيوية للمتابعة</string>
 </resources>

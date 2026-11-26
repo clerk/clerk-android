@@ -308,4 +308,15 @@
     <string name="update_app">Uygulamayı güncelle</string>
     <string name="cant_update">Güncelleyemiyor musunuz?</string>
     <string name="your_version">Sürümünüz</string>
+    <string name="reverification_title">Doğrulama gerekli</string>
+    <string name="reverification_password_subtitle">Devam etmek için mevcut parolanızı girin</string>
+    <string name="reverification_email_code_subtitle">Devam etmek için e-postanıza gönderilen kodu girin</string>
+    <string name="reverification_phone_code_subtitle">Devam etmek için telefonunuza gönderilen kodu girin</string>
+    <string name="reverification_totp_subtitle">Devam etmek için doğrulama uygulamanızın oluşturduğu kodu girin</string>
+    <string name="reverification_alternative_methods_subtitle">Sorun mu yaşıyorsun? Kimliğini doğrulamak için bu yöntemlerden herhangi birini kullanabilirsin.</string>
+    <string name="reverification_get_help_subtitle">Kimliğinizi yöntemlerinizin hiçbiriyle doğrulayamıyorsanız bize e-posta gönderin, erişiminizi en kısa sürede geri yükleyelim.</string>
+    <string name="use_your_password">Parolanı kullan</string>
+    <string name="reverification_password_pwned">Parolanız bir veri ihlalinde bulundu. Devam etmek için yeni bir parola belirleyin.</string>
+    <string name="reverification_password_compromised">Parolanız artık kullanılamaz. Devam etmek için yeni bir parola belirleyin.</string>
+    <string name="reverification_biometric_subtitle">Devam etmek için biyometri kullanın</string>
 </resources>

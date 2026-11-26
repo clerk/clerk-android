@@ -28,6 +28,7 @@ public final class com/clerk/api/Clerk {
 	public final fun getDeleteSelfIsEnabled ()Z
 	public final fun getDeviceToken ()Ljava/lang/String;
 	public final fun getEnabledFirstFactorAttributes ()Ljava/util/List;
+	public final fun getForegroundActivity ()Landroid/app/Activity;
 	public final fun getInitializationError ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getInstanceEnvironmentType ()Lcom/clerk/api/network/model/environment/InstanceEnvironmentType;
 	public final fun getLocale ()Lkotlinx/coroutines/flow/StateFlow;
