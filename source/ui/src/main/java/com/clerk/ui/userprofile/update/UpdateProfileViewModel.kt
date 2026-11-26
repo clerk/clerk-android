@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
@@ -12,6 +13,8 @@ import com.clerk.api.user.get
 import com.clerk.api.user.setProfileImage
 import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,12 +71,18 @@ internal class UpdateProfileViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser({ _state.value = State.Error("User not authenticated") }) { user ->
       viewModelScope.launch {
-        user
-          .update(
-            User.UpdateParams(firstName = firstName, lastName = lastName, username = username)
-          )
+        val params =
+          User.UpdateParams(firstName = firstName, lastName = lastName, username = username)
+        Clerk.reverify { user.update(params) }
           .flatMap { user.get() }
-          .onFailure { _state.value = State.Error("Failed to update profile: ${it.errorMessage}") }
+          .onFailure {
+            _state.value =
+              if (it.isReverificationCancelled) {
+                State.Idle
+              } else {
+                State.Error("Failed to update profile: ${it.errorMessage}")
+              }
+          }
           .onSuccess { _state.value = State.Success }
       }
     }

@@ -2,6 +2,7 @@ package com.clerk.ui.organizationprofile.actions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -12,6 +13,8 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.delete
 import com.clerk.ui.core.log.ClerkLog
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +64,10 @@ internal class OrganizationProfileActionConfirmationViewModel(
         }
         is ClerkResult.Failure ->
           mutableState.value =
-            mutableState.value.copy(isLoading = false, errorMessage = result.errorMessage)
+            mutableState.value.copy(
+              isLoading = false,
+              errorMessage = result.errorMessage.takeUnless { result.isReverificationCancelled },
+            )
       }
     }
   }
@@ -82,7 +88,8 @@ internal class OrganizationProfileActionConfirmationViewModel(
     when (action) {
       OrganizationProfileConfirmationAction.LeaveOrganization ->
         membership?.delete() ?: missingMembershipFailure()
-      OrganizationProfileConfirmationAction.DeleteOrganization -> organization.delete()
+      OrganizationProfileConfirmationAction.DeleteOrganization ->
+        Clerk.reverify { organization.delete() }
     }
 
   private fun missingMembershipFailure(): ClerkResult.Failure<ClerkErrorResponse> {

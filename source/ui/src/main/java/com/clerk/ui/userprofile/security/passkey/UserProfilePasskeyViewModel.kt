@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.security.passkey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.network.serialization.errorMessage
@@ -12,6 +13,8 @@ import com.clerk.api.passkeys.delete
 import com.clerk.api.user.createPasskey
 import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -24,9 +27,11 @@ internal class UserProfilePasskeyViewModel : ViewModel() {
   fun deletePasskey(passkey: Passkey) {
     _state.value = State.Loading
     viewModelScope.launch {
-      passkey
-        .delete()
-        .onFailure { _state.value = State.Error(it.errorMessage) }
+      Clerk.reverify { passkey.delete() }
+        .onFailure {
+          _state.value =
+            if (it.isReverificationCancelled) State.Idle else State.Error(it.errorMessage)
+        }
         .onSuccess { _state.value = State.Success }
     }
   }
@@ -34,10 +39,10 @@ internal class UserProfilePasskeyViewModel : ViewModel() {
   fun createPasskey() {
     guardUser({ _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user
-          .createPasskey()
+        Clerk.reverify { user.createPasskey() }
           .onSuccess { _state.value = State.Success }
           .onFailure {
+            if (it.isReverificationCancelled) return@onFailure
             ClerkLog.e("Failed to create passkey: ${it.resolvedCredentialFlowMessage}")
             _state.value =
               if (it.shouldSuppressCredentialFlowError) {

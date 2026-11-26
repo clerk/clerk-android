@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -61,13 +62,21 @@ internal fun UserProfileMfaAddTotpViewImpl(
 
   val collectedState by viewModel.state.collectAsStateWithLifecycle()
   val state = previewState ?: collectedState
+  LaunchedEffect(viewModel) { viewModel.createTotpIfIdle() }
+  LaunchedEffect(state) {
+    if (state == UserProfileMfaTotpViewModel.State.Cancelled) {
+      viewModel.acknowledgeCancellation()
+      onDismiss()
+    }
+  }
   Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
     BottomSheetTopBar(
       title = stringResource(R.string.add_authenticator_application),
       onClosePressed = onDismiss,
     )
     when (state) {
-      UserProfileMfaTotpViewModel.State.Idle -> Unit
+      UserProfileMfaTotpViewModel.State.Idle,
+      UserProfileMfaTotpViewModel.State.Cancelled -> Unit
       UserProfileMfaTotpViewModel.State.Loading ->
         Box(
           modifier =

@@ -9,6 +9,8 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.user.createEmailAddress
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,10 +32,12 @@ internal class AddEmailViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("No current user found") }) { user ->
       viewModelScope.launch(Dispatchers.IO) {
-        user
-          .createEmailAddress(email)
+        Clerk.reverify { user.createEmailAddress(email) }
           .onSuccess { _state.value = State.Success(it) }
-          .onFailure { _state.value = State.Error(it.errorMessage) }
+          .onFailure {
+            _state.value =
+              if (it.isReverificationCancelled) State.Idle else State.Error(it.errorMessage)
+          }
       }
     }
   }

@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.phone
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -12,6 +13,8 @@ import com.clerk.api.user.createPhoneNumber
 import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -28,10 +31,13 @@ internal class UserProfileAddPhoneViewModel : ViewModel() {
       _state.value = State.Error("User does not exist")
     }) { user ->
       viewModelScope.launch {
-        user
-          .createPhoneNumber(phoneNumber)
+        Clerk.reverify { user.createPhoneNumber(phoneNumber) }
           .onSuccess { _state.value = State.Success(it) }
           .onFailure { error ->
+            if (error.isReverificationCancelled) {
+              _state.value = State.Idle
+              return@onFailure
+            }
             ClerkLog.e(
               "UserProfileAddPhoneViewModel - Failed to add phone number: ${error.errorMessage}"
             )
@@ -44,10 +50,10 @@ internal class UserProfileAddPhoneViewModel : ViewModel() {
   fun setAsPrimary(phoneNumber: PhoneNumber) {
     guardUser({ _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user
-          .update(User.UpdateParams(primaryPhoneNumberId = phoneNumber.id))
+        Clerk.reverify { user.update(User.UpdateParams(primaryPhoneNumberId = phoneNumber.id)) }
           .onSuccess { _state.value = State.SetPhoneAsPrimarySuccess }
           .onFailure {
+            if (it.isReverificationCancelled) return@onFailure
             ClerkLog.e("Failed to update primary phone ")
             _state.value = State.Error(it.errorMessage)
           }
@@ -57,10 +63,11 @@ internal class UserProfileAddPhoneViewModel : ViewModel() {
 
   fun deletePhoneNumber(phoneNumber: PhoneNumber) {
     viewModelScope.launch {
-      phoneNumber
-        .delete()
+      Clerk.reverify { phoneNumber.delete() }
         .onSuccess { _state.value = State.DeletedPhoneNumber }
-        .onFailure { _state.value = State.Error(it.errorMessage) }
+        .onFailure {
+          if (!it.isReverificationCancelled) _state.value = State.Error(it.errorMessage)
+        }
     }
   }
 
