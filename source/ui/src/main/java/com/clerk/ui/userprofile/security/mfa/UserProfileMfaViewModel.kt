@@ -2,6 +2,9 @@ package com.clerk.ui.userprofile.security.mfa
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -12,6 +15,8 @@ import com.clerk.api.user.createBackupCodes
 import com.clerk.api.user.disableTotp
 import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,10 +31,10 @@ internal class UserProfileMfaViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        phoneNumber
-          ?.makeDefaultSecondFactor()
-          ?.onSuccess { _state.value = State.Success }
-          ?.onFailure { _state.value = State.Error(it.errorMessage) }
+        if (phoneNumber == null) return@launch
+        Clerk.reverify { phoneNumber.makeDefaultSecondFactor() }
+          .onSuccess { _state.value = State.Success }
+          .onFailure { _state.value = failureState(it) }
       }
     }
   }
@@ -38,10 +43,9 @@ internal class UserProfileMfaViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user
-          .createBackupCodes()
+        Clerk.reverify { user.createBackupCodes() }
           .onSuccess { _state.value = State.BackupCodesGenerated(it.codes) }
-          .onFailure { _state.value = State.Error(it.errorMessage) }
+          .onFailure { _state.value = failureState(it) }
       }
     }
   }
@@ -49,10 +53,10 @@ internal class UserProfileMfaViewModel : ViewModel() {
   fun deleteTotp() {
     guardUser({ _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user
-          .disableTotp()
+        Clerk.reverify { user.disableTotp() }
           .onSuccess { _state.value = State.TotpDeleted }
           .onFailure {
+            if (it.isReverificationCancelled) return@onFailure
             ClerkLog.e("Error deleting TOTP")
             _state.value = State.Error(it.errorMessage)
           }
@@ -66,15 +70,18 @@ internal class UserProfileMfaViewModel : ViewModel() {
 
   fun deletePhoneNumber(phoneNumber: PhoneNumber) {
     viewModelScope.launch {
-      phoneNumber
-        .delete()
+      Clerk.reverify { phoneNumber.delete() }
         .onSuccess { _state.value = State.PhoneNumberDeleted }
         .onFailure {
+          if (it.isReverificationCancelled) return@onFailure
           ClerkLog.e("Error deleting phone number: ${it.errorMessage}")
           _state.value = State.Error(it.errorMessage)
         }
     }
   }
+
+  private fun failureState(failure: ClerkResult.Failure<ClerkErrorResponse>): State =
+    if (failure.isReverificationCancelled) State.Idle else State.Error(failure.errorMessage)
 
   sealed interface State {
     data object Idle : State

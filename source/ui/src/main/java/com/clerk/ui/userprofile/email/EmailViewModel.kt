@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.delete
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.user.User
 import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,10 +36,9 @@ internal class EmailViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = {}) { user ->
       viewModelScope.launch(Dispatchers.IO) {
-        user
-          .update(User.UpdateParams(primaryEmailAddressId = emailAddress.id))
+        Clerk.reverify { user.update(User.UpdateParams(primaryEmailAddressId = emailAddress.id)) }
           .onSuccess { _state.value = State.SetAsPrimary.Success }
-          .onFailure { _state.value = State.Failure(it.errorMessage) }
+          .onFailure { _state.value = failureState(it) }
       }
     }
   }
@@ -47,12 +50,14 @@ internal class EmailViewModel : ViewModel() {
     }
     _state.value = State.Loading
     viewModelScope.launch(Dispatchers.IO) {
-      emailAddress
-        .delete()
-        .onFailure { _state.value = State.Failure(it.errorMessage) }
+      Clerk.reverify { emailAddress.delete() }
+        .onFailure { _state.value = failureState(it) }
         .onSuccess { _state.value = State.Remove.Success }
     }
   }
+
+  private fun failureState(failure: ClerkResult.Failure<ClerkErrorResponse>): State =
+    if (failure.isReverificationCancelled) State.Idle else State.Failure(failure.errorMessage)
 
   fun clearError(reported: State.Failure) {
     _state.compareAndSet(reported, State.Idle)

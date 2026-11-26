@@ -9,6 +9,8 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.user.delete
 import com.clerk.ui.core.common.guardUser
 import com.clerk.ui.core.log.ClerkLog
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -39,13 +41,16 @@ internal class UserProfileAccountViewModel(
       }) { user ->
         viewModelScope.launch {
           val deletedUserId = user.id
-          user
-            .delete()
+          Clerk.reverify { user.delete() }
             .onSuccess {
               forgetBiometricLocalCredentials(deletedUserId)
               _deleteAccountStateFlow.value = DeleteAccountState.Success
             }
             .onFailure {
+              if (it.isReverificationCancelled) {
+                _deleteAccountStateFlow.value = DeleteAccountState.Idle
+                return@onFailure
+              }
               ClerkLog.e("Failed to delete user account: ${it.errorMessage}")
               _deleteAccountStateFlow.value = DeleteAccountState.Error(it.errorMessage)
             }

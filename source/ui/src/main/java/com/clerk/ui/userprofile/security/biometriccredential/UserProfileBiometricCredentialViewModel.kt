@@ -7,6 +7,8 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.ui.auth.biometriccredential.biometricCredentialIdentifierHint
 import com.clerk.ui.auth.isBiometricCredentialCancellation
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,18 +66,23 @@ internal class UserProfileBiometricCredentialViewModel(
       val failure =
         if (enabled) {
           when (
-            val result =
+            val result = Clerk.reverify {
               Clerk.biometricCredentials.enroll(
                 identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
                 promptTitle = promptTitle,
                 promptSubtitle = promptSubtitle,
               )
+            }
           ) {
             is ClerkResult.Success -> null
             is ClerkResult.Failure -> result
           }
         } else {
-          when (val result = Clerk.biometricCredentials.revokeCurrentBiometricCredential()) {
+          when (
+            val result = Clerk.reverify {
+              Clerk.biometricCredentials.revokeCurrentBiometricCredential()
+            }
+          ) {
             is ClerkResult.Success -> null
             is ClerkResult.Failure -> result
           }
@@ -89,7 +96,11 @@ internal class UserProfileBiometricCredentialViewModel(
             canEnroll = Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
             isLoading = false,
             error =
-              failure?.takeUnless { it.isBiometricCredentialCancellation }?.let { it.errorMessage },
+              failure
+                ?.takeUnless {
+                  it.isBiometricCredentialCancellation || it.isReverificationCancelled
+                }
+                ?.let { it.errorMessage },
           )
       }
     }

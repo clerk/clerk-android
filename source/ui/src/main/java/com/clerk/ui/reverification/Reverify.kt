@@ -68,6 +68,16 @@ public suspend fun Clerk.reverify(
 public class ReverificationCancelledException :
   Exception("The user closed reverification before verifying their identity.")
 
+internal val ClerkResult.Failure<*>.isReverificationCancelled: Boolean
+  get() = throwable is ReverificationCancelledException
+
+internal fun <T : Any, E : Any> withRetryFlag(
+  block: suspend (isRetry: Boolean) -> ClerkResult<T, E>
+): suspend () -> ClerkResult<T, E> {
+  var runs = 0
+  return { block(runs++ > 0) }
+}
+
 internal data class SignedInIdentity(val clientId: String?, val sessionId: String?)
 
 internal enum class ReverificationOutcome {

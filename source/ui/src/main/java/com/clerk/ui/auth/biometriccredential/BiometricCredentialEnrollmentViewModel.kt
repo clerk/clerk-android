@@ -7,6 +7,8 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.ui.auth.isBiometricCredentialCancellation
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,17 +30,18 @@ internal class BiometricCredentialEnrollmentViewModel : ViewModel() {
     if (_state.value is State.Loading) return
     _state.value = State.Loading
     viewModelScope.launch(Dispatchers.IO) {
-      Clerk.biometricCredentials
-        .enroll(
-          identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
-          promptTitle = promptTitle,
-          promptSubtitle = promptSubtitle,
-        )
+      Clerk.reverify {
+          Clerk.biometricCredentials.enroll(
+            identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
+            promptTitle = promptTitle,
+            promptSubtitle = promptSubtitle,
+          )
+        }
         .onSuccess { withContext(Dispatchers.Main) { _state.value = State.Enrolled } }
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
             _state.value =
-              if (failure.isBiometricCredentialCancellation) {
+              if (failure.isBiometricCredentialCancellation || failure.isReverificationCancelled) {
                 State.Idle
               } else {
                 State.Error(failure.errorMessage)

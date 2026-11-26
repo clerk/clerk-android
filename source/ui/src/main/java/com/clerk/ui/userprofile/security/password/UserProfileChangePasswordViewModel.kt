@@ -2,12 +2,15 @@ package com.clerk.ui.userprofile.security.password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.user.User
 import com.clerk.api.user.updatePassword
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.reverification.isReverificationCancelled
+import com.clerk.ui.reverification.reverify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -24,16 +27,17 @@ internal class UserProfileChangePasswordViewModel : ViewModel() {
   ) {
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user
-          .updatePassword(
-            User.UpdatePasswordParams(
-              currentPassword = currentPassword,
-              newPassword = newPassword,
-              signOutOfOtherSessions = signOutOfOtherSessions,
-            )
+        val params =
+          User.UpdatePasswordParams(
+            currentPassword = currentPassword,
+            newPassword = newPassword,
+            signOutOfOtherSessions = signOutOfOtherSessions,
           )
+        Clerk.reverify { user.updatePassword(params) }
           .onSuccess { _state.value = State.Success }
-          .onFailure { error -> _state.value = State.Error(error.errorMessage) }
+          .onFailure { error ->
+            if (!error.isReverificationCancelled) _state.value = State.Error(error.errorMessage)
+          }
       }
     }
   }
