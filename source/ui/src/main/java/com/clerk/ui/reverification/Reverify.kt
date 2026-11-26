@@ -35,12 +35,38 @@ public suspend fun <T : Any, E : Any> Clerk.reverify(
 ): ClerkResult<T, E> = Reverifier.shared.run(block)
 
 /**
+ * Asks the user to verify their identity again, unless they already did within [reverification].
+ *
+ * When [com.clerk.api.session.Session.checkAuthorization] with [reverification] is `false`, it
+ * shows Clerk's reverification screen over the activity your app shows, and returns once the user
+ * verifies. Call it before a sensitive step, so the user verifies before your app sends the request
+ * instead of after your backend rejects it.
+ *
+ * ```kotlin
+ * if (Clerk.reverify(ReverificationConfig.Strict) is ClerkResult.Success) {
+ *   showDeleteAccountForm()
+ * }
+ * ```
+ *
+ * @return Success when the user has verified within [reverification], before the call or on the
+ *   screen. When the user closes the screen, or a different session becomes active while it shows,
+ *   a failure whose [ClerkResult.Failure.throwable] is a [ReverificationCancelledException]. A
+ *   failure with an [IllegalArgumentException] when [reverification] is a
+ *   [ReverificationConfig.Custom] whose level is unknown or whose `afterMinutes` isn't positive,
+ *   and with an [IllegalStateException] when no one is signed in or your app shows no activity to
+ *   open the screen over.
+ */
+public suspend fun Clerk.reverify(
+  reverification: ReverificationConfig
+): ClerkResult<Unit, Nothing> = Reverifier.shared.verify(reverification)
+
+/**
  * The [ClerkResult.Failure.throwable] that [reverify] returns when the user closes the
  * reverification screen before verifying, or when a different session becomes active while it
  * shows.
  */
 public class ReverificationCancelledException :
-  Exception("The user didn't verify their identity, so the action didn't run again.")
+  Exception("The user closed reverification before verifying their identity.")
 
 internal data class SignedInIdentity(val clientId: String?, val sessionId: String?)
 
@@ -54,7 +80,27 @@ internal class Reverifier(
   private val currentIdentity: () -> SignedInIdentity,
   private val present:
     suspend (SessionVerification.Level, SignedInIdentity) -> ReverificationOutcome,
+  private val isSatisfied: (ReverificationConfig) -> Boolean = { false },
 ) {
+  suspend fun verify(reverification: ReverificationConfig): ClerkResult<Unit, Nothing> {
+    val identity = currentIdentity()
+    val level = reverification.levelOrNull
+    return when {
+      level == null -> ClerkResult.unknownFailure(IllegalArgumentException(UNSUPPORTED_MESSAGE))
+      identity.sessionId == null ->
+        ClerkResult.unknownFailure(IllegalStateException(NOT_SIGNED_IN_MESSAGE))
+      isSatisfied(reverification) -> ClerkResult.success(Unit)
+      else ->
+        when (present(level, identity)) {
+          ReverificationOutcome.VERIFIED ->
+            if (currentIdentity() == identity) ClerkResult.success(Unit) else cancelled()
+          ReverificationOutcome.CANCELLED -> cancelled()
+          ReverificationOutcome.NOT_PRESENTED ->
+            ClerkResult.unknownFailure(IllegalStateException(NOT_PRESENTED_MESSAGE))
+        }
+    }
+  }
+
   suspend fun <T : Any, E : Any> run(block: suspend () -> ClerkResult<T, E>): ClerkResult<T, E> {
     val identity = currentIdentity()
     val first = block()
@@ -76,22 +122,33 @@ internal class Reverifier(
     ClerkResult.unknownFailure(ReverificationCancelledException())
 
   companion object {
+    private const val UNSUPPORTED_MESSAGE =
+      "Clerk can't reverify with this requirement because its level or age isn't one Clerk supports."
+    private const val NOT_SIGNED_IN_MESSAGE = "You need to be signed in to verify your identity."
+    private const val NOT_PRESENTED_MESSAGE =
+      "Clerk couldn't show reverification because the app shows no activity to open it over."
+
     val shared =
       Reverifier(
         currentIdentity = {
           SignedInIdentity(clientId = Clerk.clientFlow.value?.id, sessionId = Clerk.session?.id)
         },
         present = ReverificationPresenter.shared::present,
+        isSatisfied = { Clerk.session?.checkAuthorization(reverification = it) == true },
       )
   }
 }
 
 internal val ReverificationRequiredException.level: SessionVerification.Level
+  get() = reverification?.levelOrNull ?: SessionVerification.Level.SECOND_FACTOR
+
+internal val ReverificationConfig.levelOrNull: SessionVerification.Level?
   get() =
-    when (val requested = reverification) {
+    when (this) {
       ReverificationConfig.StrictMfa -> SessionVerification.Level.MULTI_FACTOR
+      ReverificationConfig.Strict,
+      ReverificationConfig.Moderate,
+      ReverificationConfig.Lax -> SessionVerification.Level.SECOND_FACTOR
       is ReverificationConfig.Custom ->
-        requested.level.takeUnless { it == SessionVerification.Level.UNKNOWN }
-          ?: SessionVerification.Level.SECOND_FACTOR
-      else -> SessionVerification.Level.SECOND_FACTOR
+        level.takeIf { it != SessionVerification.Level.UNKNOWN && afterMinutes > 0 }
     }

@@ -55,6 +55,15 @@ internal object ReverificationFactors {
       Strategy.Password,
     )
 
+  private val passwordPreferredFirstFactorOrder =
+    listOf(
+      Strategy.Passkey,
+      Strategy.TrustedDevice,
+      Strategy.Password,
+      Strategy.EmailCode,
+      Strategy.PhoneCode,
+    )
+
   private val secondFactorOrder =
     listOf(
       Strategy.Passkey,
@@ -89,6 +98,20 @@ internal object ReverificationFactors {
       .sortedWith(
         compareBy<Factor> { order.indexOf(it.strategyType) }.thenBy { it.primary != true }
       )
+  }
+
+  fun startingFactor(
+    usable: List<Factor>,
+    stage: ReverificationStage,
+    prefersPassword: Boolean,
+  ): Factor? {
+    val order =
+      if (stage == ReverificationStage.FIRST_FACTOR && prefersPassword) {
+        passwordPreferredFirstFactorOrder
+      } else {
+        order(stage)
+      }
+    return usable.minByOrNull { order.indexOf(it.strategyType) }
   }
 
   fun resetPasswordFactor(firstFactors: List<Factor>): Factor? =

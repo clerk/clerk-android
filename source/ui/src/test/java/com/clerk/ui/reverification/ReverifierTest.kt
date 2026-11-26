@@ -18,6 +18,7 @@ class ReverifierTest {
   private val presented = mutableListOf<Pair<SessionVerification.Level, SignedInIdentity>>()
   private var outcome = ReverificationOutcome.VERIFIED
   private var duringPresent: () -> Unit = {}
+  private var satisfied = false
 
   private val reverifier =
     Reverifier(
@@ -27,6 +28,7 @@ class ReverifierTest {
         duringPresent()
         outcome
       },
+      isSatisfied = { satisfied },
     )
 
   private val apiReverificationRequired =
@@ -175,5 +177,75 @@ class ReverifierTest {
       ),
       levels,
     )
+  }
+
+  @Test
+  fun aSatisfiedRequirementSucceedsWithoutPresenting() = runTest {
+    satisfied = true
+
+    val result = reverifier.verify(ReverificationConfig.Strict)
+
+    assertTrue(result is ClerkResult.Success)
+    assertTrue(presented.isEmpty())
+  }
+
+  @Test
+  fun anUnsatisfiedRequirementPresentsAtItsLevel() = runTest {
+    val result = reverifier.verify(ReverificationConfig.StrictMfa)
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(listOf(SessionVerification.Level.MULTI_FACTOR to signedIn), presented)
+  }
+
+  @Test
+  fun aRequirementClosedOnTheScreenIsCancelled() = runTest {
+    outcome = ReverificationOutcome.CANCELLED
+
+    val result = reverifier.verify(ReverificationConfig.Lax)
+
+    assertTrue((result as ClerkResult.Failure).throwable is ReverificationCancelledException)
+  }
+
+  @Test
+  fun aRequirementVerifiedForASessionThatIsNoLongerActiveIsCancelled() = runTest {
+    duringPresent = { identity = signedIn.copy(sessionId = "sess_2") }
+
+    val result = reverifier.verify(ReverificationConfig.Strict)
+
+    assertTrue((result as ClerkResult.Failure).throwable is ReverificationCancelledException)
+  }
+
+  @Test
+  fun aRequirementThatCannotShowFails() = runTest {
+    outcome = ReverificationOutcome.NOT_PRESENTED
+
+    val result = reverifier.verify(ReverificationConfig.Strict)
+
+    assertTrue((result as ClerkResult.Failure).throwable is IllegalStateException)
+  }
+
+  @Test
+  fun aRequirementWithNoSessionFailsWithoutPresenting() = runTest {
+    identity = SignedInIdentity(clientId = "client_1", sessionId = null)
+
+    val result = reverifier.verify(ReverificationConfig.Strict)
+
+    assertTrue((result as ClerkResult.Failure).throwable is IllegalStateException)
+    assertTrue(presented.isEmpty())
+  }
+
+  @Test
+  fun anUnsupportedCustomRequirementFailsWithoutPresenting() = runTest {
+    val results =
+      listOf(
+          ReverificationConfig.Custom(SessionVerification.Level.UNKNOWN, 10),
+          ReverificationConfig.Custom(SessionVerification.Level.FIRST_FACTOR, 0),
+        )
+        .map { reverifier.verify(it) }
+
+    results.forEach {
+      assertTrue((it as ClerkResult.Failure).throwable is IllegalArgumentException)
+    }
+    assertTrue(presented.isEmpty())
   }
 }

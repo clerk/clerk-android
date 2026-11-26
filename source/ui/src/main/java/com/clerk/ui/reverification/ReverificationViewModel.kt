@@ -69,6 +69,7 @@ internal class ReverificationViewModel(
   private val level: SessionVerification.Level,
   private val sessionId: String?,
   private val currentSession: () -> Session? = { Clerk.session },
+  private val prefersPassword: () -> Boolean = { Clerk.prefersPasswordSignIn },
   private val hasLocalBiometricCredential: () -> Boolean = {
     Clerk.biometricCredentials.currentUserLocalAvailability() ==
       BiometricCredentialAvailability.Available
@@ -135,7 +136,7 @@ internal class ReverificationViewModel(
 
   private fun showRoot(stage: ReverificationStage) {
     val root =
-      availableFactors(stage).firstOrNull()?.let {
+      ReverificationFactors.startingFactor(availableFactors(stage), stage, prefersPassword())?.let {
         ReverificationDestination.FactorEntry(it, stage)
       } ?: ReverificationDestination.GetHelp
     backStack.clear()

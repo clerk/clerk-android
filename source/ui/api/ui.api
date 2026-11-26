@@ -353,6 +353,7 @@ public final class com/clerk/ui/reverification/ReverificationCancelledException 
 }
 
 public final class com/clerk/ui/reverification/ReverifyKt {
+	public static final fun reverify (Lcom/clerk/api/Clerk;Lcom/clerk/api/session/ReverificationConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun reverify (Lcom/clerk/api/Clerk;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

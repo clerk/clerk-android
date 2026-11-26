@@ -94,4 +94,38 @@ class ReverificationFactorsTest {
     )
     assertEquals(resetPhone, ReverificationFactors.resetPasswordFactor(listOf(resetPhone)))
   }
+
+  @Test
+  fun anInstanceThatPrefersPasswordStartsWithPasswordAfterPasskeys() {
+    val usable = listOf(email, phone, password)
+
+    assertEquals(
+      password,
+      ReverificationFactors.startingFactor(usable, ReverificationStage.FIRST_FACTOR, true),
+    )
+    assertEquals(
+      email,
+      ReverificationFactors.startingFactor(usable, ReverificationStage.FIRST_FACTOR, false),
+    )
+    assertEquals(
+      passkey,
+      ReverificationFactors.startingFactor(
+        listOf(passkey, password),
+        ReverificationStage.FIRST_FACTOR,
+        true,
+      ),
+    )
+  }
+
+  @Test
+  fun preferringPasswordDoesNotChangeTheSecondFactorStart() {
+    assertEquals(
+      totp,
+      ReverificationFactors.startingFactor(
+        listOf(totp, backupCode),
+        ReverificationStage.SECOND_FACTOR,
+        true,
+      ),
+    )
+  }
 }

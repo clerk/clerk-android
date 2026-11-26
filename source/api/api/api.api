@@ -54,6 +54,7 @@ public final class com/clerk/api/Clerk {
 	public final fun getPasskeyFirstFactorIsEnabled ()Z
 	public final fun getPasskeyIsEnabled ()Z
 	public final fun getPasswordIsEnabled ()Z
+	public final fun getPrefersPasswordSignIn ()Z
 	public final fun getPrivacyPolicyUrl ()Ljava/lang/String;
 	public final fun getProxyUrl ()Ljava/lang/String;
 	public final fun getPublishableKey ()Ljava/lang/String;
