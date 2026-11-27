@@ -5,7 +5,7 @@ A new user enters a test email or a test phone number, gives what the instance s
 ## Sub-features
 
 - `complete` reaches the password step for a new test email, sets the run password, types `424242` on the code screen, and lands signed in.
-- `complete-from-home` does the same in the AuthView that the home's `Sign in` button opens, and that AuthView closes itself.
+- `complete-from-home` does the same in the AuthView that the home's `Sign in` button opens, and the home closes that AuthView when the sign-up completes (`MainActivity.kt`, `onAuthComplete`).
 - `phone` starts with a phone number, gives the email and the password that the standard settings require, verifies the email and then the phone with `424242`, and lands signed in.
 
 ## How to get to it (user POV)
