@@ -87,6 +87,7 @@ private fun RootAuthView(authMode: AuthMode, initialIdentifier: String?) {
 private fun Home(authMode: AuthMode, open: (VerifyScreen) -> Unit) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val client by Clerk.clientFlow.collectAsStateWithLifecycle()
   val activeSession = session?.takeIf { it.status == Session.SessionStatus.ACTIVE }
   val signedInUser = user.takeIf { activeSession != null }
   var showsAuthView by rememberSaveable { mutableStateOf(false) }
@@ -112,6 +113,15 @@ private fun Home(authMode: AuthMode, open: (VerifyScreen) -> Unit) {
         }
         TextAction("Custom sign-in", E2ETags.Home.CUSTOM_SIGN_IN) {
           open(VerifyScreen.CustomSignIn)
+        }
+      }
+      client?.id?.let { clientId ->
+        ProvideTextStyle(
+          MaterialTheme.typography.bodySmall.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
+        ) {
+          LabelledId("Client ID", clientId, E2ETags.Auth.CLIENT_ID)
         }
       }
     }

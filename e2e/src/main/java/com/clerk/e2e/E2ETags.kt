@@ -9,6 +9,7 @@ internal object E2ETags {
     const val SIGN_OUT = "e2e.auth.signOut"
     const val USER_ID = "e2e.auth.userId"
     const val SESSION_ID = "e2e.auth.sessionId"
+    const val CLIENT_ID = "e2e.auth.clientId"
   }
 
   object CustomSignIn {

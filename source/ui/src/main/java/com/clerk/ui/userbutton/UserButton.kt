@@ -408,7 +408,11 @@ private fun PendingSessionAccountSheetHost(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PendingSessionAccountSheet(user: User, session: Session, onDismissRequest: () -> Unit) {
+internal fun PendingSessionAccountSheet(
+  user: User,
+  session: Session,
+  onDismissRequest: () -> Unit,
+) {
   ClerkMaterialTheme {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -443,15 +447,13 @@ private fun PendingSessionAccountSheet(user: User, session: Session, onDismissRe
             isSigningOut = true
             errorMessage = null
             scope.launch {
-              when (val result = Clerk.auth.signOut(sessionId = session.id)) {
-                is ClerkResult.Success -> {
-                  sheetState.hide()
-                  onDismissRequest()
-                }
-                is ClerkResult.Failure -> {
-                  isSigningOut = false
-                  errorMessage = result.errorMessage
-                }
+              val result = Clerk.auth.signOut(sessionId = session.id)
+              if (result is ClerkResult.Failure && Clerk.isSignedIn) {
+                isSigningOut = false
+                errorMessage = result.errorMessage
+              } else {
+                sheetState.hide()
+                onDismissRequest()
               }
             }
           },
