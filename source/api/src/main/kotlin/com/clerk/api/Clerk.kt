@@ -29,6 +29,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.CommerceSettings
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
+import com.clerk.api.network.model.environment.PreferredSignInStrategy
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
 import com.clerk.api.network.model.environment.supportEmailOrNull
@@ -108,6 +109,10 @@ public object Clerk {
   internal var applicationContext: WeakReference<Context>? = null
 
   internal var currentActivity: WeakReference<Activity>? = null
+
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val foregroundActivity: Activity?
+    get() = currentActivity?.get()
 
   private var trackedApplication: Application? = null
 
@@ -276,6 +281,10 @@ public object Clerk {
    */
   public val supportEmail: String?
     get() = environment?.displayConfig?.supportEmailOrNull
+
+  @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public val prefersPasswordSignIn: Boolean
+    get() = environment?.displayConfig?.preferredSignInStrategy == PreferredSignInStrategy.PASSWORD
 
   @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   public val supportEmailFlow: StateFlow<String?> = stateStore.supportEmailFlow

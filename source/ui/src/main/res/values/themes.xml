@@ -10,4 +10,15 @@
         <item name="android:activityCloseEnterAnimation">@anim/clerk_hold</item>
         <item name="android:activityCloseExitAnimation">@anim/clerk_fade_out</item>
     </style>
+
+    <style name="Theme.Clerk.Reverification" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowAnimationStyle">@style/Animation.Clerk.Reverification</item>
+    </style>
+
+    <style name="Animation.Clerk.Reverification" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/clerk_slide_up</item>
+        <item name="android:activityOpenExitAnimation">@anim/clerk_hold</item>
+        <item name="android:activityCloseEnterAnimation">@anim/clerk_hold</item>
+        <item name="android:activityCloseExitAnimation">@anim/clerk_slide_down</item>
+    </style>
 </resources>

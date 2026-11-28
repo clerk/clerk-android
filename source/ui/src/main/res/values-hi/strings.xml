@@ -308,4 +308,15 @@
     <string name="update_app">ऐप अपडेट करें</string>
     <string name="cant_update">अपडेट नहीं कर पा रहे हैं?</string>
     <string name="your_version">आपका संस्करण</string>
+    <string name="reverification_title">सत्यापन आवश्यक है</string>
+    <string name="reverification_password_subtitle">जारी रखने के लिए अपना वर्तमान पासवर्ड दर्ज करें</string>
+    <string name="reverification_email_code_subtitle">जारी रखने के लिए अपने ईमेल पर भेजा गया कोड दर्ज करें</string>
+    <string name="reverification_phone_code_subtitle">जारी रखने के लिए अपने फ़ोन पर भेजा गया कोड दर्ज करें</string>
+    <string name="reverification_totp_subtitle">जारी रखने के लिए अपने प्रमाणक ऐप द्वारा उत्पन्न कोड दर्ज करें</string>
+    <string name="reverification_alternative_methods_subtitle">समस्याएं आ रही हैं? आप अपनी पहचान सत्यापित करने के लिए इनमें से किसी भी विधि का उपयोग कर सकते हैं।</string>
+    <string name="reverification_get_help_subtitle">यदि आप अपनी किसी भी विधि से अपनी पहचान सत्यापित नहीं कर पा रहे हैं, तो हमें ईमेल करें और हम आपके साथ काम करेंगे ताकि जल्द से जल्द पहुंच बहाल की जा सके।</string>
+    <string name="use_your_password">अपने पासवर्ड का उपयोग करें</string>
+    <string name="reverification_password_pwned">आपका पासवर्ड एक डेटा उल्लंघन में पाया गया। जारी रखने के लिए नया पासवर्ड सेट करें।</string>
+    <string name="reverification_password_compromised">आपका पासवर्ड अब इस्तेमाल नहीं किया जा सकता। जारी रखने के लिए नया पासवर्ड सेट करें।</string>
+    <string name="reverification_biometric_subtitle">जारी रखने के लिए बायोमेट्रिक्स का उपयोग करें</string>
 </resources>

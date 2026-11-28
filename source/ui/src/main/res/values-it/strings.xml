@@ -308,4 +308,15 @@
     <string name="update_app">Aggiorna l\'app</string>
     <string name="cant_update">Non riesci ad aggiornare?</string>
     <string name="your_version">La tua versione</string>
+    <string name="reverification_title">Verifica richiesta</string>
+    <string name="reverification_password_subtitle">Inserisci la tua password attuale per continuare</string>
+    <string name="reverification_email_code_subtitle">Inserisci il codice inviato alla tua email per continuare</string>
+    <string name="reverification_phone_code_subtitle">Inserisci il codice inviato al tuo telefono per continuare</string>
+    <string name="reverification_totp_subtitle">Inserisci il codice generato dalla tua app di autenticazione per continuare</string>
+    <string name="reverification_alternative_methods_subtitle">Hai problemi? Puoi utilizzare uno di questi metodi per verificare la tua identità.</string>
+    <string name="reverification_get_help_subtitle">Se non riesci a verificare la tua identità con nessuno dei tuoi metodi, inviaci una email e lavoreremo con te per ripristinare l\'accesso il prima possibile.</string>
+    <string name="use_your_password">Usa la tua password</string>
+    <string name="reverification_password_pwned">La tua password è stata trovata in una violazione di dati. Imposta una nuova password per continuare.</string>
+    <string name="reverification_password_compromised">La tua password non può più essere usata. Imposta una nuova password per continuare.</string>
+    <string name="reverification_biometric_subtitle">Usa la biometria per continuare</string>
 </resources>

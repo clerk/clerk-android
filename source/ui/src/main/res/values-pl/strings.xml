@@ -308,4 +308,15 @@
     <string name="update_app">Zaktualizuj aplikację</string>
     <string name="cant_update">Nie możesz zaktualizować?</string>
     <string name="your_version">Twoja wersja</string>
+    <string name="reverification_title">Wymagana weryfikacja</string>
+    <string name="reverification_password_subtitle">Wprowadź obecne hasło, aby kontynuować</string>
+    <string name="reverification_email_code_subtitle">Wprowadź kod wysłany na Twój adres e-mail, aby kontynuować</string>
+    <string name="reverification_phone_code_subtitle">Wprowadź kod wysłany na Twój telefon, aby kontynuować</string>
+    <string name="reverification_totp_subtitle">Wprowadź kod wygenerowany przez aplikację uwierzytelniającą, aby kontynuować</string>
+    <string name="reverification_alternative_methods_subtitle">Masz problemy? Możesz potwierdzić swoją tożsamość dowolną z tych metod.</string>
+    <string name="reverification_get_help_subtitle">Jeśli nie możesz potwierdzić swojej tożsamości żadną ze swoich metod, napisz do nas, a pomożemy przywrócić dostęp tak szybko, jak to możliwe.</string>
+    <string name="use_your_password">Użyj hasła</string>
+    <string name="reverification_password_pwned">Twoje hasło zostało znalezione w wycieku danych. Ustaw nowe hasło, aby kontynuować.</string>
+    <string name="reverification_password_compromised">Twojego hasła nie można już używać. Ustaw nowe hasło, aby kontynuować.</string>
+    <string name="reverification_biometric_subtitle">Użyj biometrii, aby kontynuować</string>
 </resources>
