@@ -8,6 +8,11 @@ package com.clerk.api
  * only its client, environment, and device-token state through a signature-checked content
  * provider.
  *
+ * An app that enables shared session sync does not bind its client to a device key, because a
+ * sibling app cannot sign with a key it does not hold. If an earlier release of the app ran without
+ * shared session sync and bound the client, the first launch with it enabled drops that token, and
+ * the user signs in again once.
+ *
  * Example:
  * ```kotlin
  * Clerk.initialize(

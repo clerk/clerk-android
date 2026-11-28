@@ -1,11 +1,13 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Clerk
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Clock
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
@@ -31,7 +33,8 @@ class ClientSyncingMiddlewareOrderingTest {
 
   @Test
   fun `intercept drops a client response fetched before already applied state`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
 
     middleware.intercept(
       chainFor(piggybackedClientResponse("client_newer", date = "Mon, 13 Jul 2026 18:00:05 GMT"))
@@ -46,7 +49,8 @@ class ClientSyncingMiddlewareOrderingTest {
 
   @Test
   fun `refresh result sharing a Date second with a newer sign-in keeps the sign-in`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val updateCountAtStart = Clerk.clientUpdateCount
     val clientFetch = Request.Builder().url("https://api.clerk.com/v1/client").build()
     val fetchedClientJson = """{"object": "client", "id": "client_refreshed", "sessions": []}"""
@@ -82,7 +86,8 @@ class ClientSyncingMiddlewareOrderingTest {
 
   @Test
   fun `older piggybacked response arriving after an applied refresh is dropped`() {
-    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val middleware =
+      ClientSyncingMiddleware(json = ClerkApi.json, serverClock = ServerClock(Clock.System))
     val updateCountAtStart = Clerk.clientUpdateCount
     val refreshResponse =
       middleware.intercept(

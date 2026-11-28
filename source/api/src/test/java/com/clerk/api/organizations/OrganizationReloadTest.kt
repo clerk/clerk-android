@@ -1,6 +1,7 @@
 package com.clerk.api.organizations
 
 import com.clerk.api.Clerk
+import com.clerk.api.dpop.ServerClock
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
@@ -15,6 +16,7 @@ import com.clerk.api.user.User
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import okhttp3.MediaType.Companion.toMediaType
@@ -43,7 +45,7 @@ class OrganizationReloadTest {
     StorageHelper.initialize(RuntimeEnvironment.getApplication())
     val httpClient =
       OkHttpClient.Builder()
-        .addInterceptor(ClientSyncingMiddleware(ClerkApi.json))
+        .addInterceptor(ClientSyncingMiddleware(ClerkApi.json, ServerClock(Clock.System)))
         .addInterceptor { chain ->
           whileFetchIsInFlight()
           val response = ClerkApi.json.encodeToString(Client.serializer(), fetchedClient)

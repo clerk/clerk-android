@@ -8,6 +8,7 @@ public final class com/clerk/api/Clerk {
 	public static final field INSTANCE Lcom/clerk/api/Clerk;
 	public final fun attachActivity (Landroid/app/Activity;)V
 	public final fun clearDeviceToken (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deleteDeviceKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getActiveSession ()Lcom/clerk/api/session/Session;
 	public final fun getActiveUser ()Lcom/clerk/api/user/User;
 	public final fun getAppVersionSupportResets ()Lkotlinx/coroutines/flow/StateFlow;
