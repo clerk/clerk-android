@@ -129,14 +129,15 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
+  testImplementation(libs.nimbus.jose.jwt)
   testImplementation(libs.okhttp.mockwebserver)
   testImplementation(libs.okhttp.tls)
   testImplementation(libs.robolectric)
   testImplementation(libs.snakeyaml.engine)
 
   androidTestImplementation(platform(libs.compose.bom))
-  androidTestImplementation("androidx.test:runner:${libs.versions.androidxTest.get()}")
   androidTestImplementation(libs.androidx.compose.runtime)
+  androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.junit)
   androidTestImplementation(libs.kotlin.test)
 
