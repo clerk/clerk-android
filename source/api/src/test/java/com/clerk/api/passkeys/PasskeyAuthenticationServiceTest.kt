@@ -26,6 +26,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -94,6 +95,7 @@ class PasskeyAuthenticationServiceTest {
     GoogleCredentialAuthenticationService.setGoogleSignInService(GoogleSignInService())
     unmockkAll()
     Clerk.stateStore.reset()
+    SessionTokenFetcher.shared.reset()
   }
 
   @Test

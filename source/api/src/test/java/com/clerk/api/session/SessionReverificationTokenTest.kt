@@ -321,6 +321,59 @@ class SessionReverificationTokenTest {
     coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
   }
 
+  @Test
+  fun `a completed password verification fences the pre-reverification token`() = runTest {
+    coEvery { api.attemptFirstFactorVerification(session.id, any()) } returns
+      ClerkResult.success(verification(SessionVerification.Status.COMPLETE))
+
+    verifyFencesOldToken { session.verifyWithPassword("test-password") }
+  }
+
+  @Test
+  fun `a completed second factor code verification fences the pre-reverification token`() =
+    runTest {
+      coEvery { api.attemptSecondFactorVerification(session.id, any()) } returns
+        ClerkResult.success(verification(SessionVerification.Status.COMPLETE))
+
+      verifyFencesOldToken { session.verifyWithTOTP("424242") }
+    }
+
+  @Test
+  fun `a verification that still needs a second factor keeps the current token`() = runTest {
+    val oldToken = token(100)
+    updateSnapshot(oldToken)
+    coEvery { api.attemptFirstFactorVerification(session.id, any()) } returns
+      ClerkResult.success(verification(SessionVerification.Status.NEEDS_SECOND_FACTOR))
+
+    session.verifyWithEmailCode("424242")
+
+    assertEquals(oldToken, fetcher.getToken(session))
+    coVerify(exactly = 0) { api.tokens(any(), any(), any(), any()) }
+  }
+
+  private suspend fun verifyFencesOldToken(
+    verify: suspend () -> ClerkResult<SessionVerification, *>
+  ) {
+    val oldToken = token(100)
+    updateSnapshot(oldToken)
+    assertEquals(oldToken, fetcher.getToken(session))
+    val verifiedToken = token(200)
+    coEvery { api.tokens(session.id, "org_123", any(), "true") } returns
+      ClerkResult.success(verifiedToken)
+
+    verify()
+
+    assertEquals(verifiedToken, fetcher.getToken(session))
+    coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), "true") }
+  }
+
+  private fun verification(status: SessionVerification.Status): SessionVerification =
+    SessionVerification(
+      id = "sessver_123",
+      status = status,
+      level = SessionVerification.Level.FIRST_FACTOR,
+    )
+
   private fun updateSnapshot(token: TokenResource): Session {
     val updatedSession = session.copy(lastActiveToken = token)
     client.value = Client(sessions = listOf(updatedSession))

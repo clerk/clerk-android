@@ -7,7 +7,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.session.Session
-import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.session.attemptFirstFactorVerification
 import com.clerk.api.session.attemptSecondFactorVerification
@@ -29,12 +28,7 @@ internal object BiometricSessionVerificationService {
         when (val result = attempt(session, credential.id, signature, level)) {
           is ClerkResult.Failure ->
             BiometricCredentials.handleBiometricCredentialError(result, credential)
-          is ClerkResult.Success ->
-            result.also {
-              if (it.value.status == SessionVerification.Status.COMPLETE) {
-                SessionTokenFetcher.shared.invalidateSession(session.id)
-              }
-            }
+          is ClerkResult.Success -> result
         }
       }
     }

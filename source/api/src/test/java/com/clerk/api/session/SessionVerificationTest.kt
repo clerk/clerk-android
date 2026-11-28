@@ -23,6 +23,7 @@ class SessionVerificationTest {
   @After
   fun tearDown() {
     unmockkAll()
+    SessionTokenFetcher.shared.reset()
   }
 
   @Test
