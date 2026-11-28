@@ -56,9 +56,11 @@ import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 
 /**
  * Main entrypoint class for the Clerk SDK.
@@ -1108,6 +1110,44 @@ public object Clerk {
   @FrameworkIntegrationApi
   public suspend fun deleteDeviceKey(): Boolean = configurationManager.deleteDeviceKey()
 
+  /**
+   * Returns a DPoP proof, signed with this device's key, for a Frontend API request that a
+   * framework host sends from a runtime of its own, or null when the request goes unsigned. Each
+   * call returns a new proof, so call it for every attempt of the request.
+   *
+   * The host gets proofs only when it configured Clerk with
+   * [ClerkConfigurationOptions.withHostSignsRequests]. Otherwise, and before [initialize], this
+   * returns null.
+   *
+   * @param method The method the request sends on the wire, not a `_method` override.
+   * @param url The full request URL. The proof leaves out its query and fragment.
+   * @param authorization The client token exactly as the request sends it in `Authorization`, or
+   *   null when the request sends none.
+   * @return The value for the request's `DPoP` header, or null to send the request without one.
+   * @throws java.io.IOException when the client token is bound to this device's key but the key
+   *   cannot sign yet. Fail the request instead of sending it unsigned.
+   * @throws IllegalArgumentException when [url] is not an http or https URL.
+   */
+  @FrameworkIntegrationApi
+  public suspend fun deviceBindingProof(
+    method: String,
+    url: String,
+    authorization: String?,
+  ): String? {
+    val signing = configurationManager.hostSigning ?: return null
+    return withContext(Dispatchers.IO) { signing.proof(method, url, authorization) }
+  }
+
+  /**
+   * Records the `Date` header of a Frontend API response that a framework host received, so the
+   * proofs from [deviceBindingProof] are dated by the server's clock. A value that is not an HTTP
+   * date is ignored.
+   */
+  @FrameworkIntegrationApi
+  public fun recordServerDate(date: String) {
+    configurationManager.hostSigning?.recordServerDate(date)
+  }
+
   // endregion
 
   // region Internal Methods
@@ -1408,11 +1448,21 @@ public data class ClerkConfigurationOptions(
   internal val isFrameworkHost: Boolean
     get() = _customHeaders.keys.any { it.equals(HOST_SDK_HEADER, ignoreCase = true) }
 
+  private var _hostSignsRequests: Boolean = false
+
+  /**
+   * Whether a framework host's own runtime signs its Frontend API requests with
+   * [Clerk.deviceBindingProof]. Set it with [withHostSignsRequests]. Defaults to `false`.
+   */
+  val hostSignsRequests: Boolean
+    get() = _hostSignsRequests
+
   /**
    * Returns a copy of these options with additional outgoing request headers configured.
    *
    * A host SDK that names itself in an `x-clerk-host-sdk` header shares the client token with a
-   * runtime of its own, so this SDK does not bind that client to the device key.
+   * runtime of its own, so this SDK does not bind that client to the device key unless the host
+   * also calls [withHostSignsRequests].
    */
   public fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._customHeaders = customHeaders.toMap() }
@@ -1436,9 +1486,20 @@ public data class ClerkConfigurationOptions(
   public fun withUpdateRequiredViewDisabled(): ClerkConfigurationOptions =
     copyWithNonConstructorState().also { it._updateRequiredViewEnabled = false }
 
+  /**
+   * Returns a copy of these options for a framework host whose own runtime signs every Frontend API
+   * request it sends with [Clerk.deviceBindingProof]. The client is then bound to this device's
+   * key, and this SDK signs its own requests too. Without it, a host that names itself in an
+   * `x-clerk-host-sdk` header keeps the client unbound.
+   */
+  @FrameworkIntegrationApi
+  public fun withHostSignsRequests(): ClerkConfigurationOptions =
+    copyWithNonConstructorState().also { it._hostSignsRequests = true }
+
   private fun copyWithNonConstructorState(): ClerkConfigurationOptions =
     copy().also {
       it._customHeaders = _customHeaders
+      it._hostSignsRequests = _hostSignsRequests
       it._autoRefreshOnForeground = _autoRefreshOnForeground
       it._updateRequiredViewEnabled = _updateRequiredViewEnabled
     }

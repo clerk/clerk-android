@@ -16,6 +16,8 @@ import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.devicekey.DeviceKeyFactory
 import com.clerk.api.devicekey.DeviceKeyHolder
+import com.clerk.api.dpop.DpopSigner
+import com.clerk.api.dpop.HostSigning
 import com.clerk.api.dpop.ServerClock
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLogger
@@ -122,6 +124,10 @@ internal class ConfigurationManager(
   private val sharedDeviceTokenFenceGeneration = AtomicInteger()
 
   @Volatile private var deviceKeyHolder: DeviceKeyHolder? = null
+
+  @Volatile
+  internal var hostSigning: HostSigning? = null
+    private set
 
   private enum class RefreshMode {
     INITIALIZATION,
@@ -245,12 +251,14 @@ internal class ConfigurationManager(
     this.deviceKeyHolder = deviceKeyHolder
     val deviceBinding =
       scope.resolveDeviceBinding(optOut = signingOptOut(options), holder = deviceKeyHolder)
+    val serverClock = ServerClock(Clock.System)
+    hostSigning = HostSigning(DpopSigner(deviceBinding, serverClock, DEVICE_KEY_WAIT), serverClock)
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
       customHeaders = options?.customHeaders.orEmpty(),
       deviceBinding = deviceBinding,
-      serverClock = ServerClock(Clock.System),
+      serverClock = serverClock,
     )
     hasConfigured = true
     configureConnectivityMonitor(context.applicationContext)
@@ -366,6 +374,7 @@ internal class ConfigurationManager(
     activeSessionWatchJob = null
     context = null
     deviceKeyHolder = null
+    hostSigning = null
     storageInitialized = false
     hasConfigured = false
     storedOptions = null
